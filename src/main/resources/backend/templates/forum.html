@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 討論區管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+
+<body>
+    <script src="../static/js/sidebar.js"></script>
+    
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+
+            <div>
+                <h1>討論區管理</h1>
+                <div class="sub">管理看板、版主與違規文章</div>
+            </div>
+        </header>
+
+        <section>
+            <div class="card">
+                <h3>看板列表</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>看板名稱</th>
+                            <th>版主</th>
+                            <th>今日文章數</th>
+                            <th>待處理檢舉</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>寵物美容版</strong></td>
+                            <td>小張 (user_88)</td>
+                            <td>122</td>
+                            <td><span style="color:red;font-weight:bold">2</span></td>
+                            <td>
+                                <button class="btn">管理文章</button>
+                                <button class="btn ghost">設定版主</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>狗狗行為訓練</strong></td>
+                            <td>(從缺)</td>
+                            <td>45</td>
+                            <td>0</td>
+                            <td>
+                                <button class="btn">管理文章</button>
+                                <button class="btn ghost">設定版主</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>最新檢舉文章</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>文章標題</th>
+                            <th>作者</th>
+                            <th>檢舉原因</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>便宜出售不明藥物...</td>
+                            <td>bad_guy</td>
+                            <td>違禁品/藥事法</td>
+                            <td><button class="btn" style="background:#d9534f">刪除並封鎖</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 保母管理系統</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/sitters.css">
+</head>
+
+<body>
+    <script src="../static/js/sidebar.js"></script>
+
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+
+            <div>
+                <h1>保母管理系統</h1>
+                <div class="sub">審核申請、服務項目設定與帳號權限控管</div>
+            </div>
+        </header>
+
+        <section>
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('audit')">
+                    <i class="fa-solid fa-file-signature"></i> 文件/證明審核
+                </button>
+                <button class="tab-btn" onclick="switchTab('settings')">
+                    <i class="fa-solid fa-sliders"></i> 服務與寵物設定
+                </button>
+                <button class="tab-btn" onclick="switchTab('access')">
+                    <i class="fa-solid fa-user-slash"></i> 帳號停權控制
+                </button>
+            </div>
+
+            <div id="panel-audit" class="panel active">
+                <div class="card">
+                    <h3>待審核申請列表</h3>
+                    <div class="sub" style="margin-bottom:15px; color:#666;">
+                        審核通過後，系統將自動發送 Email 通知申請人。
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>申請 ID</th>
+                                <th>申請人</th>
+                                <th>提交文件</th>
+                                <th>申請時間</th>
+                                <th>狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>REQ-101</td>
+                                <td>Linda Liu</td>
+                                <td>
+                                    <a href="#" style="color:var(--orange); display:block;">良民證.jpg</a>
+                                    <a href="#" style="color:var(--orange); display:block;">身分證正反面.pdf</a>
+                                </td>
+                                <td>2026-01-07</td>
+                                <td><span style="color:orange; font-weight:bold;">待審核</span></td>
+                                <td>
+                                    <button class="btn" onclick="alert('已發送審核通過通知！')">通過並通知</button>
+                                    <button class="btn ghost" style="color:red; border-color:red;"
+                                        onclick="alert('已發送駁回通知')">駁回</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>REQ-102</td>
+                                <td>Mark Wang</td>
+                                <td><a href="#" style="color:var(--orange)">專業訓練證書.png</a></td>
+                                <td>2026-01-06</td>
+                                <td><span style="color:red;">資料不全</span></td>
+                                <td>
+                                    <button class="btn ghost">通知補件</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="panel-settings" class="panel">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+
+                    <div class="card">
+                        <h3><i class="fa-solid fa-hand-holding-heart"></i> 服務項目設定</h3>
+                        <div class="sub">設定平台上保母可提供的服務選項</div>
+
+                        <div class="tag-container">
+                            <span class="tag">到府照顧 <i class="fa-solid fa-xmark remove"></i></span>
+                            <span class="tag">遛狗服務 <i class="fa-solid fa-xmark remove"></i></span>
+                            <span class="tag">家庭寄宿 <i class="fa-solid fa-xmark remove"></i></span>
+                            <span class="tag">洗澡美容 <i class="fa-solid fa-xmark remove"></i></span>
+                        </div>
+
+                        <div style="margin-top:16px; display:flex; gap:8px;">
+                            <input type="text" placeholder="輸入新服務名稱..." style="width:70%;">
+                            <button class="btn" style="width:30%;">新增</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fa-solid fa-paw"></i> 支援寵物種類</h3>
+                        <div class="sub">設定系統支援的寵物類別</div>
+
+                        <div class="tag-container">
+                            <span class="tag">狗狗 (Dog) <i class="fa-solid fa-xmark remove"></i></span>
+                            <span class="tag">貓咪 (Cat) <i class="fa-solid fa-xmark remove"></i></span>
+                            <span class="tag">兔子 (Rabbit) <i class="fa-solid fa-xmark remove"></i></span>
+                            <span class="tag">鳥類 (Bird) <i class="fa-solid fa-xmark remove"></i></span>
+                        </div>
+
+                        <div style="margin-top:16px; display:flex; gap:8px;">
+                            <input type="text" placeholder="輸入新種類..." style="width:70%;">
+                            <button class="btn" style="width:30%;">新增</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-access" class="panel">
+                <div class="card">
+                    <h3>保母名單與權限管理</h3>
+                    <div class="sub" style="margin-bottom:15px; color:#666;">
+                        針對違規保母進行暫時停權或永久封鎖。
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>保母姓名</th>
+                                <th>服務評價</th>
+                                <th>目前狀態</th>
+                                <th>上次登入</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S-008</td>
+                                <td>Jason Chen</td>
+                                <td><i class="fa-solid fa-star" style="color:gold"></i> 4.9 (102則)</td>
+                                <td><span style="color:green">正常接案</span></td>
+                                <td>10分鐘前</td>
+                                <td>
+                                    <button class="btn ghost" style="color:red; border-color:red;"
+                                        onclick="alert('帳號已停權')">停權</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>S-015</td>
+                                <td>Sarah Lee</td>
+                                <td><i class="fa-solid fa-star" style="color:gold"></i> 2.1 (5則)</td>
+                                <td><span style="color:red; font-weight:bold;">已停權</span></td>
+                                <td>30天前</td>
+                                <td>
+                                    <button class="btn" style="background:#4CAF50;"
+                                        onclick="alert('帳號已恢復')">恢復權限</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+
+            event.currentTarget.classList.add('active');
+            document.getElementById('panel-' + tabName).classList.add('active');
+        }
+    </script>
+</body>
+
+</html>

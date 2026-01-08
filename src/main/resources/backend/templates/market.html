@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 二手商城管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/market.css">
+</head>
+
+<body>
+    <script src="../static/js/sidebar.js"></script>
+
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+
+            <div>
+                <h1>二手商城管理</h1>
+                <div class="sub">處理訂單撥款與退款爭議</div>
+            </div>
+        </header>
+
+        <section>
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('orders')">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> 訂單紀錄 (撥款)
+                </button>
+                <button class="tab-btn" onclick="switchTab('refunds')">
+                    <i class="fa-solid fa-rotate-left"></i> 退款審核申請
+                </button>
+            </div>
+
+            <div id="panel-orders" class="panel active">
+                <div class="card">
+                    <h3>待撥款訂單列表</h3>
+                    <div class="sub" style="margin-bottom:15px; color:#666;">
+                        當買家確認收貨後，系統將顯示於此，管理員需手動或確認自動撥款給賣家。
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>訂單編號</th>
+                                <th>商品名稱</th>
+                                <th>買家</th>
+                                <th>賣家</th>
+                                <th>金額</th>
+                                <th>訂單狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#ORD-202401</td>
+                                <td>全新自動餵食器</td>
+                                <td>王小明</td>
+                                <td>陳大發</td>
+                                <td>$1,500</td>
+                                <td><span
+                                        style="color:green; background:#e6fffa; padding:4px 8px; border-radius:4px;">買家已收貨</span>
+                                </td>
+                                <td>
+                                    <button class="btn" onclick="alert('已撥款給賣家！')">撥款給賣家</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-202405</td>
+                                <td>寵物推車 (九成新)</td>
+                                <td>林依依</td>
+                                <td>張三</td>
+                                <td>$2,200</td>
+                                <td><span
+                                        style="color:#666; background:#eee; padding:4px 8px; border-radius:4px;">運送中</span>
+                                </td>
+                                <td>
+                                    <button class="btn ghost" disabled>尚未完成</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-202408</td>
+                                <td>貓咪罐頭 x 24</td>
+                                <td>Kevin</td>
+                                <td>寵物小舖</td>
+                                <td>$800</td>
+                                <td><span
+                                        style="color:blue; background:#e6f7ff; padding:4px 8px; border-radius:4px;">已完成撥款</span>
+                                </td>
+                                <td>
+                                    <button class="btn ghost" disabled>已結案</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="panel-refunds" class="panel">
+                <div class="card">
+                    <h3>退款爭議審核</h3>
+                    <div class="sub" style="margin-bottom:15px; color:#666;">
+                        買家發起退款申請，需人工介入審核是否符合退貨標準。
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>申請編號</th>
+                                <th>訂單 / 商品</th>
+                                <th>申請人</th>
+                                <th>退款原因</th>
+                                <th>佐證圖片</th>
+                                <th>狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>REF-009</td>
+                                <td>二手貓砂盆 (#ORD-202403)</td>
+                                <td>李四</td>
+                                <td>商品破損嚴重，與描述不符</td>
+                                <td><a href="#" style="color:var(--orange)">查看圖片</a></td>
+                                <td><span style="color:orange; font-weight:bold;">待審核</span></td>
+                                <td>
+                                    <button class="btn" style="background:#4CAF50;"
+                                        onclick="alert('已批准退款')">批准退款</button>
+                                    <button class="btn" style="background:#d9534f;" onclick="alert('已駁回申請')">駁回</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>REF-012</td>
+                                <td>過期飼料 (#ORD-202407)</td>
+                                <td>Unknown</td>
+                                <td>賣家寄錯商品</td>
+                                <td><a href="#" style="color:var(--orange)">查看圖片</a></td>
+                                <td><span style="color:red; font-weight:bold;">申訴中</span></td>
+                                <td>
+                                    <button class="btn" style="background:#4CAF50;">批准退款</button>
+                                    <button class="btn" style="background:#d9534f;">駁回</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </div>
+    <script>
+        function switchTab(tabName) {
+            // 1. 移除所有按鈕的 active 樣式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 2. 隱藏所有區塊
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // 3. 加上 active 到被點擊的按鈕
+            // 這裡使用了 event.currentTarget 來抓取觸發點擊的按鈕
+            event.currentTarget.classList.add('active');
+
+            // 4. 顯示對應的區塊
+            document.getElementById('panel-' + tabName).classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
