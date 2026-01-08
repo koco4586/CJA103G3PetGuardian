@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 活動文章</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+
+<body>
+    <script src="../static/js/sidebar.js"></script>
+
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>活動與文章管理</h1>
+                <div class="sub">發布最新消息與衛教文章</div>
+            </div>
+        </header>
+
+        <section>
+            <div style="margin-bottom:16px;">
+                <button class="btn"><i class="fa-solid fa-plus"></i> 新增文章 / 活動</button>
+            </div>
+
+            <div class="card">
+                <h3>已發布列表</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>標題</th>
+                            <th>分類</th>
+                            <th>發布日期</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>301</td>
+                            <td>寒假寵物照顧注意事項</td>
+                            <td>衛教知識</td>
+                            <td>2026-01-01</td>
+                            <td><span style="color:green">已發布</span></td>
+                            <td>
+                                <button class="btn">編輯</button>
+                                <button class="btn ghost">下架</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>302</td>
+                            <td>2026 新年保母媒合優惠活動</td>
+                            <td>官方活動</td>
+                            <td>2026-01-05</td>
+                            <td><span style="color:green">進行中</span></td>
+                            <td>
+                                <button class="btn">編輯</button>
+                                <button class="btn ghost">結束活動</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>303</td>
+                            <td>系統維護公告 (1/10)</td>
+                            <td>系統公告</td>
+                            <td>2026-01-08</td>
+                            <td><span style="color:#999">排程中</span></td>
+                            <td>
+                                <button class="btn">編輯</button>
+                                <button class="btn ghost">刪除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>
