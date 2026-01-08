@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>預約服務 | PetGuardian</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .filter-section {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container" style="padding-top: 2rem;">
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <h3 class="mb-1">🔍 尋找理想保母</h3>
+            <div class="d-flex gap-md" style="flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                    <label class="form-label">服務地區</label>
+                    <select class="form-control">
+                        <option>全台北市</option>
+                        <option>大安區</option>
+                        <option>信義區</option>
+                        <option>中山區</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                    <label class="form-label">服務類型</label>
+                    <select class="form-control">
+                        <option>全部服務</option>
+                        <option>散步遛狗</option>
+                        <option>到府餵食</option>
+                        <option>洗澡美容</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                    <label class="form-label">預約日期</label>
+                    <input type="date" class="form-control">
+                </div>
+                <div style="align-self: flex-end;">
+                    <button class="btn btn-primary" style="height: 46px; width: 100%;">搜尋</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sitter List -->
+        <h2 class="mb-2">推薦保母 (8位)</h2>
+        <div class="grid-list-view" id="sitter-list">
+            <!-- Sitter 1 -->
+            <div class="card card-horizontal">
+                <div class="img-wrapper">
+                    <img
+                        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400">
+                    <button class="btn-like" onclick="toggleFavorite(this)">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="content-wrapper">
+                    <div>
+                        <div class="d-flex gap-sm align-center mb-1">
+                            <h4 style="margin:0; font-size: 1rem;">王小美</h4>
+                            <span style="color: var(--warning); font-size: 0.8rem;">4.9 ★</span>
+                        </div>
+                        <p class="card-text mb-1"
+                            style="color: #666; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            擁有3年養狗經驗，非常有耐心，愛狗如命！
+                        </p>
+                        <div class="d-flex gap-xs mb-1">
+                            <span class="badge badge-primary" style="font-size:0.75rem;">大安區</span>
+                            <span class="badge badge-accent" style="font-size:0.75rem;">散步</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-between align-center">
+                        <span style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">$300起</span>
+                        <button class="btn btn-primary btn-sm" onclick="openBookingModal('王小美')">預約</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sitter 2 -->
+            <div class="card card-horizontal">
+                <div class="img-wrapper">
+                    <img
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400">
+                    <button class="btn-like" onclick="toggleFavorite(this)">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="content-wrapper">
+                    <div>
+                        <div class="d-flex gap-sm align-center mb-1">
+                            <h4 style="margin:0; font-size: 1rem;">陳大山</h4>
+                            <span style="color: var(--warning); font-size: 0.8rem;">4.8 ★</span>
+                        </div>
+                        <p class="card-text mb-1"
+                            style="color: #666; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            專業寵物美容師退役，提供最專業的服務。
+                        </p>
+                        <div class="d-flex gap-xs mb-1">
+                            <span class="badge badge-primary" style="font-size:0.75rem;">板橋區</span>
+                            <span class="badge badge-accent" style="font-size:0.75rem;">美容</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-between align-center">
+                        <span style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">$500起</span>
+                        <button class="btn btn-primary btn-sm" onclick="openBookingModal('陳大山')">預約</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sitter 3 -->
+            <div class="card card-horizontal">
+                <div class="img-wrapper">
+                    <img
+                        src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400">
+                    <button class="btn-like" onclick="toggleFavorite(this)">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="content-wrapper">
+                    <div>
+                        <div class="d-flex gap-sm align-center mb-1">
+                            <h4 style="margin:0; font-size: 1rem;">林沐沐</h4>
+                            <span style="color: var(--warning); font-size: 0.8rem;">5.0 ★</span>
+                        </div>
+                        <p class="card-text mb-1"
+                            style="color: #666; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            週末兼職，喜歡貓貓狗狗。
+                        </p>
+                        <div class="d-flex gap-xs mb-1">
+                            <span class="badge badge-primary" style="font-size:0.75rem;">信義區</span>
+                            <span class="badge badge-accent" style="font-size:0.75rem;">陪玩</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-between align-center">
+                        <span style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">$250起</span>
+                        <button class="btn btn-primary btn-sm" onclick="openBookingModal('林沐沐')">預約</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Simple Booking Modal -->
+    <div id="bookingModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:500px; position:relative;">
+            <button onclick="closeModal()"
+                style="position:absolute; right:1rem; top:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            <h3>預約 - <span id="sitterName"></span></h3>
+            <form class="mt-2" onsubmit="event.preventDefault(); alert('預約請求已發送！'); closeModal();">
+                <div class="form-group">
+                    <label class="form-label">選擇寵物</label>
+                    <div class="d-flex gap-sm">
+                        <label class="d-flex align-center gap-xs"
+                            style="border:1px solid #ddd; padding:0.5rem; border-radius:8px; cursor:pointer;">
+                            <input type="radio" name="pet" checked> 皮皮 (狗)
+                        </label>
+                        <label class="d-flex align-center gap-xs"
+                            style="border:1px solid #ddd; padding:0.5rem; border-radius:8px; cursor:pointer;">
+                            <input type="radio" name="pet"> 咪咪 (貓)
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">選擇服務</label>
+                    <select class="form-control">
+                        <option>散步遛狗 (30min)</option>
+                        <option>散步遛狗 (60min)</option>
+                        <option>到府洗澡</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">預約時間</label>
+                    <input type="datetime-local" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">備註需求</label>
+                    <textarea class="form-control" rows="3"></textarea>
+                </div>
+                <button class="btn btn-primary" style="width:100%;">確認預約</button>
+            </form>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+
+    <script src="../static/js/main.js"></script>
+    <script>
+        const modal = document.getElementById('bookingModal');
+
+        function openBookingModal(name) {
+            document.getElementById('sitterName').innerText = name;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    </script>
+</body>
+
+</html>

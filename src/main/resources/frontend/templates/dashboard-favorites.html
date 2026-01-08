@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 | PetGuardian</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/dashboard.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
+                </div>
+                <h4>李小明</h4>
+                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="menu-item">
+                    <i class="fas fa-user"></i> 個人資料
+                </a>
+                <a href="dashboard-pets.html" class="menu-item">
+                    <i class="fas fa-paw"></i> 我的寵物
+                </a>
+                <a href="dashboard-orders.html" class="menu-item">
+                    <i class="fas fa-receipt"></i> 商城訂單紀錄
+                </a>
+                <a href="dashboard-bookings.html" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
+                </a>
+                <a href="dashboard-favorites.html" class="menu-item active">
+                    <i class="fas fa-heart"></i> 收藏列表
+                </a>
+                <a href="dashboard-sitter-registration.html" class="menu-item"
+                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
+                    <i class="fas fa-user-plus"></i> 成為保母
+                </a>
+                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
+                    onclick="alert('已登出'); window.location.href='index.html'">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="favorites">
+                <h2 class="mb-2">我的收藏</h2>
+                <div class="sub-tabs">
+                    <div class="sub-tab active" onclick="filterFavorites('sitters', this)">保母</div>
+                    <div class="sub-tab" onclick="filterFavorites('store', this)">二手商品</div>
+                    <div class="sub-tab" onclick="filterFavorites('articles', this)">文章</div>
+                </div>
+
+                <div id="fav-sitters" class="favorites-grid favorites-category active">
+                    <div class="card favorite-card">
+                        <div style="position: relative;">
+                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
+                                class="card-img-top">
+                            <button class="btn-like active" onclick="removeFavorite(this)"><i
+                                    class="fas fa-heart"></i></button>
+                        </div>
+                        <h4 class="mt-1">王小美保母</h4>
+                        <div class="d-flex align-center gap-sm mb-1" style="font-size: 0.9rem; color: #666;">
+                            <i class="fas fa-star text-warning"></i> 4.9 (120)
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">立即預約</button>
+                    </div>
+                </div>
+
+                <div id="fav-store" class="favorites-grid favorites-category">
+                    <div class="card favorite-card">
+                        <div style="position: relative;">
+                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=400"
+                                class="card-img-top">
+                            <button class="btn-like active" onclick="removeFavorite(this)"><i
+                                    class="fas fa-heart"></i></button>
+                        </div>
+                        <h4 class="mt-1">貓咪自動餵食器</h4>
+                        <p class="text-primary" style="font-weight: 700;">$1,200</p>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">查看詳情</button>
+                    </div>
+                </div>
+
+                <div id="fav-articles" class="favorites-grid favorites-category">
+                    <div class="card favorite-card article-card">
+                        <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=400"
+                            class="card-img-top">
+                        <div class="article-meta" style="margin-top: 0.5rem; font-size: 0.8rem; color: #999;">
+                            <span>2024/01/02</span>
+                            <span>#健康</span>
+                        </div>
+                        <h4 class="mt-1" style="font-size: 1rem;">狗狗需要每天散步嗎？</h4>
+                        <button class="btn btn-outline btn-sm" style="width: 100%; margin-top: 1rem;">閱讀更多</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="../static/js/main.js"></script>
+    <script>
+        function filterFavorites(category, tabElement) {
+            document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            tabElement.classList.add('active');
+
+            document.querySelectorAll('.favorites-category').forEach(list => list.classList.remove('active'));
+            document.getElementById('fav-' + category).classList.add('active');
+        }
+
+        function removeFavorite(btn) {
+            if (confirm('確定要移除此收藏嗎？')) {
+                const card = btn.closest('.card');
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                card.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    card.remove();
+                    window.showToast('已從收藏移除');
+                }, 300);
+            }
+        }
+    </script>
+</body>
+
+</html>
