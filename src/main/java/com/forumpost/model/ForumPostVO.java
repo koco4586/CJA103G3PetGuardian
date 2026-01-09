@@ -1,0 +1,191 @@
+package com.forumpost.model;
+
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.Set;
+
+import com.forum.model.ForumVO;
+import com.forumpostcomment.model.ForumPostCommentVO;
+import com.forumpostpic.model.ForumPostPicVO;
+import com.forumpostreport.model.ForumPostReportVO;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "forumpost")
+public class ForumPostVO implements Serializable{
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "post_id", updatable = false)
+	private Integer postId;
+	
+	@Column(name = "mem_id", updatable = false)
+	private Integer memId;
+	
+	@ManyToOne
+	@JoinColumn(name = "forum_id", referencedColumnName = "forum_id")
+	private ForumVO forum;
+	
+//	@Column(name = "forum_id", updatable = false)
+//	private Integer forumId;
+	
+	@Column(name = "post_title")
+	private String postTitle;
+	
+	@Column(name = "post_content")
+	private String postContent;
+	
+	@Column(name = "post_pic", columnDefinition = "longblob")
+	private byte[] postPic;
+	
+	@Column(name = "created_at", insertable = false, updatable = false)
+	private Timestamp createdAt;
+	
+	@Column(name = "last_edited_at", insertable = false)
+	private Timestamp lastEditedAt;
+	
+	@Column(name = "post_status", insertable = false)
+	private Integer postStatus;
+	
+	@OneToMany(mappedBy = "forumPost")
+	@OrderBy("picId asc")
+	private Set<ForumPostPicVO> forumPostPic;
+	
+	@OneToMany(mappedBy = "forumPost")
+	@OrderBy("commentId asc")
+	private Set<ForumPostCommentVO> forumPostComment;
+	
+	@OneToMany(mappedBy = "forumPost")
+	@OrderBy("reportId asc")
+	private Set<ForumPostReportVO> forumPostReport;
+	
+//	@ManyToMany
+//	@JoinTable(
+//			   name = "forumpostcollection",
+//			   joinColumns = { @JoinColumn( name = "post_id", referencedColumnName = "post_id" ) },
+//			   inverseJoinColumns = { @JoinColumn( name = "mem_id", referencedColumnName = "mem_id") }
+//			  )
+//	private Set<> members;
+	
+	public ForumPostVO() {
+		super();
+	}
+
+	public ForumVO getForum() {
+		return forum;
+	}
+
+	public void setForum(ForumVO forum) {
+		this.forum = forum;
+	}
+
+	public Set<ForumPostPicVO> getForumPostPic() {
+		return forumPostPic;
+	}
+
+	public void setForumPostPic(Set<ForumPostPicVO> forumPostPic) {
+		this.forumPostPic = forumPostPic;
+	}
+
+	public Set<ForumPostCommentVO> getForumPostComment() {
+		return forumPostComment;
+	}
+
+	public void setForumPostComment(Set<ForumPostCommentVO> forumPostComment) {
+		this.forumPostComment = forumPostComment;
+	}
+
+	public Set<ForumPostReportVO> getForumPostReport() {
+		return forumPostReport;
+	}
+
+	public void setForumPostReport(Set<ForumPostReportVO> forumPostReport) {
+		this.forumPostReport = forumPostReport;
+	}
+
+	public Integer getPostId() {
+		return postId;
+	}
+	
+	public void setPostId(Integer postId) {
+		this.postId = postId;
+	}
+	
+	public Integer getMemId() {
+		return memId;
+	}
+	
+	public void setMemId(Integer memId) {
+		this.memId = memId;
+	}
+	
+//	public Integer getForumId() {
+//		return forumId;
+//	}
+	
+//	public void setForumId(Integer forumId) {
+//		this.forumId = forumId;
+//	}
+	
+	public String getPostTitle() {
+		return postTitle;
+	}
+	
+	public void setPostTitle(String postTitle) {
+		this.postTitle = postTitle;
+	}
+	
+	public String getPostContent() {
+		return postContent;
+	}
+	
+	public void setPostContent(String postContent) {
+		this.postContent = postContent;
+	}
+	
+	public byte[] getPostPic() {
+		return postPic;
+	}
+	
+	public void setPostPic(byte[] postPic) {
+		this.postPic = postPic;
+	}
+	
+	public Timestamp getCreatedAt() {
+		return createdAt;
+	}
+	
+	public void setCreatedAt(Timestamp createdAt) {
+		this.createdAt = createdAt;
+	}
+	
+	public Timestamp getLastEditedAt() {
+		return lastEditedAt;
+	}
+	
+	public void setLastEditedAt(Timestamp lastEditedAt) {
+		this.lastEditedAt = lastEditedAt;
+	}
+	
+	public Integer getPostStatus() {
+		return postStatus;
+	}
+	
+	public void setPostStatus(Integer postStatus) {
+		this.postStatus = postStatus;
+	}
+
+}
