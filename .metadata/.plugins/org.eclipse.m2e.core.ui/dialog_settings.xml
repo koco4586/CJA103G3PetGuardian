@@ -2,6 +2,7 @@
 <section name="Workbench">
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
+			<item value="C:\CJA103_WebApp\eclipse_workspace1\CJA103G3PetGuardian"/>
 			<item value="C:\CJA103_WebApp\petguardian"/>
 		</list>
 		<list key="projectNameTemplate">

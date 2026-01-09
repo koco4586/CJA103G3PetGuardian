@@ -2,6 +2,8 @@ package com.forumpostpic.model;
 
 import java.io.Serializable;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.forumpost.model.ForumPostVO;
 
 import jakarta.persistence.Column;
@@ -10,8 +12,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.AssertTrue;
 
 @Entity
 @Table(name = "forumpostpicture")
@@ -29,11 +34,23 @@ public class ForumPostPicVO implements Serializable{
 //	@Column(name = "post_id", updatable = false)
 //	private Integer postId;
 	
-	@Column(name = "pic", columnDefinition = "longblob")
+	@Lob
+	@Column(name = "pic", nullable = true, columnDefinition = "longblob")
 	private byte[] pic;
+	
+	@Transient
+	private MultipartFile[] upFiles;
 
 	public ForumPostPicVO() {
 		super();
+	}
+
+	public MultipartFile[] getUpFiles() {
+		return upFiles;
+	}
+
+	public void setUpFiles(MultipartFile[] upFiles) {
+		this.upFiles = upFiles;
 	}
 
 	public ForumPostVO getForumPost() {
@@ -66,6 +83,28 @@ public class ForumPostPicVO implements Serializable{
 
 	public void setPic(byte[] pic) {
 		this.pic = pic;
+	}
+	
+	//	驗證上傳檔案是否為圖片檔
+	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
+	public boolean isImage() {
+	
+		if(upFiles == null || upFiles.length == 0) {
+			return true;
+		}
+		
+		for(int i = 0; i < upFiles.length; i++) {
+			if(upFiles[i] == null || upFiles[i].isEmpty()) {
+				continue;
+			} else {
+				String contentType = upFiles[i].getContentType();
+				if(contentType == null || !contentType.startsWith("image/")) {
+					return false;
+				}
+			}
+			
+		}
+		return true;
 	}
 	
 }

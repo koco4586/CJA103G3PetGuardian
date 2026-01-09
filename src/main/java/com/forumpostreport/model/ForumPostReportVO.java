@@ -13,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "forumpostreport")
@@ -37,15 +39,17 @@ public class ForumPostReportVO implements Serializable{
 	private Integer reportType;
 	
 	@Column(name = "report_reason")
+	@NotBlank(message = "檢舉原因請勿空白")
+	@Size(min = 20, max = 800, message = "檢舉原因長度必需在{min}到{max}字之間")
 	private String reportReason;
 	
 	@Column(name = "report_status", insertable = false)
 	private Integer reportStatus;
 	
-	@Column(name = "report_time", insertable = false)
+	@Column(name = "report_time", insertable = false, updatable = false)
 	private Timestamp reportTime;
 	
-	@Column(name = "handle_time", insertable = false)
+	@Column(name = "handle_time", insertable = false, updatable = false)
 	private Timestamp handleTime;
 	
 	public ForumPostReportVO() {

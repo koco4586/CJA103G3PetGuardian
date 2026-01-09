@@ -4,20 +4,26 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Set;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.forumcommentreport.model.ForumCommentReportVO;
 import com.forumpost.model.ForumPostVO;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "forumpostcomment")
@@ -43,22 +49,36 @@ public class ForumPostCommentVO implements Serializable{
 	private Set<ForumCommentReportVO> forumCommentReport;
 	
 	@Column(name = "comment_content")
+	@NotBlank(message = "留言內容請勿空白")
+	@Size(min = 1, max = 800, message = "留言長度必需在{min}到{max}字之間")
 	private String commentContent;
 	
-	@Column(name = "comment_pic", columnDefinition = "longblob")
+	@Lob
+	@Column(name = "comment_pic", nullable = true, columnDefinition = "longblob")
 	private byte[] commentPic;
 	
-	@Column(name = "created_at", updatable = false, insertable = false)
+	@Column(name = "created_at", insertable = false, updatable = false)
 	private Timestamp createdAt;
 	
-	@Column(name = "last_edited_at", insertable = false)
+	@Column(name = "last_edited_at", insertable = false, updatable = false)
 	private Timestamp lastEditedAt;
 	
 	@Column(name = "comment_status", insertable = false)
 	private Integer commentStatus;
 	
+	@Transient
+	private MultipartFile upFiles;
+	
 	public ForumPostCommentVO() {
 		super();
+	}
+
+	public MultipartFile getUpFiles() {
+		return upFiles;
+	}
+
+	public void setUpFiles(MultipartFile upFiles) {
+		this.upFiles = upFiles;
 	}
 
 	public ForumPostVO getForumPost() {
@@ -139,6 +159,16 @@ public class ForumPostCommentVO implements Serializable{
 
 	public void setCommentStatus(Integer commentStatus) {
 		this.commentStatus = commentStatus;
+	}
+	
+	//	驗證上傳檔案是否為圖片檔
+	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
+	public boolean isImage() {
+		if(upFiles == null || upFiles.isEmpty()) {
+			return true;
+		}
+		String contentType = upFiles.getContentType();
+		return contentType != null && contentType.startsWith("image/");
 	}
 	
 }

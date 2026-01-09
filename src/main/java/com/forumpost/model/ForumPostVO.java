@@ -4,12 +4,13 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Set;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.forum.model.ForumVO;
 import com.forumpostcomment.model.ForumPostCommentVO;
 import com.forumpostpic.model.ForumPostPicVO;
 import com.forumpostreport.model.ForumPostReportVO;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,11 +18,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "forumpost")
@@ -43,22 +50,30 @@ public class ForumPostVO implements Serializable{
 //	private Integer forumId;
 	
 	@Column(name = "post_title")
+	@NotBlank(message = "文章標題請勿空白")
+	@Pattern(regexp = "^[(\u4e00-\u9fa5)(a-zA-Z0-9)]{1,50}$", message = "文章標題: 只能是中、英文字母、或數字，且不能超過50字")
 	private String postTitle;
 	
 	@Column(name = "post_content")
+	@NotBlank(message = "文章內容請勿空白")
+	@Size(min = 30, max = 2500, message = "文章長度必需在{min}到{max}字之間")
 	private String postContent;
 	
-	@Column(name = "post_pic", columnDefinition = "longblob")
+	@Lob
+	@Column(name = "post_pic", nullable = true, columnDefinition = "longblob")
 	private byte[] postPic;
 	
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private Timestamp createdAt;
 	
-	@Column(name = "last_edited_at", insertable = false)
+	@Column(name = "last_edited_at", insertable = false, updatable = false)
 	private Timestamp lastEditedAt;
 	
 	@Column(name = "post_status", insertable = false)
 	private Integer postStatus;
+	
+	@Transient
+	private MultipartFile upFiles;
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("picId asc")
@@ -82,6 +97,14 @@ public class ForumPostVO implements Serializable{
 	
 	public ForumPostVO() {
 		super();
+	}
+
+	public MultipartFile getUpFiles() {
+		return upFiles;
+	}
+
+	public void setUpFiles(MultipartFile upFiles) {
+		this.upFiles = upFiles;
 	}
 
 	public ForumVO getForum() {
@@ -186,6 +209,16 @@ public class ForumPostVO implements Serializable{
 	
 	public void setPostStatus(Integer postStatus) {
 		this.postStatus = postStatus;
+	}
+	
+	//	驗證上傳檔案是否為圖片檔
+	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
+	public boolean isImage() {
+		if(upFiles == null || upFiles.isEmpty()) {
+			return true;
+		}
+		String contentType = upFiles.getContentType();
+		return contentType != null && contentType.startsWith("image/");
 	}
 
 }
