@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headerEl.innerHTML = `
             <div class="container nav">
                 <a href="index.html" class="logo" style="display: flex; align-items: center; text-decoration: none;">
-                    <img src="../images/logo.png" alt="PetGuardian" style="height: 40px; margin-right: 0.5rem;">
+                    <img src="../static/images/logo.png" alt="PetGuardian" style="height: 40px; margin-right: 0.5rem;">
                     <span style="font-family: 'Rubik', sans-serif; font-weight: 700; color: var(--text-color); font-size: 1.4rem;">PetGuardian</span>
                 </a>
                 <ul class="nav-links">
