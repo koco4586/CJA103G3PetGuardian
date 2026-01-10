@@ -1,30 +1,51 @@
 package com.forum.controller;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.forum.model.ForumService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet("/forum/picture.do")
-
-public class PictureServlet extends HttpServlet{
+@Controller
+@RequestMapping("/forum")
+public class PictureServlet {
 	
-//	public void doGet(HttpServletRequest req, HttpServletResponse res)
-//			throws ServletException, IOException {
-//
-//		Integer forumId = Integer.valueOf(req.getParameter("forumId"));
-//		
-//		ForumService forumSvc = new ForumService();
-//		byte[] forumPic = forumSvc.getForumPic(forumId);
+	@Autowired
+	ForumService forumSvc;
+	
+	@GetMapping("picture")
+	public void picture(@RequestParam("forumId") Integer forumId, HttpServletRequest req, HttpServletResponse res) throws IOException {
 		
-//		if (forumPic != null && forumPic.length > 0) {
-//            res.setContentType("image/*");
-//            res.getOutputStream().write(forumPic);
-//        }	
-//		
-//	}
+		res.setContentType("image/*");
+//		ForumService forumSvc = new ForumService();
+		byte[] forumPic = forumSvc.getForumPic(forumId);
+		
+		if (forumPic != null && forumPic.length > 0) { 
+			
+            res.getOutputStream().write(forumPic);
+            
+		} else {
+			
+			ClassPathResource resource = new ClassPathResource("backend/static/images/logo.png");
+			
+			try(InputStream is = resource.getInputStream();){
+				
+				byte[] logoPic = is.readAllBytes();
+				res.getOutputStream().write(logoPic);
+				
+			}
+			
+		}
+		
+	}
 	
 }
