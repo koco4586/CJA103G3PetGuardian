@@ -1,82 +1,48 @@
 package com.forum.model;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
 public class ForumService {
 	
-	private ForumDAO_interface dao;
+	@Autowired
+	ForumRepository repository;
 	
-	public ForumService() {
-		dao = new ForumJDBCDAO();
+	public void addForum(ForumVO forumVO) {
+		repository.save(forumVO);
 	}
 	
-	public ForumVO addForum(String forumName, byte[] forumPic){
-		
-		ForumVO forumVO = new ForumVO();
-		
-		forumVO.setForumName(forumName);
-		forumVO.setForumPic(forumPic);
-		
-		dao.insert(forumVO);
-		
-		return forumVO;
+	public void updateForum(ForumVO forumVO) {
+		repository.save(forumVO);
 	}
 	
-	public ForumVO updateForum(Integer forumId, String forumName, byte[] forumPic){
-		
-		ForumVO forumVO = new ForumVO();
-		
-		forumVO.setForumId(forumId);
-		forumVO.setForumName(forumName);
-		forumVO.setForumPic(forumPic);
-		
-		dao.update(forumVO);
-		
-		return forumVO;
+	public ForumVO getOneForum(Integer forumId) {
+		Optional<ForumVO> optional = repository.findById(forumId);
+		return optional.orElse(null);
 	}
 	
-	public ForumVO disableForum(Integer forumId){
-		
-		ForumVO forumVO = new ForumVO();
-		
-		forumVO.setForumStatus(0);
-		forumVO.setForumId(forumId);
-		
-		dao.updateStatus(forumVO);
-		
-		return forumVO;
+	public List<ForumVO> getAll(){
+		return repository.findAll();
 	}
 	
-	public ForumVO activeForum(Integer forumId){
-		
-		ForumVO forumVO = new ForumVO();
-
-		forumVO.setForumStatus(1);
-		forumVO.setForumId(forumId);
-		
-		dao.updateStatus(forumVO);
-		
-		return forumVO;
+	public void updateForumStatus(Integer forumStatus, Integer forumId) {
+		repository.updateStatus(forumStatus, forumId);
 	}
 	
 	public List<ForumVO> getForumByName(String forumName){
-		return dao.searchByForumName(forumName);
-	}
-	
-	public List<ForumVO> getAll(){	
-		return dao.getAll();	
+		return repository.findByForumName(forumName);
 	}
 	
 	public List<ForumVO> getAllActive(){
-		return dao.getAllActive();	
-	}
-	
-	public ForumVO getOneForum(Integer forumId){
-		return dao.findByPrimaryKey(forumId);
+		return repository.getAllActive();
 	}
 	
 	public byte[] getForumPic(Integer forumId){
-		return dao.getPicture(forumId);
+		return repository.getPicture(forumId);
 	}
-
+	
 }
