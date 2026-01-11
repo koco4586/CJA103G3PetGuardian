@@ -107,4 +107,31 @@ public class ForumPostPicVO implements Serializable{
 		return true;
 	}
 	
+	//	驗證單張圖片大小跟總上傳檔案大小
+	@AssertTrue(message = "單張圖片大小不得超過 1MB，且總上傳檔案不得超過 5MB")
+	public boolean isSize() {
+		if (upFiles == null || upFiles.length == 0) {
+			return true;
+		}
+		long maxSize = 1 * 1024 *1024;
+		long totalMaxSize = 5 * 1024 *1024;
+		long upFilesTotalSize = 0;
+		for(int i = 0; i < upFiles.length; i++) {
+			if(upFiles[i].isEmpty()) {
+				continue;
+			}
+			if(upFiles[i].getSize() > maxSize) {
+				return false;
+			} else {
+				upFilesTotalSize += upFiles[i].getSize();
+				if(upFilesTotalSize > totalMaxSize) {
+					return false;
+				}
+				
+			}
+			
+		}
+		return true;
+	}
+	
 }
