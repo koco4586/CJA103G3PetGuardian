@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城訂單紀錄 | PetGuardian</title>
+    <link rel="stylesheet" href="../../static/css/frontend/style.css">
+    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../static/css/frontend/dashboard.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
+                </div>
+                <h4>李小明</h4>
+                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="menu-item">
+                    <i class="fas fa-user"></i> 個人資料
+                </a>
+                <a href="dashboard-pets.html" class="menu-item">
+                    <i class="fas fa-paw"></i> 我的寵物
+                </a>
+                <a href="dashboard-orders.html" class="menu-item active">
+                    <i class="fas fa-receipt"></i> 商城訂單紀錄
+                </a>
+                <a href="dashboard-bookings.html" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
+                </a>
+                <a href="dashboard-favorites.html" class="menu-item">
+                    <i class="fas fa-heart"></i> 收藏列表
+                </a>
+                <a href="dashboard-sitter-registration.html" class="menu-item"
+                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
+                    <i class="fas fa-user-plus"></i> 成為保母
+                </a>
+                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
+                    onclick="alert('已登出'); window.location.href='index.html'">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="orders">
+                <h2 class="mb-2">商城訂單紀錄</h2>
+
+                <div class="d-flex gap-sm mb-3">
+                    <button class="btn btn-outline btn-sm active" onclick="filterOrders('all', this)">全部</button>
+                    <button class="btn btn-outline btn-sm" onclick="filterOrders('processing', this)">進行中</button>
+                    <button class="btn btn-outline btn-sm" onclick="filterOrders('delivered', this)">已送達</button>
+                    <button class="btn btn-outline btn-sm" onclick="filterOrders('cancelled', this)">已取消</button>
+                </div>
+
+                <div class="order-list">
+                    <!-- Order 1: Delivered -->
+                    <div class="order-item status-delivered">
+                        <div class="order-info">
+                            <div class="order-meta">
+                                <span>#ORD-20231228-01</span>
+                                <span>•</span>
+                                <span>2023/12/28</span>
+                            </div>
+                            <div class="order-product">
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=100"
+                                    class="order-thumb">
+                                <div>
+                                    <h4 style="margin-bottom: 0.2rem">貓咪自動餵食器</h4>
+                                    <div style="color: #999; font-size: 0.9rem;">x1 $1,200</div>
+                                    <div style="color: #666; font-size: 0.85rem; margin-top: 0.3rem;">
+                                        <i class="fas fa-store"></i> 寵物好物專賣店
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-center gap-md">
+                            <span class="badge badge-success">已送達</span>
+                            <button class="btn btn-outline btn-sm"
+                                onclick="openReviewModal('ORD-20231228-01')">評價賣家</button>
+                            <button class="btn btn-outline btn-sm text-danger"
+                                onclick="openReturnModal('ORD-20231228-01')"
+                                style="border-color: #ffc9c9; background: #fff5f5; color: #fa5252;">申請退貨</button>
+                        </div>
+                    </div>
+
+                    <!-- Order 2: Shipped -->
+                    <div class="order-item status-processing">
+                        <div class="order-info">
+                            <div class="order-meta">
+                                <span>#ORD-20240105-02</span>
+                                <span>•</span>
+                                <span>2024/01/05</span>
+                            </div>
+                            <div class="order-product">
+                                <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&q=80&w=100"
+                                    class="order-thumb">
+                                <div>
+                                    <h4 style="margin-bottom: 0.2rem">狗狗潔牙骨 (大包裝)</h4>
+                                    <div style="color: #999; font-size: 0.9rem;">x2 $500</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-center gap-md">
+                            <span class="badge badge-primary">配送中</span>
+                        </div>
+                    </div>
+
+                    <!-- Order 3: Processing -->
+                    <div class="order-item status-processing">
+                        <div class="order-info">
+                            <div class="order-meta">
+                                <span>#ORD-20240106-03</span>
+                                <span>•</span>
+                                <span>2024/01/06</span>
+                            </div>
+                            <div class="order-product">
+                                <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=100"
+                                    class="order-thumb">
+                                <div>
+                                    <h4 style="margin-bottom: 0.2rem">寵物外出提籃</h4>
+                                    <div style="color: #999; font-size: 0.9rem;">x1 $890</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-center gap-md">
+                            <span class="badge" style="background: #ffa94d; color: white;">處理中</span>
+                            <button class="btn btn-outline btn-sm text-danger"
+                                onclick="openCancelOrderModal('ORD-20240106-03')"
+                                style="border-color: #ffc9c9; background: #fff5f5; color: #fa5252;">取消訂單</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="returnModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:500px; position:relative;">
+            <button onclick="closeReturnModal()"
+                style="position:absolute; right:1.5rem; top:1.5rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">&times;</button>
+            <h3 class="mb-2">申請退貨</h3>
+            <p class="mb-3" style="color:#666; font-size:0.95rem;">訂單編號：<span id="returnOrderId"
+                    style="font-weight:700; color:#333;"></span></p>
+
+            <form onsubmit="submitReturn(event)">
+                <div class="form-group mb-3">
+                    <label class="form-label" style="display:block; margin-bottom:0.5rem; font-weight:600;">退貨原因</label>
+                    <select class="form-control"
+                        style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;" required>
+                        <option value="">請選擇退貨原因...</option>
+                        <option>商品有瑕疵 / 損壞</option>
+                        <option>商品與描述不符</option>
+                        <option>寄錯商品</option>
+                        <option>其他</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label" style="display:block; margin-bottom:0.5rem; font-weight:600;">詳細說明</label>
+                    <textarea class="form-control" rows="3"
+                        style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;"
+                        placeholder="請描述商品問題..."></textarea>
+                </div>
+
+                <div class="d-flex gap-md">
+                    <button type="button" class="btn btn-outline" style="flex:1;"
+                        onclick="closeReturnModal()">取消</button>
+                    <button type="submit" class="btn btn-primary"
+                        style="flex:1; background: var(--danger); border-color: var(--danger);">提交申請</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Seller Review Modal -->
+    <div id="reviewModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:500px; position:relative;">
+            <button onclick="closeReviewModal()"
+                style="position:absolute; right:1.5rem; top:1.5rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">&times;</button>
+            <h3 class="mb-2">評價賣家</h3>
+            <p class="mb-3" style="color:#666; font-size:0.95rem;">訂單編號：<span id="reviewOrderId"
+                    style="font-weight:700; color:#333;"></span></p>
+
+            <form onsubmit="submitReview(event)">
+                <div class="form-group mb-3">
+                    <label class="form-label" style="display:block; margin-bottom:0.5rem; font-weight:600;">評分</label>
+                    <div style="font-size: 2rem; color: #ffd43b;">
+                        <i class="far fa-star rating-star" onclick="setRating(1)" style="cursor:pointer;"></i>
+                        <i class="far fa-star rating-star" onclick="setRating(2)" style="cursor:pointer;"></i>
+                        <i class="far fa-star rating-star" onclick="setRating(3)" style="cursor:pointer;"></i>
+                        <i class="far fa-star rating-star" onclick="setRating(4)" style="cursor:pointer;"></i>
+                        <i class="far fa-star rating-star" onclick="setRating(5)" style="cursor:pointer;"></i>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label" style="display:block; margin-bottom:0.5rem; font-weight:600;">評價內容</label>
+                    <textarea class="form-control" rows="4"
+                        style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;"
+                        placeholder="分享您的購物體驗..." required></textarea>
+                </div>
+
+                <div class="d-flex gap-md">
+                    <button type="button" class="btn btn-outline" style="flex:1;"
+                        onclick="closeReviewModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;">提交評價</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div id="cancelOrderModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:450px; position:relative;">
+            <button onclick="closeCancelOrderModal()"
+                style="position:absolute; right:1.5rem; top:1.5rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">&times;</button>
+            <h3 class="mb-2">取消訂單</h3>
+            <p class="mb-3" style="color:#666;">訂單編號：<span id="cancelOrderId"
+                    style="font-weight:700; color:#333;"></span></p>
+
+            <div class="mb-3 p-3" style="background:#fff3cd; border-radius:8px; border-left: 4px solid #ffc107;">
+                <p style="margin:0; color:#856404; font-weight:600;">
+                    <i class="fas fa-exclamation-triangle"></i> 取消須知
+                </p>
+                <p style="margin:0.5rem 0 0 0; color:#856404; font-size:0.9rem;">
+                    訂單取消後將全額退款至原付款方式，預計 3-5 個工作天到帳。
+                </p>
+            </div>
+
+            <div class="d-flex gap-md">
+                <button class="btn btn-outline" style="flex:1" onclick="closeCancelOrderModal()">保留訂單</button>
+                <button class="btn btn-primary" onclick="confirmCancelOrder()"
+                    style="flex:1; background:var(--danger); border-color:var(--danger);">確認取消</button>
+            </div>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="../../static/js/frontend/main.js"></script>
+    <script>
+        function filterOrders(status, btn) {
+            document.querySelectorAll('.btn-outline').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.order-item').forEach(item => {
+                if (status === 'all') {
+                    item.style.display = 'flex';
+                } else if (status === 'processing') {
+                    item.style.display = item.classList.contains('status-processing') ? 'flex' : 'none';
+                } else {
+                    item.style.display = item.classList.contains('status-' + status) ? 'flex' : 'none';
+                }
+            });
+        }
+
+        // Return Modal
+        function openReturnModal(orderId) {
+            document.getElementById('returnOrderId').innerText = orderId;
+            document.getElementById('returnModal').style.display = 'flex';
+        }
+        function closeReturnModal() {
+            document.getElementById('returnModal').style.display = 'none';
+        }
+        function submitReturn(e) {
+            e.preventDefault();
+            window.showToast('退貨申請已提交，我們將儘快審核。');
+            closeReturnModal();
+        }
+
+        // Review Modal
+        let currentRating = 0;
+        function openReviewModal(orderId) {
+            document.getElementById('reviewOrderId').innerText = orderId;
+            document.getElementById('reviewModal').style.display = 'flex';
+            setRating(0);
+        }
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+        }
+        function setRating(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll('.rating-star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+            });
+        }
+        function submitReview(e) {
+            e.preventDefault();
+            if (currentRating === 0) { alert('請選擇評分'); return; }
+            window.showToast('評價成功！感謝您的分享。');
+            closeReviewModal();
+        }
+
+        // Cancel Order Modal
+        let orderToCancel = null;
+        function openCancelOrderModal(orderId) {
+            orderToCancel = orderId;
+            document.getElementById('cancelOrderId').innerText = orderId;
+            document.getElementById('cancelOrderModal').style.display = 'flex';
+        }
+        function closeCancelOrderModal() {
+            document.getElementById('cancelOrderModal').style.display = 'none';
+        }
+        function confirmCancelOrder() {
+            window.showToast(`訂單 #${orderToCancel} 已取消成功。`);
+            closeCancelOrderModal();
+        }
+    </script>
+</body>
+
+</html>

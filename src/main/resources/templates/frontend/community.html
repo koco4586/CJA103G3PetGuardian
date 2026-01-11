@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>討論區 | PetGuardian</title>
+    <link rel="stylesheet" href="../../static/css/frontend/style.css">
+    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .forum-header {
+            background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+
+        .post-card {
+            display: flex;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1rem;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .post-card:hover {
+            transform: translateX(5px);
+            border-left-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+        }
+
+        .post-tag {
+            background: #f1f3f5;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #495057;
+            margin-right: 0.5rem;
+            font-weight: 500;
+        }
+
+        .btn-fav {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: #dee2e6;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .btn-fav:hover {
+            color: #fa5252;
+            transform: scale(1.1);
+        }
+
+        .btn-fav.active {
+            color: #fa5252;
+        }
+
+        .search-bar-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #f1f3f5;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #adb5bd;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.8rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.1);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .filter-tab {
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            border: 2px solid #e9ecef;
+            background: white;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.2s;
+        }
+
+        .filter-tab:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .filter-tab.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #adb5bd;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="forum-header">
+        <div class="container d-flex justify-between align-center">
+            <div>
+                <h1>💬 寵物討論區</h1>
+                <p style="color: #555;">分享毛小孩的日常，交流養育心得</p>
+            </div>
+            <button class="btn btn-primary"><i class="fas fa-pen"></i> 發布新話題</button>
+        </div>
+    </div>
+
+    <div class="container d-flex gap-lg" style="flex-direction: row-reverse; min-height: 60vh;">
+
+        <!-- Sidebar -->
+        <div class="sidebar" style="flex: 0 0 250px; margin-left:20px;">
+            <div class="card mb-2">
+                <h4 class="mb-1">熱門話題</h4>
+                <ul style="font-size: 0.9rem;">
+                    <li class="mb-1"><a href="#" style="color: #666;"># 新手養狗指南</a></li>
+                    <li class="mb-1"><a href="#" style="color: #666;"># 貓咪飲食禁忌</a></li>
+                    <li class="mb-1"><a href="#" style="color: #666;"># 週末好去處</a></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4 class="mb-1">版規公告</h4>
+                <p style="font-size: 0.9rem; color: #666;">
+                    請保持友善發言，嚴禁謾罵或人身攻擊。
+                </p>
+            </div>
+            <div class="card mt-2" id="search-stats" style="display: none;">
+                <h4 class="mb-1">篩選結果</h4>
+                <p style="font-size: 0.9rem; color: #666;" id="results-count"></p>
+                <button class="btn btn-outline btn-sm mt-1" onclick="resetFilters()" style="width: 100%;">清除篩選</button>
+            </div>
+        </div>
+
+        <!-- Post List Area -->
+        <div style="flex: 1;">
+
+            <!-- Search & Filter Controls -->
+            <div class="search-bar-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="postSearch" placeholder="搜尋文章標題或關鍵字..."
+                        onkeyup="handleSearch()">
+                </div>
+            </div>
+
+            <div class="filter-tabs">
+                <div class="filter-tab active" onclick="setCategory('all', this)" data-category="all">全部</div>
+                <div class="filter-tab" onclick="setCategory('🐶 狗狗', this)" data-category="🐶 狗狗">🐶 狗狗</div>
+                <div class="filter-tab" onclick="setCategory('🐱 貓貓', this)" data-category="🐱 貓貓">🐱 貓貓</div>
+                <div class="filter-tab" onclick="setCategory('🏥 醫療', this)" data-category="🏥 醫療">🏥 醫療</div>
+                <div class="filter-tab" onclick="setCategory('🥗 飲食', this)" data-category="🥗 飲食">🥗 飲食</div>
+                <div class="filter-tab" onclick="setCategory('🏖️ 出遊', this)" data-category="🏖️ 出遊">🏖️ 出遊</div>
+            </div>
+
+            <!-- Posts Container -->
+            <div id="posts-container">
+                <!-- Posts will be injected here -->
+            </div>
+
+        </div>
+    </div>
+
+    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+
+    <script src="../../static/js/frontend/main.js"></script>
+    <script>
+        // Article Data
+        const articles = [
+            {
+                id: 1,
+                author: '李小明',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack',
+                time: '2小時前',
+                title: '請問大家都給狗狗吃什麼品牌的飼料？',
+                content: '家裡的柯基最近有點挑食，想換個口味試試看，目前考慮...有沒有推薦鮮食或是高評價的乾糧？',
+                categories: ['🥗 飲食', '🐶 狗狗'],
+                upvotes: 156,
+                comments: 24,
+                favorited: false
+            },
+            {
+                id: 2,
+                author: '林沐沐',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Coco',
+                time: '5小時前',
+                title: '分享台北大安森林公園遛狗心得',
+                content: '週末天氣很好，帶狗狗去大安森林公園散步，遇到很多可愛的柴犬，大家要注意狗狗的牽繩喔！',
+                categories: ['🏖️ 出遊', '🐶 狗狗'],
+                upvotes: 89,
+                comments: 12,
+                favorited: true
+            },
+            {
+                id: 3,
+                author: '陳大山',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
+                time: '1天前',
+                title: '[請益] 老狗關節保養品推薦',
+                content: '家裡的黃金獵犬已經10歲了，最近走路有點吃力，想請問大家有沒有推薦的葡萄糖胺或是魚油？',
+                categories: ['🏥 醫療', '🐶 狗狗'],
+                upvotes: 10,
+                comments: 5,
+                favorited: false
+            },
+            {
+                id: 4,
+                author: '王小美',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mimi',
+                time: '3小時前',
+                title: '貓咪一直抓耳朵是怎麼了？',
+                content: '我家主子最近一直瘋狂抓耳朵，還有黑色分泌物，這是耳疥蟲嗎？求助大安區推薦的獸醫！',
+                categories: ['🏥 醫療', '🐱 貓貓'],
+                upvotes: 45,
+                comments: 18,
+                favorited: false
+            },
+            {
+                id: 5,
+                author: '張大王',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo',
+                time: '8小時前',
+                title: '新手貓奴必備：自動貓砂盆心得',
+                content: '終於入手了全自動貓砂盆，真的是懶人救星！不過換貓砂的時候還是要注意...這款推薦給預算充足的朋友。',
+                categories: ['🐱 貓貓'],
+                upvotes: 210,
+                comments: 56,
+                favorited: false
+            }
+        ];
+
+        let currentCategory = 'all';
+        let searchQuery = '';
+
+        // Initial Render
+        renderPosts();
+
+        // Render Function
+        function renderPosts() {
+            const container = document.getElementById('posts-container');
+            const filtered = articles.filter(post => {
+                const matchesCategory = currentCategory === 'all' || post.categories.includes(currentCategory);
+                const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    post.author.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            // Update stats sidebar
+            if (currentCategory !== 'all' || searchQuery !== '') {
+                document.getElementById('search-stats').style.display = 'block';
+                document.getElementById('results-count').textContent = `找到 ${filtered.length} 篇相關文章`;
+            } else {
+                document.getElementById('search-stats').style.display = 'none';
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search mb-2" style="font-size: 3rem;"></i>
+                        <h3>找不到相關文章</h3>
+                        <p>換個關鍵字搜尋看看吧！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(post => `
+                <div class="post-card" onclick="openPost(${post.id})">
+                    <button class="btn-fav ${post.favorited ? 'active' : ''}" onclick="toggleFavorite(${post.id}, this); event.stopPropagation();">
+                        <i class="${post.favorited ? 'fas' : 'far'} fa-heart"></i>
+                    </button>
+                    <div class="text-center" style="margin-right: 1.5rem; min-width: 50px;">
+                        <i class="fas fa-chevron-up" style="color: ${post.upvotes > 20 ? 'var(--primary-color)' : '#ccc'};"></i>
+                        <div style="font-weight: 700; font-size: 1.1rem;">${post.upvotes}</div>
+                    </div>
+                    <div style="flex:1;">
+                        <div class="d-flex align-center text-light mb-1" style="font-size: 0.85rem;">
+                            <img src="${post.avatar}" class="avatar" style="width: 24px; height: 24px; margin-right: 0.5rem; border-radius: 50%;">
+                            <span style="font-weight:600;">${post.author}</span>
+                            <span style="margin: 0 0.5rem;">•</span>
+                            <span>${post.time}</span>
+                        </div>
+                        <h3 class="mb-1">${post.title}</h3>
+                        <p style="color: #666; margin-bottom: 0.8rem; line-height: 1.5;">
+                            ${post.content}
+                        </p>
+                        <div class="d-flex align-center justify-between">
+                            <div class="d-flex">
+                                ${post.categories.map(cat => `<span class="post-tag">${cat}</span>`).join('')}
+                            </div>
+                            <div class="d-flex align-center" style="color: #adb5bd; font-size: 0.9rem;">
+                                <i class="far fa-comment-alt" style="margin-right: 0.5rem;"></i> ${post.comments}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Action Handlers
+        function setCategory(category, element) {
+            currentCategory = category;
+
+            // Update UI tabs
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+
+            renderPosts();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('postSearch').value;
+            renderPosts();
+        }
+
+        function resetFilters() {
+            currentCategory = 'all';
+            searchQuery = '';
+            document.getElementById('postSearch').value = '';
+
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector('[data-category="all"]').classList.add('active');
+
+            renderPosts();
+        }
+
+        function toggleFavorite(id, btn) {
+            const article = articles.find(a => a.id === id);
+            if (article) {
+                article.favorited = !article.favorited;
+                const icon = btn.querySelector('i');
+
+                if (article.favorited) {
+                    btn.classList.add('active');
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    showToast('已加入我的收藏');
+                } else {
+                    btn.classList.remove('active');
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    showToast('已從收藏移除');
+                }
+            }
+        }
+
+        function openPost(id) {
+            // In real app: navigate to post detail page
+            console.log('Opening post:', id);
+            // alert('將進入文章詳情頁面 (ID: ' + id + ')');
+        }
+
+        // Helper toast (if not defined in main.js)
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 2rem;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 0.8rem 1.5rem;
+                border-radius: 50px;
+                z-index: 9999;
+                font-size: 0.9rem;
+                animation: toastIn 0.3s ease, toastOut 0.3s ease 2s forwards;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        // Add toast animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes toastIn { from { bottom: 0; opacity: 0; } to { bottom: 2rem; opacity: 1; } }
+            @keyframes toastOut { from { bottom: 2rem; opacity: 1; } to { bottom: 1rem; opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+
+    </script>
+</body>
+
+</html>

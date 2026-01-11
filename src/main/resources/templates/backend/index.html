@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 儀表板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../../static/css/backend/style.css" />
+</head>
+
+<body>
+    <script src="../../static/js/backend/sidebar.js"></script>
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="admin-avatar" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>儀表板總覽</h1>
+                <div class="sub">歡迎回來</div>
+            </div>
+        </header>
+
+        <section>
+            <div class="card">
+                <h3>系統概況</h3>
+                <p class="muted">即時數據統計</p>
+                <div
+                    style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px">
+                    <div class="card">
+                        <strong style="font-size:1.5rem">1,204</strong>
+                        <div class="muted">會員總數</div>
+                    </div>
+                    <div class="card">
+                        <strong style="font-size:1.5rem; color:var(--orange)">5</strong>
+                        <div class="muted">待審保母</div>
+                    </div>
+                    <div class="card">
+                        <strong style="font-size:1.5rem">12</strong>
+                        <div class="muted">今日預約</div>
+                    </div>
+                    <div class="card">
+                        <strong style="font-size:1.5rem">3</strong>
+                        <div class="muted">待處理退款</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>最近動態</h3>
+                <ul style="padding-left:20px; line-height:1.8; color:#555">
+                    <li>系統啟動 - 2026-01-07 09:00</li>
+                    <li>新會員註冊：張先生 - 2026-01-07 09:15</li>
+                    <li>保母申請：Michael - 2026-01-07 09:30</li>
+                    <li>檢舉回報：聊天室 #882 發現可疑訊息 - 2026-01-07 10:00</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>

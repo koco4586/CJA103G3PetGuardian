@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetGuardian 寵護家 | 最溫暖的寵物照護平台</title>
+    <link rel="stylesheet" href="../../static/css/frontend/style.css">
+    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
+            padding: 4rem 0;
+            border-bottom-left-radius: var(--radius-lg);
+            border-bottom-right-radius: var(--radius-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            max-width: 600px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-img {
+            position: absolute;
+            right: 5%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: auto;
+            border-radius: var(--radius-lg);
+            display: none;
+        }
+
+        @media (min-width: 900px) {
+            .hero-img {
+                display: block;
+            }
+        }
+
+        .search-box {
+            background: var(--white);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box input,
+        .search-box select {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #eee;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            text-align: center;
+            margin: 4rem 0 2rem;
+        }
+
+        .category-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            background-color: var(--secondary-color);
+        }
+
+        .category-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <section class="hero">
+        <div class="container d-flex align-center" style="min-height: 400px; position: relative;">
+            <div class="hero-content fade-in">
+                <h1 style="font-size: 3rem; color: var(--primary-color);">給毛小孩<br>最溫暖的守護 ❤️</h1>
+                <p class="mt-1" style="font-size: 1.2rem; color: #666;">
+                    專業保母、到府照護、散步遛狗。<br>
+                    讓您出差旅遊無後顧之憂，隨時掌握寶貝動態。
+                </p>
+
+                <div class="search-box">
+                    <select>
+                        <option>選擇服務 (如: 散步、餵食)</option>
+                        <option>🐶 散步遛狗</option>
+                        <option>🐱 到府餵食</option>
+                        <option>🛁 寵物洗澡</option>
+                    </select>
+                    <input type="text" placeholder="輸入地區 (如: 台北市大安區)">
+                    <button class="btn btn-primary" onclick="window.location.href='services.html'">
+                        🔍 搜尋保母
+                    </button>
+                </div>
+            </div>
+            <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80&w=800"
+                alt="Happy Dog" class="hero-img">
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="section-title">
+            <h2>我們的服務</h2>
+            <p style="color: #666;">滿足您與毛小孩的所有需求</p>
+        </div>
+
+        <div class="grid-list-view">
+            <div class="category-card d-flex align-center gap-md"
+                onclick="window.location.href='services.html?type=walk'" style="text-align: left; padding: 1.5rem;">
+                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🐕‍🦺</div>
+                <div>
+                    <h3 class="mb-0">散步遛狗</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin:0;">專業保母陪跑，記錄路線</p>
+                </div>
+            </div>
+            <div class="category-card d-flex align-center gap-md"
+                onclick="window.location.href='services.html?type=care'" style="text-align: left; padding: 1.5rem;">
+                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🏠</div>
+                <div>
+                    <h3 class="mb-0">到府照顧</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin:0;">餵食、陪玩、維持習慣</p>
+                </div>
+            </div>
+            <div class="category-card d-flex align-center gap-md"
+                onclick="window.location.href='services.html?type=bath'" style="text-align: left; padding: 1.5rem;">
+                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🛁</div>
+                <div>
+                    <h3 class="mb-0">到府洗澡</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin:0;">免出門，專業美容師服務</p>
+                </div>
+            </div>
+            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='store.html'"
+                style="text-align: left; padding: 1.5rem;">
+                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🛍️</div>
+                <div>
+                    <h3 class="mb-0">二手商城</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin:0;">環保愛地球，好物便宜淘</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <h2>熱門保母</h2>
+            <p style="color: #666;">經過嚴格認證的愛心夥伴</p>
+        </div>
+
+        <div class="grid-list-view" id="featured-sitters">
+            <div class="card card-horizontal">
+                <div class="img-wrapper">
+                    <img
+                        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400">
+                    <button class="btn-like" onclick="toggleFavorite(this)"><i class="far fa-heart"></i></button>
+                </div>
+                <div class="content-wrapper">
+                    <div>
+                        <div class="d-flex justify-between align-center mb-1">
+                            <h3 class="card-title" style="margin:0;">王小美</h3>
+                            <span class="badge badge-primary">⭐️ 4.9</span>
+                        </div>
+                        <p class="card-text mb-1" style="font-size: 0.9rem;">📍 台北市大安區</p>
+                        <div class="d-flex gap-xs mb-1">
+                            <span class="badge badge-accent">散步</span>
+                            <span class="badge badge-accent">洗澡</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-between align-center">
+                        <span style="color: var(--primary-color); font-weight: 700;">$300起</span>
+                        <a href="services.html" class="btn btn-outline btn-sm">預約</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-horizontal">
+                <div class="img-wrapper">
+                    <img
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400">
+                    <button class="btn-like" onclick="toggleFavorite(this)"><i class="far fa-heart"></i></button>
+                </div>
+                <div class="content-wrapper">
+                    <div>
+                        <div class="d-flex justify-between align-center mb-1">
+                            <h3 class="card-title" style="margin:0;">陳大山</h3>
+                            <span class="badge badge-primary">⭐️ 4.8</span>
+                        </div>
+                        <p class="card-text mb-1" style="font-size: 0.9rem;">📍 新北市板橋區</p>
+                        <div class="d-flex gap-xs mb-1">
+                            <span class="badge badge-accent">美容</span>
+                            <span class="badge badge-accent">清潔</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-between align-center">
+                        <span style="color: var(--primary-color); font-weight: 700;">$500起</span>
+                        <a href="services.html" class="btn btn-outline btn-sm">預約</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-horizontal">
+                <div class="img-wrapper">
+                    <img
+                        src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400">
+                    <button class="btn-like" onclick="toggleFavorite(this)"><i class="far fa-heart"></i></button>
+                </div>
+                <div class="content-wrapper">
+                    <div>
+                        <div class="d-flex justify-between align-center mb-1">
+                            <h3 class="card-title" style="margin:0;">林沐沐</h3>
+                            <span class="badge badge-primary">⭐️ 5.0</span>
+                        </div>
+                        <p class="card-text mb-1" style="font-size: 0.9rem;">📍 台北市信義區</p>
+                        <div class="d-flex gap-xs mb-1">
+                            <span class="badge badge-accent">陪玩</span>
+                            <span class="badge badge-accent">更多</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-between align-center">
+                        <span style="color: var(--primary-color); font-weight: 700;">$250起</span>
+                        <a href="services.html" class="btn btn-outline btn-sm">預約</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 mb-2">
+            <a href="services.html" class="btn btn-secondary">查看更多保母 -></a>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+
+    <script src="../../static/js/frontend/data.js"></script>
+    <script src="../../static/js/frontend/main.js"></script>
+</body>
+
+</html>
