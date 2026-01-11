@@ -30,7 +30,8 @@ public class ForumService {
 	}
 	
 	public void updateForumStatus(Integer forumStatus, Integer forumId) {
-		repository.updateStatus(forumStatus, forumId);
+		Integer newStatus = (forumStatus == 1) ? 0 : 1;
+		repository.updateStatus(newStatus, forumId);	
 	}
 	
 	public List<ForumVO> getForumByName(String forumName){
