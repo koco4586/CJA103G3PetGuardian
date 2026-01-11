@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成為保母 | PetGuardian</title>
+    <link rel="stylesheet" href="../../static/css/frontend/style.css">
+    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../static/css/frontend/dashboard.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
+                </div>
+                <h4>李小明</h4>
+                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
+            </div>
+            <nav>
+                <a href="dashboard.html" class="menu-item">
+                    <i class="fas fa-user"></i> 個人資料
+                </a>
+                <a href="dashboard-pets.html" class="menu-item">
+                    <i class="fas fa-paw"></i> 我的寵物
+                </a>
+                <a href="dashboard-orders.html" class="menu-item">
+                    <i class="fas fa-receipt"></i> 商城訂單紀錄
+                </a>
+                <a href="dashboard-bookings.html" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
+                </a>
+                <a href="dashboard-favorites.html" class="menu-item">
+                    <i class="fas fa-heart"></i> 收藏列表
+                </a>
+                <a href="dashboard-sitter-registration.html" class="menu-item active"
+                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
+                    <i class="fas fa-user-plus"></i> 成為保母
+                </a>
+                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
+                    onclick="alert('已登出'); window.location.href='index.html'">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="sitter-register">
+                <h2 class="mb-2">成為 PetGuardian 保母</h2>
+                <p style="color: #666; margin-bottom: 2rem;">加入我們的專業保母團隊，開始您的寵物照顧事業！</p>
+
+                <div class="card">
+                    <form onsubmit="submitRegistration(event)">
+                        <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">基本資料</h3>
+                        <div class="profile-form-grid"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group mb-3">
+                                <label class="form-label">真實姓名</label>
+                                <input type="text" class="form-control" placeholder="請輸入真實姓名" required>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="form-label">聯絡電話</label>
+                                <input type="tel" class="form-control" placeholder="09xx-xxx-xxx" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">服務地區</label>
+                            <div class="d-flex gap-sm">
+                                <select class="form-control" style="flex: 1;">
+                                    <option>台北市</option>
+                                    <option>新北市</option>
+                                </select>
+                                <select class="form-control" style="flex: 1;">
+                                    <option>大安區</option>
+                                    <option>信義區</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">服務類型 (可複選)</label>
+                            <div class="d-flex gap-md" style="flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="checkbox"> 到府照顧
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="checkbox"> 陪伴散步
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="checkbox"> 寵物安親
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label class="form-label">自我介紹 / 經驗說明</label>
+                            <textarea class="form-control" rows="4" placeholder="請向飼主介紹您的經驗或是對寵物的熱愛..."></textarea>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary" style="padding: 0.8rem 3rem;">提交申請</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="../../static/js/frontend/main.js"></script>
+    <script>
+        function submitRegistration(e) {
+            e.preventDefault();
+            window.showToast('申請已提交！我們將在 1-3 個工作天內完成審核。');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>
