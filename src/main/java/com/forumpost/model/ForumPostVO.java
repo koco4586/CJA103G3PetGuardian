@@ -220,5 +220,15 @@ public class ForumPostVO implements Serializable{
 		String contentType = upFiles.getContentType();
 		return contentType != null && contentType.startsWith("image/");
 	}
+	
+	//	驗證圖片大小不得超過1MB
+	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
+	public boolean isSize() {
+		if (upFiles == null || upFiles.isEmpty()) {
+			return true;
+		}
+		long maxSize = 1 * 1024 *1024;	
+		return upFiles != null && maxSize > upFiles.getSize();
+	}
 
 }
