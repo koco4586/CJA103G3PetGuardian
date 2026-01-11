@@ -17,17 +17,17 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
 @RequestMapping("/forum")
-public class PictureServlet {
+public class PictureController {
 	
 	@Autowired
-	ForumService forumSvc;
+	ForumService forumService;
 	
 	@GetMapping("picture")
 	public void picture(@RequestParam("forumId") Integer forumId, HttpServletRequest req, HttpServletResponse res) throws IOException {
 		
 		res.setContentType("image/*");
 //		ForumService forumSvc = new ForumService();
-		byte[] forumPic = forumSvc.getForumPic(forumId);
+		byte[] forumPic = forumService.getForumPic(forumId);
 		
 		if (forumPic != null && forumPic.length > 0) { 
 			
