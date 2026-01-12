@@ -35,7 +35,7 @@ public class PictureController {
             
 		} else {
 			
-			ClassPathResource resource = new ClassPathResource("backend/static/images/logo.png");
+			ClassPathResource resource = new ClassPathResource("/static/images/backend/logo.png");
 			
 			try(InputStream is = resource.getInputStream();){
 				

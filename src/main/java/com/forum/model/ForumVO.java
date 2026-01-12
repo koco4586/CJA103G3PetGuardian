@@ -1,12 +1,12 @@
 package com.forum.model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.sql.Date;
 import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.forumpost.model.ForumPostVO;
+import com.forum.post.model.ForumPostVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,7 +37,7 @@ public class ForumVO implements Serializable{
 	private String forumName;
 	
 	@Column(name = "created_at", insertable = false, updatable = false)
-	private Timestamp createdAt;
+	private Date createdAt;
 	
 	@Lob
 	@Column(name = "forum_pic", nullable = true, columnDefinition = "longblob")
@@ -89,11 +89,11 @@ public class ForumVO implements Serializable{
 		this.forumName = forumName;
 	}
 	
-	public Timestamp getCreatedAt() {
+	public Date getCreatedAt() {
 		return createdAt;
 	}
 	
-	public void setCreatedAt(Timestamp createdAt) {
+	public void setCreatedAt(Date createdAt) {
 		this.createdAt = createdAt;
 	}
 	
