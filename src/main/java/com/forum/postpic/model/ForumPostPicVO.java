@@ -1,4 +1,4 @@
-package com.forumpostpic.model;
+package com.forum.postpic.model;
 
 import java.io.Serializable;
 

@@ -26,7 +26,7 @@ public class AdminForumController {
 	
 	@Autowired
 	ForumService forumService;
-
+	
 	@GetMapping("listAllForum")
 	public String listAllForum(Model model) {
 		List<ForumVO> forumList = forumService.getAll();

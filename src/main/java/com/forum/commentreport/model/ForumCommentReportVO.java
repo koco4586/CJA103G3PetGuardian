@@ -1,10 +1,10 @@
-package com.forumcommentreport.model;
+package com.forum.commentreport.model;
 
 import java.io.Serializable;
 
 import java.sql.Timestamp;
 
-import com.forumpostcomment.model.ForumPostCommentVO;
+import com.forum.postcomment.model.ForumPostCommentVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

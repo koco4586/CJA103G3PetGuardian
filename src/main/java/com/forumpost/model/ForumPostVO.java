@@ -7,9 +7,9 @@ import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.forum.model.ForumVO;
-import com.forumpostcomment.model.ForumPostCommentVO;
-import com.forumpostpic.model.ForumPostPicVO;
-import com.forumpostreport.model.ForumPostReportVO;
+import com.forum.postcomment.model.ForumPostCommentVO;
+import com.forum.postpic.model.ForumPostPicVO;
+import com.forum.postreport.model.ForumPostReportVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
