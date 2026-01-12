@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <nav id="sidebar">
             <div class="logo">
                 <a href="index.html" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit;">
-                    <img src="../../static/images/backend/logo.png" alt="Pet Guardian Logo" style="width:32px; height:32px; object-fit:contain;">
+                    <img src="/images/backend/logo.png" alt="Pet Guardian Logo" style="width:32px; height:32px; object-fit:contain;">
                     <strong>Admin</strong>
                 </a>
             </div>

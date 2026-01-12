@@ -1,4 +1,4 @@
-package com.forumpostcomment.model;
+package com.forum.postcomment.model;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.forumcommentreport.model.ForumCommentReportVO;
+import com.forum.commentreport.model.ForumCommentReportVO;
 import com.forumpost.model.ForumPostVO;
 
 import jakarta.persistence.Column;

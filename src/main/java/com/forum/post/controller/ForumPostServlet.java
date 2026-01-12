@@ -1,4 +1,4 @@
-package com.forumpost.controller;
+package com.forum.post.controller;
 
 public class ForumPostServlet {
 
