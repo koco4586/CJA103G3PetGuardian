@@ -1,8 +1,16 @@
 package com.sitter.model;
 
+import java.time.LocalDateTime;
+
 public class sitterVO {
-	public static void main(String[] args) {
-		System.out.println("123");
-	}
+	private Integer sitterId;
+	private Integer memId;
+	private String sitterName;
+	private String sitterAdd;
+	private Integer defaultPrice;
+	private LocalDateTime sitterCreatedAt;
+	private String serviceTime;
+	private Integer sitterRatingCount;
+	private Integer sitterStarCount;
 	
 }
