@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <li data-page="reviews"><a href="reviews.html"><i class="fa-solid fa-star"></i> 評價管理</a></li>
                 <li data-page="news"><a href="news.html"><i class="fa-solid fa-bullhorn"></i> 活動/文章</a></li>
                 <li data-page="market"><a href="market.html"><i class="fa-solid fa-store"></i> 二手商城</a></li>
-                <li data-page="forum"><a href="forum.html"><i class="fa-solid fa-message"></i> 討論區管理</a></li>
+                <li data-page="forum"><a href="/admin/forum/listAllForum"><i class="fa-solid fa-message"></i> 討論區管理</a></li>
                 <li data-page="accounts"><a href="accounts.html"><i class="fa-solid fa-user-lock"></i> 管理員帳號</a></li>
             </ul>
         </nav>
