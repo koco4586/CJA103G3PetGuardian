@@ -7,7 +7,8 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @ComponentScan({
     "com.forum",
-    "com.news"
+    "com.news",
+    "com.sitter"
 })
 
 public class PetGuardianApplication {
