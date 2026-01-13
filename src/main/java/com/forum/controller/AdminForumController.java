@@ -58,17 +58,27 @@ public class AdminForumController {
 	}
 	
 	@PostMapping("updateForum")
-	public String updateForum(@Valid ForumVO forumVO, BindingResult result, ModelMap model,
-							  @RequestParam("upFiles") MultipartFile upFiles) throws IOException {
+	public String updateForum(@Valid ForumVO forumVO, BindingResult result, ModelMap model) throws IOException {
 		
 		// Java Bean Validation 錯誤處理
 		if(result.hasErrors()) {
+			
+			// 手動把ObjectError注入到result
+			if(result.hasGlobalErrors()) {
+				result.getGlobalErrors().forEach(error -> {
+					result.rejectValue("upFiles", null, error.getDefaultMessage());
+				});
+			}
 			return "backend/forum/updateForum";
 		}
 		
 		// MultipartFile convert byte[]
+		MultipartFile upFiles = forumVO.getUpFiles();
 		if(upFiles != null && !upFiles.isEmpty()) {
 			byte[] forumPic = upFiles.getBytes();
+			forumVO.setForumPic(forumPic);
+		} else {
+			byte[] forumPic = forumService.getForumPic(forumVO.getForumId());
 			forumVO.setForumPic(forumPic);
 		}
 		
