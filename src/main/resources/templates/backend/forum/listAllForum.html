@@ -13,6 +13,7 @@
 <link rel="stylesheet" th:href="@{/css/backend/style.css}">
 
 <style>
+
 	table {
 		width: 100%;
 		border-collapse: collapse;
@@ -105,7 +106,44 @@
 		outline: none;
 		box-shadow: none;
 	}
-	</style>
+	
+	/* 標題與按鈕的容器佈局 */
+	.card-header-flex {
+	    display: flex;
+	    justify-content: space-between; /* 標題靠左，按鈕靠右 */
+	    align-items: center;           /* 垂直居中 */
+	    margin-bottom: 20px;           /* 與下方表格的間距 */
+	    padding-bottom: 10px;
+	    border-bottom: 1px solid #eee; /* 可選：加一條淺色分隔線 */
+	}
+	
+	/* 移除標題預設的 margin 避免錯位 */
+	.card-header-flex h3 {
+	    margin: 0;
+	}
+	
+	/* 「新增討論區」按鈕樣式 */
+	.btn-add-forum {
+	    background-color: green;    /* 紅色背景 */
+	    color: white !important;      /* 白色文字 */
+	    font-weight: bold;            /* 粗體 */
+	    text-decoration: none;        /* 移除底線 */
+	    padding: 8px 16px;            /* 內距 */
+	    border-radius: 6px;           /* 圓角 */
+	    transition: all 0.3s ease;    /* 平滑過渡效果 */
+	    display: flex;
+	    align-items: center;
+	    gap: 5px;                     /* 圖示與文字的間距 */
+	}
+	
+	/* 滑鼠懸停效果 */
+	.btn-add-forum:hover {
+	    background-color: #d32f2f;    /* 變深紅色 */
+	    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+	    transform: translateY(-1px);  /* 微幅上移 */
+	}
+	
+</style>
 </head>
 
 <body>
@@ -117,7 +155,6 @@
 				src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
 				alt="logo"
 				style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
-
 			<div>
 				<h1>討論區管理</h1>
 			</div>
@@ -125,7 +162,13 @@
 
 		<section>
 			<div class="card">
-				<h3>討論區列表</h3>
+				<div class="card-header-flex">
+					<h3>討論區列表</h3>
+					<a th:href="@{/admin/forum/addForum}" class="btn-add-forum">
+				        <i class="fas fa-plus"></i>
+				        <span>新增討論區</span>
+				    </a>
+       			 </div>	
 				<table id="example">
 					<thead>
 						<tr>

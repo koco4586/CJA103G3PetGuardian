@@ -33,6 +33,13 @@ public class AdminForumController {
 		model.addAttribute("forumList", forumList);
 		return "backend/forum/listAllForum";
 	}
+	
+	@GetMapping("addForum")
+	public String addForum(ModelMap model) {
+		ForumVO forumVO = new ForumVO();
+		model.addAttribute("forumVO", forumVO);
+		return "backend/forum/addForum";
+	}
 		
 	@PostMapping("getForumIdForUpdateStatus")
 	public String getForumIdForUpdateStatus(@RequestParam("forumStatus") Integer forumStatus,
@@ -63,7 +70,7 @@ public class AdminForumController {
 		// Java Bean Validation 錯誤處理
 		if(result.hasErrors()) {
 			
-			// 手動把ObjectError注入到result
+			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
 			if(result.hasGlobalErrors()) {
 				result.getGlobalErrors().forEach(error -> {
 					result.rejectValue("upFiles", null, error.getDefaultMessage());
@@ -91,18 +98,28 @@ public class AdminForumController {
 	}
 	
 	@PostMapping("insertForum")
-	public String insertForum(@Valid ForumVO forumVO, BindingResult result, ModelMap model,
-							  @RequestParam("upFiles") MultipartFile upFiles) throws IOException {
+	public String insertForum(@Valid ForumVO forumVO, BindingResult result, ModelMap model) throws IOException {
 		
 		// Java Bean Validation 錯誤處理
 		if(result.hasErrors()) {
+					
+			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
+			if(result.hasGlobalErrors()) {
+				result.getGlobalErrors().forEach(error -> {
+					result.rejectValue("upFiles", null, error.getDefaultMessage());
+				});
+			}
 			return "backend/forum/addForum";
 		}
-		
+				
 		// MultipartFile convert byte[]
+		MultipartFile upFiles = forumVO.getUpFiles();
 		if(upFiles != null && !upFiles.isEmpty()) {
 			byte[] forumPic = upFiles.getBytes();
 			forumVO.setForumPic(forumPic);
+//		} else {
+//			byte[] forumPic = forumService.getForumPic(forumVO.getForumId());
+//			forumVO.setForumPic(forumPic);
 		}
 		
 		// 開始新增資料
