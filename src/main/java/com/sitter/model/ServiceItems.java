@@ -1,6 +1,5 @@
 package com.sitter.model;
 
-
 import java.io.Serializable;
 
 import jakarta.persistence.Column;
@@ -10,19 +9,20 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Entity 
-@Table(name ="service_items")
-public class ServiceItems implements Serializable{
-	
+@Entity
+@Table(name = "service_items")
+public class ServiceItems implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	public ServiceItems() {
-		super();
+
 	}
-	
+
 	@Id
 	@Column(name = "service_item_Id", updatable = false, nullable = false)
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer serviceItemId;
-	
+
 	@Column(name = "service_type")
 	private String serviceType;
 
@@ -40,6 +40,6 @@ public class ServiceItems implements Serializable{
 
 	public void setServiceType(String serviceType) {
 		this.serviceType = serviceType;
-	}		
-	
+	}
+
 }
