@@ -79,3 +79,5 @@ Thumbs.db
 # 專案特定設定 (敏感資訊)
 ##############################
 **/src/main/resources/application.properties
+/.apt_generated/
+/.apt_generated_tests/
