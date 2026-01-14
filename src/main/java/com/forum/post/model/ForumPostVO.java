@@ -1,4 +1,4 @@
-package com.forumpost.model;
+package com.forum.post.model;
 
 import java.io.Serializable;
 import java.sql.Timestamp;

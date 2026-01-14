@@ -1,12 +1,12 @@
 package com.forum.model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.sql.Date;
 import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.forumpost.model.ForumPostVO;
+import com.forum.post.model.ForumPostVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,12 +32,12 @@ public class ForumVO implements Serializable{
 	private Integer forumId;
 	
 	@Column(name = "forum_name")
-	@NotBlank(message = "討論區名稱請勿空白")
-	@Pattern(regexp = "^[(\u4e00-\u9fa5)(a-zA-Z0-9)]{1,50}$", message = "討論區名稱: 只能是中、英文字母、或數字，且不能超過50字")
+	@NotBlank(message = "名稱請勿空白")
+	@Pattern(regexp = "^[(\u4e00-\u9fa5)(a-zA-Z0-9)]{1,50}$", message = "名稱只能是中、英文字母、或數字，且不能超過50字")
 	private String forumName;
 	
 	@Column(name = "created_at", insertable = false, updatable = false)
-	private Timestamp createdAt;
+	private Date createdAt;
 	
 	@Lob
 	@Column(name = "forum_pic", nullable = true, columnDefinition = "longblob")
@@ -56,12 +56,12 @@ public class ForumVO implements Serializable{
 	public ForumVO() {
 		super();
 	}
-	
-	public MultipartFile getMultipartFile() {
+
+	public MultipartFile getUpFiles() {
 		return upFiles;
 	}
 
-	public void setMultipartFile(MultipartFile upFiles) {
+	public void setUpFiles(MultipartFile upFiles) {
 		this.upFiles = upFiles;
 	}
 
@@ -89,11 +89,11 @@ public class ForumVO implements Serializable{
 		this.forumName = forumName;
 	}
 	
-	public Timestamp getCreatedAt() {
+	public Date getCreatedAt() {
 		return createdAt;
 	}
 	
-	public void setCreatedAt(Timestamp createdAt) {
+	public void setCreatedAt(Date createdAt) {
 		this.createdAt = createdAt;
 	}
 	
@@ -113,24 +113,33 @@ public class ForumVO implements Serializable{
 		this.forumPic = forumPic;
 	}
 	
-    //	驗證上傳檔案是否為圖片檔
-	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
-	public boolean isImage() {		
+    //	驗證上傳檔案是否為圖片檔 || 驗證圖片大小不得超過1MB
+	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif），且檔案大小不得超過 1MB ")
+	public boolean isValidImage() {		
 		if (upFiles == null || upFiles.isEmpty()) {
 			return true;
 		}
+		
 		String contentType = upFiles.getContentType();
-		return contentType != null && contentType.startsWith("image/");	
+		if(contentType == null || !contentType.startsWith("image/")) {
+			return false;
+		}
+		
+		long maxSize = 1 * 1024 *1024;
+		if(upFiles.getSize() > maxSize) {
+			return false;
+		}
+		return true;
 	}
 	
 	//	驗證圖片大小不得超過1MB
-	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
-	public boolean isSize() {
-		if (upFiles == null || upFiles.isEmpty()) {
-			return true;
-		}
-		long maxSize = 1 * 1024 *1024;	
-		return upFiles != null && maxSize > upFiles.getSize();
-	}
+//	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
+//	public boolean isSize() {
+//		if (upFiles == null || upFiles.isEmpty()) {
+//			return true;
+//		}
+//		long maxSize = 1 * 1024 *1024;	
+//		return upFiles != null && maxSize > upFiles.getSize();
+//	}
 	
 }

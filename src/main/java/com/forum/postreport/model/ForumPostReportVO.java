@@ -3,7 +3,7 @@ package com.forum.postreport.model;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
-import com.forumpost.model.ForumPostVO;
+import com.forum.post.model.ForumPostVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
