@@ -1,4 +1,4 @@
 package com.member;
 
-public class MemberService {
+public interface MemberService {
 }

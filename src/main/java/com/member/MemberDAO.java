@@ -1,4 +1,4 @@
 package com.member;
 
-public class MemberDAO {
+public interface MemberDAO {
 }
