@@ -1,5 +1,9 @@
 package com.sitter.model;
 
+
+
+import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -9,43 +13,43 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
-public class sitterApplicationVO {
+@Table(name = "sitter_application")
+public class SitterApplicationVO implements Serializable{
 	private static final long serialVersionUID = 1L;
 
-	public sitterApplicationVO() { // 必需有一個不傳參數建構子(JavaBean基本知識)
+	public SitterApplicationVO() { // 必需有一個不傳參數建構子(JavaBean基本知識)
 		super();
 	};
 
 	@Id // @Id代表這個屬性是這個Entity的唯一識別屬性，並且對映到Table的主鍵
-	@Column(name = "appId")
-	@GeneratedValue(strategy = GenerationType.IDENTITY) // @GeneratedValue的generator屬性指定要用哪個generator
-														// //【strategy的GenerationType, 有四種值: AUTO, IDENTITY, SEQUENCE,
-														// TABLE】
+	@Column(name = "app_Id", updatable = false, nullable = false)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer appId; // 申請編號
 
 	@OneToOne
-	@JoinColumn(name = "memId", unique = true) // 會員編號
+	@JoinColumn(name = "mem_Id", unique = true) // 會員編號
 	private Integer memId; // 會員編號
 
-	@Column(name = "appIntro")
+	@Column(name = "app_Intro")
 	private String appIntro; // 個人簡介
 
-	@Column(name = "AppExperience")
-	private String AppExperience; // 相關經驗
+	@Column(name = "app_experience")
+	private String appExperience; // 相關經驗
 
-	@Column(name = "AppStatus")
-	private Byte AppStatus; // 申請狀態
+	@Column(name = "app_Status")
+	private Byte appStatus; // 申請狀態
 
-	@Column(name = "AppReviewAt")
-	private LocalDateTime AppReviewAt;// 審核時間
+	@Column(name = "app_review_at")
+	private LocalDateTime appReviewAt;// 審核時間
 
-	@Column(name = "AppReviewNote")
-	private String AppReviewNote; // 審核意見
+	@Column(name = "app_review_rote")
+	private String appReviewNote; // 審核意見
 
-	@Column(name = "AppCreatedAt")
-	private LocalDateTime AppCreatedAt; // 申請時間
+	@Column(name = "app_created_at")
+	private Instant appCreatedAt; // 申請時間
 
 	public Integer getAppId() {
 		return appId;
@@ -72,43 +76,43 @@ public class sitterApplicationVO {
 	}
 
 	public String getAppExperience() {
-		return AppExperience;
+		return appExperience;
 	}
 
 	public void setAppExperience(String appExperience) {
-		AppExperience = appExperience;
+		appExperience = appExperience;
 	}
 
 	public Byte getAppStatus() {
-		return AppStatus;
+		return appStatus;
 	}
 
 	public void setAppStatus(Byte appStatus) {
-		AppStatus = appStatus;
+		appStatus = appStatus;
 	}
 
 	public LocalDateTime getAppReviewAt() {
-		return AppReviewAt;
+		return appReviewAt;
 	}
 
 	public void setAppReviewAt(LocalDateTime appReviewAt) {
-		AppReviewAt = appReviewAt;
+		appReviewAt = appReviewAt;
 	}
 
 	public String getAppReviewNote() {
-		return AppReviewNote;
+		return appReviewNote;
 	}
 
 	public void setAppReviewNote(String appReviewNote) {
-		AppReviewNote = appReviewNote;
+		appReviewNote = appReviewNote;
 	}
 
-	public LocalDateTime getAppCreatedAt() {
-		return AppCreatedAt;
+	public Instant getAppCreatedAt() {
+		return appCreatedAt;
 	}
 
-	public void setAppCreatedAt(LocalDateTime appCreatedAt) {
-		AppCreatedAt = appCreatedAt;
+	public void setAppCreatedAt(Instant appCreatedAt) {
+		appCreatedAt = appCreatedAt;
 	}
 
 }
