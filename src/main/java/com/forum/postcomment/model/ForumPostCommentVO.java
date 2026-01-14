@@ -7,7 +7,7 @@ import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.forum.commentreport.model.ForumCommentReportVO;
-import com.forumpost.model.ForumPostVO;
+import com.forum.post.model.ForumPostVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

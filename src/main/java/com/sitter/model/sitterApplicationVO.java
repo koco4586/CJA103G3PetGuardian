@@ -13,37 +13,39 @@ import jakarta.persistence.OneToOne;
 @Entity
 public class sitterApplicationVO {
 	private static final long serialVersionUID = 1L;
-	
-	public sitterApplicationVO() { //必需有一個不傳參數建構子(JavaBean基本知識)
+
+	public sitterApplicationVO() { // 必需有一個不傳參數建構子(JavaBean基本知識)
 		super();
 	};
-	
-	@Id //@Id代表這個屬性是這個Entity的唯一識別屬性，並且對映到Table的主鍵
+
+	@Id // @Id代表這個屬性是這個Entity的唯一識別屬性，並且對映到Table的主鍵
 	@Column(name = "appId")
-	@GeneratedValue(strategy = GenerationType.IDENTITY) //@GeneratedValue的generator屬性指定要用哪個generator //【strategy的GenerationType, 有四種值: AUTO, IDENTITY, SEQUENCE, TABLE】 
-	private Integer appId; //申請編號
-	
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // @GeneratedValue的generator屬性指定要用哪個generator
+														// //【strategy的GenerationType, 有四種值: AUTO, IDENTITY, SEQUENCE,
+														// TABLE】
+	private Integer appId; // 申請編號
+
 	@OneToOne
-	@JoinColumn(name ="memId", unique = true)  //會員編號
-	private Integer memId; //會員編號
-	
+	@JoinColumn(name = "memId", unique = true) // 會員編號
+	private Integer memId; // 會員編號
+
 	@Column(name = "appIntro")
-	private String appIntro; //個人簡介
-	
+	private String appIntro; // 個人簡介
+
 	@Column(name = "AppExperience")
-	private String AppExperience; //相關經驗
-	
+	private String AppExperience; // 相關經驗
+
 	@Column(name = "AppStatus")
-	private Byte AppStatus; //申請狀態
-	
+	private Byte AppStatus; // 申請狀態
+
 	@Column(name = "AppReviewAt")
-	private LocalDateTime AppReviewAt;//審核時間
-	
+	private LocalDateTime AppReviewAt;// 審核時間
+
 	@Column(name = "AppReviewNote")
-	private String AppReviewNote; //審核意見
-	
+	private String AppReviewNote; // 審核意見
+
 	@Column(name = "AppCreatedAt")
-	private LocalDateTime AppCreatedAt; //申請時間
+	private LocalDateTime AppCreatedAt; // 申請時間
 
 	public Integer getAppId() {
 		return appId;
@@ -108,7 +110,5 @@ public class sitterApplicationVO {
 	public void setAppCreatedAt(LocalDateTime appCreatedAt) {
 		AppCreatedAt = appCreatedAt;
 	}
-
-	
 
 }
