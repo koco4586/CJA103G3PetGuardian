@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>討論區 | PetGuardian</title>
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+
+
+
+
+
+
+</style>
+</head>
+
+<body>
+	<div>
+		<th:block th:each="forumPostVO : ${postList}">
+			<a th:href="@{/forumpost/getPostIdForPost(postId=${forumPostVO.postId})}"></a>
+				<div>
+					
+				</div>
+	
+	</div>
+
+
+
+
+
+<script>
+
+
+
+
+
+
+</script>
+
+</body>
+</html>

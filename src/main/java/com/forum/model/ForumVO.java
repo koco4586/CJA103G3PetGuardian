@@ -51,7 +51,7 @@ public class ForumVO implements Serializable{
 	
 	@OneToMany(mappedBy = "forum")
 	@OrderBy("postId desc")
-	private Set<ForumPostVO> forumPost;
+	private Set<ForumPostVO> forumPosts;
 	
 	public ForumVO() {
 		super();
@@ -64,13 +64,13 @@ public class ForumVO implements Serializable{
 	public void setUpFiles(MultipartFile upFiles) {
 		this.upFiles = upFiles;
 	}
-
-	public Set<ForumPostVO> getForumPost() {
-		return forumPost;
+	
+	public Set<ForumPostVO> getForumPosts() {
+		return forumPosts;
 	}
 
-	public void setForumPost(Set<ForumPostVO> forumPost) {
-		this.forumPost = forumPost;
+	public void setForumPosts(Set<ForumPostVO> forumPosts) {
+		this.forumPosts = forumPosts;
 	}
 
 	public Integer getForumId() {

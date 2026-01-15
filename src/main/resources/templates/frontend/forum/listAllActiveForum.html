@@ -208,7 +208,7 @@
 
             <div id="posts-container" class="baha-forum-list">
                 <th:block th:each="forumVO : ${forumList}">
-                    <a th:href="@{/forum/view(id=${forumVO.forumId})}" class="forum-row-card">
+                    <a th:href="@{/forumpost/getForumIdForPosts(forumId=${forumVO.forumId})}" class="forum-row-card">
                         
                         <div class="forum-img-box">
                             <img th:src="@{/forum/picture(forumId=${forumVO.forumId})}" alt="討論區封面">

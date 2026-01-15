@@ -46,7 +46,7 @@ public class ForumPostCommentVO implements Serializable{
 	
 	@OneToMany(mappedBy = "forumPostComment")
 	@OrderBy("reportId asc")
-	private Set<ForumCommentReportVO> forumCommentReport;
+	private Set<ForumCommentReportVO> forumCommentReports;
 	
 	@Column(name = "comment_content")
 	@NotBlank(message = "留言內容請勿空白")
@@ -89,12 +89,12 @@ public class ForumPostCommentVO implements Serializable{
 		this.forumPost = forumPost;
 	}
 
-	public Set<ForumCommentReportVO> getForumCommentReport() {
-		return forumCommentReport;
+	public Set<ForumCommentReportVO> getForumCommentReports() {
+		return forumCommentReports;
 	}
 
-	public void setForumCommentReport(Set<ForumCommentReportVO> forumCommentReport) {
-		this.forumCommentReport = forumCommentReport;
+	public void setForumCommentReports(Set<ForumCommentReportVO> forumCommentReports) {
+		this.forumCommentReports = forumCommentReports;
 	}
 
 	public Integer getCommentId() {
