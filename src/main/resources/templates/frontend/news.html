@@ -89,7 +89,54 @@
     </div>
 
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
-    <script src="../../static/js/frontend/main.js"></script>
+    <script src="../../static/js/frontend/main.js"> </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNews();
+        });
+
+        async function fetchNews() {
+            try {
+                // 呼叫後端 API
+                const response = await fetch('/api/news/public/list');
+                if (!response.ok) throw new Error('網路回應錯誤');
+
+                const newsData = await response.json();
+                renderNews(newsData);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('news-list').innerHTML = '<p>載入失敗，請稍後再試。</p>';
+            }
+        }
+
+        function renderNews(data) {
+            const container = document.getElementById('news-list');
+            container.innerHTML = ''; // 清空載入文字
+
+            if (data.length === 0) {
+                container.innerHTML = '<p>目前沒有最新消息。</p>';
+                return;
+            }
+
+            data.forEach(news => {
+                const date = new Date(news.createdTime).toLocaleDateString();
+                const html = `
+                             <div class="news-card">
+                                <div class="news-title">
+                                      <span class="tag">公告</span> ${news.title}
+                                    </div>
+                                    <div class="news-meta">
+                                        <i class="far fa-calendar-alt"></i> 發布日期: ${date}
+                                    </div>
+                                    <div class="news-content">
+                                        ${news.content.substring(0, 100)}... <a href="#">閱讀更多</a>
+                                    </div>
+                                </div>
+                                `;
+                container.innerHTML += html;
+            });
+        }
+    </script>
 </body>
 
 </html>
