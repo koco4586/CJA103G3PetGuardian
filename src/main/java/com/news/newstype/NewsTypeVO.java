@@ -7,7 +7,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "news_type")
 @Getter @Setter
-public class NewsType {
+public class NewsTypeVO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
