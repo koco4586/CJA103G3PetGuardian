@@ -51,7 +51,7 @@ public class ForumPostVO implements Serializable{
 	
 	@Column(name = "post_title")
 	@NotBlank(message = "文章標題請勿空白")
-	@Pattern(regexp = "^[(\u4e00-\u9fa5)(a-zA-Z0-9)]{1,50}$", message = "文章標題: 只能是中、英文字母、或數字，且不能超過50字")
+	@Pattern(regexp = "^[(\u4e00-\u9fa5)(a-zA-Z0-9)]{1,50}$", message = "標題只能是中、英文字母、或數字，且不能超過50字")
 	private String postTitle;
 	
 	@Column(name = "post_content")
@@ -77,15 +77,15 @@ public class ForumPostVO implements Serializable{
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("picId asc")
-	private Set<ForumPostPicVO> forumPostPic;
+	private Set<ForumPostPicVO> forumPostPics;
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("commentId asc")
-	private Set<ForumPostCommentVO> forumPostComment;
+	private Set<ForumPostCommentVO> forumPostComments;
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("reportId asc")
-	private Set<ForumPostReportVO> forumPostReport;
+	private Set<ForumPostReportVO> forumPostReports;
 	
 //	@ManyToMany
 //	@JoinTable(
@@ -115,28 +115,28 @@ public class ForumPostVO implements Serializable{
 		this.forum = forum;
 	}
 
-	public Set<ForumPostPicVO> getForumPostPic() {
-		return forumPostPic;
+	public Set<ForumPostPicVO> getForumPostPics() {
+		return forumPostPics;
 	}
 
-	public void setForumPostPic(Set<ForumPostPicVO> forumPostPic) {
-		this.forumPostPic = forumPostPic;
+	public void setForumPostPics(Set<ForumPostPicVO> forumPostPics) {
+		this.forumPostPics = forumPostPics;
 	}
 
-	public Set<ForumPostCommentVO> getForumPostComment() {
-		return forumPostComment;
+	public Set<ForumPostCommentVO> getForumPostComments() {
+		return forumPostComments;
 	}
 
-	public void setForumPostComment(Set<ForumPostCommentVO> forumPostComment) {
-		this.forumPostComment = forumPostComment;
+	public void setForumPostComments(Set<ForumPostCommentVO> forumPostComments) {
+		this.forumPostComments = forumPostComments;
 	}
 
-	public Set<ForumPostReportVO> getForumPostReport() {
-		return forumPostReport;
+	public Set<ForumPostReportVO> getForumPostReports() {
+		return forumPostReports;
 	}
 
-	public void setForumPostReport(Set<ForumPostReportVO> forumPostReport) {
-		this.forumPostReport = forumPostReport;
+	public void setForumPostReports(Set<ForumPostReportVO> forumPostReports) {
+		this.forumPostReports = forumPostReports;
 	}
 
 	public Integer getPostId() {
@@ -211,24 +211,43 @@ public class ForumPostVO implements Serializable{
 		this.postStatus = postStatus;
 	}
 	
-	//	驗證上傳檔案是否為圖片檔
-	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
-	public boolean isImage() {
-		if(upFiles == null || upFiles.isEmpty()) {
-			return true;
-		}
-		String contentType = upFiles.getContentType();
-		return contentType != null && contentType.startsWith("image/");
-	}
-	
-	//	驗證圖片大小不得超過1MB
-	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
-	public boolean isSize() {
+	//	驗證上傳檔案是否為圖片檔 || 驗證圖片大小不得超過1MB
+	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif），且檔案大小不得超過 1MB ")
+	public boolean isValidImage() {		
 		if (upFiles == null || upFiles.isEmpty()) {
 			return true;
 		}
-		long maxSize = 1 * 1024 *1024;	
-		return upFiles != null && maxSize > upFiles.getSize();
+		
+		String contentType = upFiles.getContentType();
+		if(contentType == null || !contentType.startsWith("image/")) {
+			return false;
+		}
+		
+		long maxSize = 1 * 1024 *1024;
+		if(upFiles.getSize() > maxSize) {
+			return false;
+		}
+		return true;
 	}
+	
+	//	驗證上傳檔案是否為圖片檔
+//	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
+//	public boolean isImage() {
+//		if(upFiles == null || upFiles.isEmpty()) {
+//			return true;
+//		}
+//		String contentType = upFiles.getContentType();
+//		return contentType != null && contentType.startsWith("image/");
+//	}
+	
+	//	驗證圖片大小不得超過1MB
+//	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
+//	public boolean isSize() {
+//		if (upFiles == null || upFiles.isEmpty()) {
+//			return true;
+//		}
+//		long maxSize = 1 * 1024 *1024;	
+//		return upFiles != null && maxSize > upFiles.getSize();
+//	}
 
 }

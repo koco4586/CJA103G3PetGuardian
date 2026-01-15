@@ -1,5 +1,6 @@
 package com.forum.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +29,13 @@ public class ForumController {
 		return "frontend/forum/listAllActiveForum";
 	}
 	
-	@PostMapping("getForumNameForDisplay")
+	@GetMapping("getForumNameForDisplay")
 	public String getForumNameForDisplay(@RequestParam("forumName") String forumName, ModelMap model) {
 		
 		// 空字串驗證，沒輸入資料forward回原頁面
 		if(forumName == null || forumName.trim().isEmpty()) {
 			model.addAttribute("errorMsgs", "請輸入欲查詢的討論區名稱");
+			model.addAttribute("forumList", new ArrayList<ForumVO>(forumService.getAllActive()));
 			return "frontend/forum/listAllActiveForum";
 		}
 		
@@ -41,8 +43,9 @@ public class ForumController {
 		List<ForumVO> forumList = forumService.getForumByName(forumName);
 		
 		// 查無資料，forward回原頁面
-		if(forumList == null || forumList.isEmpty()) {
-			model.addAttribute("errorMsgs", "查無相關的討論區");
+		if(forumList == null || forumList.isEmpty()) {	
+			model.addAttribute("errorMsgs", "查無相關討論區");
+			model.addAttribute("forumList", forumService.getAllActive());
 			return "frontend/forum/listAllActiveForum";
 		}
 		
