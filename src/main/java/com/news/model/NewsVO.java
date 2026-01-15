@@ -11,7 +11,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "news")
 @Getter @Setter
-public class News {
+public class NewsVO {
 
 
 @Id

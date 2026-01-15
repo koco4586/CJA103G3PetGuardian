@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "product")
 @Getter @Setter
-public class Product {
+public class ProductVO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

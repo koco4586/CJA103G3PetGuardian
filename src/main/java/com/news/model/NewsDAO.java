@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NewsDAO extends JpaRepository<News, Integer> {
-    // 若有特殊查詢需求可定義於此，例如：
-    List<News> findByTitleContaining(String keyword);
+public interface NewsDAO extends JpaRepository<NewsVO, Integer> {
+    // 查詢已發布的消息，並按時間倒序排列 (給前台用)
+    List<NewsVO> findByIsPublishedOrderByCreatedTimeDesc(Integer isPublished);
 }
