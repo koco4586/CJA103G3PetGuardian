@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>討論區 | PetGuardian</title>
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- 核心配色與變數 --- */
+        :root {
+            --primary-orange: #ff9800;
+            --deep-brown: #5d4037;
+            --soft-bg: #f8f9fa;
+        }
+
+        /* --- 頁首區塊 --- */
+        .forum-header {
+            background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+
+        /* --- 搜尋欄位 --- */
+        .search-bar-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px; /* 拉大與列表的間距 */
+        }
+
+        .search-input {
+            width: 100%;
+            height: 50px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--deep-brown);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 8px rgba(255, 152, 0, 0.2);
+        }
+
+        /* --- 橫向看板列表 (巴哈風格) --- */
+        .baha-forum-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .forum-row-card {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 16px;
+            text-decoration: none;
+            color: inherit;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .forum-row-card:hover {
+            transform: translateX(8px);
+            border-color: var(--primary-orange);
+            box-shadow: 0 6px 16px rgba(255, 152, 0, 0.15);
+        }
+
+        .forum-img-box {
+            flex: 0 0 320px;
+            height: 160px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-right: 24px;
+            background-color: #f0f0f0;
+        }
+
+        .forum-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .forum-row-card:hover .forum-img-box img {
+            transform: scale(1.05);
+        }
+
+        .forum-main-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .forum-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--deep-brown);
+            margin: 0;
+        }
+
+        /* --- 側邊欄 --- */
+        .sidebar .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .sidebar h4 {
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary-orange);
+            padding-left: 10px;
+        }
+
+        .sidebar p,
+        .sidebar ul li a {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li a {
+            text-decoration: none;
+            display: block;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+
+        .sidebar ul li a:hover {
+            color: var(--primary-orange) !important;
+        }
+
+        /* --- 響應式處理 --- */
+        @media (max-width: 850px) {
+            .container.d-flex {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                order: 0; /* 公告在手機版置頂 */
+                flex: none;
+                width: 100%;
+            }
+
+            .forum-row-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .forum-img-box {
+                flex: 0 0 auto;
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="forum-header">
+        <div class="container">
+            <h1>💬 討論區列表</h1>
+            <p style="color: var(--deep-brown); font-weight: 700;">分享毛小孩的日常，交流養育心得</p>
+        </div>
+    </div>
+
+    <div class="container d-flex" style="gap: 30px; min-height: 60vh;">
+
+        <div style="flex: 1;">
+            
+            <div class="search-bar-container">
+                <form th:action="@{/forum/getForumNameForDisplay}" method="get" style="width: 100%;">
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="fas fa-search" style="position: absolute; left: 15px; color: #aaa;"></i>
+                        <input type="text" name="forumName" class="search-input" placeholder="搜尋討論區名稱..." 
+                        style="padding-left: 45px;">
+                    </div>
+                </form>
+                <div id="errorData" th:data-msgs="${errorMsgs}" style="display: none;"></div>
+            </div>
+
+            <div id="posts-container" class="baha-forum-list">
+                <th:block th:each="forumVO : ${forumList}">
+                    <a th:href="@{/forumpost/getForumIdForPosts(forumId=${forumVO.forumId})}" class="forum-row-card">
+                        
+                        <div class="forum-img-box">
+                            <img th:src="@{/forum/picture(forumId=${forumVO.forumId})}" alt="討論區封面">
+                        </div>
+
+                        <div class="forum-main-info">
+                            <h3 class="forum-title" th:text="${forumVO.forumName}"></h3>
+                            <p style="white-space: nowrap; display: inline-block; margin: 0; font-weight: 600;">
+                                歡迎來到 <span><b style="color: #f44336;" th:text="${forumVO.forumName}"></b></span> 快來與大家分享心得與生活點滴吧！
+                            </p>
+                        </div>
+                    </a>
+                </th:block>
+            </div>
+        </div>
+
+        <div class="sidebar" style="flex: 0 0 280px;">
+            <div class="card">
+                <h4>網站公告</h4>
+                <p>請保持友善發言，嚴禁謾罵或人身攻擊。讓我們營造溫暖的寵物社群。</p>
+            </div>
+            <div class="card">
+                <h4>熱門討論版</h4>
+                <ul>
+                    <li><a href="#"><b>1</b> 狗狗日誌</a></li>
+                    <li><a href="#"><b>2</b> 貓奴日常</a></li>
+                    <li><a href="#"><b>3</b> 寵物醫療百科</a></li>
+                    <li><a href="#"><b>4</b> 浪浪領養資訊</a></li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+    
+	/* 有空去看彈窗api文件 */
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+    <script th:src="@{/js/frontend/main.js}"></script>
+    <script th:inline="javascript">
+    
+    /* 使用 Thymeleaf 取得後端的錯誤訊息變數 */
+    const errorData = document.getElementById('errorData'); 
+	const errorMsgs = errorData.getAttribute('data-msgs');
+
+    if (errorMsgs && errorMsgs.length > 0) {
+
+        // 將錯誤訊息陣列合併成字串(未使用到)
+        Swal.fire({
+            icon: 'error',
+            title: '搜尋失敗',
+            text: errorMsgs,
+            confirmButtonColor: '#ff9800', // 使用主題橘色
+            confirmButtonText: '確定'
+        });
+    } 
+    </script>
+</body>
+
+</html>

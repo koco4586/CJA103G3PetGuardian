@@ -69,6 +69,7 @@
 		max-width: 100%;
 		max-height: 200px;
 		border-radius: 8px;
+		border: 2px dashed #ddd;
 	}
 	
 	/* 按鈕 */
@@ -195,8 +196,8 @@
 				<h1>更新討論區</h1>
 				<form th:action="@{updateForum}" method="post" th:object="${forumVO}" enctype="multipart/form-data">
 					<div th:if="${#fields.hasAnyErrors()}" class="error-box">
-						<span class="error-title"> <i
-							class="fas fa-exclamation-circle"></i> 錯誤訊息：
+						<span class="error-title"> 
+							<i class="fas fa-exclamation-circle">錯誤訊息：</i>
 						</span>
 						<ul class="error-list">
 							<li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
