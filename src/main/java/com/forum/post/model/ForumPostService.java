@@ -29,8 +29,8 @@ public class ForumPostService {
 		return repo.findPostsByForumId(forumId);
 	}
 	
-	public List<ForumPostVO> getPostByName(String postTitle){
-		return repo.findByPostName(postTitle);
+	public List<ForumPostVO> getPostBykeyword(String keyword, Integer forumId){
+		return repo.findByKeyword(keyword, forumId);
 	}
 	
 	public List<ForumPostVO> getAllReportedPost(){
