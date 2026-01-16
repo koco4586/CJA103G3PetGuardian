@@ -38,6 +38,15 @@ public class ForumPostController {
 		return "frontend/forum/onePost";
 	}
 	
+	@GetMapping("getKeywordForPosts")
+	public String getKeywordForPosts(@RequestParam("keyword") String keyword, ModelMap model) {
+		
+		if(keyword == null || keyword.trim().isEmpty()) {
+			
+		}
+		
+		return "";
+	}
 	
 	
 }
