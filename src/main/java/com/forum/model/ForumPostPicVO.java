@@ -1,10 +1,8 @@
-package com.forum.postpic.model;
+package com.forum.model;
 
 import java.io.Serializable;
 
 import org.springframework.web.multipart.MultipartFile;
-
-import com.forum.post.model.ForumPostVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

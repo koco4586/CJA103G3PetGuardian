@@ -1,9 +1,8 @@
-package com.forum.postreport.model;
+package com.forum.model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
-import com.forum.post.model.ForumPostVO;
+import java.sql.Timestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,8 +16,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "forumpostreport")
-public class ForumPostReportVO implements Serializable{
+@Table(name = "forumcommentreport")
+public class ForumCommentReportVO implements Serializable{
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,11 +28,11 @@ public class ForumPostReportVO implements Serializable{
 	private Integer memId;
 	
 	@ManyToOne
-	@JoinColumn(name = "post_id", referencedColumnName = "post_id")
-	private ForumPostVO forumPost;
+	@JoinColumn(name = "comment_id", referencedColumnName = "comment_id")
+	private ForumPostCommentVO forumPostComment;
 	
-//	@Column(name = "post_id", updatable = false)
-//	private Integer postId;
+//	@Column(name = "comment_id", updatable = false)
+//	private Integer commentId;
 	
 	@Column(name = "report_type")
 	private Integer reportType;
@@ -52,78 +51,78 @@ public class ForumPostReportVO implements Serializable{
 	@Column(name = "handle_time", insertable = false, updatable = false)
 	private Timestamp handleTime;
 	
-	public ForumPostReportVO() {
+	public ForumCommentReportVO() {
 		super();
 	}
 
-	public ForumPostVO getForumPost() {
-		return forumPost;
+	public ForumPostCommentVO getForumPostComment() {
+		return forumPostComment;
 	}
 
-	public void setForumPost(ForumPostVO forumPost) {
-		this.forumPost = forumPost;
+	public void setForumPostComment(ForumPostCommentVO forumPostComment) {
+		this.forumPostComment = forumPostComment;
 	}
 
 	public Integer getReportId() {
 		return reportId;
 	}
-	
+
 	public void setReportId(Integer reportId) {
 		this.reportId = reportId;
 	}
-	
+
 	public Integer getMemId() {
 		return memId;
 	}
-	
+
 	public void setMemId(Integer memId) {
 		this.memId = memId;
 	}
-	
-//	public Integer getPostId() {
-//		return postId;
+
+//	public Integer getCommentId() {
+//		return commentId;
 //	}
-	
-//	public void setPostId(Integer postId) {
-//		this.postId = postId;
+//
+//	public void setCommentId(Integer commentId) {
+//		this.commentId = commentId;
 //	}
-	
+
 	public Integer getReportType() {
 		return reportType;
 	}
-	
+
 	public void setReportType(Integer reportType) {
 		this.reportType = reportType;
 	}
-	
+
 	public String getReportReason() {
 		return reportReason;
 	}
-	
+
 	public void setReportReason(String reportReason) {
 		this.reportReason = reportReason;
 	}
-	
+
 	public Integer getReportStatus() {
 		return reportStatus;
 	}
-	
+
 	public void setReportStatus(Integer reportStatus) {
 		this.reportStatus = reportStatus;
 	}
-	
+
 	public Timestamp getReportTime() {
 		return reportTime;
 	}
-	
+
 	public void setReportTime(Timestamp reportTime) {
 		this.reportTime = reportTime;
 	}
-	
+
 	public Timestamp getHandleTime() {
 		return handleTime;
 	}
-	
+
 	public void setHandleTime(Timestamp handleTime) {
 		this.handleTime = handleTime;
 	}

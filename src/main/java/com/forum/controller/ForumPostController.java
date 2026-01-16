@@ -1,4 +1,4 @@
-package com.forum.post.controller;
+package com.forum.controller;
 
 import java.util.List;
 
@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.forum.post.model.ForumPostService;
-import com.forum.post.model.ForumPostVO;
+import com.forum.model.ForumPostService;
+import com.forum.model.ForumPostVO;
 
 @Controller
 @RequestMapping("/forumpost")
