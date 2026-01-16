@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.forum.model.ForumService;
+import com.forum.post.model.ForumPostService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +23,9 @@ public class PictureController {
 	@Autowired
 	ForumService forumService;
 	
+	@Autowired
+	ForumPostService forumPostService;
+	
 	@GetMapping("picture")
 	public void picture(@RequestParam("forumId") Integer forumId, HttpServletRequest req, HttpServletResponse res) throws IOException {
 		
@@ -32,6 +36,32 @@ public class PictureController {
 		if (forumPic != null && forumPic.length > 0) { 
 			
             res.getOutputStream().write(forumPic);
+            
+		} else {
+			
+			ClassPathResource resource = new ClassPathResource("/static/images/backend/logo.png");
+			
+			try(InputStream is = resource.getInputStream();){
+				
+				byte[] logoPic = is.readAllBytes();
+				res.getOutputStream().write(logoPic);
+				
+			}
+			
+		}
+		
+	}
+	
+	@GetMapping("postPicture")
+	public void postPicture(@RequestParam("postId") Integer postId, HttpServletRequest req, HttpServletResponse res) throws IOException {
+		
+		res.setContentType("image/*");
+//		ForumPostService forumPostSvc = new ForumPostService();
+		byte[] postPic = forumPostService.getPostPic(postId);
+		
+		if (postPic != null && postPic.length > 0) { 
+			
+            res.getOutputStream().write(postPic);
             
 		} else {
 			

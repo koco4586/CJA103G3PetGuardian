@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.forum.model.ForumVO;
 import com.forum.postcomment.model.ForumPostCommentVO;
 import com.forum.postpic.model.ForumPostPicVO;
@@ -67,6 +68,7 @@ public class ForumPostVO implements Serializable{
 	private Timestamp createdAt;
 	
 	@Column(name = "last_edited_at", insertable = false, updatable = false)
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp lastEditedAt;
 	
 	@Column(name = "post_status", insertable = false)

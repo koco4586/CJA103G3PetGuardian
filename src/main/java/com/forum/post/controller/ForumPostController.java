@@ -20,14 +20,15 @@ public class ForumPostController {
 	ForumPostService forumPostService;
 	
 	@GetMapping("getForumIdForPosts")
-	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, ModelMap model) {
+	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, @RequestParam("forumName") String forumName, ModelMap model) {
 		List<ForumPostVO> postList = forumPostService.getAllActiveByForumId(forumId);
 		model.addAttribute("postList", postList);
+		model.addAttribute("forumName", forumName);
 		return "frontend/forum/listAllActivePost";
 	}
 	
-	@GetMapping("getPostIdForPost")
-	public String getPostIdForPost(@RequestParam("postId") Integer postId, ModelMap model) {
+	@GetMapping("getPostIdForOnePost")
+	public String getPostIdForOnePost(@RequestParam("postId") Integer postId, ModelMap model) {
 		
 		// 開始查詢資料
 		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
@@ -36,5 +37,7 @@ public class ForumPostController {
 		model.addAttribute(forumPostVO);
 		return "frontend/forum/onePost";
 	}
+	
+	
 	
 }

@@ -13,7 +13,7 @@
         :root {
             --primary-orange: #ff9800;
             --deep-brown: #5d4037;
-            --soft-bg: #f8f9fa;
+            --soft-bg: #fdfdfd;
         }
 
         /* --- 頁首區塊 --- */
@@ -208,7 +208,7 @@
 
             <div id="posts-container" class="baha-forum-list">
                 <th:block th:each="forumVO : ${forumList}">
-                    <a th:href="@{/forumpost/getForumIdForPosts(forumId=${forumVO.forumId})}" class="forum-row-card">
+                    <a th:href="@{/forumpost/getForumIdForPosts(forumId=${forumVO.forumId}, forumName=${forumVO.forumName})}" class="forum-row-card">
                         
                         <div class="forum-img-box">
                             <img th:src="@{/forum/picture(forumId=${forumVO.forumId})}" alt="討論區封面">
@@ -245,7 +245,7 @@
 
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
     
-	/* 有空去看彈窗api文件 */
+	
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
     <script th:src="@{/js/frontend/main.js}"></script>
     <script th:inline="javascript">

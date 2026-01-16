@@ -9,8 +9,8 @@ import org.springframework.data.repository.query.Param;
 public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer> {
 	
 	//	關鍵字查詢
-	@Query(value = "select p from ForumPostVO p where p.postStatus = 1 and p.postTitle like concat('%', :postTitle, '%') order by p.postId desc")
-	public List<ForumPostVO> findByPostName(@Param("postTitle") String postTitle);
+	@Query(value = "select p from ForumPostVO p where p.postStatus = 1 and p.forum.forumId = :forumId and (p.postTitle like concat('%', :keyword, '%') or p.postContent like concat('%', :keyword, '%')) order by p.postId desc")
+	public List<ForumPostVO> findByKeyword(@Param("keyword") String keyword, @Param("forumId") Integer forumId);
 	
 	// 	Spring 會自動解析為：postStatus = 1 AND postTitle LIKE %...% ORDER BY postId DESC
 	//	List<ForumPostVO> findByPostStatusAndPostTitleContainingOrderByPostIdDesc(Integer postStatus, String postTitle);

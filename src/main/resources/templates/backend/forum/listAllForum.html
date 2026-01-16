@@ -122,25 +122,24 @@
 	    margin: 0;
 	}
 	
-	/* 「新增討論區」按鈕樣式 */
+	/* 修正按鈕樣式 */
 	.btn-add-forum {
-	    background-color: green;    /* 紅色背景 */
-	    color: white !important;      /* 白色文字 */
-	    font-weight: bold;            /* 粗體 */
-	    text-decoration: none;        /* 移除底線 */
-	    padding: 8px 16px;            /* 內距 */
-	    border-radius: 6px;           /* 圓角 */
-	    transition: all 0.3s ease;    /* 平滑過渡效果 */
-	    display: flex;
+	    background-color: #2e7d32;    /* 改為深綠色，比較符合新增語意 */
+	    color: white !important;      
+	    font-weight: bold;            
+	    text-decoration: none;        
+	    padding: 10px 20px;            
+	    border-radius: 8px;           
+	    transition: all 0.3s ease;    
+	    display: inline-flex;         /* 使用 inline-flex 確保不會寬度撐開 */
 	    align-items: center;
-	    gap: 5px;                     /* 圖示與文字的間距 */
+	    gap: 8px;                     
 	}
 	
-	/* 滑鼠懸停效果 */
 	.btn-add-forum:hover {
-	    background-color: #d32f2f;    /* 變深紅色 */
-	    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-	    transform: translateY(-1px);  /* 微幅上移 */
+	    background-color: #1b5e20;    /* 滑鼠移入變更深的綠 */
+	    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+	    transform: translateY(-2px);
 	}
 	
 </style>
