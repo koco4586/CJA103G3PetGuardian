@@ -6,8 +6,6 @@ import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.forum.post.model.ForumPostVO;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

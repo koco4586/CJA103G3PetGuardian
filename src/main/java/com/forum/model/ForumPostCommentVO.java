@@ -1,13 +1,10 @@
-package com.forum.postcomment.model;
+package com.forum.model;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
-
-import com.forum.commentreport.model.ForumCommentReportVO;
-import com.forum.post.model.ForumPostVO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
