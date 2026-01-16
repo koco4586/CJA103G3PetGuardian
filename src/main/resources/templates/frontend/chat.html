@@ -107,7 +107,6 @@
     <div class="container">
         <div class="chat-container">
 
-            <!-- Sidebar -->
             <div class="chat-sidebar">
                 <div style="padding: 1rem; border-bottom: 1px solid #eee;">
                     <div style="position: relative;">
@@ -139,22 +138,14 @@
                 </div>
             </div>
 
-            <!-- Main Chat -->
             <div class="chat-main">
                 <div class="chat-header">
                     <div class="d-flex align-center gap-sm">
-                        <!-- <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="avatar"> -->
                         <div
                             style="display: flex !important; flex-direction: row !important; align-items: center; gap: 0.5rem;">
                             <h4 style="margin: 0; margin-bottom: 0 !important;">王小美</h4>
                             <span style="font-size: 0.8rem; color: var(--success);">● 線上</span>
                         </div>
-                    </div>
-                    <div class="d-flex gap-sm">
-                        <button class="btn btn-outline" style="padding: 0.4rem 0.8rem;"><i
-                                class="fas fa-phone"></i></button>
-                        <button class="btn btn-outline" style="padding: 0.4rem 0.8rem;"><i
-                                class="fas fa-video"></i></button>
                     </div>
                 </div>
 
@@ -182,10 +173,8 @@
                 </div>
 
                 <form class="chat-input" onsubmit="event.preventDefault(); sendMessage();">
-                    <button type="button" class="btn btn-outline" style="border:none; padding: 0.5rem;"><i
-                            class="fas fa-paperclip"></i></button>
                     <input type="text" id="msg-input" class="form-control" placeholder="輸入訊息..."
-                        style="border: none; background: #f9f9f9;">
+                        style="border: none; background: #f9f9f9; flex: 1;">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
                 </form>
             </div>
