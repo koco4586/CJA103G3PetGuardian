@@ -44,6 +44,7 @@ out/
 .classpath
 .settings/
 bin/
+.metadata/
 # VS Code
 .vscode/
 

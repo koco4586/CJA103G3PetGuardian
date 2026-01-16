@@ -23,7 +23,7 @@ public class AreaVO implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer areaId;// 地區編號
 
-	@Column(name = "service_type")
+	@Column(name = "city_name")
 	private String cityName;// 縣市
 
 	@Column(name = "district")
