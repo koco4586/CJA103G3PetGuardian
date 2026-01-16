@@ -1,4 +1,4 @@
-package com.forum.post.model;
+package com.forum.model;
 
 import java.util.List;
 
