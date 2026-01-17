@@ -18,7 +18,7 @@ import jakarta.validation.constraints.AssertTrue;
 
 @Entity
 @Table(name = "forumpostpicture")
-public class ForumPostPicVO implements Serializable{
+public class ForumPostPicsVO implements Serializable{
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +39,7 @@ public class ForumPostPicVO implements Serializable{
 	@Transient
 	private MultipartFile[] upFiles;
 
-	public ForumPostPicVO() {
+	public ForumPostPicsVO() {
 		super();
 	}
 

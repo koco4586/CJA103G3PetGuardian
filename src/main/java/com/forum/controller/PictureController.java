@@ -2,6 +2,7 @@ package com.forum.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.forum.model.ForumService;
+import com.forum.model.ForumPostPicsService;
+import com.forum.model.ForumPostPicsVO;
 import com.forum.model.ForumPostService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +28,9 @@ public class PictureController {
 	
 	@Autowired
 	ForumPostService forumPostService;
+	
+	@Autowired
+	ForumPostPicsService forumPostPicsService;
 	
 	@GetMapping("picture")
 	public void picture(@RequestParam("forumId") Integer forumId, HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -77,5 +83,21 @@ public class PictureController {
 		}
 		
 	}
+	
+	@GetMapping("getPicIdForPic")
+	public void getPicIdForPic(@RequestParam("picId") Integer picId, HttpServletResponse res) throws IOException {
+		
+		res.setContentType("image/*");
+		byte[] pic = forumPostPicsService.getPicByPicId(picId);
+		
+		if(pic != null && pic.length > 0) {
+			// 將二進位資料寫入輸出流
+	        res.getOutputStream().write(pic);
+	        // 確保資料傳輸完畢
+	        res.getOutputStream().flush();
+		}
+		
+	}
+	
 	
 }

@@ -47,13 +47,13 @@ public class ForumPostVO implements Serializable{
 //	private Integer forumId;
 	
 	@Column(name = "post_title")
-	@NotBlank(message = "文章標題請勿空白")
+	@NotBlank(message = "貼文標題請勿空白")
 	@Pattern(regexp = "^[(\u4e00-\u9fa5)(a-zA-Z0-9)]{1,50}$", message = "標題只能是中、英文字母、或數字，且不能超過50字")
 	private String postTitle;
 	
-	@Column(name = "post_content")
+	@Column(name = "post_content", columnDefinition = "longtext")
 	@NotBlank(message = "文章內容請勿空白")
-	@Size(min = 30, max = 2500, message = "文章長度必需在{min}到{max}字之間")
+	@Size(min = 30, max = 5000, message = "文章長度必需在{min}到{max}字之間")
 	private String postContent;
 	
 	@Lob
@@ -75,7 +75,7 @@ public class ForumPostVO implements Serializable{
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("picId asc")
-	private Set<ForumPostPicVO> forumPostPics;
+	private Set<ForumPostPicsVO> forumPostPics;
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("commentId asc")
@@ -113,11 +113,11 @@ public class ForumPostVO implements Serializable{
 		this.forum = forum;
 	}
 
-	public Set<ForumPostPicVO> getForumPostPics() {
+	public Set<ForumPostPicsVO> getForumPostPics() {
 		return forumPostPics;
 	}
 
-	public void setForumPostPics(Set<ForumPostPicVO> forumPostPics) {
+	public void setForumPostPics(Set<ForumPostPicsVO> forumPostPics) {
 		this.forumPostPics = forumPostPics;
 	}
 
