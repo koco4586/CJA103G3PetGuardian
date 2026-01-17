@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a href="store-seller.html" class="dropdown-item">賣家管理</a>
                         </div>
                     </li>
-                    <li><a href="/forum/listAllActiveForum" class="nav-link">討論區</a></li>
+                    <li><a href="/forum/list-all-active-forum" class="nav-link">討論區</a></li>
                     <li><a href="news.html" class="nav-link">最新消息</a></li>
                 </ul>
                 <div class="d-flex align-center">

@@ -18,28 +18,28 @@ import jakarta.validation.constraints.AssertTrue;
 
 @Entity
 @Table(name = "forumpostpicture")
-public class ForumPostPicVO implements Serializable {
-
+public class ForumPostPicsVO implements Serializable{
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "pic_id", updatable = false)
 	private Integer picId;
-
+	
 	@ManyToOne
 	@JoinColumn(name = "post_id", referencedColumnName = "post_id")
 	private ForumPostVO forumPost;
-
-	// @Column(name = "post_id", updatable = false)
-	// private Integer postId;
-
+	
+//	@Column(name = "post_id", updatable = false)
+//	private Integer postId;
+	
 	@Lob
 	@Column(name = "pic", nullable = true, columnDefinition = "longblob")
 	private byte[] pic;
-
+	
 	@Transient
 	private MultipartFile[] upFiles;
 
-	public ForumPostPicVO() {
+	public ForumPostPicsVO() {
 		super();
 	}
 
@@ -67,13 +67,13 @@ public class ForumPostPicVO implements Serializable {
 		this.picId = picId;
 	}
 
-	// public Integer getPostId() {
-	// return postId;
-	// }
-	//
-	// public void setPostId(Integer postId) {
-	// this.postId = postId;
-	// }
+//	public Integer getPostId() {
+//		return postId;
+//	}
+//
+//	public void setPostId(Integer postId) {
+//		this.postId = postId;
+//	}
 
 	public byte[] getPic() {
 		return pic;
@@ -82,54 +82,54 @@ public class ForumPostPicVO implements Serializable {
 	public void setPic(byte[] pic) {
 		this.pic = pic;
 	}
-
-	// 驗證上傳檔案是否為圖片檔
+	
+	//	驗證上傳檔案是否為圖片檔
 	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
 	public boolean isImage() {
-
-		if (upFiles == null || upFiles.length == 0) {
+	
+		if(upFiles == null || upFiles.length == 0) {
 			return true;
 		}
-
-		for (int i = 0; i < upFiles.length; i++) {
-			if (upFiles[i] == null || upFiles[i].isEmpty()) {
+		
+		for(int i = 0; i < upFiles.length; i++) {
+			if(upFiles[i] == null || upFiles[i].isEmpty()) {
 				continue;
 			} else {
 				String contentType = upFiles[i].getContentType();
-				if (contentType == null || !contentType.startsWith("image/")) {
+				if(contentType == null || !contentType.startsWith("image/")) {
 					return false;
 				}
 			}
-
+			
 		}
 		return true;
 	}
-
-	// 驗證單張圖片大小跟總上傳檔案大小
+	
+	//	驗證單張圖片大小跟總上傳檔案大小
 	@AssertTrue(message = "單張圖片大小不得超過 1MB，且總上傳檔案不得超過 5MB")
 	public boolean isSize() {
 		if (upFiles == null || upFiles.length == 0) {
 			return true;
 		}
-		long maxSize = 1 * 1024 * 1024;
-		long totalMaxSize = 5 * 1024 * 1024;
+		long maxSize = 1 * 1024 *1024;
+		long totalMaxSize = 5 * 1024 *1024;
 		long upFilesTotalSize = 0;
-		for (int i = 0; i < upFiles.length; i++) {
-			if (upFiles[i].isEmpty()) {
+		for(int i = 0; i < upFiles.length; i++) {
+			if(upFiles[i].isEmpty()) {
 				continue;
 			}
-			if (upFiles[i].getSize() > maxSize) {
+			if(upFiles[i].getSize() > maxSize) {
 				return false;
 			} else {
 				upFilesTotalSize += upFiles[i].getSize();
-				if (upFilesTotalSize > totalMaxSize) {
+				if(upFilesTotalSize > totalMaxSize) {
 					return false;
 				}
-
+				
 			}
-
+			
 		}
 		return true;
 	}
-
+	
 }
