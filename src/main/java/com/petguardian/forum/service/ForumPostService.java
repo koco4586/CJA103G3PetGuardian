@@ -1,4 +1,7 @@
-package com.forum.model;
+package com.petguardian.forum.service;
+
+import com.petguardian.forum.model.ForumPostRepository;
+import com.petguardian.forum.model.ForumPostVO;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,37 +11,37 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ForumPostService {
-	
+
 	@Autowired
 	ForumPostRepository repo;
-	
+
 	public void addPost(ForumPostVO forumPostVO) {
 		repo.save(forumPostVO);
 	}
-	
+
 	public void updatePost(ForumPostVO forumPostVO) {
 		repo.save(forumPostVO);
 	}
-	
+
 	public ForumPostVO getOnePost(Integer postId) {
 		Optional<ForumPostVO> optional = repo.findById(postId);
 		return optional.orElse(null);
 	}
-	
-	public List<ForumPostVO> getAllActiveByForumId(Integer forumId){
+
+	public List<ForumPostVO> getAllActiveByForumId(Integer forumId) {
 		return repo.findPostsByForumId(forumId);
 	}
-	
-	public List<ForumPostVO> getPostBykeyword(String keyword, Integer forumId){
+
+	public List<ForumPostVO> getPostBykeyword(String keyword, Integer forumId) {
 		return repo.findByKeyword(keyword, forumId);
 	}
-	
-	public List<ForumPostVO> getAllReportedPost(){
+
+	public List<ForumPostVO> getAllReportedPost() {
 		return repo.getAllReportedPost();
 	}
-	
+
 	public byte[] getPostPic(Integer postId) {
 		return repo.getPicture(postId);
 	}
-	
+
 }

@@ -31,7 +31,8 @@
             border-radius: 12px;
             padding: 1rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px; /* 拉大與列表的間距 */
+            margin-bottom: 20px;
+            /* 拉大與列表的間距 */
         }
 
         .search-input {
@@ -160,7 +161,8 @@
             }
 
             .sidebar {
-                order: 0; /* 公告在手機版置頂 */
+                order: 0;
+                /* 公告在手機版置頂 */
                 flex: none;
                 width: 100%;
             }
@@ -194,13 +196,13 @@
     <div class="container d-flex" style="gap: 30px; min-height: 60vh;">
 
         <div style="flex: 1;">
-            
+
             <div class="search-bar-container">
-                <form th:action="@{/forum/getForumNameForDisplay}" method="get" style="width: 100%;">
+                <form th:action="@{/forum/get-forum-name-for-display}" method="get" style="width: 100%;">
                     <div style="position: relative; display: flex; align-items: center;">
                         <i class="fas fa-search" style="position: absolute; left: 15px; color: #aaa;"></i>
-                        <input type="text" name="forumName" class="search-input" placeholder="搜尋討論區名稱..." 
-                        style="padding-left: 45px;">
+                        <input type="text" name="forumName" class="search-input" placeholder="搜尋討論區名稱..."
+                            style="padding-left: 45px;">
                     </div>
                 </form>
                 <div id="errorData" th:data-msgs="${errorMsgs}" style="display: none;"></div>
@@ -208,8 +210,9 @@
 
             <div id="posts-container" class="baha-forum-list">
                 <th:block th:each="forumVO : ${forumList}">
-                    <a th:href="@{/forumpost/getForumIdForPosts(forumId=${forumVO.forumId}, forumName=${forumVO.forumName})}" class="forum-row-card">
-                        
+                    <a th:href="@{/forumpost/get-forum-id-for-posts(forumId=${forumVO.forumId}, forumName=${forumVO.forumName})}"
+                        class="forum-row-card">
+
                         <div class="forum-img-box">
                             <img th:src="@{/forum/picture(forumId=${forumVO.forumId})}" alt="討論區封面">
                         </div>
@@ -217,7 +220,8 @@
                         <div class="forum-main-info">
                             <h3 class="forum-title" th:text="${forumVO.forumName}"></h3>
                             <p style="white-space: nowrap; display: inline-block; margin: 0; font-weight: 600;">
-                                歡迎來到 <span><b style="color: #f44336;" th:text="${forumVO.forumName}"></b></span> 快來與大家分享心得與生活點滴吧！
+                                歡迎來到 <span><b style="color: #f44336;" th:text="${forumVO.forumName}"></b></span>
+                                快來與大家分享心得與生活點滴吧！
                             </p>
                         </div>
                     </a>
@@ -244,27 +248,27 @@
     </div>
 
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
-    
-	
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/frontend/main.js}"></script>
     <script th:inline="javascript">
-    
-    /* 使用 Thymeleaf 取得後端的錯誤訊息變數 */
-    const errorData = document.getElementById('errorData'); 
-	const errorMsgs = errorData.getAttribute('data-msgs');
 
-    if (errorMsgs && errorMsgs.length > 0) {
+        /* 使用 Thymeleaf 取得後端的錯誤訊息變數 */
+        const errorData = document.getElementById('errorData');
+        const errorMsgs = errorData.getAttribute('data-msgs');
 
-        // 將錯誤訊息陣列合併成字串(未使用到)
-        Swal.fire({
-            icon: 'error',
-            title: '搜尋失敗',
-            text: errorMsgs,
-            confirmButtonColor: '#ff9800', // 使用主題橘色
-            confirmButtonText: '確定'
-        });
-    } 
+        if (errorMsgs && errorMsgs.length > 0) {
+
+            // 將錯誤訊息陣列合併成字串(未使用到)
+            Swal.fire({
+                icon: 'error',
+                title: '搜尋失敗',
+                text: errorMsgs,
+                confirmButtonColor: '#ff9800', // 使用主題橘色
+                confirmButtonText: '確定'
+            });
+        } 
     </script>
 </body>
 

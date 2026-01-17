@@ -86,3 +86,10 @@ Thumbs.db
 # 專案特定設定 (敏感資訊)
 ##############################
 src/main/resources/application-dev.properties
+
+##############################
+# AI agent
+##############################
+.agent/
+.antigravity/
+.antigravity-agent/

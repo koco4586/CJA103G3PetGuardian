@@ -1,4 +1,4 @@
-package com.forum.controller;
+package com.petguardian.forum.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.forum.model.ForumService;
-import com.forum.model.ForumPostService;
+import com.petguardian.forum.service.ForumService;
+import com.petguardian.forum.service.ForumPostService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,63 +19,65 @@ import jakarta.servlet.http.HttpServletResponse;
 @Controller
 @RequestMapping("/forum")
 public class PictureController {
-	
+
 	@Autowired
 	ForumService forumService;
-	
+
 	@Autowired
 	ForumPostService forumPostService;
-	
+
 	@GetMapping("picture")
-	public void picture(@RequestParam("forumId") Integer forumId, HttpServletRequest req, HttpServletResponse res) throws IOException {
-		
+	public void picture(@RequestParam("forumId") Integer forumId, HttpServletRequest req, HttpServletResponse res)
+			throws IOException {
+
 		res.setContentType("image/*");
-//		ForumService forumSvc = new ForumService();
+		// ForumService forumSvc = new ForumService();
 		byte[] forumPic = forumService.getForumPic(forumId);
-		
-		if (forumPic != null && forumPic.length > 0) { 
-			
-            res.getOutputStream().write(forumPic);
-            
+
+		if (forumPic != null && forumPic.length > 0) {
+
+			res.getOutputStream().write(forumPic);
+
 		} else {
-			
+
 			ClassPathResource resource = new ClassPathResource("/static/images/backend/logo.png");
-			
-			try(InputStream is = resource.getInputStream();){
-				
+
+			try (InputStream is = resource.getInputStream();) {
+
 				byte[] logoPic = is.readAllBytes();
 				res.getOutputStream().write(logoPic);
-				
+
 			}
-			
+
 		}
-		
+
 	}
-	
-	@GetMapping("postPicture")
-	public void postPicture(@RequestParam("postId") Integer postId, HttpServletRequest req, HttpServletResponse res) throws IOException {
-		
+
+	@GetMapping("post-picture")
+	public void postPicture(@RequestParam("postId") Integer postId, HttpServletRequest req, HttpServletResponse res)
+			throws IOException {
+
 		res.setContentType("image/*");
-//		ForumPostService forumPostSvc = new ForumPostService();
+		// ForumPostService forumPostSvc = new ForumPostService();
 		byte[] postPic = forumPostService.getPostPic(postId);
-		
-		if (postPic != null && postPic.length > 0) { 
-			
-            res.getOutputStream().write(postPic);
-            
+
+		if (postPic != null && postPic.length > 0) {
+
+			res.getOutputStream().write(postPic);
+
 		} else {
-			
+
 			ClassPathResource resource = new ClassPathResource("/static/images/backend/logo.png");
-			
-			try(InputStream is = resource.getInputStream();){
-				
+
+			try (InputStream is = resource.getInputStream();) {
+
 				byte[] logoPic = is.readAllBytes();
 				res.getOutputStream().write(logoPic);
-				
+
 			}
-			
+
 		}
-		
+
 	}
-	
+
 }

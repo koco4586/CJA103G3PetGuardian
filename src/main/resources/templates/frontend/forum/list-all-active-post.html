@@ -19,7 +19,8 @@
         body {
             overflow-x: hidden;
             margin: 0;
-            background-color: var(--soft-bg) !important; /* 確保背景色顯示 */
+            background-color: var(--soft-bg) !important;
+            /* 確保背景色顯示 */
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
         }
 
@@ -38,7 +39,8 @@
             margin-bottom: 2rem;
             border-bottom-left-radius: 24px;
             border-bottom-right-radius: 24px;
-            display: block; /* 確保區塊不塌陷 */
+            display: block;
+            /* 確保區塊不塌陷 */
         }
 
         /* --- 發表新貼文按鈕樣式 --- */
@@ -77,7 +79,7 @@
             border-radius: 12px;
             padding: 1rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px; 
+            margin-bottom: 20px;
         }
 
         .search-input {
@@ -152,7 +154,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            min-width: 0; 
+            min-width: 0;
         }
 
         .post-title {
@@ -213,31 +215,41 @@
             padding-left: 10px;
         }
 
-        .sidebar p, .sidebar ul li a {
+        .sidebar p,
+        .sidebar ul li a {
             font-weight: 600;
             font-size: 0.95rem;
             color: #666;
             line-height: 1.5;
         }
 
-        .sidebar ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
         .sidebar ul li a {
             text-decoration: none;
             display: block;
             padding: 6px 0;
             transition: color 0.2s;
         }
-        .sidebar ul li a:hover { color: var(--primary-orange) !important; }
+
+        .sidebar ul li a:hover {
+            color: var(--primary-orange) !important;
+        }
 
         @media (max-width: 850px) {
-            .container.d-flex { 
-                flex-direction: column; 
+            .container.d-flex {
+                flex-direction: column;
                 align-items: stretch;
             }
-            .sidebar { 
-                order: -1; 
+
+            .sidebar {
+                order: -1;
                 flex: 0 0 auto;
-                width: 100%; 
+                width: 100%;
                 max-width: 100%;
             }
         }
@@ -258,12 +270,13 @@
     <div class="container d-flex" style="gap: 30px; min-height: 60vh;">
 
         <div style="flex: 1;">
-            
+
             <div class="search-bar-container">
-                <form th:action="@{/forumpost/getPostByTitle}" method="get" style="width: 100%;">
+                <form th:action="@{/forumpost/get-post-by-title}" method="get" style="width: 100%;">
                     <div style="position: relative; display: flex; align-items: center;">
                         <i class="fas fa-search" style="position: absolute; left: 15px; color: #aaa;"></i>
-                        <input type="text" name="postTitle" class="search-input" placeholder="搜尋貼文標題..." style="padding-left: 45px;">
+                        <input type="text" name="postTitle" class="search-input" placeholder="搜尋貼文標題..."
+                            style="padding-left: 45px;">
                         <input type="hidden" name="forumId" th:value="${forumId}">
                     </div>
                 </form>
@@ -272,10 +285,11 @@
 
             <div id="posts-container" class="post-list-wrapper">
                 <th:block th:each="forumPostVO : ${postList}">
-                    <a th:href="@{/forumpost/getPostIdForOnePost(postId=${forumPostVO.postId})}" class="post-row-item">
-                        
+                    <a th:href="@{/forumpost/get-post-id-for-one-post(postId=${forumPostVO.postId})}"
+                        class="post-row-item">
+
                         <div class="post-img-box">
-                            <img th:src="@{/forum/postPicture(postId=${forumPostVO.postId})}" alt="貼文封面">
+                            <img th:src="@{/forum/post-picture(postId=${forumPostVO.postId})}" alt="貼文封面">
                         </div>
 
                         <div class="post-main-info">
@@ -293,7 +307,7 @@
         </div>
 
         <div class="sidebar">
-            <a th:href="@{/forumpost/addPost(forumId=${forumId})}" class="btn-post-new">
+            <a th:href="@{/forumpost/add-post(forumId=${forumId})}" class="btn-post-new">
                 <i class="fas fa-pen-nib"></i> 發表新貼文
             </a>
 
@@ -301,7 +315,7 @@
                 <h4>看板公告</h4>
                 <p>請保持友善發言，嚴禁謾罵或人身攻擊。讓我們營造溫暖的寵物社群。</p>
             </div>
-            
+
             <div class="card">
                 <h4>熱門看板</h4>
                 <ul>
@@ -316,18 +330,18 @@
     </div>
 
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
-    
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/4.0.2/timeago.full.min.js"></script>
     <script th:src="@{/js/frontend/main.js}"></script>
-    
+
     <script th:inline="javascript">
- 		// 1. Timeago 初始化
+        // 1. Timeago 初始化
         const nodes = document.querySelectorAll('.need-timeago');
         if (nodes.length) timeago.render(nodes, 'zh_TW');
-        
-     	// 2. 搜尋錯誤彈窗
-        const errorData = document.getElementById('errorData'); 
+
+        // 2. 搜尋錯誤彈窗
+        const errorData = document.getElementById('errorData');
         const errorMsgs = errorData.getAttribute('data-msgs');
         if (errorMsgs && errorMsgs.trim() !== '' && errorMsgs !== 'null') {
             Swal.fire({
@@ -340,4 +354,5 @@
         }
     </script>
 </body>
+
 </html>
