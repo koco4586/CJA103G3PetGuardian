@@ -2,18 +2,8 @@ package com.petguardian;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-// @ComponentScan({
-// "com.forum",
-// "com.news",
-// "com.sitter",
-// "com.member",
-// "com.pet",
-// "com.chat",
-// "com.product",
-// })
 
 public class PetGuardianApplication {
 
