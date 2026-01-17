@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>看板貼文 | PetGuardian</title>
+    <title>新增貼文 | PetGuardian</title>
     <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
     <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,29 +13,42 @@
 </head>
 
 <body>
-	<div th:if="${#fields.hasAnyErrors()}" class="error-box">
-        <span class="error-title"> 
-            <i class="fas fa-exclamation-circle"></i> 錯誤訊息：
-        </span>
-        <ul class="error-list">
-            <li th:each="err : ${#fields.allErrors()}" ></li>
-        </ul>
-    </div>
+	<form th:action="@{insert-forum}" method="post" th:object="${forumVO}" enctype="multipart/form-data">
+		<div th:if="${#fields.hasAnyErrors()}" class="error-box">
+	        <ul class="error-list">
+	            <li th:each="err : ${#fields.allErrors()}" ></li>
+	        </ul>
+	    </div>
+		<div>
+	        <input type="text" th:field="*{forumName}" id="forumName" placeholder="請輸入討論區名稱" />
+	        <span th:if="${#fields.hasErrors('forumName')}" th:errors="*{forumName}" class="error"></span>
+	    </div>  
+	
 
+
+
+
+
+	</form>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/4.0.2/timeago.full.min.js"></script>
     <script th:src="@{/js/frontend/main.js}"></script>
     
     <script>
-    	
+ 	// 在表單送出時檢查
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const data = editor.getData(); // 取得編輯器內容
+        const plainText = data.replace(/<[^>]*>/g, ''); // 用正則表達式濾掉標籤，只算純文字
+
+        if (plainText.length < 30) {
+            e.preventDefault(); // 阻止送出
+            Swal.fire('錯誤', '文章內容不得小於 30 字！', 'error');
+        }
+    });
     
     
     </script>
-    
-    
-    
-    
-    
+ 
 </body>
 
 </html>
