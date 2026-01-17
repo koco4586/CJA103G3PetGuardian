@@ -17,40 +17,40 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "forumcommentreport")
-public class ForumCommentReportVO implements Serializable {
-
+public class ForumCommentReportVO implements Serializable{
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "report_id", updatable = false)
 	private Integer reportId;
-
+	
 	@Column(name = "mem_id", updatable = false)
 	private Integer memId;
-
+	
 	@ManyToOne
 	@JoinColumn(name = "comment_id", referencedColumnName = "comment_id")
 	private ForumPostCommentVO forumPostComment;
-
-	// @Column(name = "comment_id", updatable = false)
-	// private Integer commentId;
-
+	
+//	@Column(name = "comment_id", updatable = false)
+//	private Integer commentId;
+	
 	@Column(name = "report_type")
 	private Integer reportType;
-
+	
 	@Column(name = "report_reason")
 	@NotBlank(message = "檢舉原因請勿空白")
 	@Size(min = 20, max = 800, message = "檢舉原因長度必需在{min}到{max}字之間")
 	private String reportReason;
-
+	
 	@Column(name = "report_status", insertable = false)
 	private Integer reportStatus;
-
+	
 	@Column(name = "report_time", insertable = false, updatable = false)
 	private Timestamp reportTime;
-
+	
 	@Column(name = "handle_time", insertable = false, updatable = false)
 	private Timestamp handleTime;
-
+	
 	public ForumCommentReportVO() {
 		super();
 	}
@@ -79,13 +79,13 @@ public class ForumCommentReportVO implements Serializable {
 		this.memId = memId;
 	}
 
-	// public Integer getCommentId() {
-	// return commentId;
-	// }
-	//
-	// public void setCommentId(Integer commentId) {
-	// this.commentId = commentId;
-	// }
+//	public Integer getCommentId() {
+//		return commentId;
+//	}
+//
+//	public void setCommentId(Integer commentId) {
+//		this.commentId = commentId;
+//	}
 
 	public Integer getReportType() {
 		return reportType;
@@ -126,5 +126,5 @@ public class ForumCommentReportVO implements Serializable {
 	public void setHandleTime(Timestamp handleTime) {
 		this.handleTime = handleTime;
 	}
-
+	
 }

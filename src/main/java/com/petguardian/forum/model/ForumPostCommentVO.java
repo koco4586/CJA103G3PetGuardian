@@ -24,48 +24,48 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "forumpostcomment")
-public class ForumPostCommentVO implements Serializable {
-
+public class ForumPostCommentVO implements Serializable{
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "comment_id", updatable = false)
 	private Integer commentId;
-
+	
 	@Column(name = "mem_id", updatable = false)
 	private Integer memId;
-
+	
 	@ManyToOne
 	@JoinColumn(name = "post_id", referencedColumnName = "post_id")
 	private ForumPostVO forumPost;
-
-	// @Column(name = "post_id", updatable = false)
-	// private Integer postId;
-
+	
+//	@Column(name = "post_id", updatable = false)
+//	private Integer postId;
+	
 	@OneToMany(mappedBy = "forumPostComment")
 	@OrderBy("reportId asc")
 	private Set<ForumCommentReportVO> forumCommentReports;
-
+	
 	@Column(name = "comment_content")
 	@NotBlank(message = "留言內容請勿空白")
 	@Size(min = 1, max = 800, message = "留言長度必需在{min}到{max}字之間")
 	private String commentContent;
-
+	
 	@Lob
 	@Column(name = "comment_pic", nullable = true, columnDefinition = "longblob")
 	private byte[] commentPic;
-
+	
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private Timestamp createdAt;
-
+	
 	@Column(name = "last_edited_at", insertable = false, updatable = false)
 	private Timestamp lastEditedAt;
-
+	
 	@Column(name = "comment_status", insertable = false)
 	private Integer commentStatus;
-
+	
 	@Transient
 	private MultipartFile upFiles;
-
+	
 	public ForumPostCommentVO() {
 		super();
 	}
@@ -110,13 +110,13 @@ public class ForumPostCommentVO implements Serializable {
 		this.memId = memId;
 	}
 
-	// public Integer getPostId() {
-	// return postId;
-	// }
-	//
-	// public void setPostId(Integer postId) {
-	// this.postId = postId;
-	// }
+//	public Integer getPostId() {
+//		return postId;
+//	}
+//
+//	public void setPostId(Integer postId) {
+//		this.postId = postId;
+//	}
 
 	public String getCommentContent() {
 		return commentContent;
@@ -157,25 +157,25 @@ public class ForumPostCommentVO implements Serializable {
 	public void setCommentStatus(Integer commentStatus) {
 		this.commentStatus = commentStatus;
 	}
-
-	// 驗證上傳檔案是否為圖片檔
+	
+	//	驗證上傳檔案是否為圖片檔
 	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
 	public boolean isImage() {
-		if (upFiles == null || upFiles.isEmpty()) {
+		if(upFiles == null || upFiles.isEmpty()) {
 			return true;
 		}
 		String contentType = upFiles.getContentType();
 		return contentType != null && contentType.startsWith("image/");
 	}
-
-	// 驗證圖片大小不得超過1MB
+	
+	//	驗證圖片大小不得超過1MB
 	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
 	public boolean isSize() {
 		if (upFiles == null || upFiles.isEmpty()) {
 			return true;
 		}
-		long maxSize = 1 * 1024 * 1024;
+		long maxSize = 1 * 1024 *1024;	
 		return upFiles != null && maxSize > upFiles.getSize();
 	}
-
+	
 }
