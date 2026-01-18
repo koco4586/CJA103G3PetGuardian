@@ -2,11 +2,8 @@ package com.petguardian.chat.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -19,183 +16,220 @@ import org.springframework.transaction.annotation.Transactional;
 import com.petguardian.chat.model.ChatMemberRepository;
 import com.petguardian.chat.model.ChatMemberVO;
 import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatMessageRepository;
 import com.petguardian.chat.model.ChatMessageVO;
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomVO;
 
 /**
- * Implementation of {@link ChatService}.
- * Orchestrates message persistence, chatroom resolution, and historical data
- * retrieval.
+ * Service Implementation for Core Chat Functionality.
+ * 
+ * Responsibilities:
+ * - Orchestrates the message processing flow (Validation -> Persistence ->
+ * Notification)
+ * - Manages chat history retrieval with pagination
+ * - Handles complex DTO assembly (resolving member names, reply contexts)
+ * 
+ * Architecture Note:
+ * persistence is delegated to {@link MessageStrategyService} to support future
+ * Redis Write-Behind strategy without modifying this core service (DIP).
  */
 @Service
 public class ChatServiceImpl implements ChatService {
 
+    // ============================================================
+    // DEPENDENCIES
+    // ============================================================
     private final ChatRoomRepository chatroomRepository;
-    private final MessageStoreStrategyService messageStoreStrategyService;
-    private final ChatMessageRepository messageRepository;
+    private final MessageStrategyService messageStrategyService;
     private final ChatMemberRepository memberRepository;
+    private final ChatRoomCreationStrategy chatRoomCreationStrategy;
 
     public ChatServiceImpl(ChatRoomRepository chatroomRepository,
-            MessageStoreStrategyService messageStoreStrategyService,
-            ChatMessageRepository messageRepository,
-            ChatMemberRepository memberRepository) {
+            MessageStrategyService messageStrategyService,
+            ChatMemberRepository memberRepository,
+            ChatRoomCreationStrategy chatRoomCreationStrategy) {
         this.chatroomRepository = chatroomRepository;
-        this.messageStoreStrategyService = messageStoreStrategyService;
-        this.messageRepository = messageRepository;
+        this.messageStrategyService = messageStrategyService;
         this.memberRepository = memberRepository;
+        this.chatRoomCreationStrategy = chatRoomCreationStrategy;
     }
 
+    // ============================================================
+    // PUBLIC API
+    // ============================================================
+
+    /**
+     * Processes an incoming message from a user.
+     * Ensures chatroom existence, persists the message via strategy,
+     * and constructs the response DTO with full context.
+     */
     @Override
     @Transactional
     public ChatMessageDTO handleIncomingMessage(ChatMessageDTO dto) {
         Integer senderId = dto.getSenderId();
         Integer receiverId = dto.getReceiverId();
-        String content = dto.getContent();
 
-        // Chatroom Resolution
-        ChatRoomVO chatroom = findOrCreateChatroom(senderId, receiverId);
+        // Ensure valid chatroom exists before saving message
+        ChatRoomVO chatroom = chatRoomCreationStrategy.findOrCreate(senderId, receiverId, 0);
 
-        // Persistence Strategy Delegation
-        ChatMessageVO saved = messageStoreStrategyService.save(chatroom.getChatroomId(), senderId, content,
-                dto.getReplyToId());
+        // Delegate persistence to strategy (supports Sync MySQL or Async Redis)
+        ChatMessageVO saved = messageStrategyService.save(
+                chatroom.getChatroomId(), senderId, dto.getContent(), dto.getReplyToId());
 
-        // DTO Construction
-        ChatMessageDTO responseDto = new ChatMessageDTO();
-        responseDto.setMessageId(saved.getMessageId());
-        responseDto.setSenderId(dto.getSenderId());
-        responseDto.setReceiverId(dto.getReceiverId());
-        responseDto.setContent(dto.getContent());
-        responseDto.setSenderName(dto.getSenderName());
-
-        // Reply Context Decoration
-        if (saved.getReplyToMessageId() != null) {
-            responseDto.setReplyToId(saved.getReplyToMessageId());
-            messageRepository.findById(saved.getReplyToMessageId()).ifPresent(replyMsg -> {
-                responseDto.setReplyToContent(replyMsg.getMessage());
-                memberRepository.findById(replyMsg.getMemberId()).ifPresent(replySender -> {
-                    responseDto.setReplyToSenderName(replySender.getMemName());
-                });
-            });
-        }
-
-        return responseDto;
+        return buildResponseDto(saved, dto.getSenderName(), receiverId);
     }
 
     /**
-     * Resolves chatroom via bidirectional lookup or creation.
+     * Retrieves paginated chat history for a specific room.
+     * Validates access rights and enriches messages with sender/reply details.
      */
-    private ChatRoomVO findOrCreateChatroom(Integer memId1, Integer memId2) {
-        // Forward Lookup (A, B)
-        Optional<ChatRoomVO> existingRoom = chatroomRepository.findByMemId1AndMemId2(memId1, memId2);
-        if (existingRoom.isPresent()) {
-            return existingRoom.get();
-        }
-
-        // Reverse Lookup (B, A)
-        existingRoom = chatroomRepository.findByMemId1AndMemId2(memId2, memId1);
-        if (existingRoom.isPresent()) {
-            return existingRoom.get();
-        }
-
-        // Creation (Ordered IDs)
-        ChatRoomVO newRoom = new ChatRoomVO();
-        if (memId1 < memId2) {
-            newRoom.setMemId1(memId1);
-            newRoom.setMemId2(memId2);
-        } else {
-            newRoom.setMemId1(memId2);
-            newRoom.setMemId2(memId1);
-        }
-        return chatroomRepository.save(newRoom);
-    }
-
     @Override
     @Transactional(readOnly = true)
     public List<ChatMessageDTO> getChatHistory(Integer chatroomId, Integer currentUserId, int page, int size) {
-        // Access Verification
+        // Access Control: Ensure user is a member of the chatroom
         ChatRoomVO chatroom = chatroomRepository.findById(chatroomId).orElse(null);
         if (chatroom == null) {
             return Collections.emptyList();
         }
-
         if (!currentUserId.equals(chatroom.getMemId1()) && !currentUserId.equals(chatroom.getMemId2())) {
             throw new RuntimeException("Access denied");
         }
 
-        Integer partnerId = chatroom.getOtherMemberId(currentUserId);
-
-        // Pagination: Fetch & Sort
+        // Fetch paginated messages (Strategy handles DB/Cache retrieval)
         Pageable pageable = PageRequest.of(page, size);
-        List<ChatMessageVO> messagesDesc = messageRepository.findLatest(chatroomId, pageable);
+        List<ChatMessageVO> messages = fetchMessagesAsc(chatroomId, pageable);
 
-        if (messagesDesc.isEmpty()) {
+        if (messages.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // Chronological Reordering (ASC)
-        List<ChatMessageVO> messages = new ArrayList<>(messagesDesc);
-        Collections.reverse(messages);
+        // Batch resolve dependencies to avoid N+1 queries
+        Integer partnerId = chatroom.getOtherMemberId(currentUserId);
+        Map<Integer, ChatMemberVO> memberMap = resolveMemberMap(messages);
+        Map<String, ChatMessageVO> replyMap = resolveReplyMap(messages, memberMap);
 
-        // Batch Fetch Preparation
-        Set<Integer> memberIds = new HashSet<>();
-        Set<Integer> replyMessageIds = new HashSet<>();
+        // Map Entities to DTOs
+        return messages.stream()
+                .map(msg -> toDto(msg, memberMap, replyMap, currentUserId, partnerId))
+                .collect(Collectors.toList());
+    }
 
-        for (ChatMessageVO msg : messages) {
-            memberIds.add(msg.getMemberId());
-            if (msg.getReplyToMessageId() != null) {
-                replyMessageIds.add(msg.getReplyToMessageId());
-            }
-        }
+    // ============================================================
+    // PRIVATE HELPERS
+    // ============================================================
 
-        // Entity Resolution (Batch)
-        Map<Integer, ChatMemberVO> memberMap = memberRepository.findAllById(memberIds).stream()
+    /**
+     * Constructs the response DTO for a newly saved message.
+     */
+    private ChatMessageDTO buildResponseDto(ChatMessageVO saved, String senderName, Integer receiverId) {
+        ChatMessageDTO responseDto = new ChatMessageDTO();
+        responseDto.setMessageId(saved.getMessageId());
+        responseDto.setSenderId(saved.getMemberId());
+        responseDto.setReceiverId(receiverId); // Explicitly set for frontend hydration
+        responseDto.setContent(saved.getMessage());
+        responseDto.setSenderName(senderName);
+
+        // Enrich with reply context if applicable
+        decorateReplyContext(responseDto, saved.getReplyToMessageId());
+
+        return responseDto;
+    }
+
+    private List<ChatMessageVO> fetchMessagesAsc(Integer chatroomId, Pageable pageable) {
+        // Fetch latest DESC (efficient for pagination) then reverse to ASC for display
+        List<ChatMessageVO> desc = messageStrategyService.findLatestMessages(chatroomId, pageable);
+        List<ChatMessageVO> asc = new ArrayList<>(desc);
+        Collections.reverse(asc);
+        return asc;
+    }
+
+    /**
+     * Bulk resolves member information for all participants in the message list.
+     */
+    private Map<Integer, ChatMemberVO> resolveMemberMap(List<ChatMessageVO> messages) {
+        Set<Integer> memberIds = messages.stream()
+                .map(ChatMessageVO::getMemberId)
+                .collect(Collectors.toSet());
+
+        return memberRepository.findAllById(memberIds).stream()
                 .collect(Collectors.toMap(ChatMemberVO::getMemId, Function.identity()));
+    }
 
-        // Reply Resolution
-        Map<Integer, ChatMessageVO> tempReplyMap = new HashMap<>();
-        if (!replyMessageIds.isEmpty()) {
-            tempReplyMap = messageRepository.findAllById(replyMessageIds).stream()
-                    .collect(Collectors.toMap(ChatMessageVO::getMessageId, Function.identity()));
+    /**
+     * Resolves referenced reply messages and ensures their authors are also loaded.
+     */
+    private Map<String, ChatMessageVO> resolveReplyMap(List<ChatMessageVO> messages,
+            Map<Integer, ChatMemberVO> memberMap) {
+        Set<String> replyIds = messages.stream()
+                .map(ChatMessageVO::getReplyToMessageId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
 
-            // Resolve Reply Senders
-            Set<Integer> replySenderIds = new HashSet<>();
-            for (ChatMessageVO replyMsg : tempReplyMap.values()) {
-                if (!memberMap.containsKey(replyMsg.getMemberId())) {
-                    replySenderIds.add(replyMsg.getMemberId());
+        if (replyIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, ChatMessageVO> replyMap = messageStrategyService.findAllById(replyIds).stream()
+                .collect(Collectors.toMap(ChatMessageVO::getMessageId, Function.identity()));
+
+        // identify sender IDs from replies that haven't been loaded yet (edge case)
+        Set<Integer> missingSenderIds = replyMap.values().stream()
+                .map(ChatMessageVO::getMemberId)
+                .filter(id -> !memberMap.containsKey(id))
+                .collect(Collectors.toSet());
+
+        if (!missingSenderIds.isEmpty()) {
+            memberRepository.findAllById(missingSenderIds)
+                    .forEach(m -> memberMap.put(m.getMemId(), m));
+        }
+
+        return replyMap;
+    }
+
+    /**
+     * Converts a message entity to DTO with full context (sender names, reply
+     * content).
+     */
+    private ChatMessageDTO toDto(ChatMessageVO msg, Map<Integer, ChatMemberVO> memberMap,
+            Map<String, ChatMessageVO> replyMap, Integer currentUserId, Integer partnerId) {
+        ChatMessageDTO dto = new ChatMessageDTO();
+        dto.setMessageId(msg.getMessageId());
+        dto.setSenderId(msg.getMemberId());
+        dto.setReceiverId(msg.getMemberId().equals(currentUserId) ? partnerId : currentUserId);
+        dto.setContent(msg.getMessage());
+
+        ChatMemberVO sender = memberMap.get(msg.getMemberId());
+        dto.setSenderName(sender != null ? sender.getMemName() : "Unknown");
+
+        // Reply decoration
+        if (msg.getReplyToMessageId() != null) {
+            dto.setReplyToId(msg.getReplyToMessageId());
+            ChatMessageVO replyMsg = replyMap.get(msg.getReplyToMessageId());
+
+            if (replyMsg != null) {
+                dto.setReplyToContent(replyMsg.getMessage());
+                ChatMemberVO replySender = memberMap.get(replyMsg.getMemberId());
+                if (replySender != null) {
+                    dto.setReplyToSenderName(replySender.getMemName());
                 }
-            }
-            if (!replySenderIds.isEmpty()) {
-                memberRepository.findAllById(replySenderIds).forEach(m -> memberMap.put(m.getMemId(), m));
             }
         }
-        final Map<Integer, ChatMessageVO> replyMessageMap = tempReplyMap;
 
-        // DTO Mapping (O(1))
-        return messages.stream().map(msg -> {
-            ChatMessageDTO dto = new ChatMessageDTO();
-            dto.setMessageId(msg.getMessageId());
-            dto.setSenderId(msg.getMemberId());
-            dto.setReceiverId(msg.getMemberId().equals(currentUserId) ? partnerId : currentUserId);
-            dto.setContent(msg.getMessage());
+        return dto;
+    }
 
-            ChatMemberVO sender = memberMap.get(msg.getMemberId());
-            dto.setSenderName(sender != null ? sender.getMemName() : "Unknown");
+    private void decorateReplyContext(ChatMessageDTO dto, String replyToMessageId) {
+        if (replyToMessageId == null) {
+            return;
+        }
+        dto.setReplyToId(replyToMessageId);
 
-            if (msg.getReplyToMessageId() != null) {
-                dto.setReplyToId(msg.getReplyToMessageId());
-                ChatMessageVO replyMsg = replyMessageMap.get(msg.getReplyToMessageId());
-                if (replyMsg != null) {
-                    dto.setReplyToContent(replyMsg.getMessage());
-                    ChatMemberVO replySender = memberMap.get(replyMsg.getMemberId());
-                    if (replySender != null) {
-                        dto.setReplyToSenderName(replySender.getMemName());
-                    }
-                }
-            }
-
-            return dto;
-        }).collect(Collectors.toList());
+        // Single lookup for individual message processing (rare case compared to batch)
+        messageStrategyService.findById(replyToMessageId).ifPresent(replyMsg -> {
+            dto.setReplyToContent(replyMsg.getMessage());
+            memberRepository.findById(replyMsg.getMemberId()).ifPresent(replySender -> {
+                dto.setReplyToSenderName(replySender.getMemName());
+            });
+        });
     }
 }

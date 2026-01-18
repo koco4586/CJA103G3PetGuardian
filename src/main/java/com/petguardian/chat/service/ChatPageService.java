@@ -1,32 +1,40 @@
 package com.petguardian.chat.service;
 
 import java.util.List;
+import java.util.Map;
 
-import com.petguardian.chat.model.ChatMemberVO;
+import com.petguardian.chat.model.ChatMemberDTO;
 
 /**
- * Service Component for View Data Aggregation.
- * Provides composite data structures for initial page rendering.
+ * Service Interface for Chat View Data Aggregation.
+ * 
+ * Defines the contract for preparing data required to render the initial chat
+ * interface,
+ * optimized for minimizing network round-trips.
  */
 public interface ChatPageService {
 
     /**
-     * Retrieves valid chat members for directory listing.
+     * Retrieves the complete directory of chat-enabled members.
      * 
-     * @return List of Member VOs
+     * @return List of Member DTOs
      */
-    List<ChatMemberVO> getAllMembers();
+    List<ChatMemberDTO> getAllMembers();
 
     /**
-     * Resolves member identity by ID.
+     * Resolves member details by unique identifier.
+     * 
+     * @param memId Member ID
+     * @return Member DTO, or null if not found
      */
-    ChatMemberVO getMember(Integer memId);
+    ChatMemberDTO getMember(Integer memId);
 
     /**
-     * Aggregates latest conversation snapshots.
+     * Compiles a summary of recent conversations for the current user.
+     * Returns a map of partner IDs to their latest message preview.
      * 
      * @param currentUserId Context User ID
-     * @return Map of Partner ID to Truncated Message Content
+     * @return Map<PartnerId, PreviewText>
      */
-    java.util.Map<Integer, String> getLastMessages(Integer currentUserId);
+    Map<Integer, String> getLastMessages(Integer currentUserId);
 }

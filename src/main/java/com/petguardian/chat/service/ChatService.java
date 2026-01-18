@@ -5,29 +5,31 @@ import java.util.List;
 import com.petguardian.chat.model.ChatMessageDTO;
 
 /**
- * Service interface for core chat business logic.
+ * Service Interface for Core Chat Operations.
+ * 
+ * Defines the contract for:
+ * - Handling incoming real-time messages
+ * - Retrieving historical conversation data
  */
 public interface ChatService {
 
     /**
-     * Processes incoming WebSocket messages.
-     * Orchestrates chatroom resolution, persistence, and DTO construction with
-     * reply context.
+     * Processes an incoming message payload.
      * 
-     * @param dto Incoming message payload
-     * @return Persisted message DTO with semantic details (e.g., reply chains)
+     * @param dto The message data transfer object
+     * @return The persisted message DTO, enriched with system metadata (ID,
+     *         timestamp)
      */
     ChatMessageDTO handleIncomingMessage(ChatMessageDTO dto);
 
     /**
-     * Retrieves paginated chat history.
-     * Implements batch fetching to prevent N+1 queries.
+     * Retrieves a paginated list of historical messages for a specific chatroom.
      * 
-     * @param chatroomId    Target chatroom identifier
-     * @param currentUserId Requesting user identifier
-     * @param page          Pagination index (0-based)
-     * @param size          Batch size
-     * @return List of Message DTOs
+     * @param chatroomId    Chatroom Identifier
+     * @param currentUserId Requesting User ID (for access control)
+     * @param page          Page number (0-based)
+     * @param size          Number of records per page
+     * @return List of {@link ChatMessageDTO}
      */
     List<ChatMessageDTO> getChatHistory(Integer chatroomId, Integer currentUserId, int page, int size);
 }
