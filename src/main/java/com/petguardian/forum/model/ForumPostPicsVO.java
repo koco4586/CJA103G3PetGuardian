@@ -84,52 +84,52 @@ public class ForumPostPicsVO implements Serializable{
 	}
 	
 	//	驗證上傳檔案是否為圖片檔
-	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
-	public boolean isImage() {
-	
-		if(upFiles == null || upFiles.length == 0) {
-			return true;
-		}
-		
-		for(int i = 0; i < upFiles.length; i++) {
-			if(upFiles[i] == null || upFiles[i].isEmpty()) {
-				continue;
-			} else {
-				String contentType = upFiles[i].getContentType();
-				if(contentType == null || !contentType.startsWith("image/")) {
-					return false;
-				}
-			}
-			
-		}
-		return true;
-	}
+//	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
+//	public boolean isImage() {
+//	
+//		if(upFiles == null || upFiles.length == 0) {
+//			return true;
+//		}
+//		
+//		for(int i = 0; i < upFiles.length; i++) {
+//			if(upFiles[i] == null || upFiles[i].isEmpty()) {
+//				continue;
+//			} else {
+//				String contentType = upFiles[i].getContentType();
+//				if(contentType == null || !contentType.startsWith("image/")) {
+//					return false;
+//				}
+//			}
+//			
+//		}
+//		return true;
+//	}
 	
 	//	驗證單張圖片大小跟總上傳檔案大小
-	@AssertTrue(message = "單張圖片大小不得超過 1MB，且總上傳檔案不得超過 5MB")
-	public boolean isSize() {
-		if (upFiles == null || upFiles.length == 0) {
-			return true;
-		}
-		long maxSize = 1 * 1024 *1024;
-		long totalMaxSize = 5 * 1024 *1024;
-		long upFilesTotalSize = 0;
-		for(int i = 0; i < upFiles.length; i++) {
-			if(upFiles[i].isEmpty()) {
-				continue;
-			}
-			if(upFiles[i].getSize() > maxSize) {
-				return false;
-			} else {
-				upFilesTotalSize += upFiles[i].getSize();
-				if(upFilesTotalSize > totalMaxSize) {
-					return false;
-				}
-				
-			}
-			
-		}
-		return true;
-	}
+//	@AssertTrue(message = "單張圖片大小不得超過 1MB，且總上傳檔案不得超過 5MB")
+//	public boolean isSize() {
+//		if (upFiles == null || upFiles.length == 0) {
+//			return true;
+//		}
+//		long maxSize = 1 * 1024 *1024;
+//		long totalMaxSize = 5 * 1024 *1024;
+//		long upFilesTotalSize = 0;
+//		for(int i = 0; i < upFiles.length; i++) {
+//			if(upFiles[i].isEmpty()) {
+//				continue;
+//			}
+//			if(upFiles[i].getSize() > maxSize) {
+//				return false;
+//			} else {
+//				upFilesTotalSize += upFiles[i].getSize();
+//				if(upFilesTotalSize > totalMaxSize) {
+//					return false;
+//				}
+//				
+//			}
+//			
+//		}
+//		return true;
+//	}
 	
 }
