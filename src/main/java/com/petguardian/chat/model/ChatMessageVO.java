@@ -7,13 +7,23 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity: Chat Message.
+ * 
+ * Represents an individual message in a chat conversation.
+ * 
+ * Key Design Decisions:
+ * - Uses String (CHAR(13)) for IDs to store TSIDs (Time-Sorted Unique
+ * Identifiers)
+ * - Decoupled from ChatRoom/Member via ID references (No JPA Relations) to
+ * allow
+ * independent scaling or microservice extraction.
+ */
 @Entity
 @Table(name = "chat_message")
 @Data
@@ -21,9 +31,8 @@ import lombok.NoArgsConstructor;
 public class ChatMessageVO implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "message_id", updatable = false)
-    private Integer messageId;
+    @Column(name = "message_id", length = 13, updatable = false)
+    private String messageId; // Strategy: TSID (Application Generated)
 
     @Column(name = "chatroom_id")
     private Integer chatroomId;
@@ -38,6 +47,6 @@ public class ChatMessageVO implements Serializable {
     @Column(name = "chat_time", insertable = false, updatable = false)
     private LocalDateTime chatTime;
 
-    @Column(name = "reply_to_message_id")
-    private Integer replyToMessageId;
+    @Column(name = "reply_to_message_id", length = 13)
+    private String replyToMessageId; // Reference to parent message ID
 }

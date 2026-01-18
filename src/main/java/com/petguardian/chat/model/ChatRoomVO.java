@@ -12,6 +12,17 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity: Chat Room.
+ * 
+ * Represents a conversation container between two users.
+ * 
+ * Optimization Note:
+ * Includes denormalized fields (`lastMessageAt`, `lastMessagePreview`) to
+ * support
+ * efficient high-volume queries for the sidebar "Inbox" view without joining
+ * the massive `chat_message` table.
+ */
 @Entity
 @Table(name = "chatroom")
 @Data
@@ -44,14 +55,19 @@ public class ChatRoomVO implements Serializable {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
+    // Denormalized for Performance (Inbox Sorting)
     @Column(name = "last_message_at")
     private LocalDateTime lastMessageAt;
 
+    // Denormalized for Performance (Inbox Preview)
     @Column(name = "last_message_preview", length = 200)
     private String lastMessagePreview;
 
     /**
-     * Helper method: Get the other member's ID in this chatroom
+     * Resolves the ID of the conversation partner for a given user.
+     * 
+     * @param myId The ID of the current user
+     * @return The ID of the other participant, or null if myId is not a participant
      */
     public Integer getOtherMemberId(Integer myId) {
         if (myId.equals(memId1)) {

@@ -19,12 +19,19 @@ import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * REST Controller for Chat Resource Management.
- * Provides endpoints for chatroom resolution and message history retrieval.
+ * 
+ * Responsibilities:
+ * - Provides JSON API for chatroom resolution
+ * - Serves lazy-loaded message history via AJAX
+ * - Enforces security and validation for data access
  */
 @RestController
 @RequestMapping("/api/chatrooms")
 public class ChatApiController {
 
+    // ============================================================
+    // DEPENDENCIES
+    // ============================================================
     private final ChatRoomRepository chatroomRepository;
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
@@ -37,14 +44,17 @@ public class ChatApiController {
         this.chatService = chatService;
     }
 
+    // ============================================================
+    // ENDPOINTS
+    // ============================================================
+
     /**
-     * Endpoint: Chatroom Resolution.
-     * Resolves or validates the existence of a chat session with a specific
-     * partner.
+     * Finds or validates a chatroom with a specific partner.
+     * Used when a user selects a contact to chat with.
      * 
-     * @param request   HTTP Request (for Auth)
-     * @param partnerId Target User ID
-     * @return ChatRoomVO if found, or 404
+     * @param partnerId    Target User ID
+     * @param chatroomType Room Type (Default: 0 for 1-on-1)
+     * @return ChatRoomVO or 404 Not Found
      */
     @GetMapping
     public ResponseEntity<ChatRoomVO> findChatroom(
@@ -57,7 +67,7 @@ public class ChatApiController {
             return ResponseEntity.status(401).build();
         }
 
-        // Unified Resolution (normalized: smaller ID first)
+        // Normalize participants (Convention: Lower ID first)
         Integer memId1 = Math.min(currentUserId, partnerId);
         Integer memId2 = Math.max(currentUserId, partnerId);
 
@@ -72,13 +82,11 @@ public class ChatApiController {
     }
 
     /**
-     * Endpoint: Message History.
-     * Retrieves paginated message history for a subscribed chatroom.
+     * Retrieves paginated message history for a chatroom.
      * 
-     * @param request    HTTP Request (for Auth)
-     * @param chatroomId Target Chatroom ID
-     * @param page       Page index
-     * @param size       Page size
+     * @param chatroomId Target Room ID
+     * @param page       Page Index
+     * @param size       Page Size
      * @return List of Message DTOs
      */
     @GetMapping("/{chatroomId}/messages")
@@ -93,11 +101,11 @@ public class ChatApiController {
             return ResponseEntity.status(401).build();
         }
 
-        // Service Delegation (Includes Security Validation)
         try {
             List<ChatMessageDTO> dtos = chatService.getChatHistory(chatroomId, currentUserId, page, size);
             return ResponseEntity.ok(dtos);
         } catch (RuntimeException e) {
+            // Usually indicates Access Denied / Not a member
             return ResponseEntity.status(403).build();
         }
     }

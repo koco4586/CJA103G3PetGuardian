@@ -1,10 +1,27 @@
 /**
  * Chat MVP Module
  * Handles WebSocket integration, state management, and UI rendering.
+ * 
+ * Architecture:
+ * - IIFE pattern for namespace isolation
+ * - Centralized configuration and DOM references
+ * - async/await for cleaner async flow
  */
 
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const CONFIG = {
+    PAGE_SIZE: 50,
+    RECONNECT_DELAY_MS: 5000,
+    RECONNECT_JITTER_MS: 2000, // Random jitter to prevent thundering herd
+    SCROLL_THRESHOLD_PX: 100,
+    DEBOUNCE_DELAY_MS: 300
+};
 
-// --- State Container ---
+// ============================================================
+// STATE CONTAINER
+// ============================================================
 const ChatState = {
     stompClient: null,
     currentUserId: null,
@@ -12,147 +29,207 @@ const ChatState = {
     selectedUserId: null,
     selectedUserName: null,
     currentReplyId: null,
-    loadingRequestId: 0, // Race condition guard
+    loadingRequestId: 0,
     currentPage: 0,
     isLoadingHistory: false,
-    hasMoreHistory: true
+    hasMoreHistory: true,
+    messageIds: new Set() // O(1) deduplication
 };
 
-/**
- * Initialization
- */
+// ============================================================
+// DOM CACHE (Initialized once on DOMContentLoaded)
+// ============================================================
+const DOM = {
+    messageList: null,
+    msgInput: null,
+    sendBtn: null,
+    chatHeaderTitle: null,
+    chatInputForm: null,
+    replyPreviewBar: null,
+    replyToName: null,
+    replyToText: null,
+
+    init() {
+        this.messageList = document.getElementById('message-list');
+        this.msgInput = document.getElementById('msg-input');
+        this.sendBtn = document.getElementById('send-btn');
+        this.chatHeaderTitle = document.getElementById('chatHeaderTitle');
+        this.chatInputForm = document.getElementById('chat-input-form');
+        this.replyPreviewBar = document.getElementById('reply-preview-bar');
+        this.replyToName = document.getElementById('reply-to-name');
+        this.replyToText = document.getElementById('reply-to-text');
+
+        // Event Listeners
+        if (this.msgInput) {
+            this.msgInput.addEventListener('input', updateSendButton);
+        }
+    }
+};
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
 function initChat() {
-    const userIdVal = document.getElementById('currentUserId').value;
-    const userNameVal = document.getElementById('currentUserName').value;
+    const userIdEl = document.getElementById('currentUserId');
+    const userNameEl = document.getElementById('currentUserName');
 
-    ChatState.currentUserId = parseInt(userIdVal, 10);
-    ChatState.currentUserName = userNameVal;
+    // Guard: Required elements must exist
+    if (!userIdEl || !userNameEl) {
+        console.error('[Chat] Missing required hidden inputs: currentUserId or currentUserName');
+        return;
+    }
 
-    console.log(`[Init] User: ${ChatState.currentUserName} (${ChatState.currentUserId})`);
+    ChatState.currentUserId = parseInt(userIdEl.value, 10);
+    ChatState.currentUserName = userNameEl.value;
 
+    DOM.init();
+    updateSendButton(); // Initialize button state
     connect();
 }
 
-/**
- * WebSocket Connection (SockJS + STOMP)
- */
+// ============================================================
+// WEBSOCKET CONNECTION
+// ============================================================
 function connect() {
     const socket = new SockJS('/ws');
     ChatState.stompClient = Stomp.over(socket);
 
-
+    // Disable STOMP debug logging in production
+    ChatState.stompClient.debug = null;
 
     ChatState.stompClient.connect({}, function (frame) {
-        console.log('[WS] Connected');
-
-        // Topic Subscription
-        ChatState.stompClient.subscribe('/topic/messages.' + ChatState.currentUserId, function (message) {
-            onMessageReceived(JSON.parse(message.body));
-        });
-
+        // Subscribe to personal message topic
+        ChatState.stompClient.subscribe(
+            '/topic/messages.' + ChatState.currentUserId,
+            function (message) {
+                onMessageReceived(JSON.parse(message.body));
+            }
+        );
     }, function (error) {
-        console.error('[WS] Error:', error);
-        setTimeout(connect, 5000); // Reconnection strategy
+        console.error('[WS] Connection error:', error);
+        // Jittered reconnect to prevent thundering herd when server restarts
+        const jitter = Math.floor(Math.random() * CONFIG.RECONNECT_JITTER_MS);
+        setTimeout(connect, CONFIG.RECONNECT_DELAY_MS + jitter);
     });
 }
 
+// ============================================================
+// MESSAGE HANDLERS
+// ============================================================
 
 /**
- * Message Event Handler
+ * Process incoming WebSocket message.
+ * Determines if message should be appended to current view or trigger notification.
  */
 function onMessageReceived(dto) {
-    console.log('[Msg] Received:', dto);
-
     const senderId = parseInt(dto.senderId, 10);
     const receiverId = parseInt(dto.receiverId, 10);
     const isSentByMe = (senderId === ChatState.currentUserId);
-
-    // View Context Logic
-    let shouldAppend = false;
-
-    if (ChatState.selectedUserId) {
-        if (isSentByMe) {
-            shouldAppend = (receiverId === ChatState.selectedUserId);
-        } else {
-            shouldAppend = (senderId === ChatState.selectedUserId); // Incoming match
-        }
-    }
-
-    // Determine UI Partner Context
     const partnerId = isSentByMe ? receiverId : senderId;
+
+    // Determine if message belongs to currently open conversation
+    let shouldAppend = false;
+    if (ChatState.selectedUserId) {
+        shouldAppend = isSentByMe
+            ? (receiverId === ChatState.selectedUserId)
+            : (senderId === ChatState.selectedUserId);
+    }
 
     if (shouldAppend) {
         appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName);
-    } else {
-        // Notification Logic (Red Dot)
-        if (!isSentByMe) {
-            const contactItem = document.querySelector(`.contact-item[data-user-id="${partnerId}"]`);
-            if (contactItem) {
-                const dot = contactItem.querySelector('.unread-dot');
-                if (dot) dot.classList.remove('app-d-none');
-            }
-        }
+    } else if (!isSentByMe) {
+        // Show unread indicator for messages from other conversations
+        showUnreadDot(partnerId);
     }
 
-    // Sidebar Sync
-    updateContactLastMessage(partnerId, dto.content);
+    // Always update sidebar preview
+    let previewContent = dto.content;
+    if (isSentByMe) {
+        previewContent = 'You: ' + previewContent;
+    }
+
+    // Truncate if too long (consistent with backend logic)
+    if (previewContent.length > 30) {
+        previewContent = previewContent.substring(0, 27) + '...';
+    }
+
+    updateContactLastMessage(partnerId, previewContent);
 }
 
-/**
- * Update Sidebar Preview
- */
+function showUnreadDot(userId) {
+    const contactItem = document.getElementById('contact-item-' + userId);
+    if (contactItem) {
+        const dot = contactItem.querySelector('.unread-dot');
+        if (dot) dot.classList.remove('app-d-none');
+    }
+}
+
 function updateContactLastMessage(userId, content) {
-    const contactItem = document.querySelector(`.contact-item[data-user-id="${userId}"]`);
+    // ID-based selection
+    const contactItem = document.getElementById('contact-item-' + userId);
     if (contactItem) {
         const msgDiv = contactItem.querySelector('.contact-last-msg');
         if (msgDiv) msgDiv.textContent = content;
+    } else {
+        console.warn('[Chat] Contact item not found for user:', userId);
     }
 }
 
-/**
- * User Selection Handler
- */
+// ============================================================
+// USER SELECTION
+// ============================================================
 function selectUser(userId, userName) {
     ChatState.selectedUserId = parseInt(userId, 10);
     ChatState.selectedUserName = userName;
 
-    console.log(`[Select] ${userName} (${userId})`);
-
-    // UI Update: Active State
+    // Update sidebar active state
     document.querySelectorAll('.contact-item').forEach(item => {
         item.classList.remove('active');
         if (parseInt(item.dataset.userId, 10) === ChatState.selectedUserId) {
             item.classList.add('active');
-
-            // Clear Notification
+            // Clear unread indicator
             const dot = item.querySelector('.unread-dot');
             if (dot) dot.classList.add('app-d-none');
         }
     });
 
-    // Update Header
-    const headerTitle = document.getElementById('chatHeaderTitle');
-    if (headerTitle) {
-        headerTitle.textContent = userName;
+    // Update chat header
+    if (DOM.chatHeaderTitle) {
+        DOM.chatHeaderTitle.textContent = userName;
     }
 
-    // Reset View
-    const messageList = document.getElementById('message-list');
-    messageList.innerHTML = '<div class="chat-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>';
+    // Show loading state
+    if (DOM.messageList) {
+        DOM.messageList.innerHTML = '<div class="chat-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>';
+    }
 
-    document.getElementById('chat-input-form').style.display = 'flex';
+    if (DOM.chatInputForm) {
+        DOM.chatInputForm.style.display = 'flex';
+    }
 
     loadChatHistory(userId);
 }
 
+// ============================================================
+// CHAT HISTORY (async/await for clarity)
+// ============================================================
+
 /**
- * Fetch Chat History (Paginated)
+ * Load chat history for selected user.
+ * Uses requestId pattern to handle race conditions when user rapidly switches conversations.
+ * 
+ * Flow:
+ * 1. Resolve chatroom by partner ID
+ * 2. Fetch paginated messages
+ * 3. Render to DOM
  */
-function loadChatHistory(partnerId, isLoadMore = false) {
+async function loadChatHistory(partnerId, isLoadMore = false) {
+    // Reset pagination on new conversation
     if (!isLoadMore) {
         ChatState.currentPage = 0;
         ChatState.hasMoreHistory = true;
-        ChatState.loadingRequestId++; // Reset Context
+        ChatState.loadingRequestId++; // Invalidate any in-flight requests
+        ChatState.messageIds.clear(); // Clear cache on new chat
     }
 
     const requestId = ChatState.loadingRequestId;
@@ -160,83 +237,96 @@ function loadChatHistory(partnerId, isLoadMore = false) {
 
     const partnerIdInt = parseInt(partnerId, 10);
     const page = ChatState.currentPage;
-    const size = 50;
 
-    console.log(`[History] Req:${requestId} Partner:${partnerIdInt} Page:${page}`);
+    try {
+        // Step 1: Resolve chatroom
+        const chatroomResponse = await fetch(`/api/chatrooms?partnerId=${partnerIdInt}&userId=${ChatState.currentUserId}`);
 
-    // 1. Resolve Chatroom
-    fetch(`/api/chatrooms?partnerId=${partnerIdInt}&userId=${ChatState.currentUserId}`)
-        .then(response => {
-            if (requestId !== ChatState.loadingRequestId) return null;
-            if (response.status === 404) return null;
-            if (!response.ok) throw new Error('Chatroom lookup failed');
-            return response.json();
-        })
-        .then(chatroom => {
-            if (requestId !== ChatState.loadingRequestId) return;
-            const messageList = document.getElementById('message-list');
+        // Race condition guard: user may have switched to another conversation
+        if (requestId !== ChatState.loadingRequestId) return;
 
-            if (!chatroom) {
-                messageList.innerHTML = `<div class="chat-empty-state"><i class="fas fa-comments"></i><p>Start chatting with ${ChatState.selectedUserName}</p></div>`;
-                ChatState.isLoadingHistory = false;
-                return;
-            }
-
-            // 2. Fetch Messages
-            return fetch(`/api/chatrooms/${chatroom.chatroomId}/messages?userId=${ChatState.currentUserId}&page=${page}&size=${size}`)
-                .then(response => {
-                    if (requestId !== ChatState.loadingRequestId) return null;
-                    if (!response.ok) throw new Error('Message fetch failed');
-                    return response.json();
-                })
-                .then(messages => {
-                    if (requestId !== ChatState.loadingRequestId) return;
-
-                    ChatState.isLoadingHistory = false;
-                    if (messages.length < size) {
-                        ChatState.hasMoreHistory = false;
-                    }
-
-                    if (!isLoadMore) {
-                        // Initial Load
-                        messageList.innerHTML = '';
-                        if (messages.length === 0) {
-                            messageList.innerHTML = `<div class="chat-empty-state"><i class="fas fa-comments"></i><p>Start chatting with ${ChatState.selectedUserName}</p></div>`;
-                        } else {
-                            renderMessagesPro(messages, messageList, true);
-                            attachScrollListener(messageList, partnerIdInt);
-                        }
-                    } else {
-                        // Pagination Load (Prepend)
-                        if (messages.length > 0) {
-                            renderMessagesPro(messages, messageList, false);
-                        }
-                    }
-                });
-        })
-        .catch(error => {
-            if (requestId !== ChatState.loadingRequestId) return;
-            console.error('[History] Error:', error);
+        if (chatroomResponse.status === 404 || !chatroomResponse.ok) {
+            showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
             ChatState.isLoadingHistory = false;
-            if (!isLoadMore) {
-                const messageList = document.getElementById('message-list');
-                messageList.innerHTML = '<div class="chat-empty-state"><i class="fas fa-exclamation-triangle"></i><p>Load failed</p></div>';
+            return;
+        }
+
+        const chatroom = await chatroomResponse.json();
+        if (!chatroom) {
+            showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
+            ChatState.isLoadingHistory = false;
+            return;
+        }
+
+        // Step 2: Fetch messages
+        const messagesResponse = await fetch(
+            `/api/chatrooms/${chatroom.chatroomId}/messages?userId=${ChatState.currentUserId}&page=${page}&size=${CONFIG.PAGE_SIZE}`
+        );
+
+        if (requestId !== ChatState.loadingRequestId) return;
+
+        if (!messagesResponse.ok) {
+            throw new Error('Message fetch failed');
+        }
+
+        const messages = await messagesResponse.json();
+        ChatState.isLoadingHistory = false;
+
+        // Check if more history exists
+        if (messages.length < CONFIG.PAGE_SIZE) {
+            ChatState.hasMoreHistory = false;
+        }
+
+        // Step 3: Render
+        if (!isLoadMore) {
+            DOM.messageList.innerHTML = '';
+            if (messages.length === 0) {
+                showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
+            } else {
+                renderMessagesBatch(messages, DOM.messageList, true);
+                attachScrollListener(DOM.messageList, partnerIdInt);
             }
-        });
+        } else if (messages.length > 0) {
+            renderMessagesBatch(messages, DOM.messageList, false);
+        }
+
+    } catch (error) {
+        if (requestId !== ChatState.loadingRequestId) return;
+        console.error('[History] Error:', error);
+        ChatState.isLoadingHistory = false;
+        if (!isLoadMore) {
+            showEmptyState('Load failed', 'fa-exclamation-triangle');
+        }
+    }
 }
 
+function showEmptyState(message, icon = 'fa-comments') {
+    if (DOM.messageList) {
+        DOM.messageList.innerHTML = `<div class="chat-empty-state"><i class="fas ${icon}"></i><p>${message}</p></div>`;
+    }
+}
+
+// ============================================================
+// MESSAGE RENDERING
+// ============================================================
+
 /**
- * Message Renderer (DocumentFragment optimized)
- * Handles both append (real-time) and prepend (history).
+ * Batch render messages using DocumentFragment for performance.
+ * @param {Array} messages - Message DTOs
+ * @param {HTMLElement} container - Target container
+ * @param {boolean} scrollToBottom - true for initial load, false for history prepend
  */
-function renderMessagesPro(messages, container, scrollToBottom) {
+function renderMessagesBatch(messages, container, scrollToBottom) {
     const fragment = document.createDocumentFragment();
 
     messages.forEach(msg => {
-        // Duplicate Check
-        if (msg.messageId && container.querySelector(`.message[data-message-id="${msg.messageId}"]`)) {
+        // Skip duplicates (O(1) check)
+        if (msg.messageId && ChatState.messageIds.has(msg.messageId)) {
             return;
         }
+
+        // Add to cache
+        if (msg.messageId) ChatState.messageIds.add(msg.messageId);
 
         const isSentByMe = (msg.senderId === ChatState.currentUserId);
         const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName);
@@ -247,7 +337,7 @@ function renderMessagesPro(messages, container, scrollToBottom) {
         container.appendChild(fragment);
         container.scrollTop = container.scrollHeight;
     } else {
-        // Prepend Logic (Maintain Scroll Position)
+        // Prepend: maintain scroll position relative to existing content
         const oldScrollHeight = container.scrollHeight;
         container.insertBefore(fragment, container.firstChild);
         const newScrollHeight = container.scrollHeight;
@@ -256,70 +346,23 @@ function renderMessagesPro(messages, container, scrollToBottom) {
 }
 
 /**
- * Infinite Scroll Observer
- */
-function attachScrollListener(element, partnerId) {
-    element.onscroll = function () {
-        if (element.scrollTop === 0 && ChatState.hasMoreHistory && !ChatState.isLoadingHistory) {
-            console.log('[Scroll] Loading more...');
-            ChatState.currentPage++;
-            loadChatHistory(partnerId, true);
-        }
-    };
-}
-
-/**
- * Message Dispatcher
- */
-function sendMessage() {
-    const input = document.getElementById('msg-input');
-    const content = input.value.trim();
-
-    if (content === '' || !ChatState.selectedUserId) {
-        if (!ChatState.selectedUserId) {
-            alert('Select a user first');
-        }
-        return;
-    }
-
-    const dto = {
-        senderId: ChatState.currentUserId,
-        receiverId: ChatState.selectedUserId,
-        content: content,
-        senderName: ChatState.currentUserName,
-        replyToId: ChatState.currentReplyId
-    };
-
-    ChatState.stompClient.send('/app/chat.send', {}, JSON.stringify(dto));
-
-    // Optimistic UI Update
-    updateContactLastMessage(ChatState.selectedUserId, 'You: ' + content);
-
-    cancelReply();
-
-    input.value = '';
-    input.focus();
-}
-
-/**
- * DOM Element Factory (XSS Safe)
+ * Create message DOM element (XSS-safe via createTextNode).
  */
 function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isSent ? 'sent' : 'received');
-    if (messageId) {
-        msgDiv.dataset.messageId = messageId;
-    }
 
     if (messageId) {
-        msgDiv.addEventListener('click', function (e) {
+        msgDiv.dataset.messageId = messageId;
+        msgDiv.style.cursor = 'pointer';
+        msgDiv.addEventListener('click', function () {
+            // Ignore if user is selecting text
             if (window.getSelection().toString().length > 0) return;
             toggleReply(msgDiv, messageId, content, senderName);
         });
-        msgDiv.style.cursor = 'pointer';
     }
 
-    // Reply Context
+    // Reply context (if this message is a reply)
     if (replyToContent) {
         const contextDiv = document.createElement('div');
         contextDiv.className = 'reply-context';
@@ -335,134 +378,170 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
         msgDiv.appendChild(contextDiv);
     }
 
-    // Message Body
-    const textNode = document.createTextNode(content);
-    msgDiv.appendChild(textNode);
+    // Message body (XSS-safe)
+    msgDiv.appendChild(document.createTextNode(content));
 
     return msgDiv;
 }
 
 /**
- * Append Message & Smart Scroll
+ * Append single message and smart-scroll.
  */
-function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName, autoScroll = true) {
-    const messageList = document.getElementById('message-list');
-
-    // Duplicate Guard
-    if (messageId && document.querySelector(`.message[data-message-id="${messageId}"]`)) {
-        console.warn('[Append] Duplicate prevented:', messageId);
+function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName) {
+    // Duplicate guard (O(1))
+    if (messageId && ChatState.messageIds.has(messageId)) {
         return;
     }
 
-    // Clear Empty State
-    const emptyState = messageList.querySelector('.chat-empty-state');
+    if (messageId) ChatState.messageIds.add(messageId);
+
+    // Clear empty state if present
+    const emptyState = DOM.messageList.querySelector('.chat-empty-state');
     if (emptyState) {
         emptyState.remove();
     }
 
     const msgDiv = createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName);
 
-    // Smart Scroll Heuristics
-    const isNearBottom = (messageList.scrollHeight - messageList.scrollTop - messageList.clientHeight) < 100;
+    // Smart scroll: only auto-scroll if user is near bottom or just sent a message
+    const isNearBottom = (DOM.messageList.scrollHeight - DOM.messageList.scrollTop - DOM.messageList.clientHeight) < CONFIG.SCROLL_THRESHOLD_PX;
+    DOM.messageList.appendChild(msgDiv);
 
-    messageList.appendChild(msgDiv);
-
-    if (autoScroll) {
-        if (isSent || isNearBottom) {
-            messageList.scrollTop = messageList.scrollHeight;
-        } else {
-            console.log('[Append] Background update (user active on history)');
-        }
+    if (isSent || isNearBottom) {
+        DOM.messageList.scrollTop = DOM.messageList.scrollHeight;
     }
 }
 
-/**
- * Input Event Handler
- */
+// ============================================================
+// INFINITE SCROLL
+// ============================================================
+function attachScrollListener(element, partnerId) {
+    element.onscroll = function () {
+        // Load more when scrolled to top
+        if (element.scrollTop === 0 && ChatState.hasMoreHistory && !ChatState.isLoadingHistory) {
+            ChatState.currentPage++;
+            loadChatHistory(partnerId, true);
+        }
+    };
+}
+
+// ============================================================
+// MESSAGE SENDING
+// ============================================================
+function sendMessage() {
+    const content = DOM.msgInput.value.trim();
+
+    if (!content) return;
+    if (!ChatState.selectedUserId) {
+        alert('Select a user first');
+        return;
+    }
+
+    const dto = {
+        senderId: ChatState.currentUserId,
+        receiverId: ChatState.selectedUserId,
+        content: content,
+        senderName: ChatState.currentUserName,
+        replyToId: ChatState.currentReplyId
+    };
+
+
+
+    ChatState.stompClient.send('/app/chat.send', {}, JSON.stringify(dto));
+
+    // Optimistic UI: update sidebar immediately (This is fine to keep)
+    updateContactLastMessage(ChatState.selectedUserId, 'You: ' + content);
+
+    cancelReply();
+    DOM.msgInput.value = '';
+    updateSendButton(); // Explicitly update button state after clear
+    DOM.msgInput.focus();
+}
+
+// ============================================================
+// REPLY SYSTEM
+// ============================================================
+function toggleReply(msgElement, messageId, content, senderName) {
+    // Toggle off if clicking same message
+    if (ChatState.currentReplyId === messageId) {
+        cancelReply();
+        return;
+    }
+
+    // Clear previous selection
+    document.querySelectorAll('.message.reply-selected').forEach(el => el.classList.remove('reply-selected'));
+
+    ChatState.currentReplyId = messageId;
+    msgElement.classList.add('reply-selected');
+
+    DOM.replyToName.textContent = 'Reply to ' + senderName;
+    DOM.replyToText.textContent = content;
+    DOM.replyPreviewBar.style.display = 'flex';
+
+    DOM.msgInput.focus();
+}
+
+function cancelReply() {
+    ChatState.currentReplyId = null;
+    document.querySelectorAll('.message.reply-selected').forEach(el => el.classList.remove('reply-selected'));
+    DOM.replyPreviewBar.style.display = 'none';
+}
+
+// ============================================================
+// INPUT HANDLERS
+// ============================================================
 function handleKeyPress(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         sendMessage();
     }
 }
-window.handleKeyPress = handleKeyPress;
 
 function updateSendButton() {
-    const input = document.getElementById('msg-input');
-    const sendBtn = document.getElementById('send-btn');
-
-    if (input.value.trim() !== '') {
-        sendBtn.classList.add('active');
+    if (DOM.msgInput.value.trim() !== '') {
+        DOM.sendBtn.classList.add('active');
     } else {
-        sendBtn.classList.remove('active');
+        DOM.sendBtn.classList.remove('active');
     }
 }
 
-
-
-document.addEventListener('DOMContentLoaded', initChat);
-
-/**
- * Reply Logic
- */
-function toggleReply(msgElement, messageId, content, senderName) {
-    if (ChatState.currentReplyId === messageId) {
-        cancelReply();
-        return;
-    }
-
-    document.querySelectorAll('.message.reply-selected').forEach(el => el.classList.remove('reply-selected'));
-
-    ChatState.currentReplyId = messageId;
-    msgElement.classList.add('reply-selected');
-
-    const previewBar = document.getElementById('reply-preview-bar');
-    document.getElementById('reply-to-name').textContent = 'Reply to ' + senderName;
-    document.getElementById('reply-to-text').textContent = content;
-    previewBar.style.display = 'flex';
-
-    document.getElementById('msg-input').focus();
-}
-
-function cancelReply() {
-    ChatState.currentReplyId = null;
-    document.querySelectorAll('.message.reply-selected').forEach(el => el.classList.remove('reply-selected'));
-    document.getElementById('reply-preview-bar').style.display = 'none';
-}
-
-/**
- * Contact Search Filter
- */
+// ============================================================
+// CONTACT SEARCH
+// ============================================================
 function filterContacts(query) {
     const contactItems = document.querySelectorAll('.contact-item');
     const lowerQuery = query.toLowerCase();
 
     contactItems.forEach(item => {
         const userName = item.getAttribute('data-user-name').toLowerCase();
-        if (userName.includes(lowerQuery)) {
-            item.style.display = '';
-        } else {
-            item.style.display = 'none';
-        }
+        item.style.display = userName.includes(lowerQuery) ? '' : 'none';
     });
 }
 
-
-/**
- * Utility: Debounce
- */
+// ============================================================
+// UTILITIES
+// ============================================================
 function debounce(func, wait) {
     let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
+    return function (...args) {
         clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+        timeout = setTimeout(() => func(...args), wait);
     };
 }
 
-const debouncedFilterContacts = debounce(filterContacts, 300);
+// ============================================================
+// EXPORTS & INITIALIZATION
+// ============================================================
+const debouncedFilterContacts = debounce(filterContacts, CONFIG.DEBOUNCE_DELAY_MS);
 
-window.filterContacts = debouncedFilterContacts;
+// Namespace: Avoid global scope pollution, all public APIs under ChatApp
+window.ChatApp = {
+    handleKeyPress,
+    filterContacts: debouncedFilterContacts,
+    selectUser,
+    sendMessage,
+    cancelReply,
+    updateSendButton
+};
+
+document.addEventListener('DOMContentLoaded', initChat);

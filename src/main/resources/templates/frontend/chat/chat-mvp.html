@@ -36,15 +36,16 @@
                 <div style="padding: 1rem; border-bottom: 1px solid #eee;">
                     <div style="position: relative;">
                         <input type="text" id="search-contact-input" placeholder="搜尋聯絡人..." class="form-control"
-                            style="padding-left: 2rem;" oninput="filterContacts(this.value)">
+                            style="padding-left: 2rem;" oninput="ChatApp.filterContacts(this.value)">
                         <i class="fas fa-search" style="position: absolute; left: 10px; top: 12px; color: #999;"></i>
                     </div>
                 </div>
                 <div style="overflow-y: auto;">
                     <!-- Loop through users -->
                     <div th:each="user : ${users}" th:if="${user.memId != currentUser.memId}" class="contact-item"
-                        th:data-user-id="${user.memId}" th:data-user-name="${user.memName}"
-                        onclick="selectUser(this.dataset.userId, this.dataset.userName)">
+                        th:id="'contact-item-' + ${user.memId}" th:data-user-id="${user.memId}"
+                        th:data-user-name="${user.memName}"
+                        onclick="ChatApp.selectUser(this.dataset.userId, this.dataset.userName)">
                         <div class="d-flex justify-between w-100 align-center">
                             <div style="display: flex; align-items: center;">
                                 <span class="unread-dot app-d-none"></span>
@@ -88,16 +89,16 @@
                         <strong id="reply-to-name">Reply to Users</strong>
                         <span id="reply-to-text">Message content...</span>
                     </div>
-                    <button type="button" class="reply-close-btn" onclick="cancelReply()">
+                    <button type="button" class="reply-close-btn" onclick="ChatApp.cancelReply()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
 
                 <form id="chat-input-form" class="chat-input" style="display: none;"
-                    onsubmit="event.preventDefault(); sendMessage();">
+                    onsubmit="event.preventDefault(); ChatApp.sendMessage();">
                     <input type="text" id="msg-input" class="form-control" placeholder="輸入訊息..."
-                        style="border: none; background: #f9f9f9; flex: 1;" onkeypress="handleKeyPress(event)"
-                        oninput="updateSendButton()">
+                        style="border: none; background: #f9f9f9; flex: 1;" onkeypress="ChatApp.handleKeyPress(event)"
+                        oninput="ChatApp.updateSendButton()">
                     <button type="submit" id="send-btn" class="btn-send">
                         <i class="fas fa-paper-plane"></i>
                     </button>

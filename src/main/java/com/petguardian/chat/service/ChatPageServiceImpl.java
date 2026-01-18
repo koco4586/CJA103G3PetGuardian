@@ -3,69 +3,80 @@ package com.petguardian.chat.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.petguardian.chat.model.ChatMemberDTO;
 import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatMemberVO;
-import com.petguardian.chat.model.ChatMessageRepository;
-import com.petguardian.chat.model.ChatMessageVO;
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomVO;
 
 /**
- * Implementation of {@link ChatPageService}.
- * Optimizes initial data loading for the chat UI.
+ * Service Implementation for Chat View Data Aggregation.
+ * 
+ * Responsibilities:
+ * - Optimized data loading for initial page rendering
+ * - DTO projection to decouple View layer from JPA Entities
+ * - Efficient multi-entity aggregation (e.g. Member + LastMessage)
  */
 @Service
 public class ChatPageServiceImpl implements ChatPageService {
 
+    // ============================================================
+    // DEPENDENCIES
+    // ============================================================
     private final ChatMemberRepository memberRepository;
     private final ChatRoomRepository chatroomRepository;
-    private final ChatMessageRepository messageRepository;
 
     public ChatPageServiceImpl(ChatMemberRepository memberRepository,
-            ChatRoomRepository chatroomRepository,
-            ChatMessageRepository messageRepository) {
+            ChatRoomRepository chatroomRepository) {
         this.memberRepository = memberRepository;
         this.chatroomRepository = chatroomRepository;
-        this.messageRepository = messageRepository;
+    }
+
+    // ============================================================
+    // PUBLIC API
+    // ============================================================
+
+    @Override
+    public List<ChatMemberDTO> getAllMembers() {
+        return memberRepository.findAll().stream()
+                .map(ChatMemberDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<ChatMemberVO> getAllMembers() {
-        return memberRepository.findAll();
+    public ChatMemberDTO getMember(Integer memId) {
+        return memberRepository.findById(memId)
+                .map(ChatMemberDTO::fromEntity)
+                .orElse(null);
     }
 
-    @Override
-    public ChatMemberVO getMember(Integer memId) {
-        return memberRepository.findById(memId).orElse(null);
-    }
-
+    /**
+     * Aggregates the latest message preview for all valid chatrooms.
+     * Uses pre-computed `lastMessagePreview` from ChatRoomVO to avoid expensive
+     * join queries.
+     * 
+     * @param currentUserId context user
+     * @return Map<PartnerId, MessagePreview>
+     */
     @Override
     public Map<Integer, String> getLastMessages(Integer currentUserId) {
         Map<Integer, String> resultMap = new HashMap<>();
 
-        // Optimization: Query rooms first to restrict message lookup scope
         List<ChatRoomVO> chatrooms = chatroomRepository.findByMemId1OrMemId2(currentUserId, currentUserId);
 
         for (ChatRoomVO room : chatrooms) {
-            // Identify Partner
             Integer partnerId = room.getOtherMemberId(currentUserId);
 
-            // Fetch Head Message (Limit 1)
-            List<ChatMessageVO> messages = messageRepository.findLatest(
-                    room.getChatroomId(),
-                    PageRequest.of(0, 1));
-
-            if (!messages.isEmpty()) {
-                String content = messages.get(0).getMessage();
-                // View Truncation Logic
-                if (content.length() > 30) {
-                    content = content.substring(0, 27) + "...";
+            String preview = room.getLastMessagePreview();
+            if (preview != null && !preview.isEmpty()) {
+                // Truncate for UI consistency if needed (DB column is 200, UI might need less)
+                if (preview.length() > 30) {
+                    preview = preview.substring(0, 27) + "...";
                 }
-                resultMap.put(partnerId, content);
+                resultMap.put(partnerId, preview);
             }
         }
 

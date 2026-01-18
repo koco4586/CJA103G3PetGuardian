@@ -12,14 +12,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ChatMessageDTO {
 
-    private Integer messageId;
+    private String messageId; // TSID (13-char string)
     private Integer senderId;
     private Integer receiverId;
     private String content;
     private String senderName;
 
     // Reply support
-    private Integer replyToId;
+    private String replyToId; // TSID reference
     private String replyToContent;
     private String replyToSenderName;
 }

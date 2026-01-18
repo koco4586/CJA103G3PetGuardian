@@ -9,11 +9,19 @@ import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.service.ChatService;
 
 /**
- * WebSocket controller for real-time chat messages.
+ * WebSocket Controller for Real-Time Messaging.
+ * 
+ * Responsibilities:
+ * - Handles STOMP message events
+ * - Orchestrates message persistence via ChatService
+ * - Boradcasts events to targeted user topics
  */
 @Controller
 public class ChatWSController {
 
+    // ============================================================
+    // DEPENDENCIES
+    // ============================================================
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -22,21 +30,30 @@ public class ChatWSController {
         this.messagingTemplate = messagingTemplate;
     }
 
+    // ============================================================
+    // HANDLERS
+    // ============================================================
+
     /**
-     * Handle incoming chat message via WebSocket.
-     * Persists message and broadcasts to both sender and receiver.
+     * Processes incoming chat messages.
+     * 
+     * Flow:
+     * 1. Persist message (Validation + DB Save)
+     * 2. Enrich DTO (Generate ID + Timestamp)
+     * 3. Publish to Receiver's Topic (Real-time update)
+     * 4. Publish to Sender's Topic (Visual confirmation/"Sent" status)
      */
     @MessageMapping("/chat.send")
     public void sendMessage(@Payload ChatMessageDTO dto) {
-        // Delegate to service to handle everything (persist, reply info, etc.)
+        // Delegate core logic to service layer
         ChatMessageDTO responseDto = chatService.handleIncomingMessage(dto);
 
-        // Send to receiver's personal topic
+        // Notify Receiver
         messagingTemplate.convertAndSend(
                 "/topic/messages." + dto.getReceiverId(),
                 responseDto);
 
-        // Also send to sender's personal topic (for UI confirmation)
+        // Notify Sender (Echo)
         messagingTemplate.convertAndSend(
                 "/topic/messages." + dto.getSenderId(),
                 responseDto);
