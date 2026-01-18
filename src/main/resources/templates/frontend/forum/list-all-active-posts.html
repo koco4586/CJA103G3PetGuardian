@@ -339,6 +339,21 @@
                 confirmButtonText: '確定'
             });
         }
+        
+		// 取得 Flash Attribute 傳來的訊息
+		const successMsgs = [[${successMsgs}]];
+		
+		if (successMsgs) {
+			
+		    Swal.fire({
+		        icon: 'success',
+		        title: '太棒了！',
+		        text: successMsgs,
+		        timer: 2000, // 2秒後自動消失
+		        showConfirmButton: false,
+		        background: '#fffcf9',
+		   });
+	   }
     </script>
 </body>
 </html>

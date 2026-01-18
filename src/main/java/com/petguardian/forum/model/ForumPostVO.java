@@ -53,7 +53,7 @@ public class ForumPostVO implements Serializable{
 	
 	@Column(name = "post_content", columnDefinition = "longtext")
 	@NotBlank(message = "文章內容請勿空白")
-	@Size(min = 30, max = 5000, message = "文章長度必需在{min}到{max}字之間")
+	@Size(min = 30, max = 3000, message = "文章內容必需在{min}到{max}字之間")
 	private String postContent;
 	
 	@Lob
@@ -71,7 +71,7 @@ public class ForumPostVO implements Serializable{
 	private Integer postStatus;
 	
 	@Transient
-	private MultipartFile upFiles;
+	private MultipartFile upFile;
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("picId asc")
@@ -97,12 +97,12 @@ public class ForumPostVO implements Serializable{
 		super();
 	}
 
-	public MultipartFile getUpFiles() {
-		return upFiles;
+	public MultipartFile getUpFile() {
+		return upFile;
 	}
 
-	public void setUpFiles(MultipartFile upFiles) {
-		this.upFiles = upFiles;
+	public void setUpFile(MultipartFile upFile) {
+		this.upFile = upFile;
 	}
 
 	public ForumVO getForum() {
@@ -210,19 +210,19 @@ public class ForumPostVO implements Serializable{
 	}
 	
 	//	驗證上傳檔案是否為圖片檔 || 驗證圖片大小不得超過1MB
-	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif），且檔案大小不得超過 1MB ")
+	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif），且主頁圖片大小不得超過 1MB")
 	public boolean isValidImage() {		
-		if (upFiles == null || upFiles.isEmpty()) {
+		if (upFile == null || upFile.isEmpty()) {
 			return true;
 		}
 		
-		String contentType = upFiles.getContentType();
+		String contentType = upFile.getContentType();
 		if(contentType == null || !contentType.startsWith("image/")) {
 			return false;
 		}
 		
 		long maxSize = 1 * 1024 *1024;
-		if(upFiles.getSize() > maxSize) {
+		if(upFile.getSize() > maxSize) {
 			return false;
 		}
 		return true;
@@ -231,21 +231,21 @@ public class ForumPostVO implements Serializable{
 	//	驗證上傳檔案是否為圖片檔
 //	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
 //	public boolean isImage() {
-//		if(upFiles == null || upFiles.isEmpty()) {
+//		if(upFile == null || upFile.isEmpty()) {
 //			return true;
 //		}
-//		String contentType = upFiles.getContentType();
+//		String contentType = upFile.getContentType();
 //		return contentType != null && contentType.startsWith("image/");
 //	}
 	
 	//	驗證圖片大小不得超過1MB
 //	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
 //	public boolean isSize() {
-//		if (upFiles == null || upFiles.isEmpty()) {
+//		if (upFile == null || upFile.isEmpty()) {
 //			return true;
 //		}
 //		long maxSize = 1 * 1024 *1024;	
-//		return upFiles != null && maxSize > upFiles.getSize();
+//		return upFile != null && maxSize > upFile.getSize();
 //	}
 
 }

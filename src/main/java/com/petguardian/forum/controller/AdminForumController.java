@@ -73,16 +73,16 @@ public class AdminForumController {
 			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
 			if(result.hasGlobalErrors()) {
 				result.getGlobalErrors().forEach(error -> {
-					result.rejectValue("upFiles", null, error.getDefaultMessage());
+					result.rejectValue("upFile", null, error.getDefaultMessage());
 				});
 			}
 			return "backend/forum/update-forum";
 		}
 		
 		// MultipartFile convert byte[]
-		MultipartFile upFiles = forumVO.getUpFiles();
-		if(upFiles != null && !upFiles.isEmpty()) {
-			byte[] forumPic = upFiles.getBytes();
+		MultipartFile upFile = forumVO.getUpFile();
+		if(upFile != null && !upFile.isEmpty()) {
+			byte[] forumPic = upFile.getBytes();
 			forumVO.setForumPic(forumPic);
 		} else {
 			byte[] forumPic = forumService.getForumPic(forumVO.getForumId());
@@ -106,16 +106,16 @@ public class AdminForumController {
 			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
 			if(result.hasGlobalErrors()) {
 				result.getGlobalErrors().forEach(error -> {
-					result.rejectValue("upFiles", null, error.getDefaultMessage());
+					result.rejectValue("upFile", null, error.getDefaultMessage());
 				});
 			}
 			return "backend/forum/add-forum";
 		}
 				
 		// MultipartFile convert byte[]
-		MultipartFile upFiles = forumVO.getUpFiles();
-		if(upFiles != null && !upFiles.isEmpty()) {
-			byte[] forumPic = upFiles.getBytes();
+		MultipartFile upFile = forumVO.getUpFile();
+		if(upFile != null && !upFile.isEmpty()) {
+			byte[] forumPic = upFile.getBytes();
 			forumVO.setForumPic(forumPic);
 //		} else {
 //			byte[] forumPic = forumService.getForumPic(forumVO.getForumId());
