@@ -49,17 +49,20 @@ public class ChatApiController {
     @GetMapping
     public ResponseEntity<ChatRoomVO> findChatroom(
             HttpServletRequest request,
-            @RequestParam Integer partnerId) {
+            @RequestParam Integer partnerId,
+            @RequestParam(required = false, defaultValue = "0") Integer chatroomType) {
 
         Integer currentUserId = authStrategyService.getCurrentUserId(request);
         if (currentUserId == null) {
             return ResponseEntity.status(401).build();
         }
 
-        // Bidirectional Resolution (A->B or B->A)
-        ChatRoomVO chatroom = chatroomRepository.findByMemId1AndMemId2(currentUserId, partnerId)
-                .orElseGet(() -> chatroomRepository.findByMemId1AndMemId2(partnerId, currentUserId)
-                        .orElse(null));
+        // Unified Resolution (normalized: smaller ID first)
+        Integer memId1 = Math.min(currentUserId, partnerId);
+        Integer memId2 = Math.max(currentUserId, partnerId);
+
+        ChatRoomVO chatroom = chatroomRepository.findByMemId1AndMemId2AndChatroomType(memId1, memId2, chatroomType)
+                .orElse(null);
 
         if (chatroom == null) {
             return ResponseEntity.notFound().build();

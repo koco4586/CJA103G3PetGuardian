@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @Primary
 public class MockAuthStrategyServiceImpl implements AuthStrategyService {
 
+    private static final String SESSION_MEMBER_ID = "memId";
+
     private final ChatMemberRepository memberRepository;
 
     public MockAuthStrategyServiceImpl(ChatMemberRepository memberRepository) {
@@ -26,15 +28,33 @@ public class MockAuthStrategyServiceImpl implements AuthStrategyService {
 
     @Override
     public Integer getCurrentUserId(HttpServletRequest request) {
+        // 1. Try URL parameter first (for MVP testing)
         String userIdParam = request.getParameter("userId");
-        if (userIdParam == null || userIdParam.isEmpty()) {
-            return null;
+        if (userIdParam != null && !userIdParam.isEmpty()) {
+            try {
+                return Integer.parseInt(userIdParam);
+            } catch (NumberFormatException e) {
+                // Fall through to session check
+            }
         }
-        try {
-            return Integer.parseInt(userIdParam);
-        } catch (NumberFormatException e) {
-            return null;
+
+        // 2. Fall back to session (for normal login flow)
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object memId = session.getAttribute(SESSION_MEMBER_ID);
+            if (memId instanceof Integer) {
+                return (Integer) memId;
+            }
+            if (memId instanceof String) {
+                try {
+                    return Integer.parseInt((String) memId);
+                } catch (NumberFormatException e) {
+                    // Ignore
+                }
+            }
         }
+
+        return null;
     }
 
     @Override

@@ -40,7 +40,7 @@ public class ChatPageController {
         if (userId == null) {
             // Not authenticated - redirect or show error
             model.addAttribute("error", "請先登入");
-            return "frontend/chat/chat_mvp";
+            return "frontend/chat/chat-mvp";
         }
 
         // Build current user VO

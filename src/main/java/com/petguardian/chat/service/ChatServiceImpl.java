@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -36,15 +36,18 @@ public class ChatServiceImpl implements ChatService {
     private final MessageStoreStrategyService messageStoreStrategyService;
     private final ChatMessageRepository messageRepository;
     private final ChatMemberRepository memberRepository;
+    private final ChatRoomCreationStrategy chatRoomCreationStrategy;
 
     public ChatServiceImpl(ChatRoomRepository chatroomRepository,
             MessageStoreStrategyService messageStoreStrategyService,
             ChatMessageRepository messageRepository,
-            ChatMemberRepository memberRepository) {
+            ChatMemberRepository memberRepository,
+            ChatRoomCreationStrategy chatRoomCreationStrategy) {
         this.chatroomRepository = chatroomRepository;
         this.messageStoreStrategyService = messageStoreStrategyService;
         this.messageRepository = messageRepository;
         this.memberRepository = memberRepository;
+        this.chatRoomCreationStrategy = chatRoomCreationStrategy;
     }
 
     @Override
@@ -55,7 +58,7 @@ public class ChatServiceImpl implements ChatService {
         String content = dto.getContent();
 
         // Chatroom Resolution
-        ChatRoomVO chatroom = findOrCreateChatroom(senderId, receiverId);
+        ChatRoomVO chatroom = chatRoomCreationStrategy.findOrCreate(senderId, receiverId, 0);
 
         // Persistence Strategy Delegation
         ChatMessageVO saved = messageStoreStrategyService.save(chatroom.getChatroomId(), senderId, content,
@@ -83,33 +86,7 @@ public class ChatServiceImpl implements ChatService {
         return responseDto;
     }
 
-    /**
-     * Resolves chatroom via bidirectional lookup or creation.
-     */
-    private ChatRoomVO findOrCreateChatroom(Integer memId1, Integer memId2) {
-        // Forward Lookup (A, B)
-        Optional<ChatRoomVO> existingRoom = chatroomRepository.findByMemId1AndMemId2(memId1, memId2);
-        if (existingRoom.isPresent()) {
-            return existingRoom.get();
-        }
-
-        // Reverse Lookup (B, A)
-        existingRoom = chatroomRepository.findByMemId1AndMemId2(memId2, memId1);
-        if (existingRoom.isPresent()) {
-            return existingRoom.get();
-        }
-
-        // Creation (Ordered IDs)
-        ChatRoomVO newRoom = new ChatRoomVO();
-        if (memId1 < memId2) {
-            newRoom.setMemId1(memId1);
-            newRoom.setMemId2(memId2);
-        } else {
-            newRoom.setMemId1(memId2);
-            newRoom.setMemId2(memId1);
-        }
-        return chatroomRepository.save(newRoom);
-    }
+    // findOrCreateChatroom removed in favor of ChatRoomCreationStrategy
 
     @Override
     @Transactional(readOnly = true)
