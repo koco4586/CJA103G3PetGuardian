@@ -1,0 +1,594 @@
+package com.petguardian.store.controller;
+
+import com.petguardian.orders.dto.*;
+import com.petguardian.orders.model.OrdersVO;
+import com.petguardian.orders.model.StoreMemberRepository;
+import com.petguardian.orders.service.OrdersService;
+import com.petguardian.seller.model.ProductPicRepository;
+import com.petguardian.seller.model.ProductPic;
+import com.petguardian.seller.model.Product;
+import com.petguardian.store.service.StoreService;
+import com.petguardian.productfavoritelist.service.ProductFavoriteListService;
+import com.petguardian.orders.service.ReturnOrderService;
+import com.petguardian.sellerreview.model.SellerReviewVO;
+import com.petguardian.sellerreview.service.SellerReviewService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * 商品控制器
+ *
+ * 負責處理：
+ * - 商城首頁 (/store)
+ * - 結帳頁面 (/checkout)
+ * - 購買商品 (/product/{proId}/buy)
+ * - 購物車操作 (/cart/*)
+ * - 收藏操作 (/favorites/*)
+ * - 會員中心頁面 (/dashboard/*)
+ */
+@Controller
+public class StoreController {
+
+    private static final Integer TEST_MEM_ID = 1001;
+
+    @Autowired
+    private StoreService productService;
+
+    @Autowired
+    private ProductFavoriteListService favoriteService;
+
+    @Autowired
+    private OrdersService ordersService;
+
+    @Autowired
+    private SellerReviewService reviewService;
+
+    @Autowired
+    private ReturnOrderService returnOrderService;
+
+    @Autowired
+    private ProductPicRepository productPicDAO;
+
+    @Autowired
+    private StoreMemberRepository memberDAO;
+
+    // ==================== 輔助方法 ====================
+
+    /**
+     * 取得當前會員 ID（含模擬登入邏輯）
+     */
+    private Integer getCurrentMemId(HttpSession session) {
+        Integer memId = (Integer) session.getAttribute("memId");
+        if (memId == null) {
+            memId = TEST_MEM_ID;
+            session.setAttribute("memId", memId);
+        }
+        return memId;
+    }
+
+    /**
+     * 取得或建立購物車
+     */
+    @SuppressWarnings("unchecked")
+    private List<CartItem> getOrCreateCart(HttpSession session) {
+        List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
+        if (cart == null) {
+            cart = new ArrayList<>();
+            session.setAttribute("cart", cart);
+        }
+        return cart;
+    }
+
+    /**
+     * 將商品圖片轉換為 Base64 字串
+     */
+    private String getProductImageBase64(Integer proId) {
+        List<ProductPic> pics = productPicDAO.findByProduct_ProId(proId);
+
+        if (!pics.isEmpty() && pics.get(0).getProPic() != null) {
+            byte[] imageBytes = pics.get(0).getProPic();
+            return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
+        }
+
+        // 預設佔位圖（1x1 灰色像素）
+        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    }
+
+    /**
+     * 將 ProductVO 轉換為 ProductDisplayDTO
+     */
+    private ProductDisplayDTO toProductDisplayDTO(Product product, Set<Integer> favoriteIds) {
+        ProductDisplayDTO dto = new ProductDisplayDTO();
+        dto.setProId(product.getProId());
+        dto.setSellerId(product.getMemId());
+        dto.setProName(product.getProName());
+        dto.setProPrice(product.getProPrice());
+        dto.setStockQuantity(product.getStockQuantity());
+        dto.setProDescription(product.getProDescription());
+        dto.setImageBase64(getProductImageBase64(product.getProId()));
+        dto.setFavorited(favoriteIds != null && favoriteIds.contains(product.getProId()));
+        return dto;
+    }
+
+    /**
+     * 取得賣家資訊 DTO（含評分統計與評價列表）
+     */
+    private SellerInfoDTO getSellerInfoDTO(Integer sellerId) {
+        SellerInfoDTO info = new SellerInfoDTO();
+        info.setSellerId(sellerId);
+
+        // 取得賣家名稱
+        memberDAO.findById(sellerId).ifPresent(member -> info.setSellerName(member.getMemName()));
+        if (info.getSellerName() == null) {
+            info.setSellerName("賣家 #" + sellerId);
+        }
+
+        // 取得評分統計
+        Map<String, Object> stats = reviewService.getSellerRatingStats(sellerId);
+        info.setAverageRating((Double) stats.get("averageRating"));
+        info.setReviewCount((Long) stats.get("reviewCount"));
+
+        // 取得評價列表並轉換為 DTO
+        @SuppressWarnings("unchecked")
+        List<SellerReviewVO> reviews = (List<SellerReviewVO>) stats.get("reviews");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        List<SellerInfoDTO.ReviewDisplayDTO> reviewDTOs = reviews.stream().map(review -> {
+            SellerInfoDTO.ReviewDisplayDTO dto = new SellerInfoDTO.ReviewDisplayDTO();
+            dto.setReviewId(review.getReviewId());
+            dto.setOrderId(review.getOrderId());
+            dto.setRating(review.getRating());
+            dto.setReviewContent(review.getReviewContent());
+            dto.setReviewTime(review.getReviewTime() != null
+                    ? review.getReviewTime().format(formatter)
+                    : "");
+
+            // 取得買家名稱
+            try {
+                Map<String, Object> orderData = ordersService.getOrderWithItems(review.getOrderId());
+                OrdersVO order = (OrdersVO) orderData.get("order");
+                if (order != null) {
+                    memberDAO.findById(order.getBuyerMemId())
+                            .ifPresent(buyer -> dto.setBuyerName(buyer.getMemName()));
+                }
+            } catch (Exception e) {
+                // 忽略錯誤
+            }
+            if (dto.getBuyerName() == null) {
+                dto.setBuyerName("匿名買家");
+            }
+            return dto;
+        }).collect(Collectors.toList());
+
+        info.setReviews(reviewDTOs);
+        return info;
+    }
+
+    // ==================== 商城頁面 ====================
+
+    /**
+     * 商城首頁
+     * GET /store
+     */
+    @GetMapping("/store")
+    public String storePage(Model model, HttpSession session) {
+        Integer memId = getCurrentMemId(session);
+
+        // 取得所有上架商品
+        List<Product> products = productService.getAllActiveProducts();
+
+        // 取得使用者收藏的商品 ID 集合
+        Set<Integer> favoriteIds = favoriteService.getFavoriteProductIds(memId);
+
+        // 轉換為 ProductDisplayDTO（含 Base64 圖片）
+        List<ProductDisplayDTO> productDTOs = products.stream()
+                .map(p -> toProductDisplayDTO(p, favoriteIds))
+                .collect(Collectors.toList());
+
+        model.addAttribute("products", productDTOs);
+        model.addAttribute("memId", memId);
+
+        return "frontend/orders/store";
+    }
+
+    /**
+     * 進入結帳頁（從商城點擊商品）
+     * GET /product/{proId}/buy
+     */
+    @GetMapping("/product/{proId}/buy")
+    public String buyProduct(@PathVariable Integer proId,
+            @RequestParam(defaultValue = "1") Integer quantity,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        getCurrentMemId(session);
+
+        // 取得商品資訊
+        Optional<Product> productOpt = productService.getProductById(proId);
+        if (productOpt.isEmpty()) {
+            redirectAttr.addFlashAttribute("error", "商品不存在");
+            return "redirect:/store";
+        }
+        Product product = productOpt.get();
+
+        // 驗證庫存
+        if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
+            redirectAttr.addFlashAttribute("error", "商品庫存不足");
+            return "redirect:/store";
+        }
+
+        // 清空購物車並加入新商品（直接結帳模式）
+        List<CartItem> cart = new ArrayList<>();
+        CartItem item = new CartItem(
+                product.getProId(),
+                product.getMemId(),
+                product.getProName(),
+                product.getProPrice(),
+                quantity);
+        cart.add(item);
+        session.setAttribute("cart", cart);
+
+        return "redirect:/checkout";
+    }
+
+    /**
+     * 結帳頁面
+     * GET /checkout
+     */
+    @GetMapping("/checkout")
+    public String checkoutPage(Model model, HttpSession session) {
+        Integer memId = getCurrentMemId(session);
+
+        // 取得購物車資料
+        List<CartItem> cart = getOrCreateCart(session);
+
+        // 購物車為空導回商城
+        if (cart.isEmpty()) {
+            return "redirect:/store";
+        }
+
+        // 取得賣家 ID
+        Integer sellerId = cart.get(0).getSellerId();
+
+        // 取得使用者收藏的商品 ID 集合
+        Set<Integer> favoriteIds = favoriteService.getFavoriteProductIds(memId);
+
+        // 建立 CheckoutResponseDTO
+        CheckoutResponseDTO checkout = new CheckoutResponseDTO();
+        checkout.setMemId(memId);
+
+        // 1. 購物車商品（含 Base64 圖片與庫存）
+        List<CheckoutResponseDTO.CartItemDisplayDTO> cartItemDTOs = cart.stream().map(item -> {
+            CheckoutResponseDTO.CartItemDisplayDTO dto = new CheckoutResponseDTO.CartItemDisplayDTO();
+            dto.setProId(item.getProId());
+            dto.setSellerId(item.getSellerId());
+            dto.setProName(item.getProName());
+            dto.setProPrice(item.getProPrice());
+            dto.setQuantity(item.getQuantity());
+            dto.setSubtotal(item.getSubtotal());
+            dto.setImageBase64(getProductImageBase64(item.getProId()));
+
+            // 取得即時庫存
+            productService.getProductById(item.getProId())
+                    .ifPresent(p -> dto.setStockQuantity(p.getStockQuantity()));
+
+            return dto;
+        }).collect(Collectors.toList());
+        checkout.setCartItems(cartItemDTOs);
+
+        // 2. 主商品（購物車第一項）
+        if (!cartItemDTOs.isEmpty()) {
+            CheckoutResponseDTO.CartItemDisplayDTO mainItem = cartItemDTOs.get(0);
+            ProductDisplayDTO mainProduct = new ProductDisplayDTO();
+            mainProduct.setProId(mainItem.getProId());
+            mainProduct.setSellerId(mainItem.getSellerId());
+            mainProduct.setProName(mainItem.getProName());
+            mainProduct.setProPrice(mainItem.getProPrice());
+            mainProduct.setStockQuantity(mainItem.getStockQuantity());
+            mainProduct.setImageBase64(mainItem.getImageBase64());
+            mainProduct.setFavorited(favoriteIds.contains(mainItem.getProId()));
+
+            checkout.setMainProduct(mainProduct);
+            checkout.setMainQuantity(mainItem.getQuantity());
+        }
+
+        // 3. 計算總金額
+        int orderTotal = cart.stream()
+                .mapToInt(CartItem::getSubtotal)
+                .sum();
+        checkout.setOrderTotal(orderTotal);
+
+        // 4. 賣家資訊（含評分統計與評價列表）
+        SellerInfoDTO sellerInfo = getSellerInfoDTO(sellerId);
+        checkout.setSellerInfo(sellerInfo);
+
+        // 5. 同店加購商品
+        List<Integer> cartProIds = cart.stream()
+                .map(CartItem::getProId)
+                .collect(Collectors.toList());
+        List<Product> upsellProducts = productService.getOtherActiveProductsBySeller(sellerId, cartProIds);
+        List<ProductDisplayDTO> upsellDTOs = upsellProducts.stream()
+                .map(p -> toProductDisplayDTO(p, favoriteIds))
+                .collect(Collectors.toList());
+        checkout.setUpsellProducts(upsellDTOs);
+
+        model.addAttribute("checkout", checkout);
+        model.addAttribute("sellerId", sellerId);
+
+        return "frontend/orders/checkout";
+    }
+
+    /**
+     * 訂單完成頁面（舊的 URL 格式）
+     * GET /order-complete
+     */
+    @GetMapping("/order-complete")
+    public String orderCompletePage(@RequestParam(required = false) Integer orderId,
+            Model model, HttpSession session) {
+        getCurrentMemId(session);
+
+        if (orderId == null) {
+            return "redirect:/store";
+        }
+
+        try {
+            Map<String, Object> orderData = ordersService.getOrderWithItems(orderId);
+            model.addAttribute("order", orderData.get("order"));
+            model.addAttribute("orderItems", orderData.get("orderItems"));
+            model.addAttribute("itemCount", orderData.get("itemCount"));
+            return "frontend/orders/order-complete";
+        } catch (Exception e) {
+            return "redirect:/store";
+        }
+    }
+
+    // ==================== 會員中心頁面 ====================
+
+    /**
+     * 會員中心 - 訂單列表
+     * GET /dashboard/orders
+     */
+    @GetMapping("/dashboard/orders")
+    public String dashboardOrdersPage(@RequestParam(required = false) String filter,
+                                       Model model, HttpSession session) {
+        Integer memId = getCurrentMemId(session);
+
+        List<Map<String, Object>> orders = ordersService.getBuyerOrdersWithItems(memId);
+
+        // 為每個訂單加入 hasReview 與 returnOrder 資訊
+        for (Map<String, Object> orderData : orders) {
+            OrdersVO order = (OrdersVO) orderData.get("order");
+            if (order != null) {
+                // 檢查是否已評價
+                boolean hasReview = reviewService.hasReviewed(order.getOrderId());
+                order.setHasReview(hasReview);
+
+                // 取得退貨單資訊（如果有）
+                returnOrderService.getReturnOrderByOrderId(order.getOrderId())
+                        .ifPresent(returnOrder -> orderData.put("returnOrder", returnOrder));
+            }
+        }
+
+        // 根據篩選條件過濾訂單
+        if (filter != null && !filter.isEmpty() && !"all".equals(filter)) {
+            orders = orders.stream().filter(orderData -> {
+                OrdersVO order = (OrdersVO) orderData.get("order");
+                if (order == null) return false;
+                int status = order.getOrderStatus();
+                switch (filter) {
+                    case "processing":
+                        return status == 0 || status == 1 || status == 4; // 已付款、已出貨、申請退貨中
+                    case "completed":
+                        return status == 2 || status == 5; // 已完成、退貨完成
+                    case "cancelled":
+                        return status == 3; // 已取消
+                    default:
+                        return true;
+                }
+            }).collect(Collectors.toList());
+        }
+
+        model.addAttribute("orders", orders);
+        model.addAttribute("memId", memId);
+        model.addAttribute("filter", filter);
+
+        return "frontend/orders/dashboard-orders";
+    }
+
+    /**
+     * 會員中心 - 收藏列表
+     * GET /dashboard/favorites
+     */
+    @GetMapping("/dashboard/favorites")
+    public String dashboardFavoritesPage(Model model, HttpSession session) {
+        Integer memId = getCurrentMemId(session);
+
+        List<Map<String, Object>> favorites = favoriteService.getFavoritesWithProductInfo(memId);
+        model.addAttribute("favorites", favorites);
+        model.addAttribute("memId", memId);
+
+        return "frontend/orders/dashboard-favorites";
+    }
+
+    // ==================== 購物車操作 ====================
+
+    /**
+     * 加購商品（從結帳頁面加購區）
+     * POST /cart/upsell
+     */
+    @PostMapping("/cart/upsell")
+    public String upsellToCart(@RequestParam Integer proId,
+            @RequestParam(defaultValue = "1") Integer quantity,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        getCurrentMemId(session);
+
+        List<CartItem> cart = getOrCreateCart(session);
+
+        // 購物車不應為空（加購需有主商品）
+        if (cart.isEmpty()) {
+            redirectAttr.addFlashAttribute("error", "請先選擇主商品");
+            return "redirect:/store";
+        }
+
+        // 取得商品資訊
+        Optional<Product> productOpt = productService.getProductById(proId);
+        if (productOpt.isEmpty()) {
+            redirectAttr.addFlashAttribute("error", "商品不存在");
+            return "redirect:/checkout";
+        }
+        Product product = productOpt.get();
+
+        // 驗證是否為同一賣家
+        Integer currentSellerId = cart.get(0).getSellerId();
+        if (!currentSellerId.equals(product.getMemId())) {
+            redirectAttr.addFlashAttribute("error", "只能加購同一賣家的商品");
+            return "redirect:/checkout";
+        }
+
+        // 驗證庫存
+        if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
+            redirectAttr.addFlashAttribute("error", "商品庫存不足");
+            return "redirect:/checkout";
+        }
+
+        // 檢查是否已在購物車中
+        boolean exists = cart.stream().anyMatch(item -> item.getProId().equals(proId));
+        if (exists) {
+            redirectAttr.addFlashAttribute("message", "此商品已在購物車中");
+            return "redirect:/checkout";
+        }
+
+        // 新增加購商品
+        CartItem newItem = new CartItem(proId, product.getMemId(), product.getProName(),
+                product.getProPrice(), quantity);
+        cart.add(newItem);
+        session.setAttribute("cart", cart);
+
+        redirectAttr.addFlashAttribute("message", "已加入加購商品");
+        return "redirect:/checkout";
+    }
+
+    /**
+     * 更新購物車商品數量
+     * POST /cart/update
+     */
+    @PostMapping("/cart/update")
+    public String updateCartQuantity(@RequestParam Integer proId,
+            @RequestParam Integer quantity,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        getCurrentMemId(session);
+
+        List<CartItem> cart = getOrCreateCart(session);
+
+        // 驗證數量
+        if (quantity <= 0) {
+            // 數量為 0 或負數，移除商品
+            cart.removeIf(item -> item.getProId().equals(proId));
+            session.setAttribute("cart", cart);
+            redirectAttr.addFlashAttribute("message", "已從購物車移除");
+
+            // 若購物車為空導回商城
+            if (cart.isEmpty()) {
+                return "redirect:/store";
+            }
+            return "redirect:/checkout";
+        }
+
+        // 驗證庫存
+        Optional<Product> productOpt = productService.getProductById(proId);
+        if (productOpt.isEmpty()) {
+            redirectAttr.addFlashAttribute("error", "商品不存在");
+            return "redirect:/checkout";
+        }
+        Product product = productOpt.get();
+        if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
+            redirectAttr.addFlashAttribute("error", "超過庫存上限（目前庫存：" + product.getStockQuantity() + "）");
+            return "redirect:/checkout";
+        }
+
+        // 更新數量
+        cart.stream()
+                .filter(item -> item.getProId().equals(proId))
+                .findFirst()
+                .ifPresent(item -> item.setQuantity(quantity));
+
+        session.setAttribute("cart", cart);
+        redirectAttr.addFlashAttribute("message", "已更新數量");
+        return "redirect:/checkout";
+    }
+
+    /**
+     * 移除購物車商品
+     * POST /cart/remove
+     */
+    @PostMapping("/cart/remove")
+    public String removeFromCart(@RequestParam Integer proId,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        List<CartItem> cart = getOrCreateCart(session);
+
+        cart.removeIf(item -> item.getProId().equals(proId));
+        session.setAttribute("cart", cart);
+
+        redirectAttr.addFlashAttribute("message", "已從購物車移除");
+
+        // 若購物車已空，導回商城
+        if (cart.isEmpty()) {
+            return "redirect:/store";
+        }
+        return "redirect:/checkout";
+    }
+
+    // ==================== 收藏操作 ====================
+
+    /**
+     * 加入收藏
+     * POST /favorites/add
+     */
+    @PostMapping("/favorites/add")
+    public String addFavorite(@RequestParam Integer proId,
+            @RequestParam(required = false, defaultValue = "/store") String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        Integer memId = getCurrentMemId(session);
+
+        try {
+            favoriteService.addFavorite(memId, proId);
+            redirectAttr.addFlashAttribute("message", "已加入收藏");
+        } catch (Exception e) {
+            redirectAttr.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:" + redirectUrl;
+    }
+
+    /**
+     * 取消收藏
+     * POST /favorites/remove
+     */
+    @PostMapping("/favorites/remove")
+    public String removeFavorite(@RequestParam Integer proId,
+            @RequestParam(required = false, defaultValue = "/dashboard/favorites") String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        Integer memId = getCurrentMemId(session);
+
+        try {
+            favoriteService.removeFavorite(memId, proId);
+            redirectAttr.addFlashAttribute("message", "已取消收藏");
+        } catch (Exception e) {
+            redirectAttr.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:" + redirectUrl;
+    }
+}
