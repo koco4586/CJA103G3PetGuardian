@@ -10,9 +10,12 @@ import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Mock authentication strategy implementation for MVP development.
- * Reads userId from URL parameter.
+ * Reads 'sessionId' (preferred, via POST) or 'userId' (legacy) from request
+ * parameters.
  * 
- * Usage: /chat/mvp?userId=1001
+ * Usage:
+ * - POST /chat (body: sessionId=1001)
+ * - GET /chat?userId=1001
  */
 @Service
 @Primary
@@ -28,7 +31,17 @@ public class MockAuthStrategyServiceImpl implements AuthStrategyService {
 
     @Override
     public Integer getCurrentUserId(HttpServletRequest request) {
-        // 1. Try URL parameter first (for MVP testing)
+        // 1. Try URL/Body parameter (for MVP testing)
+        // Support "sessionId" (POST flow) or "userId" (Legacy/GET flow)
+        String sessionIdParam = request.getParameter("sessionId");
+        if (sessionIdParam != null && !sessionIdParam.isEmpty()) {
+            try {
+                return Integer.parseInt(sessionIdParam);
+            } catch (NumberFormatException e) {
+                // Invalid format
+            }
+        }
+
         String userIdParam = request.getParameter("userId");
         if (userIdParam != null && !userIdParam.isEmpty()) {
             try {
