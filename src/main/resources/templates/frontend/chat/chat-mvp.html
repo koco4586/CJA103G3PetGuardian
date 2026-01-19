@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訊息中心 MVP | PetGuardian</title>
+
+    <!-- Base styles -->
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <!-- Chat MVP styles -->
+    <link rel="stylesheet" th:href="@{/css/frontend/chat/chat-mvp.css}">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Hidden inputs for current user (Thymeleaf) -->
+    <input type="hidden" id="currentUserId" th:value="${currentUser.memId}">
+    <input type="hidden" id="currentUserName" th:value="${currentUser.memName}">
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container">
+        <!-- Current user badge -->
+        <div class="current-user-badge">
+            <i class="fas fa-user"></i>
+            當前用戶：<strong th:text="${currentUser.memName}">User</strong>
+            (ID: <span th:text="${currentUser.memId}">0</span>)
+        </div>
+
+        <div class="chat-container">
+            <!-- Sidebar: User List -->
+            <div class="chat-sidebar">
+                <div style="padding: 1rem; border-bottom: 1px solid #eee;">
+                    <div style="position: relative;">
+                        <input type="text" id="search-contact-input" placeholder="搜尋聯絡人..." class="form-control"
+                            style="padding-left: 2rem;" oninput="ChatApp.filterContacts(this.value)">
+                        <i class="fas fa-search" style="position: absolute; left: 10px; top: 12px; color: #999;"></i>
+                    </div>
+                </div>
+                <div style="overflow-y: auto;">
+                    <!-- Loop through users -->
+                    <div th:each="user : ${users}" th:if="${user.memId != currentUser.memId}" class="contact-item"
+                        th:id="'contact-item-' + ${user.memId}" th:data-user-id="${user.memId}"
+                        th:data-user-name="${user.memName}"
+                        onclick="ChatApp.selectUser(this.dataset.userId, this.dataset.userName)">
+                        <div class="d-flex justify-between w-100 align-center">
+                            <div style="display: flex; align-items: center;">
+                                <span class="unread-dot app-d-none"></span>
+                                <strong style="font-size: 1rem; color: var(--text-color);"
+                                    th:text="${user.memName}">User Name</strong>
+                            </div>
+                        </div>
+                        <div class="contact-last-msg" th:text="${lastMessages.get(user.memId)} ?: '點擊開始聊天'">
+                            點擊開始聊天
+                        </div>
+                    </div>
+
+                    <!-- Empty state if no other users -->
+                    <div th:if="${#lists.size(users) le 1}" style="padding: 2rem; text-align: center; color: #999;">
+                        <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>目前沒有其他用戶</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="d-flex align-center gap-sm">
+                        <div style="display: flex; flex-direction: row; align-items: center; gap: 0.5rem;">
+                            <h4 id="chatHeaderTitle" style="margin: 0;">請選擇聊天對象</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="message-list">
+                    <div class="chat-empty-state">
+                        <i class="fas fa-comments"></i>
+                        <p>從左側選擇一個用戶開始聊天</p>
+                    </div>
+                </div>
+
+                <!-- Reply Preview Bar -->
+                <div id="reply-preview-bar" class="reply-preview-bar">
+                    <div class="reply-preview-content">
+                        <strong id="reply-to-name">Reply to Users</strong>
+                        <span id="reply-to-text">Message content...</span>
+                    </div>
+                    <button type="button" class="reply-close-btn" onclick="ChatApp.cancelReply()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="chat-input-form" class="chat-input" style="display: none;"
+                    onsubmit="event.preventDefault(); ChatApp.sendMessage();">
+                    <input type="text" id="msg-input" class="form-control" placeholder="輸入訊息..."
+                        style="border: none; background: #f9f9f9; flex: 1;" onkeypress="ChatApp.handleKeyPress(event)"
+                        oninput="ChatApp.updateSendButton()">
+                    <button type="submit" id="send-btn" class="btn-send">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SockJS and STOMP -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <!-- Main JS -->
+    <script th:src="@{/js/frontend/main.js}"></script>
+    <!-- Chat MVP JS -->
+    <script th:src="@{/js/frontend/chat/chat-mvp.js}"></script>
+</body>
+
+</html>

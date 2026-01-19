@@ -249,6 +249,26 @@
 			<version>4.0.2</version>
 		</dependency>
 
+		<!-- ========================================================================================== -->
+		<!-- ●以下為 WebSocket/STOMP 預備使用● -->
+
+		<!-- spring-boot-starter-websocket -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<!-- ========================================================================================== -->
+		<!-- ●以下為 TSID (Time-Sorted ID) 預備使用● -->
+
+		<!-- hypersistence-tsid -->
+		<dependency>
+			<groupId>io.hypersistence</groupId>
+			<artifactId>hypersistence-tsid</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
