@@ -34,7 +34,7 @@ public interface ChatPageService {
      * Returns a map of partner IDs to their latest message preview.
      * 
      * @param currentUserId Context User ID
-     * @return Map<PartnerId, PreviewText>
+     * @return {@code Map<PartnerId, PreviewText>}
      */
     Map<Integer, String> getLastMessages(Integer currentUserId);
 }

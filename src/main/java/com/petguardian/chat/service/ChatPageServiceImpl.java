@@ -59,7 +59,7 @@ public class ChatPageServiceImpl implements ChatPageService {
      * join queries.
      * 
      * @param currentUserId context user
-     * @return Map<PartnerId, MessagePreview>
+     * @return {@code Map<PartnerId, MessagePreview>}
      */
     @Override
     public Map<Integer, String> getLastMessages(Integer currentUserId) {

@@ -18,9 +18,9 @@ public class ChatMemberDTO {
     /**
      * Factory method: Convert from Entity
      */
-    public static ChatMemberDTO fromEntity(ChatMemberVO vo) {
-        if (vo == null)
+    public static ChatMemberDTO fromEntity(ChatMemberVO chatMemberVO) {
+        if (chatMemberVO == null)
             return null;
-        return new ChatMemberDTO(vo.getMemId(), vo.getMemName());
+        return new ChatMemberDTO(chatMemberVO.getMemId(), chatMemberVO.getMemName());
     }
 }
