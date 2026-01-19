@@ -1,4 +1,4 @@
-package com.petguardian.shop.model;
+package com.petguardian.wallet.model;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

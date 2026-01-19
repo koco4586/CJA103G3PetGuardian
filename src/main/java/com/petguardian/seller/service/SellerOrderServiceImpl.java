@@ -1,4 +1,4 @@
-package com.petguardian.shop.service;
+package com.petguardian.seller.service;
 
 import com.petguardian.orders.model.*;
 import org.springframework.beans.factory.annotation.Autowired;

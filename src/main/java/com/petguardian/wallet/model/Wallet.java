@@ -1,4 +1,4 @@
-package com.petguardian.shop.model;
+package com.petguardian.wallet.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

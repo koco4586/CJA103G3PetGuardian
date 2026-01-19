@@ -1,8 +1,8 @@
-package com.petguardian.shop.controller;
+package com.petguardian.seller.controller;
 
-import com.petguardian.shop.model.*;
+import com.petguardian.seller.model.*;
 import com.petguardian.orders.model.*;
-import com.petguardian.shop.service.*;
+import com.petguardian.seller.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

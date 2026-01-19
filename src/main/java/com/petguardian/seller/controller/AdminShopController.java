@@ -1,8 +1,8 @@
-package com.petguardian.shop.controller;
+package com.petguardian.seller.controller;
 
 
 import com.petguardian.orders.model.*;
-import com.petguardian.shop.service.WalletService;
+import com.petguardian.seller.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,7 +22,7 @@ public class AdminShopController {
     private OrdersRepository ordersRepository;
 
     @Autowired
-    private WalletService walletService;
+    private ProductService.WalletService walletService;
 
 
     /**
