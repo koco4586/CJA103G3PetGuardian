@@ -8,293 +8,47 @@
     <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
     <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        /* --- 核心配色與變數 (移植自列表頁) --- */
-        :root {
-            --primary-orange: #ff9800;
-            --deep-brown: #5d4037;
-            --soft-bg: #fdfdfd;
-        }
-
-        body {
-            background-color: #f8f9fa; /* 配合列表頁的底色 */
-            font-family: "Microsoft JhengHei", Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* 仿列表頁的 Header 裝飾 */
-        .forum-header-mini {
-            background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
-            padding: 1.5rem 0;
-            margin-bottom: 2rem;
-            border-bottom-left-radius: 24px;
-            border-bottom-right-radius: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        /* 主容器配置 */
-        .main-container {
-            display: flex;
-            max-width: 1200px;
-            margin: 0 auto;
-            gap: 24px;
-            padding: 0 20px 40px;
-            align-items: flex-start;
-        }
-
-        /* --- 左側：會員資訊 (加入列表頁的圓角與陰影) --- */
-        .post-user-sidebar {
-            width: 160px;
-            flex-shrink: 0;
-            background: #fff;
-            border-radius: 16px; /* 統一圓角 */
-            padding: 24px 15px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            position: sticky;
-            top: 20px;
-            border: 1px solid #eee;
-        }
-
-        .user-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            border: 3px solid var(--primary-orange);
-            object-fit: cover;
-        }
-
-        .user-name {
-            font-weight: 800; /* 加粗字體 */
-            color: var(--deep-brown);
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-
-        /* --- 中間：主文區域 (移植 Row Card 風格) --- */
-        .post-article-area {
-            flex: 1;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            border: 1px solid #eee;
-        }
-
-        .article-content-wrapper {
-            padding: 30px;
-        }
-
-        .btn-back {
-            text-decoration: none;
-            color: var(--primary-orange);
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-            transition: transform 0.2s;
-        }
-        
-        .btn-back:hover {
-            transform: translateX(-5px);
-        }
-
-        .post-title {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: var(--deep-brown);
-            margin: 0 0 15px 0;
-        }
-
-        .post-meta-top {
-            color: orange;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 24px;
-            display: flex;
-            gap: 20px;
-            border-bottom: 2px solid #f9f9f9;
-            padding-bottom: 15px;
-        }
-
-        /* 圖片網格配置 */
-		.post-img-box {
-		    display: grid;
-		    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* 固定寬度範圍 */
-		    gap: 12px;
-		    margin-bottom: 25px;
-		}
-		
-		.zoomable-img {
-		    width: 100%;
-		    height: 180px; /* 固定高度，讓版面整齊 */
-		    object-fit: cover; /* 關鍵：自動裁切不變形 */
-		    border-radius: 12px;
-		    cursor: zoom-in; /* 放大鏡手勢 */
-		    transition: transform 0.2s, box-shadow 0.2s;
-		}
-		
-		.zoomable-img:hover {
-		    transform: translateY(-3px);
-		    box-shadow: 0 6px 15px rgba(255, 152, 0, 0.2);
-		}
-		
-		/* 當圖片只有一張時，稍微放大一點 */
-		.post-img-box:has(> :only-child) .zoomable-img {
-		    width: 300px;
-		    height: 300px;
-		}
-
-        .post-main-text {
-            line-height: 1.8;
-            font-size: 1.05rem;
-            font-weight: 500;
-            color: #444;
-            white-space: pre-wrap;
-            min-height: 200px;
-        }
-
-        /* --- 留言回覆區 (移植列表頁配色) --- */
-        .comment-section {
-            background: #fffcf8;
-            border-top: 1px solid #f0e6d6;
-            padding: 30px;
-        }
-
-        .comment-section h4 {
-            font-weight: 800;
-            color: var(--deep-brown);
-            margin-bottom: 20px;
-            border-left: 4px solid var(--primary-orange);
-            padding-left: 12px;
-        }
-
-        .comment-item {
-            display: flex;
-            gap: 15px;
-            padding: 18px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .comment-user-mini-img {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--primary-orange);
-        }
-
-        .comment-user-name {
-            font-weight: 800;
-            font-size: 14px;
-            color: var(--primary-orange);
-            margin-right: 10px;
-        }
-
-        /* 留言輸入框 (移植搜尋框風格) --- */
-        .reply-box {
-            margin-top: 30px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            border: 2px solid #f0f0f0;
-        }
-
-        .reply-textarea {
-            width: 100%;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            padding: 15px;
-            resize: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .reply-textarea:focus {
-            outline: none;
-            border-color: var(--primary-orange);
-            box-shadow: 0 0 8px rgba(255, 152, 0, 0.1);
-        }
-
-        .reply-submit-btn {
-            background-color: var(--primary-orange);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            float: right;
-            margin-top: 12px;
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        .reply-submit-btn:hover {
-            transform: scale(1.05);
-            background-color: #e68a00;
-        }
-
-        /* --- 右側側邊欄 (完全同步列表頁) --- */
-        .sidebar-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
-        }
-
-        .sidebar-card h4 {
-            font-weight: 800;
-            color: var(--deep-brown);
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary-orange);
-            padding-left: 10px;
-        }
-
-        .sidebar-card ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar-card li a {
-            text-decoration: none;
-            color: #666;
-            font-weight: 600;
-            font-size: 0.95rem;
-            display: block;
-            padding: 6px 0;
-            transition: color 0.2s;
-        }
-
-        .sidebar-card li a:hover {
-            color: var(--primary-orange);
-        }
-        
-        /* 移除 SweetAlert2 彈窗的陰影與背景 */
-		.transparent-popup {
-		    background: transparent !important;
-		    box-shadow: none !important;
-		    border: none !important;
-		}
-		
-		/* 讓彈出的圖片可以顯示 zoom-out 手勢 */
-		.zoom-out-img {
-		    cursor: zoom-out;
-		    max-width: 95vw; /* 防止圖片超出螢幕寬度 */
-		    max-height: 95vh; /* 防止圖片超出螢幕高度 */
-		    object-fit: contain;
-		}
+        /* (此處保留你原始的 style 設定) */
+        :root { --primary-orange: #ff9800; --deep-brown: #5d4037; --soft-bg: #fdfdfd; }
+        body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans-serif; margin: 0; padding: 0; }
+        .forum-header-mini { background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%); padding: 1.5rem 0; margin-bottom: 2rem; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .main-container { display: flex; max-width: 1200px; margin: 0 auto; gap: 24px; padding: 0 20px 40px; align-items: flex-start; }
+        .post-user-sidebar { width: 160px; flex-shrink: 0; background: #fff; border-radius: 16px; padding: 24px 15px; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); position: sticky; top: 20px; border: 1px solid #eee; }
+        .user-avatar { width: 90px; height: 90px; border-radius: 50%; margin-bottom: 15px; border: 3px solid var(--primary-orange); object-fit: cover; }
+        .user-name { font-weight: 800; color: var(--deep-brown); font-size: 1.1rem; margin-bottom: 8px; }
+        .post-article-area { flex: 1; background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #eee; }
+        .article-content-wrapper { padding: 30px; }
+        .btn-back { text-decoration: none; color: var(--primary-orange); font-weight: 800; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; transition: transform 0.2s; }
+        .btn-back:hover { transform: translateX(-5px); }
+        .post-title { font-size: 1.8rem; font-weight: 900; color: var(--deep-brown); margin: 0 0 15px 0; }
+        .post-meta-top { color: orange; font-size: 0.9rem; font-weight: 600; margin-bottom: 24px; display: flex; gap: 20px; border-bottom: 2px solid #f9f9f9; padding-bottom: 15px; }
+		.post-img-box { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 25px; }
+		.zoomable-img { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; cursor: zoom-in; transition: transform 0.2s, box-shadow 0.2s; }
+		.zoomable-img:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(255, 152, 0, 0.2); }
+		.post-img-box:has(> :only-child) .zoomable-img { width: 300px; height: 300px; }
+        .post-main-text { line-height: 1.8; font-size: 1.05rem; font-weight: 500; color: #444; white-space: pre-wrap; min-height: 200px; }
+        .comment-section { background: #fffcf8; border-top: 1px solid #f0e6d6; padding: 30px; }
+        .comment-section h4 { font-weight: 800; color: var(--deep-brown); margin-bottom: 20px; border-left: 4px solid var(--primary-orange); padding-left: 12px; }
+        .comment-item { display: flex; gap: 15px; padding: 18px 0; border-bottom: 1px solid #eee; }
+        .comment-user-mini-img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary-orange); }
+        .comment-user-name { font-weight: 800; font-size: 14px; color: var(--primary-orange); margin-right: 10px; }
+        .reply-box { margin-top: 30px; background: #fff; padding: 20px; border-radius: 12px; border: 2px solid #f0f0f0; }
+        .reply-textarea { width: 100%; border: 2px solid #eee; border-radius: 12px; padding: 15px; resize: none; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .reply-textarea:focus { outline: none; border-color: var(--primary-orange); box-shadow: 0 0 8px rgba(255, 152, 0, 0.1); }
+        .reply-submit-btn { background-color: var(--primary-orange); color: white; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; float: right; margin-top: 12px; transition: transform 0.2s, background 0.2s; }
+        .reply-submit-btn:hover { transform: scale(1.05); background-color: #e68a00; }
+        .sidebar-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .sidebar-card h4 { font-weight: 800; color: var(--deep-brown); margin-top: 0; margin-bottom: 15px; border-left: 4px solid var(--primary-orange); padding-left: 10px; }
+        .sidebar-card ul { list-style: none; padding: 0; }
+        .sidebar-card li a { text-decoration: none; color: #666; font-weight: 600; font-size: 0.95rem; display: block; padding: 6px 0; transition: color 0.2s; }
+        .sidebar-card li a:hover { color: var(--primary-orange); }
+		.transparent-popup { background: transparent !important; box-shadow: none !important; border: none !important; }
+		.zoom-out-img { cursor: zoom-out; max-width: 95vw; max-height: 95vh; object-fit: contain; }
     </style>
 </head>
 
 <body>
-
     <div class="forum-header-mini">
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
             <h2 style="color: var(--deep-brown); margin: 0; font-weight: 900;">🐾 寵物社群貼文</h2>
@@ -302,7 +56,6 @@
     </div>
 
     <div class="main-container">
-        
         <aside class="post-user-sidebar">
             <img src="https://via.placeholder.com/90" class="user-avatar" alt="User Avatar">
             <div class="user-name">原PO大大</div>
@@ -311,17 +64,13 @@
 
         <main class="post-article-area">
             <div class="article-content-wrapper">
-                
                 <a th:href="@{/forumpost/get-forum-id-for-posts(forumId=${forumId}, forumName=${forumName})}" class="btn-back">
                     <i class="fas fa-arrow-left"></i> 返回 [[${forumName}]] 列表
                 </a>
-
                 <h1 class="post-title" th:text="${forumPostVO.postTitle}"></h1>
-                
                 <div class="post-meta-top">
                     <span><i class="far fa-clock"></i> <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span></span>
                 </div>
-
                 <div class="post-img-box" th:if="${not #lists.isEmpty(picsId)}">
 				    <th:block th:each="picId : ${picsId}">
 				        <img th:src="@{/forum/get-pic-id-for-pic(picId=${picId})}" 
@@ -330,52 +79,46 @@
 				             class="zoomable-img">
 				    </th:block>
 				</div>
-
                 <div class="post-main-text" th:text="${forumPostVO.postContent}"></div>
             </div>
 
             <section class="comment-section">
                 <h4><i class="far fa-comments"></i> 留言回覆</h4>
-                
-                <div class="comment-list">
-                    <div class="comment-item">
-                        <img src="https://via.placeholder.com/45" class="comment-user-mini-img">
-                        <div class="comment-body">
-                            <div>
-                                <span class="comment-user-name">愛貓人士</span>
-                                <span style="font-size: 12px; color: #bbb; font-weight: 600;">2026-01-17 10:30</span>
-                            </div>
-                            <div style="margin-top: 5px; font-weight: 600; color: #555;">這篇分享太棒了！對新手貓奴非常有幫助！</div>
-                        </div>
-                    </div>
-                </div>
-
+                <th:block th:each="forumPostCommentVO : ${commentList}">
+	                <div class="comment-item">
+	                    <img src="https://via.placeholder.com/45" class="comment-user-mini-img">
+	                    <div class="comment-body">
+	                        <div>
+	                            <span class="comment-user-name">會員名稱</span>
+	                            <span class="need-timeago" th:datetime="${forumPostCommentVO.lastEditedAt}"></span>
+	                        </div>
+	                        <div th:text="${forumPostCommentVO.commentContent}" style="margin-top: 5px; font-weight: 600; color: #555;"></div>
+	                    </div>
+	                </div>
+				</th:block>
+				
                 <div class="reply-box">
-                    <form th:action="@{/forumreply/insert}" method="post">
+                    <form th:action="@{/forumpost/insert-comment}" th:object="${forumPostCommentVO}" method="post">
                         <input type="hidden" name="postId" th:value="${forumPostVO.postId}">
-                        <textarea class="reply-textarea" name="replyContent" rows="3" placeholder="請保持友善發言，分享您的看法..."></textarea>
-                        <button type="submit" class="reply-submit-btn">送出留言</button>
-                        <div style="clear:both;"></div>
+                        <input type="hidden" name="forumId" th:value="${forumId}">
+                        <input type="hidden" name="forumName" th:value="${forumName}">
+                        <textarea class="reply-textarea" th:field="*{commentContent}" rows="3" placeholder="請保持友善發言，分享您的看法..."></textarea>
+                        <button type="submit" class="reply-submit-btn">留言</button>
+                        <div style="clear:both;"></div>   
+
+                        <div id="commentError"
+                            th:if="${#fields.hasErrors('commentContent')}" 
+                            th:data-error="${#fields.errors('commentContent')[0]}" 
+                            style="display: none;">
+                        </div>
                     </form>
                 </div>
             </section>
         </main>
-
         <aside class="post-sidebar" style="width: 280px; flex-shrink: 0;">
             <div class="sidebar-card">
                 <h4>網站公告</h4>
-                <p style="font-size: 0.9rem; font-weight: 600; color: #777; line-height: 1.6;">
-                    請保持友善發言，嚴禁謾罵或人身攻擊。讓我們一起營造溫暖、有愛的寵物社群。
-                </p>
-            </div>
-
-            <div class="sidebar-card">
-                <h4>熱門討論版</h4>
-                <ul>
-                    <li><a href="#">🐱 喵星人日常</a></li>
-                    <li><a href="#">🐶 汪星人訓練教室</a></li>
-                    <li><a href="#">🏥 寵物健康百科</a></li>
-                </ul>
+                <p style="font-size: 0.9rem; font-weight: 600; color: #777; line-height: 1.6;">請保持友善發言，嚴禁謾罵或人身攻擊。讓我們一起營造溫暖、有愛的寵物社群。</p>
             </div>
         </aside>
     </div>
@@ -383,31 +126,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/4.0.2/timeago.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/frontend/main.js}"></script>
-    <script>
-        // 初始化 timeago
+    <script th:inline="javascript">
+        // 1. 初始化 timeago
         const nodes = document.querySelectorAll('.need-timeago');
         if (nodes.length) timeago.render(nodes, 'zh_TW');
         
+        // 2. 圖片放大 Modal
         function openImageModal(imgUrl) {
             Swal.fire({
                 imageUrl: imgUrl,
                 imageAlt: '貼文照片',
-                showConfirmButton: false, // 隱藏確認按鈕
-                showCloseButton: false,   // 隱藏關閉 X 按鈕
-                background: 'transparent', // 背景設為透明
-                backdrop: 'rgba(0,0,0,0.8)', // 遮罩設為深色半透明，強調圖片
-                width: 'auto',
-                padding: '0', // 移除內距，讓圖片緊貼邊框
-                customClass: {
-                    popup: 'transparent-popup',
-                    image: 'zoom-out-img'
-                },
-                didOpen: () => {
-                    // 點擊任何地方（包括圖片本身）就關閉
-                    Swal.getPopup().addEventListener('click', () => Swal.close());
-                }
+                showConfirmButton: false,
+                background: 'transparent',
+                backdrop: 'rgba(0,0,0,0.8)',
+                customClass: { popup: 'transparent-popup', image: 'zoom-out-img' },
+                didOpen: () => { Swal.getPopup().addEventListener('click', () => Swal.close()); }
             });
         }
+        
+     	// 3. 處理驗證錯誤彈窗
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorEl = document.getElementById('commentError');
+	        if (errorEl) {
+	            const errorText = errorEl.getAttribute('data-error');
+	            Swal.fire({
+	                icon: 'warning',
+	                title: '留言失敗',
+	                text: errorText,
+	                confirmButtonColor: '#ff9800'
+	            });
+	        }
+        });
     </script>
 </body>
 </html>

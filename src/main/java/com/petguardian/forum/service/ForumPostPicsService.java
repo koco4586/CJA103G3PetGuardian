@@ -13,7 +13,7 @@ public class ForumPostPicsService {
 	@Autowired
 	ForumPostPicsRepository repo;
 	
-	public List<Integer> getPicsIdByPostId(Integer postId){
+	public List<Integer> getPicsIdByPostId(Integer postId) {
 		return repo.findPicsIdByPostId(postId);
 	}
 	

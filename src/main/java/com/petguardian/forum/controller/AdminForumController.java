@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
+import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.ForumVO;
 
 import jakarta.validation.Valid;
@@ -26,6 +28,9 @@ public class AdminForumController {
 	
 	@Autowired
 	ForumService forumService;
+	
+	@Autowired
+	ForumPostService forumPostService;
 	
 	@GetMapping("list-all-forum")
 	public String listAllForum(Model model) {
@@ -128,6 +133,19 @@ public class AdminForumController {
 		// 新增完成重導到listAllForum
 		return "redirect:/admin/forum/list-all-forum";	
 	
+	}
+	
+	@GetMapping("get-all-handled-posts")
+	public String getAllHandledPosts(ModelMap model) {
+		
+		// 開始查詢資料
+		List<ForumPostVO> postList = forumPostService.getAllHandledPosts();
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("postList", postList);
+		
+		return "";
+		
 	}
 	
 }

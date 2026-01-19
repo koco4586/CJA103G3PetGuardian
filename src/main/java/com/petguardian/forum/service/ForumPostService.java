@@ -64,8 +64,8 @@ public class ForumPostService {
 		return repo.findByKeyword(keyword, forumId);
 	}
 	
-	public List<ForumPostVO> getAllReportedPost(){
-		return repo.getAllReportedPost();
+	public List<ForumPostVO> getAllHandledPosts(){
+		return repo.getAllHandledPosts();
 	}
 	
 	public byte[] getPostPic(Integer postId) {
