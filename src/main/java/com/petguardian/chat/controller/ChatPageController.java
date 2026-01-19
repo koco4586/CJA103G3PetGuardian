@@ -1,11 +1,11 @@
 package com.petguardian.chat.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.petguardian.chat.model.ChatMemberDTO;
 import com.petguardian.chat.service.AuthStrategyService;
@@ -42,13 +42,19 @@ public class ChatPageController {
     /**
      * Entry Point: Chat MVP Interface.
      * 
-     * Orchestrates the initial state required for the chat application:
+     * Endpoint: /chat
+     * Methods: GET, POST
+     * 
+     * Orchestrates the initial state required for the chat application.
+     * Supports POST requests to allow secure transmission of 'sessionId' (hidden
+     * from URL).
+     * 
      * 1. Validates User Session (Redirect/Error if invalid)
      * 2. Loads Current User Profile
      * 3. Fetches Directory of Contacts
      * 4. Previews Latest Messages for Sidebar
      */
-    @GetMapping("/chat/mvp")
+    @RequestMapping(value = "/chat", method = { RequestMethod.GET, RequestMethod.POST })
     public String chatMvpPage(HttpServletRequest request, Model model) {
         Integer userId = authStrategyService.getCurrentUserId(request);
         String userName = authStrategyService.getCurrentUserName(request);
@@ -68,16 +74,13 @@ public class ChatPageController {
             currentUser = new ChatMemberDTO(userId, userName != null ? userName : "User " + userId);
         }
 
-        // 2. Contact List
-        List<ChatMemberDTO> allMembers = chatPageService.getAllMembers();
-
-        // 3. Sidebar Previews
-        Map<Integer, String> lastMessages = chatPageService.getLastMessages(userId);
+        // 2. Chatroom List (Sidebar)
+        List<com.petguardian.chat.model.ChatRoomDTO> chatrooms = chatPageService.getMyChatrooms(userId);
 
         // View Model Population
         model.addAttribute("currentUser", currentUser);
-        model.addAttribute("users", allMembers);
-        model.addAttribute("lastMessages", lastMessages);
+        model.addAttribute("chatrooms", chatrooms);
+        // Note: Sidebar data consolidated in ChatRoomDTO (via getMyChatrooms)
 
         return "frontend/chat/chat-mvp";
     }
