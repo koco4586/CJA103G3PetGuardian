@@ -3,7 +3,9 @@ package com.petguardian.shop.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "product")
@@ -43,6 +45,10 @@ public class Product {
 
     @Column(name = "launched_time", nullable = false)
     private LocalDateTime launchedTime;
+
+    // 一對多關聯：一個商品有多張圖片
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ProductPic> productPics;
 
     @PrePersist
     protected void onCreate() {

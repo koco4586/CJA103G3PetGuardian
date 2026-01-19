@@ -1,5 +1,6 @@
 package com.petguardian.sellerreview.model;
 
+import com.petguardian.orders.model.OrdersVO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,4 +31,7 @@ public class SellerReviewVO {
 
     @Column(name = "show_status", nullable = false)
     private Integer showStatus = 0; // 0:顯示 1:不顯示
+
+    public void setOrder(OrdersVO order) {
+    }
 }
