@@ -63,6 +63,12 @@ public class ChatRoomVO implements Serializable {
     @Column(name = "last_message_preview", length = 200)
     private String lastMessagePreview;
 
+    @Column(name = "mem1_last_read_at")
+    private LocalDateTime mem1LastReadAt;
+
+    @Column(name = "mem2_last_read_at")
+    private LocalDateTime mem2LastReadAt;
+
     /**
      * Resolves the ID of the conversation partner for a given user.
      * 

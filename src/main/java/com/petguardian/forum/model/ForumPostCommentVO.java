@@ -6,6 +6,8 @@ import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -47,7 +49,6 @@ public class ForumPostCommentVO implements Serializable{
 	
 	@Column(name = "comment_content")
 	@NotBlank(message = "留言內容請勿空白")
-	@Size(min = 1, max = 800, message = "留言長度必需在{min}到{max}字之間")
 	private String commentContent;
 	
 	@Lob
@@ -58,6 +59,7 @@ public class ForumPostCommentVO implements Serializable{
 	private Timestamp createdAt;
 	
 	@Column(name = "last_edited_at", insertable = false, updatable = false)
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp lastEditedAt;
 	
 	@Column(name = "comment_status", insertable = false)

@@ -1,8 +1,6 @@
 package com.petguardian.chat.service;
 
 import java.util.List;
-import java.util.Map;
-
 import com.petguardian.chat.model.ChatMemberDTO;
 
 /**
@@ -15,13 +13,6 @@ import com.petguardian.chat.model.ChatMemberDTO;
 public interface ChatPageService {
 
     /**
-     * Retrieves the complete directory of chat-enabled members.
-     * 
-     * @return List of Member DTOs
-     */
-    List<ChatMemberDTO> getAllMembers();
-
-    /**
      * Resolves member details by unique identifier.
      * 
      * @param memId Member ID
@@ -30,11 +21,11 @@ public interface ChatPageService {
     ChatMemberDTO getMember(Integer memId);
 
     /**
-     * Compiles a summary of recent conversations for the current user.
-     * Returns a map of partner IDs to their latest message preview.
+     * Retrieves a summarized list of all chatrooms for the sidebar.
+     * Sorted by latest activity.
      * 
      * @param currentUserId Context User ID
-     * @return {@code Map<PartnerId, PreviewText>}
+     * @return List of summarized chatroom DTOs
      */
-    Map<Integer, String> getLastMessages(Integer currentUserId);
+    List<com.petguardian.chat.model.ChatRoomDTO> getMyChatrooms(Integer currentUserId);
 }

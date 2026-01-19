@@ -16,12 +16,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petguardian.forum.service.ForumPostCommentService;
 import com.petguardian.forum.service.ForumPostPicsService;
 import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
 
 import jakarta.validation.Valid;
 
+import com.petguardian.forum.model.ForumPostCommentVO;
 import com.petguardian.forum.model.ForumPostPicsVO;
 import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.ForumVO;
@@ -39,6 +41,9 @@ public class ForumPostController {
 	@Autowired
 	ForumPostPicsService forumPostPicsService;
 	
+	@Autowired
+	ForumPostCommentService forumPostCommentService;
+	
 	@GetMapping("get-forum-id-for-posts")
 	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, ModelMap model) {
 		List<ForumPostVO> postList = forumPostService.getAllActiveByForumId(forumId);
@@ -53,13 +58,19 @@ public class ForumPostController {
 	@GetMapping("get-post-id-for-one-post")
 	public String getPostIdForOnePost(@RequestParam("postId") Integer postId, ModelMap model) {
 		
+		ForumPostCommentVO forumPostCommentVO = new ForumPostCommentVO();
+		
 		// 開始查詢資料
 		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
 		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		List<ForumPostCommentVO> commentList = forumPostCommentService.getCommentsByPostId(postId);
 		
 		// 查詢完成，交給負責的html顯示
 		model.addAttribute("forumPostVO", forumPostVO);
 		model.addAttribute("picsId", picsId);
+		model.addAttribute("commentList", commentList);
+		model.addAttribute("forumPostCommentVO", forumPostCommentVO);
+		
 		return "frontend/forum/one-post";
 	}
 	
@@ -158,7 +169,7 @@ public class ForumPostController {
 			// 設定閃退訊息 (Flash Attribute)，重導向後會消失，不會重複出現
 		    ra.addFlashAttribute("successMsgs", "🎉 貼文發表成功！");
 			
-		    // 新增完成重導到成功頁面
+		    // 新增完成重導到該討論區列表頁面
 			Integer forumId = forumPostVO.getForum().getForumId();
 			
 			return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
@@ -170,12 +181,42 @@ public class ForumPostController {
 			// 設定閃退訊息 (Flash Attribute)，重導向後會消失，不會重複出現
 		    ra.addFlashAttribute("successMsgs", "🎉 貼文發表成功！");
 			
-			// 新增完成重導到成功頁面
+			// 新增完成重導到該討論區列表頁面
 			Integer forumId = forumPostVO.getForum().getForumId();
 			
 			return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
 		}
 		
+	}
+	
+	@PostMapping("insert-comment")
+	public String insertComment(@Valid ForumPostCommentVO forumPostCommentVO, BindingResult result, ModelMap model, RedirectAttributes ra,
+								@RequestParam("commentContent") String commentContent,
+								@RequestParam("postId") Integer postId,
+								@RequestParam("forumId") Integer forumId,
+								@RequestParam("forumName") String forumName) {
+		
+		// Java Bean Validation 錯誤處理
+		if(result.hasErrors()) {
+			
+			ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
+			List<ForumPostCommentVO> commentList = forumPostCommentService.getCommentsByPostId(postId);
+			
+			model.addAttribute("forumPostVO", forumPostVO);
+			model.addAttribute("commentList", commentList);
+			
+			return "frontend/forum/one-post";
+		}
+		
+		// 開始新增資料
+		forumPostCommentService.addCommentByPostId(commentContent, postId);
+		
+		// 重導會拿不到資料，因為有返回按鈕，所以要用RedirectAttributes把資料塞回去。
+		ra.addAttribute("forumName", forumName);
+		ra.addAttribute("forumId", forumId);
+		
+		// 新增完成重導到該貼文頁面
+		return "redirect:/forumpost/get-post-id-for-one-post?postId=" + postId;
 	}
 	
 	@GetMapping("get-keyword-for-posts")

@@ -22,4 +22,7 @@ public class ChatMessageDTO {
     private String replyToId; // TSID reference
     private String replyToContent;
     private String replyToSenderName;
+
+    // Context
+    private Integer chatroomId;
 }
