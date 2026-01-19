@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單完成 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/order-complete.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container" style="margin-top: 2rem; margin-bottom: 4rem;">
+
+        <!-- 進度條 -->
+        <div class="checkout-progress">
+            <div class="progress-step completed">
+                <div class="step-circle">✓</div>
+                <span class="step-label">選擇商品</span>
+            </div>
+            <div class="progress-line active"></div>
+            <div class="progress-step completed">
+                <div class="step-circle">✓</div>
+                <span class="step-label">填寫資料</span>
+            </div>
+            <div class="progress-line active"></div>
+            <div class="progress-step active completed">
+                <div class="step-circle">✓</div>
+                <span class="step-label">完成訂單</span>
+            </div>
+        </div>
+
+        <!-- 訂單完成內容 -->
+        <div class="order-complete-container">
+
+            <!-- 成功圖示與訊息 -->
+            <div class="success-header">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1 class="success-title">訂單已成功建立！</h1>
+                <p class="success-subtitle">感謝您的購買，我們將盡快為您處理訂單</p>
+            </div>
+
+            <!-- 訂單資訊卡片 -->
+            <div class="card order-info-card">
+                <div class="card-header">
+                    <h3>
+                        <i class="fas fa-file-invoice" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        訂單資訊
+                    </h3>
+                </div>
+
+                <div class="order-info-row">
+                    <span class="info-label">訂單編號</span>
+                    <span class="info-value order-id" id="orderId">載入中...</span>
+                </div>
+
+                <div class="order-info-row">
+                    <span class="info-label">訂單時間</span>
+                    <span class="info-value" id="orderTime">載入中...</span>
+                </div>
+
+                <div class="order-info-row">
+                    <span class="info-label">訂單狀態</span>
+                    <span class="info-value">
+                        <span class="status-badge status-paid" id="orderStatus">已付款</span>
+                    </span>
+                </div>
+
+                <div class="order-info-row">
+                    <span class="info-label">付款方式</span>
+                    <span class="info-value" id="paymentMethod">載入中...</span>
+                </div>
+
+                <div class="order-info-row total-row">
+                    <span class="info-label">訂單金額</span>
+                    <span class="info-value total-amount" id="orderTotal">$0</span>
+                </div>
+            </div>
+
+            <!-- 商品明細 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>
+                        <i class="fas fa-shopping-bag" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        商品明細
+                    </h3>
+                </div>
+
+                <div id="orderItemsList">
+                    <!-- JS 動態填入 -->
+                </div>
+            </div>
+
+            <!-- 收件人資訊 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>
+                        <i class="fas fa-truck" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        收件人資訊
+                    </h3>
+                </div>
+
+                <div class="receiver-info">
+                    <div class="receiver-row">
+                        <i class="fas fa-user"></i>
+                        <span id="receiverName">載入中...</span>
+                    </div>
+                    <div class="receiver-row">
+                        <i class="fas fa-phone"></i>
+                        <span id="receiverPhone">載入中...</span>
+                    </div>
+                    <div class="receiver-row">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="receiverAddress">載入中...</span>
+                    </div>
+                    <div class="receiver-row" id="specialInstructionsRow" style="display: none;">
+                        <i class="fas fa-comment"></i>
+                        <span id="specialInstructions"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下一步說明 -->
+            <div class="card notice-card">
+                <h4 style="margin-bottom: 1rem; color: var(--text-color);">
+                    <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
+                    接下來會發生什麼？
+                </h4>
+                <div class="next-steps">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <strong>賣家確認訂單</strong>
+                            <p>賣家將在 24 小時內確認您的訂單</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <strong>商品準備與出貨</strong>
+                            <p>賣家將於 3 個工作天內完成出貨</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <strong>追蹤物流狀態</strong>
+                            <p>您可以在「我的訂單」中查看物流進度</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <strong>收貨並確認</strong>
+                            <p>收到商品後請盡快確認，如有問題請聯繫客服</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按鈕 -->
+            <div class="action-buttons">
+                <button class="btn btn-outline" onclick="window.location.href='/store'">
+                    <i class="fas fa-shopping-cart"></i> 繼續購物
+                </button>
+                <button class="btn btn-primary" onclick="viewOrderDetails()">
+                    <i class="fas fa-list-alt"></i> 查看訂單詳情
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <footer id="main-footer" style="background-color: #f9f9f9;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+    <script src="/js/frontend/order-complete.js"></script>
+
+</body>
+
+</html>
