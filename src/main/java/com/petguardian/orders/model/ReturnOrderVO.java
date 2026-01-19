@@ -1,4 +1,4 @@
-package com.petguardian.returnorder.model;
+package com.petguardian.orders.model;
 
 
 import jakarta.persistence.*;
