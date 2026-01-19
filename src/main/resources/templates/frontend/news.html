@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>最新消息 | PetGuardian</title>
-    <link rel="stylesheet" href="../../static/css/frontend/style.css">
-    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .page-header {
@@ -16,127 +15,85 @@
             border-bottom-left-radius: 24px;
             border-bottom-right-radius: 24px;
         }
+
+        .news-item {
+            border-bottom: 1px solid #eee;
+            padding: 1.5rem 0;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 
 <body>
+<!-- 動態載入 Header -->
+<header id="main-header" class="header"></header>
 
-    <header id="main-header" class="header"></header>
-
-    <div class="page-header">
-        <div class="container">
-            <h1 class="text-center mb-1">📰 最新消息</h1>
-            <p class="text-center" style="color: #666;">掌握最新的平台公告、活動資訊與寵物照護知識</p>
-        </div>
+<!-- 頁面標題區 -->
+<div class="page-header">
+    <div class="container">
+        <h1 class="text-center mb-1">📰 最新消息</h1>
+        <p class="text-center" style="color: #666;">掌握最新的平台公告、活動資訊與寵物照護知識</p>
     </div>
+</div>
 
-    <div class="container" style="padding: 0 1rem;">
+<!-- 主要內容區 -->
+<div class="container" style="padding: 0 1rem;">
+    <div style="max-width: 800px; margin: 0 auto;">
 
-        <div style="max-width: 800px; margin: 0 auto;">
-
-            <!-- News Item 1 -->
-            <div class="card mb-2" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=300"
-                    style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px;">
-                <div style="flex: 1;">
-                    <div class="d-flex justify-between align-center mb-1">
-                        <span class="badge badge-primary">平台公告</span>
-                        <span style="color: #999; font-size: 0.9rem;">2023/12/28</span>
-                    </div>
-                    <h3 class="mb-1">PetGuardian APP 正式上線啦！</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">
-                        為了提供更便捷的服務，我們的 iOS 與 Android 版本已經正式上架。立即下載體驗隨時隨地的寵物照護服務...
-                    </p>
-                    <a href="#" class="text-primary" style="font-weight: 700;">閱讀更多 -></a>
-                </div>
-            </div>
-
-            <!-- News Item 2 -->
-            <div class="card mb-2" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=300"
-                    style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px;">
-                <div style="flex: 1;">
-                    <div class="d-flex justify-between align-center mb-1">
-                        <span class="badge badge-accent">照護知識</span>
-                        <span style="color: #999; font-size: 0.9rem;">2023/12/25</span>
-                    </div>
-                    <h3 class="mb-1">冬季寵物保暖大作戰</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">
-                        寒流來襲，家裡的毛小孩也需要保暖嗎？獸醫師建議氣溫低於15度時，短毛貓狗應注意...
-                    </p>
-                    <a href="#" class="text-primary" style="font-weight: 700;">閱讀更多 -></a>
-                </div>
-            </div>
-
-            <!-- News Item 3 -->
-            <div class="card mb-2" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                <img src="https://images.unsplash.com/photo-1623387641168-d9803ddd3f35?auto=format&fit=crop&q=80&w=300"
-                    style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px;">
-                <div style="flex: 1;">
-                    <div class="d-flex justify-between align-center mb-1">
-                        <span class="badge badge-secondary" style="background: #e3f2fd; color: #1565c0;">合作優惠</span>
-                        <span style="color: #999; font-size: 0.9rem;">2023/12/20</span>
-                    </div>
-                    <h3 class="mb-1">歡慶聖誕！指定保母服務 85 折</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">
-                        即日起至年底，預約帶有「聖誕快樂」標籤的保母，結帳輸入優惠碼 XMAS2023 即可享有折扣...
-                    </p>
-                    <a href="#" class="text-primary" style="font-weight: 700;">閱讀更多 -></a>
-                </div>
-            </div>
-
+        <!-- 如果沒有資料顯示提示 -->
+        <div th:if="${#lists.isEmpty(newsList)}" class="text-center" style="padding: 3rem;">
+            <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+            <p style="color: #999;">目前沒有最新消息。</p>
         </div>
+
+        <!-- 消息列表 -->
+        <div th:each="news : ${newsList}" class="news-item">
+            <div class="d-flex justify-between align-center mb-1">
+                <!-- 標籤 -->
+                <span class="badge"
+                      th:classappend="${news.newsType.newsTypeId == 1 ? 'badge-primary' :
+                                          (news.newsType.newsTypeId == 2 ? 'badge-accent' :
+                                          (news.newsType.newsTypeId == 3 ? 'badge-secondary' : 'badge-warning'))}"
+                      th:text="${news.newsType.newsTypeName}">
+                        平台公告
+                    </span>
+
+                <!-- 日期 -->
+                <span style="color: #999; font-size: 0.9rem;"
+                      th:text="${#temporals.format(news.publishDate, 'yyyy/MM/dd')}">
+                        2023/12/28
+                    </span>
+            </div>
+
+            <!-- 標題 -->
+            <h3 class="mb-1" th:text="${news.title}">標題範例</h3>
+
+            <!-- 內容預覽（只顯示前兩行） -->
+            <p style="color: #666; margin-bottom: 1rem;
+                          display: -webkit-box; -webkit-line-clamp: 2;
+                          -webkit-box-orient: vertical; overflow: hidden;"
+               th:text="${news.content}">
+                內容範例...
+            </p>
+
+            <!-- 閱讀更多連結 -->
+            <a th:href="@{/news/detail/{id}(id=${news.newsId})}"
+               class="text-primary"
+               style="font-weight: 700;">
+                閱讀更多 →
+            </a>
+        </div>
+
     </div>
+</div>
 
-    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
-    <script src="../../static/js/frontend/main.js"> </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchNews();
-        });
+<!-- 動態載入 Footer -->
+<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 
-        async function fetchNews() {
-            try {
-                // 呼叫後端 API
-                const response = await fetch('/api/news/public/list');
-                if (!response.ok) throw new Error('網路回應錯誤');
-
-                const newsData = await response.json();
-                renderNews(newsData);
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('news-list').innerHTML = '<p>載入失敗，請稍後再試。</p>';
-            }
-        }
-
-        function renderNews(data) {
-            const container = document.getElementById('news-list');
-            container.innerHTML = ''; // 清空載入文字
-
-            if (data.length === 0) {
-                container.innerHTML = '<p>目前沒有最新消息。</p>';
-                return;
-            }
-
-            data.forEach(news => {
-                const date = new Date(news.createdTime).toLocaleDateString();
-                const html = `
-                             <div class="news-card">
-                                <div class="news-title">
-                                      <span class="tag">公告</span> ${news.title}
-                                    </div>
-                                    <div class="news-meta">
-                                        <i class="far fa-calendar-alt"></i> 發布日期: ${date}
-                                    </div>
-                                    <div class="news-content">
-                                        ${news.content.substring(0, 100)}... <a href="#">閱讀更多</a>
-                                    </div>
-                                </div>
-                                `;
-                container.innerHTML += html;
-            });
-        }
-    </script>
+<!-- JavaScript -->
+<script th:src="@{/js/frontend/main.js}"></script>
 </body>
-
 </html>

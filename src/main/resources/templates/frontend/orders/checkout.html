@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>結帳 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/checkout.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container" style="margin-top: 2rem; margin-bottom: 4rem;">
+
+        <!-- 進度條 -->
+        <div class="checkout-progress">
+            <div class="progress-step active completed">
+                <div class="step-circle">✓</div>
+                <span class="step-label">選擇商品</span>
+            </div>
+            <div class="progress-line active"></div>
+            <div class="progress-step active">
+                <div class="step-circle">2</div>
+                <span class="step-label">填寫資料</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step">
+                <div class="step-circle">3</div>
+                <span class="step-label">完成訂單</span>
+            </div>
+        </div>
+
+        <!-- 主要內容區域 -->
+        <div class="checkout-container">
+
+            <!-- 左側：表單區域 -->
+            <div class="checkout-form-section">
+
+                <!-- 訂單摘要卡片 (手機版在上方) -->
+                <div class="card order-summary-mobile">
+                    <h3 class="mb-2">訂單摘要</h3>
+                    <div id="mobile-order-items">
+                        <!-- JS 動態填入 -->
+                    </div>
+                    <div class="divider"></div>
+                    <div class="d-flex justify-between mb-1">
+                        <span>商品小計</span>
+                        <span id="mobile-subtotal">$0</span>
+                    </div>
+                    <div class="d-flex justify-between mb-2">
+                        <span>運費</span>
+                        <span id="mobile-shipping">$60</span>
+                    </div>
+                    <div class="d-flex justify-between"
+                        style="font-size: 1.2rem; font-weight: 800; color: var(--primary-color);">
+                        <span>總金額</span>
+                        <span id="mobile-total">$0</span>
+                    </div>
+                </div>
+
+                <!-- 收件人資訊 -->
+                <div class="card">
+                    <h3 class="mb-2">
+                        <i class="fas fa-user-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        收件人資訊
+                    </h3>
+
+                    <form id="checkout-form">
+                        <div class="form-group">
+                            <label class="form-label required">收件人姓名</label>
+                            <input type="text" class="form-control" id="receiverName" name="receiverName"
+                                placeholder="請輸入收件人姓名" required maxlength="20">
+                            <span class="error-message" id="error-receiverName"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">聯絡電話</label>
+                            <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone"
+                                placeholder="例如：0912345678" required maxlength="20" pattern="[0-9]{10}">
+                            <span class="error-message" id="error-receiverPhone"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">收件地址</label>
+                            <input type="text" class="form-control" id="receiverAddress" name="receiverAddress"
+                                placeholder="請輸入完整地址（含縣市、區、街道）" required maxlength="100">
+                            <span class="error-message" id="error-receiverAddress"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">備註說明（選填）</label>
+                            <textarea class="form-control" id="specialInstructions" name="specialInstructions" rows="3"
+                                placeholder="例如：請勿按門鈴、放管理室..." maxlength="200"></textarea>
+                            <small style="color: #999; font-size: 0.85rem;">最多 200 字</small>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 付款方式 -->
+                <div class="card">
+                    <h3 class="mb-2">
+                        <i class="fas fa-credit-card" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        付款方式
+                    </h3>
+
+                    <div class="payment-options">
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="0" checked>
+                            <div class="payment-card">
+                                <div class="d-flex align-center">
+                                    <i class="fas fa-credit-card"
+                                        style="font-size: 1.5rem; color: var(--primary-color); margin-right: 1rem;"></i>
+                                    <div>
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">信用卡付款</div>
+                                        <small style="color: #999;">支援 VISA / Master / JCB</small>
+                                    </div>
+                                </div>
+                                <div class="payment-check">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="payment-option">
+                            <input type="radio" name="paymentMethod" value="1">
+                            <div class="payment-card">
+                                <div class="d-flex align-center">
+                                    <i class="fas fa-mobile-alt"
+                                        style="font-size: 1.5rem; color: var(--primary-color); margin-right: 1rem;"></i>
+                                    <div>
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">行動支付</div>
+                                        <small style="color: #999;">LINE Pay / Apple Pay</small>
+                                    </div>
+                                </div>
+                                <div class="payment-check">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 注意事項 -->
+                <div class="card notice-card">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-color);">
+                        <i class="fas fa-info-circle" style="color: var(--warning);"></i>
+                        購買須知
+                    </h4>
+                    <ul style="list-style: disc; padding-left: 1.5rem; color: #666; line-height: 1.8;">
+                        <li>收到商品後請盡快確認，3天內可退貨</li>
+                        <li>商品照片與描述僅供參考，實際狀況以商品為準</li>
+                        <li>如有問題請聯繫客服：0800-000-000</li>
+                    </ul>
+                </div>
+
+
+                <!-- 按鈕區 -->
+                <div class="d-flex gap-md" style="margin-top: 2rem;">
+                    <button class="btn btn-outline" onclick="backToStore()" style="flex: 1;">
+                        <i class="fas fa-arrow-left"></i> 返回商品
+                    </button>
+                    <button class="btn btn-primary" id="submit-order-btn" onclick="submitOrder()" style="flex: 2;">
+                        <i class="fas fa-lock"></i> 確認並付款
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- 右側：訂單摘要 (桌面版) -->
+            <div class="order-summary-desktop">
+                <div class="card sticky-summary">
+                    <h3 class="mb-2">訂單摘要</h3>
+
+                    <!-- 商品列表 -->
+                    <div id="order-items-list" style="margin-bottom: 1.5rem;">
+                        <!-- JS 動態填入 -->
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- 費用明細 -->
+                    <div class="d-flex justify-between mb-1">
+                        <span style="color: #666;">商品小計</span>
+                        <span id="desktop-subtotal">$0</span>
+                    </div>
+                    <div class="d-flex justify-between mb-2">
+                        <span style="color: #666;">運費</span>
+                        <span id="desktop-shipping">$60</span>
+                    </div>
+                    <div class="d-flex justify-between mb-3"
+                        style="font-size: 1.3rem; font-weight: 800; color: var(--primary-color);">
+                        <span>總金額</span>
+                        <span id="desktop-total">$0</span>
+                    </div>
+
+                    <!-- 安全提示 -->
+                    <div
+                        style="background: var(--secondary-color); padding: 1rem; border-radius: 12px; text-align: center;">
+                        <i class="fas fa-shield-alt"
+                            style="font-size: 2rem; color: var(--success); margin-bottom: 0.5rem;"></i>
+                        <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                            <strong>安全交易保障</strong><br>
+                            由寵護家平台擔保交易安全
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer id="main-footer" style="background-color: #f9f9f9;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+    <script src="/js/frontend/checkout.js"></script>
+
+</body>
+
+</html>

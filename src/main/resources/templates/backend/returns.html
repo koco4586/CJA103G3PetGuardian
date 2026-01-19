@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 退貨管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../../static/css/backend/style.css">
+</head>
+
+<body>
+    <script src="../../static/js/backend/sidebar.js"></script>
+
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>退貨管理</h1>
+                <div class="sub">管理所有退貨申請</div>
+            </div>
+        </header>
+
+        <!-- 統計卡片 -->
+        <section class="stats-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card">
+                <i class="fa-solid fa-clock" style="color:#f39c12"></i>
+                <div>
+                    <div class="stat-value" id="stat-pending">0</div>
+                    <div>待審核</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fa-solid fa-check-circle" style="color:#2ecc71"></i>
+                <div>
+                    <div class="stat-value" id="stat-approved">0</div>
+                    <div>已通過</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fa-solid fa-times-circle" style="color:#e74c3c"></i>
+                <div>
+                    <div class="stat-value" id="stat-rejected">0</div>
+                    <div>已拒絕</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="tab-container" style="margin-bottom: 1.5rem;">
+                <button class="tab-btn active" onclick="filterReturns('all', this)">
+                    <i class="fa-solid fa-list"></i> 全部退貨
+                </button>
+                <button class="tab-btn" onclick="filterReturns(0, this)">
+                    <i class="fa-solid fa-clock"></i> 待審核
+                </button>
+                <button class="tab-btn" onclick="filterReturns(1, this)">
+                    <i class="fa-solid fa-check-circle"></i> 已通過
+                </button>
+                <button class="tab-btn" onclick="filterReturns(2, this)">
+                    <i class="fa-solid fa-times-circle"></i> 已拒絕
+                </button>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 1.5rem;">退貨申請列表</h3>
+
+                <table id="returnsTable">
+                    <thead>
+                        <tr>
+                            <th>退貨單號</th>
+                            <th>訂單編號</th>
+                            <th>申請時間</th>
+                            <th>退貨原因</th>
+                            <th>退款金額</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- JavaScript 會動態填入退貨資料 -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- 退貨詳情視窗 -->
+    <div id="returnDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:12px; padding:2rem; max-width:600px; width:90%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;">退貨詳情</h2>
+                <button onclick="closeReturnDetail()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+
+            <div id="returnDetailContent">
+                <!-- 退貨詳情內容會由 JavaScript 填入 -->
+            </div>
+
+            <div id="returnActions" style="display:flex; gap:1rem; margin-top:2rem;">
+                <!-- 操作按鈕會由 JavaScript 填入 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../../static/js/backend/returns.js"></script>
+</body>
+
+</html>

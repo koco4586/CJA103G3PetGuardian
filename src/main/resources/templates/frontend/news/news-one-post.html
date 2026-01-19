@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${news.title} + ' | PetGuardian'">消息詳情 | PetGuardian</title>
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .news-detail-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 2rem;
+        }
+        .news-content {
+            line-height: 1.8;
+            color: #333;
+            font-size: 1.05rem;
+            white-space: pre-wrap; /* 保留換行 */
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+
+<body>
+<!-- 動態載入 Header -->
+<header id="main-header" class="header"></header>
+
+<!-- 主要內容區 -->
+<div class="container" style="padding: 0 1rem;">
+    <div class="news-detail-container">
+
+        <!-- 返回按鈕 -->
+        <a th:href="@{/news/list}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+
+        <!-- Meta 資訊區 -->
+        <div class="news-meta">
+                <span class="badge"
+                      th:classappend="${news.newsType.newsTypeId == 1 ? 'badge-primary' :
+                                      (news.newsType.newsTypeId == 2 ? 'badge-accent' :
+                                      (news.newsType.newsTypeId == 3 ? 'badge-secondary' : 'badge-warning'))}"
+                      th:text="${news.newsType.newsTypeName}">
+                    平台公告
+                </span>
+
+            <span style="color: #999; font-size: 0.9rem;">
+                    <i class="far fa-calendar"></i>
+                    <span th:text="${#temporals.format(news.publishDate, 'yyyy年MM月dd日')}">2023年12月28日</span>
+                </span>
+        </div>
+
+        <!-- 標題 -->
+        <h1 th:text="${news.title}" style="margin-bottom: 1.5rem; color: var(--text-color);">
+            標題範例
+        </h1>
+
+        <!-- 內容 -->
+        <div class="news-content" th:text="${news.content}">
+            這裡是文章的完整內容...
+        </div>
+
+    </div>
+</div>
+
+<!-- 動態載入 Footer -->
+<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+
+<!-- JavaScript -->
+<script th:src="@{/js/frontend/main.js}"></script>
+</body>
+</html>
