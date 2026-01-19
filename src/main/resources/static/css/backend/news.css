@@ -1,0 +1,92 @@
+/* =========================================
+   消息管理專用樣式 (news.css)
+   ========================================= */
+
+/* 1. 隱藏 Modal (防止它像第一張圖那樣直接跑出來) */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+.modal.active { display: flex; }
+
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+/* 2. 仿照第二張圖的 Header 設計 */
+header {
+    background: #D4B483; /* 或是您喜歡的奶茶色/橘色漸層 */
+    background: linear-gradient(135deg, #e3c192 0%, #ce875b 100%);
+    padding: 30px;
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(206, 135, 91, 0.2);
+}
+
+header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+}
+
+header .sub {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* 3. 卡片容器調整 (像第二張圖那樣有圓角跟陰影) */
+section {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.card {
+    border: none;
+    background: #fafafa;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+/* 4. 表格質感提升 */
+table {
+    width: 100%;
+    border-spacing: 0;
+}
+
+th {
+    background: #fdfdfd;
+    color: #888;
+    padding: 15px;
+    border-bottom: 2px solid #eee;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #f5f5f5;
+    color: #555;
+}
+
+/* 5. 表單群組間距 */
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #6B4C3B;
+}
