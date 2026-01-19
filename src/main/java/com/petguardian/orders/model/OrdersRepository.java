@@ -21,6 +21,4 @@ public interface OrdersRepository extends JpaRepository<OrdersVO, Integer> {
         // 根據訂單狀態查詢賣家訂單
         List<OrdersVO> findBySellerMemIdAndOrderStatusOrderByOrderTimeDesc(
                         Integer sellerMemId, Integer orderStatus);
-
-    List<OrdersVO> findByOrderStatusOrderByOrderTimeDesc(int i);
 }

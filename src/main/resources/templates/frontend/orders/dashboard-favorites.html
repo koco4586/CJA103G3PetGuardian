@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/dashboard.css">
+    <style>
+    </style>
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <!-- Flash Messages -->
+    <div th:if="${message}" class="flash-message success">
+        <i class="fas fa-check-circle"></i> <span th:text="${message}">成功訊息</span>
+    </div>
+    <div th:if="${error}" class="flash-message error">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">錯誤訊息</span>
+    </div>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
+                </div>
+                <h4 th:text="${memberName} ?: '會員'">會員名稱</h4>
+                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
+            </div>
+            <nav>
+                <a href="/dashboard" class="menu-item">
+                    <i class="fas fa-user"></i> 個人資料
+                </a>
+                <a href="/dashboard/pets" class="menu-item">
+                    <i class="fas fa-paw"></i> 我的寵物
+                </a>
+                <a th:href="@{/dashboard/orders}" class="menu-item">
+                    <i class="fas fa-receipt"></i> 商城訂單紀錄
+                </a>
+                <a href="/dashboard/bookings" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
+                </a>
+                <a th:href="@{/dashboard/favorites}" class="menu-item active">
+                    <i class="fas fa-heart"></i> 收藏列表
+                </a>
+                <a href="/dashboard/sitter-registration" class="menu-item"
+                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
+                    <i class="fas fa-user-plus"></i> 成為保母
+                </a>
+                <a href="/logout" class="menu-item" style="color: var(--danger);">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="favorites">
+                <div class="d-flex justify-between align-center mb-2">
+                    <h2 style="margin: 0;">我的收藏</h2>
+                    <span style="color: #999; font-size: 0.9rem;"
+                        th:text="${favorites != null} ? '共 ' + ${#lists.size(favorites)} + ' 件商品' : '共 0 件商品'">
+                        共 0 件商品
+                    </span>
+                </div>
+
+                <div class="sub-tabs">
+                    <div class="sub-tab" onclick="filterFavorites('sitters', this)">保母</div>
+                    <div class="sub-tab active" onclick="filterFavorites('store', this)">二手商品</div>
+                    <div class="sub-tab" onclick="filterFavorites('articles', this)">文章</div>
+                </div>
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+
+
+
+</body>
+
+</html>
