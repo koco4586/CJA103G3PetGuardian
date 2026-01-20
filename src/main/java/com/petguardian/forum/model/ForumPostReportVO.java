@@ -31,8 +31,8 @@ public class ForumPostReportVO implements Serializable{
 	private Member member;
 	
 	// 測試用
-	@Transient
-	private Integer memId;
+//	@Transient
+//	private Integer memId;
 	
 	@ManyToOne
 	@JoinColumn(name = "post_id", referencedColumnName = "post_id")
@@ -86,13 +86,13 @@ public class ForumPostReportVO implements Serializable{
 		this.reportId = reportId;
 	}
 	
-	public Integer getMemId() {
-		return memId;
-	}
-	
-	public void setMemId(Integer memId) {
-		this.memId = memId;
-	}
+//	public Integer getMemId() {
+//		return memId;
+//	}
+//	
+//	public void setMemId(Integer memId) {
+//		this.memId = memId;
+//	}
 	
 //	public Integer getPostId() {
 //		return postId;

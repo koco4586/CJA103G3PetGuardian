@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.petguardian.member.model.Member;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,15 +26,19 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "forumpostcomment")
-public class ForumPostCommentVO implements Serializable{
+public class ForumCommentVO implements Serializable{
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "comment_id", updatable = false)
 	private Integer commentId;
 	
-	@Column(name = "mem_id", updatable = false)
-	private Integer memId;
+//	@Column(name = "mem_id", updatable = false)
+//	private Integer memId;
+	
+	@ManyToOne
+	@JoinColumn(name = "mem_id", referencedColumnName = "mem_id")
+	private Member member;
 	
 	@ManyToOne
 	@JoinColumn(name = "post_id", referencedColumnName = "post_id")
@@ -67,7 +72,7 @@ public class ForumPostCommentVO implements Serializable{
 	@Transient
 	private MultipartFile upFiles;
 	
-	public ForumPostCommentVO() {
+	public ForumCommentVO() {
 		super();
 	}
 
@@ -77,6 +82,14 @@ public class ForumPostCommentVO implements Serializable{
 
 	public void setUpFiles(MultipartFile upFiles) {
 		this.upFiles = upFiles;
+	}
+
+	public Member getMember() {
+		return member;
+	}
+
+	public void setMember(Member member) {
+		this.member = member;
 	}
 
 	public ForumPostVO getForumPost() {
@@ -103,13 +116,13 @@ public class ForumPostCommentVO implements Serializable{
 		this.commentId = commentId;
 	}
 
-	public Integer getMemId() {
-		return memId;
-	}
-
-	public void setMemId(Integer memId) {
-		this.memId = memId;
-	}
+//	public Integer getMemId() {
+//		return memId;
+//	}
+//
+//	public void setMemId(Integer memId) {
+//		this.memId = memId;
+//	}
 
 //	public Integer getPostId() {
 //		return postId;
