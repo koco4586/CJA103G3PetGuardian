@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.petguardian.chat.model.ChatMemberDTO;
+import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatPageService;
 
@@ -75,7 +76,7 @@ public class ChatPageController {
         }
 
         // 2. Chatroom List (Sidebar)
-        List<com.petguardian.chat.model.ChatRoomDTO> chatrooms = chatPageService.getMyChatrooms(userId);
+        List<ChatRoomDTO> chatrooms = chatPageService.getMyChatrooms(userId);
 
         // View Model Population
         model.addAttribute("currentUser", currentUser);

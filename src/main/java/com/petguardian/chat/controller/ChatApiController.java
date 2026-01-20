@@ -17,6 +17,8 @@ import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatService;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -36,11 +38,14 @@ public class ChatApiController {
     // ============================================================
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatApiController(AuthStrategyService authStrategyService,
-            ChatService chatService) {
+            ChatService chatService,
+            SimpMessagingTemplate messagingTemplate) {
         this.authStrategyService = authStrategyService;
         this.chatService = chatService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // ============================================================
@@ -122,10 +127,6 @@ public class ChatApiController {
     /**
      * Marks a room as read.
      * Called when opening a chat or focusing on the window.
-     */
-    /**
-     * Marks a room as read.
-     * Called when opening a chat or focusing on the window.
      * Returns the UPDATED global unread status.
      */
     @PostMapping("/{chatroomId}/read")
@@ -139,6 +140,12 @@ public class ChatApiController {
         }
 
         chatService.markRoomAsRead(chatroomId, currentUserId);
+
+        // Broadcast read receipt to partner via WebSocket
+        ChatMessageDTO readReceipt = new ChatMessageDTO();
+        readReceipt.setChatroomId(chatroomId);
+        readReceipt.setIsRead(true);
+        messagingTemplate.convertAndSend("/topic/chatroom." + chatroomId + ".read", readReceipt);
 
         // Return new global status
         boolean hasUnread = chatService.hasUnreadMessages(currentUserId);

@@ -108,7 +108,24 @@ public class ChatServiceImpl implements ChatService {
 
         // Delegate DTO conversion to mapper
         Integer partnerId = chatroom.getOtherMemberId(currentUserId);
-        return messageMapper.toDtoList(messages, currentUserId, partnerId);
+        List<ChatMessageDTO> dtos = messageMapper.toDtoList(messages, currentUserId, partnerId);
+
+        // Mark last sent message as read if partner has read (only for first page)
+        if (page == 0) {
+            LocalDateTime partnerLastReadAt = currentUserId.equals(chatroom.getMemId1())
+                    ? chatroom.getMem2LastReadAt()
+                    : chatroom.getMem1LastReadAt();
+            if (partnerLastReadAt != null) {
+                for (int i = dtos.size() - 1; i >= 0; i--) {
+                    if (currentUserId.equals(dtos.get(i).getSenderId())) {
+                        dtos.get(i).setIsRead(true);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return dtos;
     }
 
     /**
@@ -166,11 +183,7 @@ public class ChatServiceImpl implements ChatService {
         chatroom.setLastMessagePreview(preview);
 
         // Update sender's read status
-        if (senderId.equals(chatroom.getMemId1())) {
-            chatroom.setMem1LastReadAt(LocalDateTime.now());
-        } else if (senderId.equals(chatroom.getMemId2())) {
-            chatroom.setMem2LastReadAt(LocalDateTime.now());
-        }
+        chatroom.updateLastReadAt(senderId);
 
         chatroomRepository.save(chatroom);
     }

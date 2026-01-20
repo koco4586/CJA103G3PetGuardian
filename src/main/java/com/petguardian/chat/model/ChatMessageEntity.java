@@ -49,4 +49,20 @@ public class ChatMessageEntity implements Serializable {
 
     @Column(name = "reply_to_message_id", length = 13)
     private String replyToMessageId; // Reference to parent message ID
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+        if (!(object instanceof ChatMessageEntity))
+            return false;
+        ChatMessageEntity that = (ChatMessageEntity) object;
+        return messageId != null && messageId.equals(that.messageId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
 }
