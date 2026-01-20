@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface ForumPostReportRepository extends JpaRepository<ForumPostReportVO, Integer> {
 	@Query("""
 			select new com.petguardian.forum.model.HandledPostDTO(
-				p.postId, p.postTitle, f.forumName, p.memId, r.reportType, r.handleTime
+				p.postId, p.postTitle, f.forumName, p.member.memId, r.reportType, r.handleTime
 			)
 			from ForumPostReportVO r
 			join r.forumPost p
