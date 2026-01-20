@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.petguardian.forum.model.ForumPostVO;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "member")
@@ -68,8 +71,22 @@ public class Member {
 
     @Column(name = "mem_login_attempts")
     private Integer memLoginAttempts;
+    
+    // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumPostVO> forumPosts;
 
-    public Integer getMemId() {
+    // 羽澈
+    public Set<ForumPostVO> getForumPosts() {
+		return forumPosts;
+	}
+    
+    // 羽澈
+	public void setForumPosts(Set<ForumPostVO> forumPosts) {
+		this.forumPosts = forumPosts;
+	}
+
+	public Integer getMemId() {
         return memId;
     }
 

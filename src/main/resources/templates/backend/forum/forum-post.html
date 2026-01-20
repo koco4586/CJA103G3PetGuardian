@@ -44,7 +44,7 @@
 			<div class="card-header-flex">
 				<a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-add-forum">
 			        <i class="fas fa-plus"></i>
-			        <span>已下架貼文</span>
+			        <span>已處理貼文</span>
 			    </a>
       	    </div>
       	    <div class="card-header-flex">
@@ -64,21 +64,21 @@
 					<tr>
 						<th>文章編號</th>
 						<th>文章標題</th>
+						<th>發文者</th>
 						<th>討論區名稱</th>
-						<th>會員訊息</th>
 						<th>下架原因</th>
 						<th>處理時間</th>
 					</tr>
 				</thead>
 				<tbody>
-					<th:block th:each="forumVO : ${forumList}">
+					<th:block th:each="HandledPostDTO : ${postList}">
 						<tr>
-							<td th:text="${forumVO.forumId}"></td>
-							<td><img th:src="@{/forum/picture(forumId=${forumVO.forumId})}"
-								style="max-width: 320px; max-height: 100px; object-fit: cover;">
-							</td>
-							<td th:text="${forumVO.forumName}"></td>
-							<td th:text="${forumVO.createdAt}"></td>
+							<td th:text="${HandledPostDTO.postId}"></td>
+							<td th:text="${HandledPostDTO.postTitle}"></td>
+							<td th:text="${HandledPostDTO.memId}"></td>
+							<td th:text="${HandledPostDTO.forumName}"></td>
+							<td th:text="${HandledPostDTO.reportType}"></td>
+							<td th:text="${HandledPostDTO.handleTime}"></td>
 							<td>
 								<form method="post" th:action="@{/admin/forum/get-one-for-update}">
 									<input class="btn" type="submit" name="更新" value="更新">

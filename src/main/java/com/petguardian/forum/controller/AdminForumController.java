@@ -14,15 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.petguardian.forum.service.ForumPostCommentService;
-import com.petguardian.forum.service.ForumPostService;
+import com.petguardian.forum.service.ForumPostReportService;
 import com.petguardian.forum.service.ForumService;
-import com.petguardian.forum.model.ForumPostCommentVO;
-import com.petguardian.forum.model.ForumPostVO;
+
 import com.petguardian.forum.model.ForumVO;
+import com.petguardian.forum.model.HandledPostDTO;
 
 import jakarta.validation.Valid;
-
 
 @Controller
 @RequestMapping("/admin/forum")
@@ -32,10 +30,7 @@ public class AdminForumController {
 	ForumService forumService;
 	
 	@Autowired
-	ForumPostService forumPostService;
-	
-	@Autowired
-	ForumPostCommentService forumPostCommentService;
+	ForumPostReportService forumPostReportService;
 	
 	@GetMapping("list-all-forum")
 	public String listAllForum(Model model) {
@@ -140,18 +135,18 @@ public class AdminForumController {
 	
 	}
 	
-//	@GetMapping("get-all-handled-posts")
-//	public String getAllHandledPosts(ModelMap model) {
-//		
-//		// 開始查詢資料
-//		List<ForumPostVO> postList = forumPostService.getAllHandledPosts();
-//		
-//		// 查詢完成forward到顯示頁面
-//		model.addAttribute("postList", postList);
-//		
-//		return "";
-//		
-//	}
+	@GetMapping("get-all-handled-posts")
+	public String getAllHandledPosts(ModelMap model) {
+		
+		// 開始查詢資料
+		List<HandledPostDTO> postList = forumPostReportService.getAllHandledPosts();
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("postList", postList);
+		
+		return "backend/forum/forum-post";
+		
+	}
 //	
 //	@GetMapping("get-all-handled-comments")
 //	public String getAllHandledComments(ModelMap model) {
