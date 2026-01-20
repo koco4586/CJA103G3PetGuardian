@@ -1,6 +1,5 @@
 package com.petguardian.chat.service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,46 +39,90 @@ public class ChatPageServiceImpl implements ChatPageService {
     // ============================================================
 
     @Override
-    public List<ChatMemberDTO> getAllMembers() {
-        return memberRepository.findAll().stream()
-                .map(ChatMemberDTO::fromEntity)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public ChatMemberDTO getMember(Integer memId) {
         return memberRepository.findById(memId)
                 .map(ChatMemberDTO::fromEntity)
                 .orElse(null);
     }
 
-    /**
-     * Aggregates the latest message preview for all valid chatrooms.
-     * Uses pre-computed `lastMessagePreview` from ChatRoomVO to avoid expensive
-     * join queries.
-     * 
-     * @param currentUserId context user
-     * @return {@code Map<PartnerId, MessagePreview>}
-     */
     @Override
-    public Map<Integer, String> getLastMessages(Integer currentUserId) {
-        Map<Integer, String> resultMap = new HashMap<>();
-
+    public List<com.petguardian.chat.model.ChatRoomDTO> getMyChatrooms(Integer currentUserId) {
+        // 1. Fetch all raw chatrooms
         List<ChatRoomVO> chatrooms = chatroomRepository.findByMemId1OrMemId2(currentUserId, currentUserId);
 
-        for (ChatRoomVO room : chatrooms) {
-            Integer partnerId = room.getOtherMemberId(currentUserId);
+        // 2. Resolve ALL partner IDs for batch loading (Avoid N+1)
+        java.util.Set<Integer> partnerIds = chatrooms.stream()
+                .map(r -> r.getOtherMemberId(currentUserId))
+                .collect(Collectors.toSet());
 
-            String preview = room.getLastMessagePreview();
-            if (preview != null && !preview.isEmpty()) {
-                // Truncate for UI consistency if needed (DB column is 200, UI might need less)
-                if (preview.length() > 30) {
-                    preview = preview.substring(0, 27) + "...";
+        Map<Integer, com.petguardian.chat.model.ChatMemberVO> memberMap = memberRepository.findAllById(partnerIds)
+                .stream()
+                .collect(Collectors.toMap(com.petguardian.chat.model.ChatMemberVO::getMemId,
+                        java.util.function.Function.identity()));
+
+        // 3. Map to DTOs
+        List<com.petguardian.chat.model.ChatRoomDTO> summaryList = new java.util.ArrayList<>();
+
+        for (ChatRoomVO room : chatrooms) {
+            com.petguardian.chat.model.ChatRoomDTO dto = new com.petguardian.chat.model.ChatRoomDTO();
+            dto.setChatroomId(room.getChatroomId());
+
+            Integer partnerId = room.getOtherMemberId(currentUserId);
+            dto.setPartnerId(partnerId);
+
+            com.petguardian.chat.model.ChatMemberVO partner = memberMap.get(partnerId);
+            String partnerName = (partner != null) ? partner.getMemName() : "Unknown User";
+
+            // Naming Logic: "PartnerName - RoomLabel"
+            String roomLabel;
+            if (room.getChatroomName() != null && !room.getChatroomName().isEmpty()) {
+                roomLabel = room.getChatroomName();
+            } else {
+                // Fallback by Type
+                int type = room.getChatroomType() != null ? room.getChatroomType() : 0;
+                switch (type) {
+                    case 0:
+                        roomLabel = "寵物服務";
+                        break;
+                    case 1:
+                        roomLabel = "商品諮詢";
+                        break;
+                    default:
+                        roomLabel = "一般聊天";
                 }
-                resultMap.put(partnerId, preview);
             }
+            dto.setDisplayName(partnerName + " - " + roomLabel);
+            dto.setLastMessage(room.getLastMessagePreview());
+            dto.setLastMessageTime(room.getLastMessageAt());
+
+            // Unread Logic
+            boolean isUnread = false;
+            // Only consider unread if there IS a message
+            if (room.getLastMessageAt() != null) {
+                if (currentUserId.equals(room.getMemId1())) {
+                    if (room.getMem1LastReadAt() == null || room.getLastMessageAt().isAfter(room.getMem1LastReadAt())) {
+                        isUnread = true;
+                    }
+                } else if (currentUserId.equals(room.getMemId2())) {
+                    if (room.getMem2LastReadAt() == null || room.getLastMessageAt().isAfter(room.getMem2LastReadAt())) {
+                        isUnread = true;
+                    }
+                }
+            }
+            dto.setUnread(isUnread);
+
+            summaryList.add(dto);
         }
 
-        return resultMap;
+        // 4. Sort by Latest Activity DESC
+        summaryList.sort((d1, d2) -> {
+            if (d1.getLastMessageTime() == null)
+                return 1;
+            if (d2.getLastMessageTime() == null)
+                return -1;
+            return d2.getLastMessageTime().compareTo(d1.getLastMessageTime());
+        });
+
+        return summaryList;
     }
 }

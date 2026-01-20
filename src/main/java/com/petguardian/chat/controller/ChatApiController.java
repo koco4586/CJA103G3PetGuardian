@@ -1,16 +1,18 @@
 package com.petguardian.chat.controller;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomVO;
 import com.petguardian.chat.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatService;
@@ -32,14 +34,11 @@ public class ChatApiController {
     // ============================================================
     // DEPENDENCIES
     // ============================================================
-    private final ChatRoomRepository chatroomRepository;
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
 
-    public ChatApiController(ChatRoomRepository chatroomRepository,
-            AuthStrategyService authStrategyService,
+    public ChatApiController(AuthStrategyService authStrategyService,
             ChatService chatService) {
-        this.chatroomRepository = chatroomRepository;
         this.authStrategyService = authStrategyService;
         this.chatService = chatService;
     }
@@ -67,12 +66,7 @@ public class ChatApiController {
             return ResponseEntity.status(401).build();
         }
 
-        // Normalize participants (Convention: Lower ID first)
-        Integer memId1 = Math.min(currentUserId, partnerId);
-        Integer memId2 = Math.max(currentUserId, partnerId);
-
-        ChatRoomVO chatroom = chatroomRepository.findByMemId1AndMemId2AndChatroomType(memId1, memId2, chatroomType)
-                .orElse(null);
+        ChatRoomVO chatroom = chatService.findChatroom(currentUserId, partnerId, chatroomType);
 
         if (chatroom == null) {
             return ResponseEntity.notFound().build();
@@ -108,5 +102,46 @@ public class ChatApiController {
             // Usually indicates Access Denied / Not a member
             return ResponseEntity.status(403).build();
         }
+    }
+
+    /**
+     * Checks global unread status for the current user.
+     * Used for the global header "Red Dot".
+     */
+    @GetMapping("/unread-count")
+    public ResponseEntity<Map<String, Boolean>> checkUnreadStatus(HttpServletRequest request) {
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        boolean hasUnread = chatService.hasUnreadMessages(currentUserId);
+        return ResponseEntity.ok(Collections.singletonMap("hasUnread", hasUnread));
+    }
+
+    /**
+     * Marks a room as read.
+     * Called when opening a chat or focusing on the window.
+     */
+    /**
+     * Marks a room as read.
+     * Called when opening a chat or focusing on the window.
+     * Returns the UPDATED global unread status.
+     */
+    @PostMapping("/{chatroomId}/read")
+    public ResponseEntity<Map<String, Boolean>> markAsRead(
+            HttpServletRequest request,
+            @PathVariable Integer chatroomId) {
+
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        chatService.markRoomAsRead(chatroomId, currentUserId);
+
+        // Return new global status
+        boolean hasUnread = chatService.hasUnreadMessages(currentUserId);
+        return ResponseEntity.ok(Collections.singletonMap("hasUnread", hasUnread));
     }
 }
