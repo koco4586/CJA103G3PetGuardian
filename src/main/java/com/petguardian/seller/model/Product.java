@@ -1,5 +1,6 @@
 package com.petguardian.seller.model;
 
+import com.petguardian.orders.model.StoreMemberVO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,11 @@ public class Product {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "pro_type_id", nullable = false)
     private ProType proType;
+
+    // 建立與會員的關聯
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mem_id", nullable = false, insertable = false, updatable = false)
+    private StoreMemberVO seller;
 
     @Column(name = "mem_id", nullable = false)
     private Integer memId; // 賣家會員ID
@@ -53,5 +59,10 @@ public class Product {
     @PrePersist
     protected void onCreate() {
         launchedTime = LocalDateTime.now();
+    }
+
+    // 取得賣家名稱的方法
+    public String getSellerName() {
+        return seller != null ? seller.getMemName() : "未知賣家";
     }
 }
