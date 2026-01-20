@@ -1,9 +1,20 @@
+/**
+ * PetGuardian - 賣家管理中心專屬樣式
+ */
+
+/* ========================================
+   側邊欄
+   ======================================== */
+
 .seller-sidebar {
     background: white;
     border-radius: 16px;
     padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 2rem;
 }
+
 .seller-menu-item {
     padding: 12px 16px;
     margin-bottom: 8px;
@@ -16,31 +27,58 @@
     text-decoration: none;
     color: inherit;
 }
+
 .seller-menu-item:hover {
     background: var(--secondary-color);
 }
+
 .seller-menu-item.active {
     background: var(--primary-color);
     color: white;
 }
+
+.seller-menu-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* ========================================
+   統計卡片
+   ======================================== */
+
 .stat-card {
     background: white;
     border-radius: 16px;
     padding: 1.5rem;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     transition: all 0.3s;
+    border: 2px solid transparent;
 }
+
 .stat-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
 }
+
 .stat-number {
     font-size: 2.5rem;
     font-weight: 800;
     margin-bottom: 0.5rem;
+    line-height: 1;
 }
+
+.stat-card p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   Modal 彈窗
+   ======================================== */
+
 .modal {
     display: none;
     position: fixed;
@@ -49,13 +87,17 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
 }
+
 .modal.active {
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: fadeIn 0.3s ease;
 }
+
 .modal-content {
     background-color: white;
     padding: 30px;
@@ -64,4 +106,227 @@
     max-width: 700px;
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   表格樣式增強
+   ======================================== */
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+table {
+    font-size: 0.95rem;
+}
+
+table thead tr {
+    background: #f8f9fa;
+}
+
+table thead th {
+    font-weight: 600;
+    color: #495057;
+}
+
+table tbody tr {
+    transition: background-color 0.2s;
+}
+
+table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* ========================================
+   按鈕統一樣式
+   ======================================== */
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: white;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.btn-sm:hover {
+    background: #f8f9fa;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-sm.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.btn-sm.btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-sm.btn-outline {
+    background: white;
+}
+
+.btn-sm i {
+    font-size: 0.9rem;
+}
+
+/* ========================================
+   Badge 標籤
+   ======================================== */
+
+.badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    border-radius: 0.375rem;
+}
+
+.badge-primary {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.badge-accent {
+    background-color: #0dcaf0;
+    color: #000;
+}
+
+.badge-success {
+    background-color: #198754;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #000;
+}
+
+/* ========================================
+   Alert 提示訊息
+   ======================================== */
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.alert i {
+    font-size: 1.2rem;
+}
+
+/* ========================================
+   響應式設計
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .seller-sidebar {
+        position: static;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container > .d-flex {
+        flex-direction: column;
+    }
+
+    .seller-sidebar {
+        width: 100% !important;
+        flex: none !important;
+    }
+
+    .stat-card {
+        min-width: 100% !important;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    table {
+        font-size: 0.85rem;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+/* ========================================
+   評論列表
+   ======================================== */
+
+#reviewsList {
+    animation: slideDown 0.3s ease;
+}
+
+#reviewsList .card {
+    border: 1px solid #e9ecef;
 }
