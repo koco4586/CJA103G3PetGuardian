@@ -49,7 +49,7 @@ public class ForumPostService {
 	
 	public ForumPostVO getOnePost(Integer postId) {
 		Optional<ForumPostVO> optional = repo.findById(postId);
-		return optional.orElse(null);
+		return optional.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
 	}
 	
 	public List<ForumPostVO> getAllActiveByForumId(Integer forumId){

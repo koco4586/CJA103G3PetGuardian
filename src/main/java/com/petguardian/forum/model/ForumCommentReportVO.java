@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import java.sql.Timestamp;
 
+import com.petguardian.member.model.Member;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,12 +26,16 @@ public class ForumCommentReportVO implements Serializable{
 	@Column(name = "report_id", updatable = false)
 	private Integer reportId;
 	
-	@Column(name = "mem_id", updatable = false)
-	private Integer memId;
+//	@Column(name = "mem_id", updatable = false)
+//	private Integer memId;
+	
+	@ManyToOne
+	@JoinColumn(name = "mem_id", referencedColumnName = "mem_id")
+	private Member member;
 	
 	@ManyToOne
 	@JoinColumn(name = "comment_id", referencedColumnName = "comment_id")
-	private ForumPostCommentVO forumPostComment;
+	private ForumCommentVO forumPostComment;
 	
 //	@Column(name = "comment_id", updatable = false)
 //	private Integer commentId;
@@ -55,11 +61,19 @@ public class ForumCommentReportVO implements Serializable{
 		super();
 	}
 
-	public ForumPostCommentVO getForumPostComment() {
+	public Member getMember() {
+		return member;
+	}
+
+	public void setMember(Member member) {
+		this.member = member;
+	}
+
+	public ForumCommentVO getForumPostComment() {
 		return forumPostComment;
 	}
 
-	public void setForumPostComment(ForumPostCommentVO forumPostComment) {
+	public void setForumPostComment(ForumCommentVO forumPostComment) {
 		this.forumPostComment = forumPostComment;
 	}
 
@@ -71,13 +85,13 @@ public class ForumCommentReportVO implements Serializable{
 		this.reportId = reportId;
 	}
 
-	public Integer getMemId() {
-		return memId;
-	}
-
-	public void setMemId(Integer memId) {
-		this.memId = memId;
-	}
+//	public Integer getMemId() {
+//		return memId;
+//	}
+//
+//	public void setMemId(Integer memId) {
+//		this.memId = memId;
+//	}
 
 //	public Integer getCommentId() {
 //		return commentId;

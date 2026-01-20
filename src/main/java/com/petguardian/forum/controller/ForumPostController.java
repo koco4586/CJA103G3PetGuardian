@@ -16,14 +16,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.petguardian.forum.service.ForumPostCommentService;
+import com.petguardian.forum.service.ForumCommentService;
 import com.petguardian.forum.service.ForumPostPicsService;
 import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
+import com.petguardian.member.model.Member;
 
 import jakarta.validation.Valid;
 
-import com.petguardian.forum.model.ForumPostCommentVO;
+import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostPicsVO;
 import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.ForumVO;
@@ -42,7 +43,7 @@ public class ForumPostController {
 	ForumPostPicsService forumPostPicsService;
 	
 	@Autowired
-	ForumPostCommentService forumPostCommentService;
+	ForumCommentService forumCommentService;
 	
 	@GetMapping("get-forum-id-for-posts")
 	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, ModelMap model) {
@@ -58,18 +59,18 @@ public class ForumPostController {
 	@GetMapping("get-post-id-for-one-post")
 	public String getPostIdForOnePost(@RequestParam("postId") Integer postId, ModelMap model) {
 		
-		ForumPostCommentVO forumPostCommentVO = new ForumPostCommentVO();
+		ForumCommentVO forumCommentVO = new ForumCommentVO();
 		
 		// 開始查詢資料
 		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
 		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
-		List<ForumPostCommentVO> commentList = forumPostCommentService.getCommentsByPostId(postId);
+		List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
 		
 		// 查詢完成，交給負責的html顯示
 		model.addAttribute("forumPostVO", forumPostVO);
 		model.addAttribute("picsId", picsId);
 		model.addAttribute("commentList", commentList);
-		model.addAttribute("forumPostCommentVO", forumPostCommentVO);
+		model.addAttribute("forumCommentVO", forumCommentVO);
 		
 		return "frontend/forum/one-post";
 	}
@@ -160,7 +161,10 @@ public class ForumPostController {
 			
 		}
 		
-		forumPostVO.setMemId(1015); // 測試用
+		// 測試用
+		Member member = new Member();
+		member.setMemId(1005);
+		forumPostVO.setMember(member);
 		
 		// 沒圖片時 -> 新增資料
 		if(postPics == null || postPics.length == 0) {
@@ -190,7 +194,7 @@ public class ForumPostController {
 	}
 	
 	@PostMapping("insert-comment")
-	public String insertComment(@Valid ForumPostCommentVO forumPostCommentVO, BindingResult result, ModelMap model, RedirectAttributes ra,
+	public String insertComment(@Valid ForumCommentVO forumCommentVO, BindingResult result, ModelMap model, RedirectAttributes ra,
 								@RequestParam("commentContent") String commentContent,
 								@RequestParam("postId") Integer postId,
 								@RequestParam("forumId") Integer forumId,
@@ -200,7 +204,7 @@ public class ForumPostController {
 		if(result.hasErrors()) {
 			
 			ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
-			List<ForumPostCommentVO> commentList = forumPostCommentService.getCommentsByPostId(postId);
+			List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
 			
 			model.addAttribute("forumPostVO", forumPostVO);
 			model.addAttribute("commentList", commentList);
@@ -209,7 +213,7 @@ public class ForumPostController {
 		}
 		
 		// 開始新增資料
-		forumPostCommentService.addCommentByPostId(commentContent, postId);
+		forumCommentService.addCommentByPostId(commentContent, postId);
 		
 		// 重導會拿不到資料，因為有返回按鈕，所以要用RedirectAttributes把資料塞回去。
 		ra.addAttribute("forumName", forumName);

@@ -98,7 +98,7 @@
 				</th:block>
 				
                 <div class="reply-box">
-                    <form th:action="@{/forumpost/insert-comment}" th:object="${forumPostCommentVO}" method="post">
+                    <form th:action="@{/forumpost/insert-comment}" th:object="${forumCommentVO}" method="post">
                         <input type="hidden" name="postId" th:value="${forumPostVO.postId}">
                         <input type="hidden" name="forumId" th:value="${forumId}">
                         <input type="hidden" name="forumName" th:value="${forumName}">
