@@ -32,4 +32,7 @@ public class ReturnOrderVO {
     @Column(name = "return_status", nullable = false)
     private Integer returnStatus = 0; // 0:審核中 1:退貨通過 2:退貨失敗
 
+    @ManyToOne
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private OrdersVO ordersVO;
 }

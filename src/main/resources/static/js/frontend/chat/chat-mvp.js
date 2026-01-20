@@ -33,7 +33,12 @@ const ChatState = {
     currentPage: 0,
     isLoadingHistory: false,
     hasMoreHistory: true,
-    messageIds: new Set() // O(1) deduplication
+    isLoadingHistory: false,
+    hasMoreHistory: true,
+    messageIds: new Set(), // O(1) deduplication
+    currentChatroomId: null,
+    // Partner context for sending messages
+    currentPartnerId: null
 };
 
 // ============================================================
@@ -127,9 +132,17 @@ function onMessageReceived(dto) {
     const isSentByMe = (senderId === ChatState.currentUserId);
     const partnerId = isSentByMe ? receiverId : senderId;
 
-    // Determine if message belongs to currently open conversation
+    // Determine if message belongs to currently open conversation by Chatroom ID
     let shouldAppend = false;
-    if (ChatState.selectedUserId) {
+    let activeChatroomId = null;
+
+    if (ChatState.currentChatroomId && dto.chatroomId) {
+        if (dto.chatroomId === ChatState.currentChatroomId) {
+            shouldAppend = true;
+            activeChatroomId = ChatState.currentChatroomId;
+        }
+    } else if (ChatState.selectedUserId) {
+        // Fallback for legacy messages without chatroomId (should not happen with new backend)
         shouldAppend = isSentByMe
             ? (receiverId === ChatState.selectedUserId)
             : (senderId === ChatState.selectedUserId);
@@ -137,9 +150,22 @@ function onMessageReceived(dto) {
 
     if (shouldAppend) {
         appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName);
+
+        // Real-time "Mark as Read"
+        if (!isSentByMe && activeChatroomId) {
+            // Check if window is focused? For now assume yes if connected.
+            // Ideally check document.hidden but "Best Effort" MVP is fine.
+            markAsRead(activeChatroomId);
+        }
+
     } else if (!isSentByMe) {
-        // Show unread indicator for messages from other conversations
-        showUnreadDot(partnerId);
+        // Show unread indicator for specific room
+        if (dto.chatroomId) {
+            showUnreadDotForRoom(dto.chatroomId);
+        } else {
+            // Fallback
+            showUnreadDot(partnerId);
+        }
     }
 
     // Always update sidebar preview
@@ -153,39 +179,55 @@ function onMessageReceived(dto) {
         previewContent = previewContent.substring(0, 27) + '...';
     }
 
-    updateContactLastMessage(partnerId, previewContent);
+    updateContactLastMessage(dto.chatroomId, partnerId, previewContent);
 }
 
-function showUnreadDot(userId) {
-    const contactItem = document.getElementById('contact-item-' + userId);
+function showUnreadDotForRoom(chatroomId) {
+    const contactItem = document.getElementById('contact-item-' + chatroomId);
     if (contactItem) {
         const dot = contactItem.querySelector('.unread-dot');
         if (dot) dot.classList.remove('app-d-none');
     }
 }
 
-function updateContactLastMessage(userId, content) {
-    // ID-based selection
-    const contactItem = document.getElementById('contact-item-' + userId);
+function showUnreadDot(userId) {
+    // Deprecated but kept for fallback
+    // Try to find ANY room with this user? 
+    // Ideally we shouldn't use this anymore.
+}
+
+function updateContactLastMessage(chatroomId, userId, content) {
+    // ID-based selection uses chatroomId now
+    let contactItem;
+    if (chatroomId) {
+        contactItem = document.getElementById('contact-item-' + chatroomId);
+    }
+
+    // Fallback if chatroomId missing (shouldn't happen)
+    // if (!contactItem) contactItem = document.getElementById('contact-item-' + userId);
+
     if (contactItem) {
         const msgDiv = contactItem.querySelector('.contact-last-msg');
         if (msgDiv) msgDiv.textContent = content;
-    } else {
-        console.warn('[Chat] Contact item not found for user:', userId);
+
+        // Move to top (Recent activity sort)
+        // const list = contactItem.parentNode;
+        // list.prepend(contactItem);
     }
 }
 
 // ============================================================
 // USER SELECTION
 // ============================================================
-function selectUser(userId, userName) {
-    ChatState.selectedUserId = parseInt(userId, 10);
-    ChatState.selectedUserName = userName;
+function selectRoom(chatroomId, partnerName, partnerId) {
+    ChatState.currentChatroomId = parseInt(chatroomId, 10);
+    ChatState.selectedUserId = parseInt(partnerId, 10); // Check if HTML passes this
+    ChatState.selectedUserName = partnerName;
 
     // Update sidebar active state
     document.querySelectorAll('.contact-item').forEach(item => {
         item.classList.remove('active');
-        if (parseInt(item.dataset.userId, 10) === ChatState.selectedUserId) {
+        if (parseInt(item.dataset.chatroomId, 10) === ChatState.currentChatroomId) {
             item.classList.add('active');
             // Clear unread indicator
             const dot = item.querySelector('.unread-dot');
@@ -195,7 +237,7 @@ function selectUser(userId, userName) {
 
     // Update chat header
     if (DOM.chatHeaderTitle) {
-        DOM.chatHeaderTitle.textContent = userName;
+        DOM.chatHeaderTitle.textContent = partnerName;
     }
 
     // Show loading state
@@ -207,12 +249,33 @@ function selectUser(userId, userName) {
         DOM.chatInputForm.style.display = 'flex';
     }
 
-    loadChatHistory(userId);
+    loadChatHistory(ChatState.currentChatroomId);
 }
 
 // ============================================================
 // CHAT HISTORY (async/await for clarity)
 // ============================================================
+
+/**
+ * Marks the current room as read.
+ */
+/**
+ * Marks the current room as read.
+ */
+function markAsRead(chatroomId) {
+    if (!chatroomId) return;
+
+    fetch(`/api/chatrooms/${chatroomId}/read?userId=${ChatState.currentUserId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            // Update global header dot based on server response (remaining unread count)
+            const dotEl = document.getElementById('header-chat-dot');
+            if (dotEl) {
+                dotEl.style.display = data.hasUnread ? 'block' : 'none';
+            }
+        })
+        .catch(console.error);
+}
 
 /**
  * Load chat history for selected user.
@@ -223,7 +286,7 @@ function selectUser(userId, userName) {
  * 2. Fetch paginated messages
  * 3. Render to DOM
  */
-async function loadChatHistory(partnerId, isLoadMore = false) {
+async function loadChatHistory(chatroomId, isLoadMore = false) {
     // Reset pagination on new conversation
     if (!isLoadMore) {
         ChatState.currentPage = 0;
@@ -234,39 +297,28 @@ async function loadChatHistory(partnerId, isLoadMore = false) {
 
     const requestId = ChatState.loadingRequestId;
     ChatState.isLoadingHistory = true;
-
-    const partnerIdInt = parseInt(partnerId, 10);
     const page = ChatState.currentPage;
 
     try {
-        // Step 1: Resolve chatroom
-        const chatroomResponse = await fetch(`/api/chatrooms?partnerId=${partnerIdInt}&userId=${ChatState.currentUserId}`);
+        // Step 1: Mark as Read Immediately
+        // Optimization: Don't wait for history to mark as read
+        markAsRead(chatroomId);
 
-        // Race condition guard: user may have switched to another conversation
-        if (requestId !== ChatState.loadingRequestId) return;
-
-        if (chatroomResponse.status === 404 || !chatroomResponse.ok) {
-            showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
-            ChatState.isLoadingHistory = false;
-            return;
-        }
-
-        const chatroom = await chatroomResponse.json();
-        if (!chatroom) {
-            showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
-            ChatState.isLoadingHistory = false;
-            return;
-        }
-
-        // Step 2: Fetch messages
+        // Step 2: Fetch messages for specific room
         const messagesResponse = await fetch(
-            `/api/chatrooms/${chatroom.chatroomId}/messages?userId=${ChatState.currentUserId}&page=${page}&size=${CONFIG.PAGE_SIZE}`
+            `/api/chatrooms/${chatroomId}/messages?userId=${ChatState.currentUserId}&page=${page}&size=${CONFIG.PAGE_SIZE}`
         );
 
         if (requestId !== ChatState.loadingRequestId) return;
 
         if (!messagesResponse.ok) {
-            throw new Error('Message fetch failed');
+            if (messagesResponse.status === 403) {
+                showEmptyState('Access Denied');
+            } else {
+                showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
+            }
+            ChatState.isLoadingHistory = false;
+            return;
         }
 
         const messages = await messagesResponse.json();
@@ -284,7 +336,7 @@ async function loadChatHistory(partnerId, isLoadMore = false) {
                 showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
             } else {
                 renderMessagesBatch(messages, DOM.messageList, true);
-                attachScrollListener(DOM.messageList, partnerIdInt);
+                attachScrollListener(DOM.messageList, chatroomId); // Attach to room ID
             }
         } else if (messages.length > 0) {
             renderMessagesBatch(messages, DOM.messageList, false);
@@ -442,15 +494,14 @@ function sendMessage() {
         receiverId: ChatState.selectedUserId,
         content: content,
         senderName: ChatState.currentUserName,
-        replyToId: ChatState.currentReplyId
+        replyToId: ChatState.currentReplyId,
+        chatroomId: ChatState.currentChatroomId
     };
-
-
 
     ChatState.stompClient.send('/app/chat.send', {}, JSON.stringify(dto));
 
-    // Optimistic UI: update sidebar immediately (This is fine to keep)
-    updateContactLastMessage(ChatState.selectedUserId, 'You: ' + content);
+    // Optimistic UI: update sidebar immediately
+    updateContactLastMessage(ChatState.currentChatroomId, ChatState.selectedUserId, 'You: ' + content);
 
     cancelReply();
     DOM.msgInput.value = '';
@@ -513,7 +564,7 @@ function filterContacts(query) {
     const lowerQuery = query.toLowerCase();
 
     contactItems.forEach(item => {
-        const userName = item.getAttribute('data-user-name').toLowerCase();
+        const userName = item.getAttribute('data-partner-name').toLowerCase();
         item.style.display = userName.includes(lowerQuery) ? '' : 'none';
     });
 }
@@ -538,7 +589,7 @@ const debouncedFilterContacts = debounce(filterContacts, CONFIG.DEBOUNCE_DELAY_M
 window.ChatApp = {
     handleKeyPress,
     filterContacts: debouncedFilterContacts,
-    selectUser,
+    selectRoom,
     sendMessage,
     cancelReply,
     updateSendButton
