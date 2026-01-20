@@ -22,8 +22,8 @@ public class SellerController {
     @Autowired
     private SellerOrderService sellerOrderService;
 
-    @Autowired
-    private MockAuthService mockAuthService;
+//    @Autowired
+//    private MockAuthService mockAuthService;
 
     @Autowired
     private WalletRepository walletRepository;
@@ -31,15 +31,15 @@ public class SellerController {
     /**
      * 處理 URL 參數切換測試帳號(/seller/dashboard?memId=1001)
      */
-    private void handleMockLogin(HttpSession session, Integer memIdParam) {
-        if (memIdParam != null) {
-            try {
-                mockAuthService.setCurrentMember(session, memIdParam);
-            } catch (IllegalArgumentException e) {
-                // 會員不存在，忽略參數
-            }
-        }
-    }
+//    private void handleMockLogin(HttpSession session, Integer memIdParam) {
+//        if (memIdParam != null) {
+//            try {
+//                mockAuthService.setCurrentMember(session, memIdParam);
+//            } catch (IllegalArgumentException e) {
+//                // 會員不存在，忽略參數
+//            }
+//        }
+//    }
 
     /**
      * 賣家管理中心 - 首頁（營運概況）
