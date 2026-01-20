@@ -1,6 +1,6 @@
 package com.petguardian.chat.service;
 
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Service for verifying chatroom membership and access rights.
@@ -12,10 +12,10 @@ public interface ChatVerificationService {
      * 
      * @param chatroomId The chatroom to verify
      * @param userId     The user to check membership for
-     * @return ChatRoomVO if user is a member
+     * @return ChatRoomEntity if user is a member
      * @throws RuntimeException if chatroom not found or user is not a member
      */
-    ChatRoomVO verifyMembership(Integer chatroomId, Integer userId);
+    ChatRoomEntity verifyMembership(Integer chatroomId, Integer userId);
 
     /**
      * Checks if the user is a member without throwing an exception.

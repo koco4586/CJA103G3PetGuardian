@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatMessageVO;
+import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Service Implementation for Core Chat Functionality.
@@ -75,10 +75,10 @@ public class ChatServiceImpl implements ChatService {
         Integer receiverId = dto.getReceiverId();
 
         // Ensure valid chatroom exists before saving message
-        ChatRoomVO chatroom = resolveChatroom(dto.getChatroomId(), senderId, receiverId);
+        ChatRoomEntity chatroom = resolveChatroom(dto.getChatroomId(), senderId, receiverId);
 
         // Delegate persistence to strategy (supports Sync MySQL or Async Redis)
-        ChatMessageVO saved = messageStrategyService.save(
+        ChatMessageEntity saved = messageStrategyService.save(
                 chatroom.getChatroomId(), senderId, dto.getContent(), dto.getReplyToId());
 
         // Update chatroom metadata (last message, sender's read status)
@@ -96,11 +96,11 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public List<ChatMessageDTO> getChatHistory(Integer chatroomId, Integer currentUserId, int page, int size) {
         // Access Control via dedicated service
-        ChatRoomVO chatroom = verificationService.verifyMembership(chatroomId, currentUserId);
+        ChatRoomEntity chatroom = verificationService.verifyMembership(chatroomId, currentUserId);
 
         // Fetch paginated messages
         Pageable pageable = PageRequest.of(page, size);
-        List<ChatMessageVO> messages = fetchMessagesAsc(chatroomId, pageable);
+        List<ChatMessageEntity> messages = fetchMessagesAsc(chatroomId, pageable);
 
         if (messages.isEmpty()) {
             return Collections.emptyList();
@@ -137,7 +137,7 @@ public class ChatServiceImpl implements ChatService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ChatRoomVO findChatroom(Integer currentUserId, Integer partnerId, Integer chatroomType) {
+    public ChatRoomEntity findChatroom(Integer currentUserId, Integer partnerId, Integer chatroomType) {
         Integer memId1 = Math.min(currentUserId, partnerId);
         Integer memId2 = Math.max(currentUserId, partnerId);
 
@@ -149,9 +149,9 @@ public class ChatServiceImpl implements ChatService {
     // PRIVATE HELPERS
     // ============================================================
 
-    private ChatRoomVO resolveChatroom(Integer chatroomId, Integer senderId, Integer receiverId) {
+    private ChatRoomEntity resolveChatroom(Integer chatroomId, Integer senderId, Integer receiverId) {
         if (chatroomId != null) {
-            ChatRoomVO chatroom = chatroomRepository.findById(chatroomId).orElse(null);
+            ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
             if (chatroom != null) {
                 return chatroom;
             }
@@ -160,7 +160,7 @@ public class ChatServiceImpl implements ChatService {
         return chatRoomCreationStrategy.findOrCreate(senderId, receiverId, 0);
     }
 
-    private void updateChatroomAfterMessage(ChatRoomVO chatroom, Integer senderId, String content) {
+    private void updateChatroomAfterMessage(ChatRoomEntity chatroom, Integer senderId, String content) {
         chatroom.setLastMessageAt(LocalDateTime.now());
         String preview = content.length() > 200 ? content.substring(0, 200) : content;
         chatroom.setLastMessagePreview(preview);
@@ -175,7 +175,7 @@ public class ChatServiceImpl implements ChatService {
         chatroomRepository.save(chatroom);
     }
 
-    private ChatMessageDTO buildResponseDto(ChatMessageVO saved, String senderName, Integer receiverId) {
+    private ChatMessageDTO buildResponseDto(ChatMessageEntity saved, String senderName, Integer receiverId) {
         ChatMessageDTO responseDto = new ChatMessageDTO();
         responseDto.setMessageId(saved.getMessageId());
         responseDto.setSenderId(saved.getMemberId());
@@ -190,9 +190,9 @@ public class ChatServiceImpl implements ChatService {
         return responseDto;
     }
 
-    private List<ChatMessageVO> fetchMessagesAsc(Integer chatroomId, Pageable pageable) {
-        List<ChatMessageVO> desc = messageStrategyService.findLatestMessages(chatroomId, pageable);
-        List<ChatMessageVO> asc = new ArrayList<>(desc);
+    private List<ChatMessageEntity> fetchMessagesAsc(Integer chatroomId, Pageable pageable) {
+        List<ChatMessageEntity> desc = messageStrategyService.findLatestMessages(chatroomId, pageable);
+        List<ChatMessageEntity> asc = new ArrayList<>(desc);
         Collections.reverse(asc);
         return asc;
     }

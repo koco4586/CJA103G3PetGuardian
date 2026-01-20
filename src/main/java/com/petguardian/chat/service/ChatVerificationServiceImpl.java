@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Implementation for verifying chatroom membership and access rights.
@@ -20,8 +20,8 @@ public class ChatVerificationServiceImpl implements ChatVerificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public ChatRoomVO verifyMembership(Integer chatroomId, Integer userId) {
-        ChatRoomVO chatroom = chatroomRepository.findById(chatroomId).orElse(null);
+    public ChatRoomEntity verifyMembership(Integer chatroomId, Integer userId) {
+        ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
         if (chatroom == null) {
             throw new RuntimeException("Chatroom not found: " + chatroomId);
         }
@@ -34,14 +34,14 @@ public class ChatVerificationServiceImpl implements ChatVerificationService {
     @Override
     @Transactional(readOnly = true)
     public boolean isMember(Integer chatroomId, Integer userId) {
-        ChatRoomVO chatroom = chatroomRepository.findById(chatroomId).orElse(null);
+        ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
         if (chatroom == null) {
             return false;
         }
         return isMemberInternal(chatroom, userId);
     }
 
-    private boolean isMemberInternal(ChatRoomVO chatroom, Integer userId) {
+    private boolean isMemberInternal(ChatRoomEntity chatroom, Integer userId) {
         return userId.equals(chatroom.getMemId1()) || userId.equals(chatroom.getMemId2());
     }
 }

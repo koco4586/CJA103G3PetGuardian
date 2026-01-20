@@ -2,6 +2,7 @@ package com.petguardian.chat.service;
 
 import java.util.List;
 import com.petguardian.chat.model.ChatMemberDTO;
+import com.petguardian.chat.model.ChatRoomDTO;
 
 /**
  * Service Interface for Chat View Data Aggregation.
@@ -27,5 +28,5 @@ public interface ChatPageService {
      * @param currentUserId Context User ID
      * @return List of summarized chatroom DTOs
      */
-    List<com.petguardian.chat.model.ChatRoomDTO> getMyChatrooms(Integer currentUserId);
+    List<ChatRoomDTO> getMyChatrooms(Integer currentUserId);
 }

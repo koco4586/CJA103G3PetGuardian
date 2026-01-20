@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 
-import com.petguardian.chat.model.ChatMessageVO;
+import com.petguardian.chat.model.ChatMessageEntity;
 
 /**
  * Strategy Interface for Unified Message Operations.
@@ -33,7 +33,7 @@ public interface MessageStrategyService {
      * @param content    Message Body
      * @return Persisted Entity
      */
-    default ChatMessageVO save(Integer chatroomId, Integer senderId, String content) {
+    default ChatMessageEntity save(Integer chatroomId, Integer senderId, String content) {
         return save(chatroomId, senderId, content, null);
     }
 
@@ -46,7 +46,7 @@ public interface MessageStrategyService {
      * @param replyToId  Optional ID of parent message
      * @return Persisted Entity
      */
-    ChatMessageVO save(Integer chatroomId, Integer senderId, String content, String replyToId);
+    ChatMessageEntity save(Integer chatroomId, Integer senderId, String content, String replyToId);
 
     /**
      * Triggers manual flush of buffered messages (Async strategies only).
@@ -79,16 +79,16 @@ public interface MessageStrategyService {
      * Retrieves latest messages for a chatroom using the most efficient
      * read path (e.g., Cache Hit -> DB Miss).
      */
-    List<ChatMessageVO> findLatestMessages(Integer chatroomId, Pageable pageable);
+    List<ChatMessageEntity> findLatestMessages(Integer chatroomId, Pageable pageable);
 
     /**
      * Resolves a single message by ID.
      */
-    Optional<ChatMessageVO> findById(String messageId);
+    Optional<ChatMessageEntity> findById(String messageId);
 
     /**
      * Batch resolves messages by ID.
      * Used typically for resolving reply contexts in bulk.
      */
-    List<ChatMessageVO> findAllById(Iterable<String> messageIds);
+    List<ChatMessageEntity> findAllById(Iterable<String> messageIds);
 }

@@ -3,13 +3,16 @@ package com.petguardian.chat.service;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatMemberDTO;
 import com.petguardian.chat.model.ChatMemberRepository;
+import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
+import com.petguardian.chat.model.ChatMemberEntity;
 
 /**
  * Service Implementation for Chat View Data Aggregation.
@@ -46,31 +49,31 @@ public class ChatPageServiceImpl implements ChatPageService {
     }
 
     @Override
-    public List<com.petguardian.chat.model.ChatRoomDTO> getMyChatrooms(Integer currentUserId) {
+    public List<ChatRoomDTO> getMyChatrooms(Integer currentUserId) {
         // 1. Fetch all raw chatrooms
-        List<ChatRoomVO> chatrooms = chatroomRepository.findByMemId1OrMemId2(currentUserId, currentUserId);
+        List<ChatRoomEntity> chatrooms = chatroomRepository.findByMemId1OrMemId2(currentUserId, currentUserId);
 
         // 2. Resolve ALL partner IDs for batch loading (Avoid N+1)
         java.util.Set<Integer> partnerIds = chatrooms.stream()
                 .map(r -> r.getOtherMemberId(currentUserId))
                 .collect(Collectors.toSet());
 
-        Map<Integer, com.petguardian.chat.model.ChatMemberVO> memberMap = memberRepository.findAllById(partnerIds)
+        Map<Integer, ChatMemberEntity> memberMap = memberRepository.findAllById(partnerIds)
                 .stream()
-                .collect(Collectors.toMap(com.petguardian.chat.model.ChatMemberVO::getMemId,
-                        java.util.function.Function.identity()));
+                .collect(Collectors.toMap(ChatMemberEntity::getMemId,
+                        Function.identity()));
 
         // 3. Map to DTOs
-        List<com.petguardian.chat.model.ChatRoomDTO> summaryList = new java.util.ArrayList<>();
+        List<ChatRoomDTO> summaryList = new java.util.ArrayList<>();
 
-        for (ChatRoomVO room : chatrooms) {
-            com.petguardian.chat.model.ChatRoomDTO dto = new com.petguardian.chat.model.ChatRoomDTO();
+        for (ChatRoomEntity room : chatrooms) {
+            ChatRoomDTO dto = new ChatRoomDTO();
             dto.setChatroomId(room.getChatroomId());
 
             Integer partnerId = room.getOtherMemberId(currentUserId);
             dto.setPartnerId(partnerId);
 
-            com.petguardian.chat.model.ChatMemberVO partner = memberMap.get(partnerId);
+            ChatMemberEntity partner = memberMap.get(partnerId);
             String partnerName = (partner != null) ? partner.getMemName() : "Unknown User";
 
             // Naming Logic: "PartnerName - RoomLabel"
