@@ -1,5 +1,6 @@
 package com.petguardian.productfavoritelist.controller;
 
+import com.petguardian.common.service.AuthService;
 import com.petguardian.productfavoritelist.service.ProductFavoriteListService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,22 +19,25 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class ProductFavoriteListController {
 
-    private static final Integer TEST_MEM_ID = 1001;
+//    private static final Integer TEST_MEM_ID = 1001;
 
     @Autowired
     private ProductFavoriteListService favoriteService;
 
+    @Autowired
+    private AuthService authService;
+
     /**
      * 取得當前會員 ID（含模擬登入邏輯）
      */
-    private Integer getCurrentMemId(HttpSession session) {
-        Integer memId = (Integer) session.getAttribute("memId");
-        if (memId == null) {
-            memId = TEST_MEM_ID;
-            session.setAttribute("memId", memId);
-        }
-        return memId;
-    }
+//    private Integer getCurrentMemId(HttpSession session) {
+//        Integer memId = (Integer) session.getAttribute("memId");
+//        if (memId == null) {
+//            memId = TEST_MEM_ID;
+//            session.setAttribute("memId", memId);
+//        }
+//        return memId;
+//    }
 
     /**
      * 會員中心 - 收藏列表
@@ -41,7 +45,7 @@ public class ProductFavoriteListController {
      */
     @GetMapping("/dashboard/favorites")
     public String dashboardFavoritesPage(Model model, HttpSession session) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         List<Map<String, Object>> favorites = favoriteService.getFavoritesWithProductInfo(memId);
         model.addAttribute("favorites", favorites);
@@ -59,7 +63,7 @@ public class ProductFavoriteListController {
             @RequestParam(required = false, defaultValue = "/store") String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         try {
             favoriteService.addFavorite(memId, proId);
@@ -80,7 +84,7 @@ public class ProductFavoriteListController {
             @RequestParam(required = false, defaultValue = "/dashboard/favorites") String redirectUrl,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         try {
             favoriteService.removeFavorite(memId, proId);
@@ -99,7 +103,7 @@ public class ProductFavoriteListController {
     @ResponseBody
     public Map<String, Object> addFavoriteApi(@RequestParam Integer proId,
             HttpSession session) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
         return favoriteService.toggleFavorite(memId, proId);
     }
 
@@ -110,7 +114,7 @@ public class ProductFavoriteListController {
     @ResponseBody
     public Map<String, Object> removeFavoriteApi(@RequestParam Integer proId,
             HttpSession session) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
         favoriteService.removeFavorite(memId, proId);
         return Map.of("success", true, "favorited", false);
     }
@@ -122,7 +126,7 @@ public class ProductFavoriteListController {
     @ResponseBody
     public Map<String, Object> toggleFavoriteApi(@RequestParam Integer proId,
             HttpSession session) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
         return favoriteService.toggleFavorite(memId, proId);
     }
 }

@@ -1,5 +1,6 @@
 package com.petguardian.store.controller;
 
+import com.petguardian.common.service.AuthService;
 import com.petguardian.orders.dto.*;
 import com.petguardian.orders.model.OrdersVO;
 import com.petguardian.orders.model.StoreMemberRepository;
@@ -31,13 +32,12 @@ import java.util.stream.Collectors;
  * - 結帳頁面 (/store/checkout)
  * - 購買商品 (/product/{proId}/buy)
  * - 購物車操作 (/cart/*)
- * - 收藏操作 (/favorites/*)
- * - 會員中心頁面 (/dashboard/*)
+ * - 會員中心 - 訂單列表 (/dashboard/orders)
  */
 @Controller
 public class StoreController {
 
-    private static final Integer TEST_MEM_ID = 1001;
+//    private static final Integer TEST_MEM_ID = 1001;
 
     @Autowired
     private StoreService productService;
@@ -60,19 +60,22 @@ public class StoreController {
     @Autowired
     private StoreMemberRepository memberDAO;
 
+    @Autowired
+    private AuthService authService;
+
     // ==================== 輔助方法 ====================
 
     /**
      * 取得當前會員 ID（含模擬登入邏輯）
      */
-    private Integer getCurrentMemId(HttpSession session) {
-        Integer memId = (Integer) session.getAttribute("memId");
-        if (memId == null) {
-            memId = TEST_MEM_ID;
-            session.setAttribute("memId", memId);
-        }
-        return memId;
-    }
+//    private Integer getCurrentMemId(HttpSession session) {
+//        Integer memId = (Integer) session.getAttribute("memId");
+//        if (memId == null) {
+//            memId = TEST_MEM_ID;
+//            session.setAttribute("memId", memId);
+//        }
+//        return memId;
+//    }
 
     /**
      * 取得或建立購物車
@@ -180,7 +183,7 @@ public class StoreController {
      */
     @GetMapping("/store")
     public String storePage(Model model, HttpSession session) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         // 取得所有上架商品
         List<Product> products = productService.getAllActiveProducts();
@@ -208,7 +211,7 @@ public class StoreController {
             @RequestParam(defaultValue = "1") Integer quantity,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         // 取得商品資訊
         Optional<Product> productOpt = productService.getProductById(proId);
@@ -244,7 +247,7 @@ public class StoreController {
      */
     @GetMapping("/store/checkout")
     public String checkoutPage(Model model, HttpSession session) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         // 取得購物車資料
         List<CartItem> cart = getOrCreateCart(session);
@@ -334,7 +337,7 @@ public class StoreController {
     @GetMapping("/dashboard/orders")
     public String dashboardOrdersPage(@RequestParam(required = false) String filter,
             Model model, HttpSession session) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         List<Map<String, Object>> orders = ordersService.getBuyerOrdersWithItems(memId);
 
@@ -398,7 +401,7 @@ public class StoreController {
             @RequestParam(defaultValue = "1") Integer quantity,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         List<CartItem> cart = getOrCreateCart(session);
 
@@ -455,7 +458,7 @@ public class StoreController {
             @RequestParam Integer quantity,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         List<CartItem> cart = getOrCreateCart(session);
 

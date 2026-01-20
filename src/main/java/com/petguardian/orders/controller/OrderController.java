@@ -1,5 +1,6 @@
 package com.petguardian.orders.controller;
 
+import com.petguardian.common.service.AuthService;
 import com.petguardian.orders.dto.CartItem;
 import com.petguardian.orders.dto.OrderFormDTO;
 import com.petguardian.orders.dto.OrderItemDTO;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/orders")
 public class OrderController {
 
-    private static final Integer TEST_MEM_ID = 1001;
+//    private static final Integer TEST_MEM_ID = 1001;
 
     @Autowired
     private OrdersService ordersService;
@@ -35,15 +36,18 @@ public class OrderController {
     @Autowired
     private ReturnOrderService returnOrderService;
 
+    @Autowired
+    private AuthService authService;
+
     // 取得當前會員 ID（含模擬登入邏輯）
-    private Integer getCurrentMemId(HttpSession session) {
-        Integer memId = (Integer) session.getAttribute("memId");
-        if (memId == null) {
-            memId = TEST_MEM_ID;
-            session.setAttribute("memId", memId);
-        }
-        return memId;
-    }
+//    private Integer getCurrentMemId(HttpSession session) {
+//        Integer memId = (Integer) session.getAttribute("memId");
+//        if (memId == null) {
+//            memId = TEST_MEM_ID;
+//            session.setAttribute("memId", memId);
+//        }
+//        return memId;
+//    }
 
     // 取得或建立購物車
     @SuppressWarnings("unchecked")
@@ -60,7 +64,7 @@ public class OrderController {
     @GetMapping("/complete/{orderId}")
     public String orderCompletePage(@PathVariable Integer orderId,
             Model model, HttpSession session) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         if (orderId == null) {
             return "redirect:/store";
@@ -86,7 +90,7 @@ public class OrderController {
             @RequestParam(required = false) String specialInstructions,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         // 取得購物車
         List<CartItem> cart = getOrCreateCart(session);
@@ -135,7 +139,7 @@ public class OrderController {
     public String cancelOrder(@PathVariable Integer orderId,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         try {
             ordersService.cancelOrderWithRefund(orderId);
@@ -154,7 +158,7 @@ public class OrderController {
             @RequestParam(required = false) String returnDescription,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         try {
             // 合併退貨原因與詳細說明
@@ -178,7 +182,7 @@ public class OrderController {
     public String confirmReceipt(@PathVariable Integer orderId,
             HttpSession session,
             RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         try {
             ordersService.updateOrderStatus(orderId, 2); // 2 = 已完成

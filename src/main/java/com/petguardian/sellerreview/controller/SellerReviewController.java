@@ -1,5 +1,6 @@
 package com.petguardian.sellerreview.controller;
 
+import com.petguardian.common.service.AuthService;
 import com.petguardian.sellerreview.service.SellerReviewReportService;
 import com.petguardian.sellerreview.service.SellerReviewService;
 import jakarta.servlet.http.HttpSession;
@@ -16,7 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/reviews")
 public class SellerReviewController {
 
-    private static final Integer TEST_MEM_ID = 1001;
+//    private static final Integer TEST_MEM_ID = 1001;
 
     @Autowired
     private SellerReviewService reviewService;
@@ -24,17 +25,19 @@ public class SellerReviewController {
     @Autowired
     private SellerReviewReportService reportService;
 
+    @Autowired
+    private AuthService authService;
     /**
      * 取得當前會員 ID（含模擬登入邏輯）
      */
-    private Integer getCurrentMemId(HttpSession session) {
-        Integer memId = (Integer) session.getAttribute("memId");
-        if (memId == null) {
-            memId = TEST_MEM_ID;
-            session.setAttribute("memId", memId);
-        }
-        return memId;
-    }
+//    private Integer getCurrentMemId(HttpSession session) {
+//        Integer memId = (Integer) session.getAttribute("memId");
+//        if (memId == null) {
+//            memId = TEST_MEM_ID;
+//            session.setAttribute("memId", memId);
+//        }
+//        return memId;
+//    }
 
     /**
      * 提交評價
@@ -45,7 +48,7 @@ public class SellerReviewController {
                                @RequestParam(required = false) String reviewContent,
                                HttpSession session,
                                RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
+        authService.getCurrentMemId(session);
 
         try {
             reviewService.createReview(orderId, rating, reviewContent);
@@ -66,7 +69,7 @@ public class SellerReviewController {
                                @RequestParam(required = false, defaultValue = "/store/checkout") String redirectUrl,
                                HttpSession session,
                                RedirectAttributes redirectAttr) {
-        Integer memId = getCurrentMemId(session);
+        Integer memId = authService.getCurrentMemId(session);
 
         try {
             reportService.createReport(reviewId, memId, reportReason);
