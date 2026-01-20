@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.petguardian.forum.model.ForumPostReportVO;
 import com.petguardian.forum.model.ForumPostVO;
 
 import java.time.LocalDate;
@@ -75,8 +76,22 @@ public class Member {
     // 羽澈
     @OneToMany(mappedBy = "member")
     private Set<ForumPostVO> forumPosts;
-
+    
     // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumPostReportVO> forumPostReports;
+    
+    // 羽澈
+    public Set<ForumPostReportVO> getForumPostReports() {
+		return forumPostReports;
+	}
+    
+    // 羽澈
+	public void setForumPostReports(Set<ForumPostReportVO> forumPostReports) {
+		this.forumPostReports = forumPostReports;
+	}
+
+	// 羽澈
     public Set<ForumPostVO> getForumPosts() {
 		return forumPosts;
 	}

@@ -42,6 +42,7 @@ public class ForumPostVO implements Serializable{
 	private Member member;
 	
 	// 測試用
+	@Transient
 	private Integer memId;
 	
 	@ManyToOne
