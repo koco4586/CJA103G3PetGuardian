@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "chatroom")
 @Data
 @NoArgsConstructor
-public class ChatRoomVO implements Serializable {
+public class ChatRoomEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

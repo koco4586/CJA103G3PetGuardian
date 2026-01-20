@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatMemberVO;
+import com.petguardian.chat.model.ChatMemberEntity;
 import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatMessageVO;
+import com.petguardian.chat.model.ChatMessageEntity;
 
 @Service
 public class ChatMessageMapperImpl implements ChatMessageMapper {
@@ -26,7 +26,8 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
     }
 
     @Override
-    public ChatMessageDTO toDto(ChatMessageVO entity, ChatMemberVO sender, String replyContent, String replySenderName,
+    public ChatMessageDTO toDto(ChatMessageEntity entity, ChatMemberEntity sender, String replyContent,
+            String replySenderName,
             Integer currentUserId, Integer partnerId) {
         ChatMessageDTO dto = new ChatMessageDTO();
         dto.setMessageId(entity.getMessageId());
@@ -46,25 +47,25 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
     }
 
     @Override
-    public List<ChatMessageDTO> toDtoList(List<ChatMessageVO> entities, Integer currentUserId, Integer partnerId) {
+    public List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> entities, Integer currentUserId, Integer partnerId) {
         if (entities.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Map<Integer, ChatMemberVO> memberMap = resolveMemberMap(entities);
-        Map<String, ChatMessageVO> replyMap = resolveReplyMap(entities, memberMap);
+        Map<Integer, ChatMemberEntity> memberMap = resolveMemberMap(entities);
+        Map<String, ChatMessageEntity> replyMap = resolveReplyMap(entities, memberMap);
 
         return entities.stream()
                 .map(msg -> {
-                    ChatMemberVO sender = memberMap.get(msg.getMemberId());
+                    ChatMemberEntity sender = memberMap.get(msg.getMemberId());
                     String replyContent = null;
                     String replySenderName = null;
 
                     if (msg.getReplyToMessageId() != null) {
-                        ChatMessageVO replyMsg = replyMap.get(msg.getReplyToMessageId());
+                        ChatMessageEntity replyMsg = replyMap.get(msg.getReplyToMessageId());
                         if (replyMsg != null) {
                             replyContent = replyMsg.getMessage();
-                            ChatMemberVO replySender = memberMap.get(replyMsg.getMemberId());
+                            ChatMemberEntity replySender = memberMap.get(replyMsg.getMemberId());
                             if (replySender != null) {
                                 replySenderName = replySender.getMemName();
                             }
@@ -91,19 +92,19 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         });
     }
 
-    private Map<Integer, ChatMemberVO> resolveMemberMap(List<ChatMessageVO> messages) {
+    private Map<Integer, ChatMemberEntity> resolveMemberMap(List<ChatMessageEntity> messages) {
         Set<Integer> memberIds = messages.stream()
-                .map(ChatMessageVO::getMemberId)
+                .map(ChatMessageEntity::getMemberId)
                 .collect(Collectors.toSet());
 
         return memberRepository.findAllById(memberIds).stream()
-                .collect(Collectors.toMap(ChatMemberVO::getMemId, Function.identity()));
+                .collect(Collectors.toMap(ChatMemberEntity::getMemId, Function.identity()));
     }
 
-    private Map<String, ChatMessageVO> resolveReplyMap(List<ChatMessageVO> messages,
-            Map<Integer, ChatMemberVO> memberMap) {
+    private Map<String, ChatMessageEntity> resolveReplyMap(List<ChatMessageEntity> messages,
+            Map<Integer, ChatMemberEntity> memberMap) {
         Set<String> replyIds = messages.stream()
-                .map(ChatMessageVO::getReplyToMessageId)
+                .map(ChatMessageEntity::getReplyToMessageId)
                 .filter(id -> id != null)
                 .collect(Collectors.toSet());
 
@@ -111,11 +112,11 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
             return Collections.emptyMap();
         }
 
-        Map<String, ChatMessageVO> replyMap = messageStrategyService.findAllById(replyIds).stream()
-                .collect(Collectors.toMap(ChatMessageVO::getMessageId, Function.identity()));
+        Map<String, ChatMessageEntity> replyMap = messageStrategyService.findAllById(replyIds).stream()
+                .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity()));
 
         Set<Integer> missingSenderIds = replyMap.values().stream()
-                .map(ChatMessageVO::getMemberId)
+                .map(ChatMessageEntity::getMemberId)
                 .filter(id -> !memberMap.containsKey(id))
                 .collect(Collectors.toSet());
 

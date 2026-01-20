@@ -5,18 +5,19 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-public interface ChatRoomRepository extends JpaRepository<ChatRoomVO, Integer> {
+public interface ChatRoomRepository extends JpaRepository<ChatRoomEntity, Integer> {
 
     /**
      * Find chatroom by member IDs and Type (Unique Key)
      */
-    Optional<ChatRoomVO> findByMemId1AndMemId2AndChatroomType(Integer memId1, Integer memId2, Integer chatroomType);
+    Optional<ChatRoomEntity> findByMemId1AndMemId2AndChatroomType(Integer memId1, Integer memId2, Integer chatroomType);
 
     /**
      * Find all chatrooms where the user is either member 1 or member 2.
      */
-    List<ChatRoomVO> findByMemId1OrMemId2(Integer memId1, Integer memId2);
+    List<ChatRoomEntity> findByMemId1OrMemId2(Integer memId1, Integer memId2);
 
     /**
      * Counts unread chatrooms for a specific user.
@@ -24,10 +25,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoomVO, Integer> {
      * null),
      * OR user is mem2 and lastMessageAt > mem2LastReadAt (or null).
      */
-    @Query("SELECT COUNT(c) FROM ChatRoomVO c WHERE " +
+    @Query("SELECT COUNT(c) FROM ChatRoomEntity c WHERE " +
             "(c.memId1 = :userId AND c.lastMessageAt IS NOT NULL AND (c.mem1LastReadAt IS NULL OR c.lastMessageAt > c.mem1LastReadAt)) OR "
             +
             "(c.memId2 = :userId AND c.lastMessageAt IS NOT NULL AND (c.mem2LastReadAt IS NULL OR c.lastMessageAt > c.mem2LastReadAt))")
-    int countUnreadRooms(Integer userId);
+    int countUnreadRooms(@Param("userId") Integer userId);
 
 }

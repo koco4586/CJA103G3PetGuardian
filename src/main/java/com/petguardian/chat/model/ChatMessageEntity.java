@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "chat_message")
 @Data
 @NoArgsConstructor
-public class ChatMessageVO implements Serializable {
+public class ChatMessageEntity implements Serializable {
 
     @Id
     @Column(name = "message_id", length = 13, updatable = false)
