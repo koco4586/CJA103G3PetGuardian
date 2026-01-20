@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pet Guardian - 貼文管理</title>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<!-- 後台樣式 -->
+<link rel="stylesheet" th:href="@{/css/backend/style.css}">
+
+<style>
+
+</style>
+
+</head>
+
+<body>
+	<div class="main-content">
+		<header>
+		    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+		
+		    <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+		        alt="logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
+		    
+		    <div style="display: flex; align-items: center; justify-content: space-between; flex: 1; margin-left: 15px;">
+		    	<h1>貼文管理</h1>
+		    </div>
+		    <div class="header-action-btns">
+	            <a th:href="@{/admin/forum/list-all-forum}" class="btn-manage-posts">
+	                <i class="fas fa-file-alt"></i> 討論區管理
+	            </a>
+	            <a th:href="@{/admin/forum/get-all-handled-comments}" class="btn-manage-comments">
+	                <i class="fas fa-comments"></i> 留言管理
+	            </a>
+	        </div>    
+		 </header>   	
+	</div>	    
+	<section>
+		<div class="card">
+			<div class="card-header-flex">
+				<a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-add-forum">
+			        <i class="fas fa-plus"></i>
+			        <span>已下架貼文</span>
+			    </a>
+      	    </div>
+      	    <div class="card-header-flex">
+				<a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-add-forum">
+			        <i class="fas fa-plus"></i>
+			        <span>待處理貼文</span>
+			    </a>
+      	    </div>
+      	    <div class="card-header-flex">
+				<a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-add-forum">
+			        <i class="fas fa-plus"></i>
+			        <span>已刪除貼文</span>
+			    </a>
+      	    </div>		
+			<table id="example">
+				<thead>
+					<tr>
+						<th>文章編號</th>
+						<th>文章標題</th>
+						<th>討論區名稱</th>
+						<th>會員訊息</th>
+						<th>下架原因</th>
+						<th>處理時間</th>
+					</tr>
+				</thead>
+				<tbody>
+					<th:block th:each="forumVO : ${forumList}">
+						<tr>
+							<td th:text="${forumVO.forumId}"></td>
+							<td><img th:src="@{/forum/picture(forumId=${forumVO.forumId})}"
+								style="max-width: 320px; max-height: 100px; object-fit: cover;">
+							</td>
+							<td th:text="${forumVO.forumName}"></td>
+							<td th:text="${forumVO.createdAt}"></td>
+							<td>
+								<form method="post" th:action="@{/admin/forum/get-one-for-update}">
+									<input class="btn" type="submit" name="更新" value="更新">
+									<input type="hidden" name="forumId" th:value="${forumVO.forumId}">
+								</form>
+							</td>
+							<td>
+								<form method="post" th:action="@{/admin/forum/get-forum-id-for-update-status}">
+									<input class="btn" type="submit"
+										th:value="${forumVO.forumStatus == 1 ? '停用' : '啟用'}"
+										th:classappend="${forumVO.forumStatus == 1 ? 'btn-disable' : 'btn-enable'}">
+									<input type="hidden" name="forumStatus" th:value="${forumVO.forumStatus}"> 
+									<input type="hidden" name="forumId" th:value="${forumVO.forumId}">
+								</form>
+							</td>
+						</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+
+
+<script th:src="@{/js/backend/sidebar.js}"></script>
+
+<script type="text/javascript">
+
+
+
+</script>
+
+</body>
+</html>

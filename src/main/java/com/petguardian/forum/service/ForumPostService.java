@@ -52,20 +52,12 @@ public class ForumPostService {
 		return optional.orElse(null);
 	}
 	
-//	public List<ForumPostVO> getAllActive(){
-//		return repo.findAll();
-//	}
-	
 	public List<ForumPostVO> getAllActiveByForumId(Integer forumId){
 		return repo.findPostsByForumId(forumId);
 	}
 	
 	public List<ForumPostVO> getPostBykeyword(String keyword, Integer forumId){
 		return repo.findByKeyword(keyword, forumId);
-	}
-	
-	public List<ForumPostVO> getAllHandledPosts(){
-		return repo.getAllHandledPosts();
 	}
 	
 	public byte[] getPostPic(Integer postId) {
