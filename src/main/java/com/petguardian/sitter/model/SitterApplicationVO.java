@@ -1,6 +1,5 @@
 package com.petguardian.sitter.model;
 
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -10,17 +9,16 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-
 //保姆申請table
 @Entity
-@Table(name = "sitter_application")//保姆申請Table
+@Table(name = "sitter_application") // 保姆申請Table
 public class SitterApplicationVO implements Serializable {//
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public SitterApplicationVO() { // 必需有一個不傳參數建構子(JavaBean基本知識)
+    public SitterApplicationVO() { // 必需有一個不傳參數建構子(JavaBean基本知識)
 
-	};
-	// =========================
+    };
+    // =========================
     // 申請基本資料
     // =========================
 
@@ -38,6 +36,8 @@ public class SitterApplicationVO implements Serializable {//
      * 會員編號
      * - 對應 member.mem_id
      * - 表示是哪一位會員提出保姆申請
+     * - 採用低耦合設計,不使用 @ManyToOne 關聯
+     * - 透過 Service 層存取會員資料
      */
     @Column(name = "mem_id", nullable = false)
     private Integer memId;
@@ -107,8 +107,6 @@ public class SitterApplicationVO implements Serializable {//
     @Column(name = "app_created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime appCreatedAt;
 
-
-
     public Integer getAppId() {
         return appId;
     }
@@ -173,4 +171,3 @@ public class SitterApplicationVO implements Serializable {//
         this.appCreatedAt = appCreatedAt;
     }
 }
-

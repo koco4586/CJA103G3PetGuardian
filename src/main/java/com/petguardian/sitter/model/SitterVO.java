@@ -33,7 +33,11 @@ public class SitterVO implements Serializable {
 	@Column(name = "sitter_id", nullable = false, updatable = false)
 	private Integer sitterId;
 
-	/** 會員編號（FK → member.mem_id，NOT NULL） */
+	/**
+	 * 會員編號 (FK → member.mem_id，NOT NULL)
+	 * 採用低耦合設計,不使用 @ManyToOne 關聯
+	 * 透過 Service 層注入 MemberRegisterRepository 存取會員資料
+	 */
 	@Column(name = "mem_id", nullable = false)
 	private Integer memId;
 
