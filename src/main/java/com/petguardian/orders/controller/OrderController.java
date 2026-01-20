@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
@@ -151,11 +152,12 @@ public class OrderController {
         return "redirect:/dashboard/orders";
     }
 
-    // 申請退貨
+    // 申請退貨（支援圖片上傳）
     @PostMapping("/return")
     public String applyReturn(@RequestParam Integer orderId,
             @RequestParam String returnReason,
             @RequestParam(required = false) String returnDescription,
+            @RequestParam(value = "returnImages", required = false) List<MultipartFile> returnImages,
             HttpSession session,
             RedirectAttributes redirectAttr) {
         authService.getCurrentMemId(session);
@@ -167,8 +169,8 @@ public class OrderController {
                 fullReason += "：" + returnDescription;
             }
 
-            // 使用 ReturnOrderService 建立退貨單並更新訂單狀態
-            returnOrderService.applyReturn(orderId, fullReason);
+            // 使用 ReturnOrderService 建立退貨單並更新訂單狀態（含圖片）
+            returnOrderService.applyReturn(orderId, fullReason, returnImages);
             redirectAttr.addFlashAttribute("message", "退貨申請已提交");
         } catch (Exception e) {
             redirectAttr.addFlashAttribute("error", e.getMessage());
