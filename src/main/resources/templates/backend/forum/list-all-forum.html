@@ -142,21 +142,82 @@
 	    transform: translateY(-2px);
 	}
 	
+	/* 標頭按鈕容器 */
+	.header-action-btns {
+	    display: flex;
+	    gap: 12px;
+	}
+	
+	/* 已處理貼文按鈕 - 使用深褐色 (符合 deep-brown 語意) */
+	.btn-manage-posts {
+	    background-color: #5d4037;
+	    color: white !important;
+	    font-weight: bold;
+	    text-decoration: none;
+	    padding: 8px 16px;
+	    border-radius: 8px;
+	    transition: all 0.3s ease;
+	    display: inline-flex;
+	    align-items: center;
+	    gap: 8px;
+	    font-size: 0.9rem;
+	}
+	
+	/* 已處理留言按鈕 - 使用深藍灰色 */
+	.btn-manage-comments {
+	    background-color: #455a64;
+	    color: white !important;
+	    font-weight: bold;
+	    text-decoration: none;
+	    padding: 8px 16px;
+	    border-radius: 8px;
+	    transition: all 0.3s ease;
+	    display: inline-flex;
+	    align-items: center;
+	    gap: 8px;
+	    font-size: 0.9rem;
+	}
+	
+	.btn-manage-posts:hover, .btn-manage-comments:hover {
+	    opacity: 0.9;
+	    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+	    transform: translateY(-2px);
+	}
+	
+	/* 確保在手機版時標頭不會擠爆 */
+	@media (max-width: 768px) {
+	    header div {
+	        flex-direction: column;
+	        align-items: flex-start !important;
+	        gap: 10px;
+	    }
+	    .header-action-btns {
+	        width: 100%;
+	    }
+	}
 </style>
 </head>
 
 <body>
 	<div class="main-content">
 		<header>
-			<button class="menu-btn" onclick="toggleSidebar()">☰</button>
-
-			<img
-				src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
-				alt="logo"
-				style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
-			<div>
-				<h1>討論區管理</h1>
-			</div>
+		    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+		
+		    <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+		        alt="logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
+		    
+		    <div style="display: flex; align-items: center; justify-content: space-between; flex: 1; margin-left: 15px;">
+		        <h1>討論區管理</h1>
+		        
+		        <div class="header-action-btns">
+		            <a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-manage-posts">
+		                <i class="fas fa-file-alt"></i> 貼文管理
+		            </a>
+		            <a th:href="@{/admin/forum/get-all-handled-comments}" class="btn-manage-comments">
+		                <i class="fas fa-comments"></i> 留言管理
+		            </a>
+		        </div>
+		    </div>
 		</header>
 
 		<section>
