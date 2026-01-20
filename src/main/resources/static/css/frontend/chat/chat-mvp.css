@@ -236,3 +236,17 @@
 .unread-dot.app-d-none {
     display: none;
 }
+
+/* Read Receipt - positioned outside bubble */
+.message.sent {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.read-status {
+    position: absolute;
+    right: 0;
+    bottom: -16px;
+    font-size: 0.65rem;
+    color: #999;
+}
