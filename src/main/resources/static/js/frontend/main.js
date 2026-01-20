@@ -22,9 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <li><a href="news.html" class="nav-link">最新消息</a></li>
                 </ul>
                 <div class="d-flex align-center">
-                    <a href="chat.html" class="btn btn-outline" style="border:none; margin-right: 0.5rem; font-size: 1.2rem; position: relative; padding: 0.5rem;">
+                    <a href="#" onclick="enterChat(event)" class="btn btn-outline" style="border:none; margin-right: 0.5rem; font-size: 1.2rem; position: relative; padding: 0.5rem;">
                         <i class="fas fa-comment-dots"></i>
-                        <span style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; border: 2px solid white;"></span>
+                        <span id="header-chat-dot" style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; border: 2px solid white; display: none;"></span>
                     </a>
                     <div class="dropdown">
                     <button class="btn btn-primary d-flex align-center gap-sm">
@@ -205,3 +205,89 @@ window.removeFavorite = function (btn, type = 'general', id = null) {
         }, 300);
     }
 };
+
+/**
+ * Handle entering chat via secure POST.
+ * Transmits userId as 'sessionId' to satisfy MockAuthStrategy.
+ * Forward compatible with SessionAuthStrategy (which ignores the body).
+ */
+window.enterChat = function (e) {
+    e.preventDefault();
+    const userIdEl = document.getElementById('currentUserId');
+
+    if (userIdEl && userIdEl.value) {
+        // Authenticated: POST to /chat
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/chat';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'sessionId'; // Transmit ID as 'sessionId'
+        input.value = userIdEl.value;
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    } else {
+        // Guest: Standard Redirect
+        window.location.href = '/chat';
+    }
+};
+
+/**
+ * Global Unread Notification Logic
+ * "Best Effort" implementation for pages where currentUserId is available.
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    const userIdEl = document.getElementById('currentUserId');
+    if (!userIdEl || !userIdEl.value) {
+        return; // Guest or page without auth context
+    }
+
+    const currentUserId = userIdEl.value;
+    const dotEl = document.getElementById('header-chat-dot'); // Now using ID from HTML
+
+    if (!dotEl) return;
+
+    // 1. Initial Check via API (Pass userId explicitly)
+    fetch(`/api/chatrooms/unread-count?userId=${currentUserId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.hasUnread) {
+                dotEl.style.display = 'block';
+            } else {
+                dotEl.style.display = 'none';
+            }
+        })
+        .catch(console.error);
+
+    // 2. Real-time Listener (Lazy load SockJS/Stomp if needed)
+    if (typeof SockJS !== 'undefined' && typeof Stomp !== 'undefined') {
+        initGlobalWS();
+    } else {
+        // Optional: Load libraries if critical, but for now skip to avoid complexity overhead 
+        // if user hasn't included them on non-chat pages.
+        // Assuming chat pages have them.
+    }
+
+    function initGlobalWS() {
+        const socket = new SockJS('/ws');
+        const stomp = Stomp.over(socket);
+        stomp.debug = null; // Quiet mode
+
+        stomp.connect({}, function () {
+            stomp.subscribe('/topic/messages.' + currentUserId, function (msg) {
+                try {
+                    const body = JSON.parse(msg.body);
+                    // Only show dot if message is NOT sent by me
+                    if (String(body.senderId) !== String(currentUserId)) {
+                        dotEl.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error('Failed to parse global notification:', e);
+                }
+            });
+        });
+    }
+});
