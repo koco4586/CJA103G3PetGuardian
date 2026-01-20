@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.petguardian.member.model.Member;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,7 +37,11 @@ public class ForumPostVO implements Serializable{
 	@Column(name = "post_id", updatable = false)
 	private Integer postId;
 	
-	@Column(name = "mem_id", updatable = false)
+	@ManyToOne
+	@JoinColumn(name = "mem_id", referencedColumnName = "mem_id", updatable = false)
+	private Member member;
+	
+	// 測試用
 	private Integer memId;
 	
 	@ManyToOne
@@ -103,6 +108,14 @@ public class ForumPostVO implements Serializable{
 
 	public void setUpFile(MultipartFile upFile) {
 		this.upFile = upFile;
+	}
+
+	public Member getMember() {
+		return member;
+	}
+
+	public void setMember(Member member) {
+		this.member = member;
 	}
 
 	public ForumVO getForum() {
