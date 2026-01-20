@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatMemberVO;
+import com.petguardian.chat.model.ChatMemberEntity;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -76,7 +76,7 @@ public class MockAuthStrategyServiceImpl implements AuthStrategyService {
         if (userId == null) {
             return null;
         }
-        ChatMemberVO member = memberRepository.findById(userId).orElse(null);
+        ChatMemberEntity member = memberRepository.findById(userId).orElse(null);
         return member != null ? member.getMemName() : "User " + userId;
     }
 }

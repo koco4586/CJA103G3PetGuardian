@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Default implementation for 1-on-1 chatroom creation.
@@ -21,20 +21,20 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
     }
 
     @Override
-    public ChatRoomVO findOrCreate(Integer userA, Integer userB, Integer chatroomType) {
+    public ChatRoomEntity findOrCreate(Integer userA, Integer userB, Integer chatroomType) {
         // Normalized Lookup (smaller ID first)
         Integer memId1 = Math.min(userA, userB);
         Integer memId2 = Math.max(userA, userB);
         Integer type = chatroomType != null ? chatroomType : 0;
 
-        Optional<ChatRoomVO> existingRoom = chatroomRepository.findByMemId1AndMemId2AndChatroomType(memId1, memId2,
+        Optional<ChatRoomEntity> existingRoom = chatroomRepository.findByMemId1AndMemId2AndChatroomType(memId1, memId2,
                 type);
         if (existingRoom.isPresent()) {
             return existingRoom.get();
         }
 
         // Creation (Ordered IDs: smaller first)
-        ChatRoomVO newRoom = new ChatRoomVO();
+        ChatRoomEntity newRoom = new ChatRoomEntity();
         newRoom.setMemId1(Math.min(userA, userB));
         newRoom.setMemId2(Math.max(userA, userB));
 
