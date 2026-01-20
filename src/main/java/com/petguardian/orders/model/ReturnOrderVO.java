@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "return_order")
@@ -35,4 +37,8 @@ public class ReturnOrderVO {
     @ManyToOne
     @JoinColumn(name = "order_id", insertable = false, updatable = false)
     private OrdersVO ordersVO;
+
+    // 退貨圖片（一對多關聯）
+    @OneToMany(mappedBy = "returnOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ReturnOrderPicVO> returnOrderPics = new ArrayList<>();
 }

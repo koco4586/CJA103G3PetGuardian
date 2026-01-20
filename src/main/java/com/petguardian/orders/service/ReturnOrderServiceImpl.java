@@ -1,14 +1,13 @@
 package com.petguardian.orders.service;
 
 
-import com.petguardian.orders.model.OrdersVO;
-import com.petguardian.orders.model.OrdersRepository;
-import com.petguardian.orders.model.ReturnOrderRepository;
-import com.petguardian.orders.model.ReturnOrderVO;
+import com.petguardian.orders.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,13 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
     private ReturnOrderRepository returnOrderDAO;
 
     @Autowired
+    private ReturnOrderPicRepository returnOrderPicDAO;
+
+    @Autowired
     private OrdersRepository ordersDAO;
+
+    @Autowired
+    private OrdersService ordersService;
 
     // 退貨狀態常數
     public static final Integer RETURN_STATUS_PENDING = 0; // 審核中
@@ -37,6 +42,11 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
 
     @Override
     public Map<String, Object> applyReturn(Integer orderId, String returnReason) {
+        return applyReturn(orderId, returnReason, null);
+    }
+
+    @Override
+    public Map<String, Object> applyReturn(Integer orderId, String returnReason, List<MultipartFile> images) {
         if (orderId == null) {
             throw new IllegalArgumentException("訂單ID不能為 null");
         }
@@ -72,6 +82,22 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
 
         ReturnOrderVO savedReturn = returnOrderDAO.save(returnOrder);
 
+        // 儲存退貨圖片
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    try {
+                        ReturnOrderPicVO pic = new ReturnOrderPicVO();
+                        pic.setReturnOrder(savedReturn);
+                        pic.setPicData(image.getBytes());
+                        returnOrderPicDAO.save(pic);
+                    } catch (IOException e) {
+                        throw new RuntimeException("圖片上傳失敗: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
         // 更新訂單狀態
         order.setOrderStatus(ORDER_STATUS_REFUNDING);
         OrdersVO updatedOrder = ordersDAO.save(order);
@@ -81,6 +107,15 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
         result.put("order", updatedOrder);
 
         return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReturnOrderPicVO> getReturnOrderPics(Integer returnId) {
+        if (returnId == null) {
+            throw new IllegalArgumentException("退貨單ID不能為 null");
+        }
+        return returnOrderPicDAO.findByReturnOrder_ReturnId(returnId);
     }
 
     @Override
@@ -139,10 +174,13 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
 
         if (newStatus.equals(RETURN_STATUS_APPROVED)) {
             order.setOrderStatus(ORDER_STATUS_REFUNDED); // 退貨完成
+            ordersDAO.save(order);
+            // 退貨通過，退款到買家錢包
+            ordersService.refundToBuyerWallet(returnOrder.getOrderId());
         } else if (newStatus.equals(RETURN_STATUS_REJECTED)) {
             order.setOrderStatus(ORDER_STATUS_COMPLETED); // 恢復已完成
+            ordersDAO.save(order);
         }
-        ordersDAO.save(order);
 
         return updatedReturn;
     }

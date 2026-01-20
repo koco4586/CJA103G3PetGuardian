@@ -145,7 +145,7 @@
                                     <form th:action="@{/reviews/report}" method="post" class="report-form"
                                         th:id="'report-form-' + ${review.reviewId}">
                                         <input type="hidden" name="reviewId" th:value="${review.reviewId}">
-                                        <input type="hidden" name="redirectUrl" value="/checkout">
+                                        <input type="hidden" name="redirectUrl" value="/store/checkout">
                                         <textarea name="reportReason" placeholder="請說明檢舉原因..." rows="2" required
                                             maxlength="200"></textarea>
                                         <div class="d-flex gap-sm justify-end">
@@ -314,8 +314,8 @@
                                             <label style="font-size: 0.85rem; color: #666;">數量：</label>
                                             <select name="quantity" onchange="this.form.submit()"
                                                 th:with="maxQty=${item.stockQuantity != null and item.stockQuantity > 10 ? 10 : (item.stockQuantity != null ? item.stockQuantity : 10)}">
-                                                <option th:each="i : ${#numbers.sequence(1, maxQty)}"
-                                                    th:value="${i}" th:text="${i}" th:selected="${i == item.quantity}">1
+                                                <option th:each="i : ${#numbers.sequence(1, maxQty)}" th:value="${i}"
+                                                    th:text="${i}" th:selected="${i == item.quantity}">1
                                                 </option>
                                             </select>
                                         </form>

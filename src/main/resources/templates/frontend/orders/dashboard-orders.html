@@ -338,6 +338,72 @@
             background: #e0e0e0;
             color: #333;
         }
+
+        /* 圖片上傳區域樣式 */
+        .image-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--primary-color);
+            background: #f5f5f5;
+        }
+
+        .image-upload-area.dragover {
+            border-color: var(--primary-color);
+            background: #e3f2fd;
+        }
+
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+
+        .image-preview-item .remove-btn:hover {
+            background: var(--danger);
+        }
     </style>
 </head>
 
@@ -422,7 +488,7 @@
             <!-- 訂單列表 -->
             <div class="order-list" th:if="${!#lists.isEmpty(orders)}">
                 <div th:each="orderData : ${orders}" class="order-card"
-                    th:with="order=${orderData['order']}, items=${orderData['orderItems']}, returnOrder=${orderData['returnOrder']}"
+                    th:with="order=${orderData['order']}, items=${orderData['orderItems']}, returnOrder=${orderData['returnOrder']}, canCancel=${orderData['canCancel']}, canApplyReturn=${orderData['canApplyReturn']}"
                     th:data-order-id="${order.orderId}" th:data-order-status="${order.orderStatus}"
                     th:data-order-time="${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm')}"
                     th:data-order-total="${order.orderTotal}" th:data-receiver-name="${order.receiverName}"
@@ -476,14 +542,19 @@
                                 th:text="'$' + ${order.orderTotal}">$0</span>
                         </div>
                         <div class="d-flex gap-sm">
-                            <!-- 已付款：可取消訂單 -->
-                            <form th:if="${order.orderStatus == 0}"
+                            <!-- 已付款且可取消（24小時內）：可取消訂單 -->
+                            <form th:if="${order.orderStatus == 0 and canCancel}"
                                 th:action="@{/orders/{id}/cancel(id=${order.orderId})}" method="post"
-                                onsubmit="return confirm('確定要取消此訂單嗎？');">
+                                onsubmit="return confirm('確定要取消此訂單嗎？款項將退回錢包。');">
                                 <button type="submit" class="btn btn-outline btn-sm">
                                     <i class="fas fa-times"></i> 取消訂單
                                 </button>
                             </form>
+                            <!-- 已付款但已超過取消期限 -->
+                            <span th:if="${order.orderStatus == 0 and !canCancel}"
+                                style="color: #999; font-size: 0.85rem;" title="下單超過24小時，無法取消">
+                                <i class="fas fa-clock"></i> 已過取消期限
+                            </span>
 
                             <!-- 已出貨：可確認收貨 -->
                             <form th:if="${order.orderStatus == 1}"
@@ -493,12 +564,6 @@
                                     <i class="fas fa-check"></i> 確認收貨
                                 </button>
                             </form>
-
-                            <!-- 已出貨：可申請退貨
-                                <button th:if="${order.orderStatus == 1}" type="button" class="btn btn-outline btn-sm"
-                                    th:onclick="'openReturnModal(' + ${order.orderId} + ', ' + ${order.orderTotal} + ')'">
-                                    <i class="fas fa-undo"></i> 申請退貨
-                                </button> -->
 
                             <!-- 已完成：可評價（若尚未評價） -->
                             <button th:if="${order.orderStatus == 2 and !order.hasReview}" type="button"
@@ -512,12 +577,17 @@
                                 <i class="fas fa-check"></i> 已評價
                             </span>
 
-                            <!-- 已完成：可申請退貨（若尚未評價） -->
-                            <button th:if="${order.orderStatus == 2 and !order.hasReview}" type="button"
+                            <!-- 已完成且可申請退貨（72小時內且尚未評價） -->
+                            <button th:if="${order.orderStatus == 2 and !order.hasReview and canApplyReturn}" type="button"
                                 class="btn btn-outline btn-sm"
                                 th:onclick="'openReturnModal(' + ${order.orderId} + ', ' + ${order.orderTotal} + ')'">
                                 <i class="fas fa-undo"></i> 申請退貨
                             </button>
+                            <!-- 已完成但已超過退貨期限 -->
+                            <span th:if="${order.orderStatus == 2 and !order.hasReview and !canApplyReturn}"
+                                style="color: #999; font-size: 0.85rem;" title="收貨超過24小時，無法申請退貨">
+                                <i class="fas fa-clock"></i> 已過退貨期限
+                            </span>
 
                             <!-- 查看詳情 -->
                             <button type="button" class="btn btn-outline btn-sm"
@@ -603,7 +673,7 @@
                 收貨後 3 天內可申請退貨，商品需保持原包裝完整
             </div>
 
-            <form th:action="@{/orders/return}" method="post" id="returnForm">
+            <form th:action="@{/orders/return}" method="post" id="returnForm" enctype="multipart/form-data">
                 <input type="hidden" name="orderId" id="returnOrderIdInput">
 
                 <!-- 退款金額 -->
@@ -633,6 +703,19 @@
                     <textarea name="returnDescription" class="form-control" rows="3"
                         placeholder="請詳細描述商品問題（最多 500 字）..." maxlength="500" required></textarea>
                     <small style="color: #999; font-size: 0.85rem;">最多 500 字</small>
+                </div>
+
+                <!-- 上傳圖片 -->
+                <div class="form-group mb-2">
+                    <label class="form-label">上傳圖片（選填，最多 5 張）</label>
+                    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('returnImages').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #999; margin-bottom: 0.5rem;"></i>
+                        <p style="color: #999; margin: 0;">點擊或拖曳圖片至此處上傳</p>
+                        <small style="color: #bbb;">支援 JPG、PNG 格式，單張最大 5MB</small>
+                    </div>
+                    <input type="file" id="returnImages" name="returnImages" multiple accept="image/jpeg,image/png"
+                        style="display: none;" onchange="previewImages(this)">
+                    <div id="imagePreviewContainer" class="image-preview-container"></div>
                 </div>
 
                 <!-- 按鈕 -->
@@ -786,15 +869,127 @@
         }
 
         // Return Modal
+        let selectedFiles = []; // 儲存選擇的檔案
+
         function openReturnModal(orderId, amount) {
             document.getElementById('returnOrderIdInput').value = orderId;
             document.getElementById('returnRefundAmount').textContent = amount;
             document.getElementById('returnModal').style.display = 'flex';
+            // 重置圖片上傳
+            selectedFiles = [];
+            document.getElementById('returnImages').value = '';
+            document.getElementById('imagePreviewContainer').innerHTML = '';
         }
 
         function closeReturnModal() {
             document.getElementById('returnModal').style.display = 'none';
+            // 重置圖片上傳
+            selectedFiles = [];
+            document.getElementById('returnImages').value = '';
+            document.getElementById('imagePreviewContainer').innerHTML = '';
         }
+
+        // 圖片預覽功能
+        function previewImages(input) {
+            const container = document.getElementById('imagePreviewContainer');
+            const maxFiles = 5;
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (input.files) {
+                // 合併現有檔案與新選擇的檔案
+                const newFiles = Array.from(input.files);
+
+                for (const file of newFiles) {
+                    // 檢查檔案數量
+                    if (selectedFiles.length >= maxFiles) {
+                        alert('最多只能上傳 ' + maxFiles + ' 張圖片');
+                        break;
+                    }
+
+                    // 檢查檔案大小
+                    if (file.size > maxSize) {
+                        alert('檔案 "' + file.name + '" 超過 5MB 限制');
+                        continue;
+                    }
+
+                    // 檢查檔案類型
+                    if (!file.type.match(/image\/(jpeg|png)/)) {
+                        alert('檔案 "' + file.name + '" 格式不支援，請上傳 JPG 或 PNG 格式');
+                        continue;
+                    }
+
+                    selectedFiles.push(file);
+                }
+
+                // 更新預覽
+                updateImagePreview();
+                // 更新 input 的 files
+                updateFileInput();
+            }
+        }
+
+        function updateImagePreview() {
+            const container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'image-preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="預覽圖片">
+                        <button type="button" class="remove-btn" onclick="removeImage(${index})">&times;</button>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeImage(index) {
+            selectedFiles.splice(index, 1);
+            updateImagePreview();
+            updateFileInput();
+        }
+
+        function updateFileInput() {
+            // 建立新的 DataTransfer 來更新 input files
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            document.getElementById('returnImages').files = dt.files;
+        }
+
+        // 拖曳上傳功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('imageUploadArea');
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        // 模擬 input change 事件
+                        const input = document.getElementById('returnImages');
+                        const dt = new DataTransfer();
+                        Array.from(files).forEach(file => dt.items.add(file));
+                        input.files = dt.files;
+                        previewImages(input);
+                    }
+                });
+            }
+        });
 
         // Close modals when clicking overlay
         document.querySelectorAll('.modal-overlay').forEach(modal => {

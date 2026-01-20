@@ -35,4 +35,16 @@ public interface OrdersService {
 
     // 計算訂單總金額（不含運費）
     Integer calculateOrderTotal(Integer orderId);
+
+    // 取消訂單並退款到買家錢包（含一天期限檢查）
+    OrdersVO cancelOrderWithRefund(Integer orderId);
+
+    // 檢查訂單是否可取消（下單後24小時內）
+    boolean canCancelOrder(Integer orderId);
+
+    // 檢查訂單是否可申請退貨（收貨後24小時內）
+    boolean canApplyReturn(Integer orderId);
+
+    // 退貨審核通過後退款到買家錢包
+    void refundToBuyerWallet(Integer orderId);
 }

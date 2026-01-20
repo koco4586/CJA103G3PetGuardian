@@ -4,14 +4,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.petguardian.orders.model.ReturnOrderPicVO;
 import com.petguardian.orders.model.ReturnOrderVO;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ReturnOrderService {
 
     /**
-     * 申請退貨
+     * 申請退貨（不含圖片）
      */
     Map<String, Object> applyReturn(Integer orderId, String returnReason);
+
+    /**
+     * 申請退貨（含圖片上傳）
+     */
+    Map<String, Object> applyReturn(Integer orderId, String returnReason, List<MultipartFile> images);
+
+    /**
+     * 根據退貨單ID取得圖片列表
+     */
+    List<ReturnOrderPicVO> getReturnOrderPics(Integer returnId);
 
     /**
      * 查詢退貨單

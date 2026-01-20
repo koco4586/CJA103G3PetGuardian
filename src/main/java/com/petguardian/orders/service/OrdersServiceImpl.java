@@ -11,10 +11,14 @@ import com.petguardian.seller.model.ProductPic;
 import com.petguardian.seller.model.ProductRepository;
 import com.petguardian.seller.model.Product;
 import com.petguardian.store.service.StoreService;
+import com.petguardian.wallet.model.Wallet;
+import com.petguardian.wallet.model.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.Base64;
 
@@ -36,6 +40,9 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Autowired
     private StoreService productService;
+
+    @Autowired
+    private WalletRepository walletDAO;
 
     // 訂單狀態常數
     public static final Integer STATUS_PAID = 0; // 已付款
@@ -110,11 +117,13 @@ public class OrdersServiceImpl implements OrdersService {
                 })
                 .sum();
 
-        // 4. Mock 錢包餘額檢查
-        // TODO: 整合真實錢包模組
-        // if (!walletService.hasEnoughBalance(buyerMemId, total)) {
-        //     throw new IllegalArgumentException("錢包餘額不足");
-        // }
+        // 4. 錢包餘額檢查
+        Wallet buyerWallet = walletDAO.findByMemId(buyerMemId)
+                .orElseThrow(() -> new IllegalArgumentException("錢包不存在，請先開通錢包"));
+
+        if (buyerWallet.getBalance() < total) {
+            throw new IllegalArgumentException("錢包餘額不足（目前餘額：$" + buyerWallet.getBalance() + "，需支付：$" + total + "）");
+        }
 
         // 5. 建立訂單
         OrdersVO order = new OrdersVO();
@@ -145,10 +154,16 @@ public class OrdersServiceImpl implements OrdersService {
             productService.deductStock(item.getProId(), item.getQuantity());
         }
 
-        // 8. Mock 錢包扣款
-        // TODO: 整合真實錢包模組
-        // walletService.deduct(buyerMemId, total);
-        // walletService.add(form.getSellerId(), total);
+        // 8. 錢包扣款（買家扣款，賣家收款）
+        buyerWallet.setBalance(buyerWallet.getBalance() - total);
+        walletDAO.save(buyerWallet);
+
+        // 賣家收款
+        Wallet sellerWallet = walletDAO.findByMemId(form.getSellerId()).orElse(null);
+        if (sellerWallet != null) {
+            sellerWallet.setBalance(sellerWallet.getBalance() + total);
+            walletDAO.save(sellerWallet);
+        }
 
         return savedOrder;
     }
@@ -405,5 +420,122 @@ public class OrdersServiceImpl implements OrdersService {
         Integer total = orderItemDAO.calculateOrderTotal(orderId);
         // 不再加運費
         return total != null ? total : 0;
+    }
+
+    // ==================== 取消訂單與退款 ====================
+
+    @Override
+    public OrdersVO cancelOrderWithRefund(Integer orderId) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("訂單ID不能為 null");
+        }
+
+        OrdersVO order = ordersDAO.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("訂單不存在: " + orderId));
+
+        // 檢查訂單狀態（只有已付款狀態才能取消）
+        if (!order.getOrderStatus().equals(STATUS_PAID)) {
+            throw new IllegalArgumentException("此訂單狀態無法取消");
+        }
+
+        // 檢查是否在24小時內
+        if (!canCancelOrder(orderId)) {
+            throw new IllegalArgumentException("已超過取消期限（下單後24小時內可取消）");
+        }
+
+        // 更新訂單狀態為已取消
+        order.setOrderStatus(STATUS_CANCELED);
+        ordersDAO.save(order);
+
+        // 退款到買家錢包
+        refundToBuyerWallet(orderId);
+
+        return order;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canCancelOrder(Integer orderId) {
+        if (orderId == null) {
+            return false;
+        }
+
+        OrdersVO order = ordersDAO.findById(orderId).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        // 只有已付款狀態才能取消
+        if (!order.getOrderStatus().equals(STATUS_PAID)) {
+            return false;
+        }
+
+        // 檢查是否在下單後24小時內
+        LocalDateTime orderTime = order.getOrderTime();
+        if (orderTime == null) {
+            return false;
+        }
+
+        long hoursSinceOrder = ChronoUnit.HOURS.between(orderTime, LocalDateTime.now());
+        return hoursSinceOrder <= 24;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canApplyReturn(Integer orderId) {
+        if (orderId == null) {
+            return false;
+        }
+
+        OrdersVO order = ordersDAO.findById(orderId).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        // 只有已完成狀態才能申請退貨
+        if (!order.getOrderStatus().equals(STATUS_COMPLETED)) {
+            return false;
+        }
+
+        // 檢查是否在訂單完成後24小時內（這裡使用 orderTime + 假設完成時間為近期）
+        // 由於沒有完成時間欄位，使用 orderTime 作為基準
+        LocalDateTime orderTime = order.getOrderTime();
+        if (orderTime == null) {
+            return false;
+        }
+
+        // 假設從下單到完成至少需要一天，所以用 orderTime + 1天 作為完成時間基準
+        // 在實際情況中，應該記錄完成時間
+        long hoursSinceOrder = ChronoUnit.HOURS.between(orderTime, LocalDateTime.now());
+        // 下單後1-3天內可申請退貨（假設1天出貨+配送，所以給予更寬鬆的時間）
+        return hoursSinceOrder <= 72; // 3天內可申請退貨
+    }
+
+    @Override
+    public void refundToBuyerWallet(Integer orderId) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("訂單ID不能為 null");
+        }
+
+        OrdersVO order = ordersDAO.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("訂單不存在: " + orderId));
+
+        Integer refundAmount = order.getOrderTotal();
+        Integer buyerMemId = order.getBuyerMemId();
+        Integer sellerMemId = order.getSellerMemId();
+
+        // 退款到買家錢包
+        Wallet buyerWallet = walletDAO.findByMemId(buyerMemId).orElse(null);
+        if (buyerWallet != null) {
+            buyerWallet.setBalance(buyerWallet.getBalance() + refundAmount);
+            walletDAO.save(buyerWallet);
+        }
+
+        // 從賣家錢包扣除（如果賣家已收到款項）
+        Wallet sellerWallet = walletDAO.findByMemId(sellerMemId).orElse(null);
+        if (sellerWallet != null && sellerWallet.getBalance() >= refundAmount) {
+            sellerWallet.setBalance(sellerWallet.getBalance() - refundAmount);
+            walletDAO.save(sellerWallet);
+        }
     }
 }

@@ -1,8 +1,9 @@
 package com.petguardian.productfavoritelist.service;
 
-
 import com.petguardian.seller.model.ProductRepository;
 import com.petguardian.seller.model.Product;
+import com.petguardian.seller.model.ProductPicRepository;
+import com.petguardian.seller.model.ProductPic;
 import com.petguardian.productfavoritelist.model.ProductFavoriteListRepository;
 import com.petguardian.productfavoritelist.model.ProductFavoriteListVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class ProductFavoriteListServiceImpl implements ProductFavoriteListServic
 
     @Autowired
     private ProductRepository productDAO;
+
+    @Autowired
+    private ProductPicRepository productPicDAO;
 
     @Override
     public ProductFavoriteListVO addFavorite(Integer memId, Integer proId) {
@@ -162,7 +166,17 @@ public class ProductFavoriteListServiceImpl implements ProductFavoriteListServic
             if (product != null) {
                 favData.put("productTitle", product.getProName());
                 favData.put("productPrice", product.getProPrice());
-                favData.put("productImg", "/images/products/" + product.getProId() + ".jpg");
+                favData.put("stockQuantity", product.getStockQuantity());
+
+                // 取得商品圖片並轉為 Base64
+                String base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="; // 預設圖片
+                List<ProductPic> pics = productPicDAO.findByProduct_ProId(product.getProId());
+                if (!pics.isEmpty() && pics.get(0).getProPic() != null) {
+                    base64Image = "data:image/jpeg;base64,"
+                            + Base64.getEncoder().encodeToString(pics.get(0).getProPic());
+                }
+                favData.put("productImg", base64Image);
+
                 // proState: 0=待售, 1=已售出, 2=下架
                 String status;
                 if (product.getProState() == 1) {
@@ -176,7 +190,8 @@ public class ProductFavoriteListServiceImpl implements ProductFavoriteListServic
             } else {
                 favData.put("productTitle", "商品已下架");
                 favData.put("productPrice", 0);
-                favData.put("productImg", "/images/no-image.jpg");
+                favData.put("productImg",
+                        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==");
                 favData.put("productStatus", "已下架");
             }
 
