@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  *
  * 負責處理：
  * - 商城首頁 (/store)
- * - 結帳頁面 (/checkout)
+ * - 結帳頁面 (/store/checkout)
  * - 購買商品 (/product/{proId}/buy)
  * - 購物車操作 (/cart/*)
  * - 收藏操作 (/favorites/*)
@@ -235,14 +235,14 @@ public class StoreController {
         cart.add(item);
         session.setAttribute("cart", cart);
 
-        return "redirect:/checkout";
+        return "redirect:/store/checkout";
     }
 
     /**
      * 結帳頁面
-     * GET /checkout
+     * GET /store/checkout
      */
-    @GetMapping("/checkout")
+    @GetMapping("/store/checkout")
     public String checkoutPage(Model model, HttpSession session) {
         Integer memId = getCurrentMemId(session);
 
@@ -325,30 +325,6 @@ public class StoreController {
         return "frontend/orders/checkout";
     }
 
-    /**
-     * 訂單完成頁面（舊的 URL 格式）
-     * GET /order-complete
-     */
-    @GetMapping("/order-complete")
-    public String orderCompletePage(@RequestParam(required = false) Integer orderId,
-            Model model, HttpSession session) {
-        getCurrentMemId(session);
-
-        if (orderId == null) {
-            return "redirect:/store";
-        }
-
-        try {
-            Map<String, Object> orderData = ordersService.getOrderWithItems(orderId);
-            model.addAttribute("order", orderData.get("order"));
-            model.addAttribute("orderItems", orderData.get("orderItems"));
-            model.addAttribute("itemCount", orderData.get("itemCount"));
-            return "frontend/orders/order-complete";
-        } catch (Exception e) {
-            return "redirect:/store";
-        }
-    }
-
     // ==================== 會員中心頁面 ====================
 
     /**
@@ -357,12 +333,12 @@ public class StoreController {
      */
     @GetMapping("/dashboard/orders")
     public String dashboardOrdersPage(@RequestParam(required = false) String filter,
-                                       Model model, HttpSession session) {
+            Model model, HttpSession session) {
         Integer memId = getCurrentMemId(session);
 
         List<Map<String, Object>> orders = ordersService.getBuyerOrdersWithItems(memId);
 
-        // 為每個訂單加入 hasReview 與 returnOrder 資訊
+        // 為每個訂單加入 hasReview、returnOrder、canCancel、canApplyReturn 資訊
         for (Map<String, Object> orderData : orders) {
             OrdersVO order = (OrdersVO) orderData.get("order");
             if (order != null) {
@@ -373,6 +349,14 @@ public class StoreController {
                 // 取得退貨單資訊（如果有）
                 returnOrderService.getReturnOrderByOrderId(order.getOrderId())
                         .ifPresent(returnOrder -> orderData.put("returnOrder", returnOrder));
+
+                // 檢查是否可取消（24小時內）
+                boolean canCancel = ordersService.canCancelOrder(order.getOrderId());
+                orderData.put("canCancel", canCancel);
+
+                // 檢查是否可申請退貨（72小時內）
+                boolean canApplyReturn = ordersService.canApplyReturn(order.getOrderId());
+                orderData.put("canApplyReturn", canApplyReturn);
             }
         }
 
@@ -380,7 +364,8 @@ public class StoreController {
         if (filter != null && !filter.isEmpty() && !"all".equals(filter)) {
             orders = orders.stream().filter(orderData -> {
                 OrdersVO order = (OrdersVO) orderData.get("order");
-                if (order == null) return false;
+                if (order == null)
+                    return false;
                 int status = order.getOrderStatus();
                 switch (filter) {
                     case "processing":
@@ -400,21 +385,6 @@ public class StoreController {
         model.addAttribute("filter", filter);
 
         return "frontend/orders/dashboard-orders";
-    }
-
-    /**
-     * 會員中心 - 收藏列表
-     * GET /dashboard/favorites
-     */
-    @GetMapping("/dashboard/favorites")
-    public String dashboardFavoritesPage(Model model, HttpSession session) {
-        Integer memId = getCurrentMemId(session);
-
-        List<Map<String, Object>> favorites = favoriteService.getFavoritesWithProductInfo(memId);
-        model.addAttribute("favorites", favorites);
-        model.addAttribute("memId", memId);
-
-        return "frontend/orders/dashboard-favorites";
     }
 
     // ==================== 購物車操作 ====================
@@ -442,7 +412,7 @@ public class StoreController {
         Optional<Product> productOpt = productService.getProductById(proId);
         if (productOpt.isEmpty()) {
             redirectAttr.addFlashAttribute("error", "商品不存在");
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
         Product product = productOpt.get();
 
@@ -450,20 +420,20 @@ public class StoreController {
         Integer currentSellerId = cart.get(0).getSellerId();
         if (!currentSellerId.equals(product.getMemId())) {
             redirectAttr.addFlashAttribute("error", "只能加購同一賣家的商品");
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
 
         // 驗證庫存
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
             redirectAttr.addFlashAttribute("error", "商品庫存不足");
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
 
         // 檢查是否已在購物車中
         boolean exists = cart.stream().anyMatch(item -> item.getProId().equals(proId));
         if (exists) {
             redirectAttr.addFlashAttribute("message", "此商品已在購物車中");
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
 
         // 新增加購商品
@@ -473,7 +443,7 @@ public class StoreController {
         session.setAttribute("cart", cart);
 
         redirectAttr.addFlashAttribute("message", "已加入加購商品");
-        return "redirect:/checkout";
+        return "redirect:/store/checkout";
     }
 
     /**
@@ -500,19 +470,19 @@ public class StoreController {
             if (cart.isEmpty()) {
                 return "redirect:/store";
             }
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
 
         // 驗證庫存
         Optional<Product> productOpt = productService.getProductById(proId);
         if (productOpt.isEmpty()) {
             redirectAttr.addFlashAttribute("error", "商品不存在");
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
         Product product = productOpt.get();
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
             redirectAttr.addFlashAttribute("error", "超過庫存上限（目前庫存：" + product.getStockQuantity() + "）");
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
 
         // 更新數量
@@ -523,7 +493,7 @@ public class StoreController {
 
         session.setAttribute("cart", cart);
         redirectAttr.addFlashAttribute("message", "已更新數量");
-        return "redirect:/checkout";
+        return "redirect:/store/checkout";
     }
 
     /**
@@ -545,50 +515,7 @@ public class StoreController {
         if (cart.isEmpty()) {
             return "redirect:/store";
         }
-        return "redirect:/checkout";
+        return "redirect:/store/checkout";
     }
 
-    // ==================== 收藏操作 ====================
-
-    /**
-     * 加入收藏
-     * POST /favorites/add
-     */
-    @PostMapping("/favorites/add")
-    public String addFavorite(@RequestParam Integer proId,
-            @RequestParam(required = false, defaultValue = "/store") String redirectUrl,
-            HttpSession session,
-            RedirectAttributes redirectAttr) {
-        Integer memId = getCurrentMemId(session);
-
-        try {
-            favoriteService.addFavorite(memId, proId);
-            redirectAttr.addFlashAttribute("message", "已加入收藏");
-        } catch (Exception e) {
-            redirectAttr.addFlashAttribute("error", e.getMessage());
-        }
-
-        return "redirect:" + redirectUrl;
-    }
-
-    /**
-     * 取消收藏
-     * POST /favorites/remove
-     */
-    @PostMapping("/favorites/remove")
-    public String removeFavorite(@RequestParam Integer proId,
-            @RequestParam(required = false, defaultValue = "/dashboard/favorites") String redirectUrl,
-            HttpSession session,
-            RedirectAttributes redirectAttr) {
-        Integer memId = getCurrentMemId(session);
-
-        try {
-            favoriteService.removeFavorite(memId, proId);
-            redirectAttr.addFlashAttribute("message", "已取消收藏");
-        } catch (Exception e) {
-            redirectAttr.addFlashAttribute("error", e.getMessage());
-        }
-
-        return "redirect:" + redirectUrl;
-    }
 }

@@ -422,7 +422,7 @@
             <!-- 訂單列表 -->
             <div class="order-list" th:if="${!#lists.isEmpty(orders)}">
                 <div th:each="orderData : ${orders}" class="order-card"
-                    th:with="order=${orderData['order']}, items=${orderData['orderItems']}, returnOrder=${orderData['returnOrder']}"
+                    th:with="order=${orderData['order']}, items=${orderData['orderItems']}, returnOrder=${orderData['returnOrder']}, canCancel=${orderData['canCancel']}, canApplyReturn=${orderData['canApplyReturn']}"
                     th:data-order-id="${order.orderId}" th:data-order-status="${order.orderStatus}"
                     th:data-order-time="${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm')}"
                     th:data-order-total="${order.orderTotal}" th:data-receiver-name="${order.receiverName}"
@@ -476,14 +476,19 @@
                                 th:text="'$' + ${order.orderTotal}">$0</span>
                         </div>
                         <div class="d-flex gap-sm">
-                            <!-- 已付款：可取消訂單 -->
-                            <form th:if="${order.orderStatus == 0}"
+                            <!-- 已付款且可取消（24小時內）：可取消訂單 -->
+                            <form th:if="${order.orderStatus == 0 and canCancel}"
                                 th:action="@{/orders/{id}/cancel(id=${order.orderId})}" method="post"
-                                onsubmit="return confirm('確定要取消此訂單嗎？');">
+                                onsubmit="return confirm('確定要取消此訂單嗎？款項將退回錢包。');">
                                 <button type="submit" class="btn btn-outline btn-sm">
                                     <i class="fas fa-times"></i> 取消訂單
                                 </button>
                             </form>
+                            <!-- 已付款但已超過取消期限 -->
+                            <span th:if="${order.orderStatus == 0 and !canCancel}"
+                                style="color: #999; font-size: 0.85rem;" title="下單超過24小時，無法取消">
+                                <i class="fas fa-clock"></i> 已過取消期限
+                            </span>
 
                             <!-- 已出貨：可確認收貨 -->
                             <form th:if="${order.orderStatus == 1}"
@@ -493,12 +498,6 @@
                                     <i class="fas fa-check"></i> 確認收貨
                                 </button>
                             </form>
-
-                            <!-- 已出貨：可申請退貨
-                                <button th:if="${order.orderStatus == 1}" type="button" class="btn btn-outline btn-sm"
-                                    th:onclick="'openReturnModal(' + ${order.orderId} + ', ' + ${order.orderTotal} + ')'">
-                                    <i class="fas fa-undo"></i> 申請退貨
-                                </button> -->
 
                             <!-- 已完成：可評價（若尚未評價） -->
                             <button th:if="${order.orderStatus == 2 and !order.hasReview}" type="button"
@@ -512,12 +511,17 @@
                                 <i class="fas fa-check"></i> 已評價
                             </span>
 
-                            <!-- 已完成：可申請退貨（若尚未評價） -->
-                            <button th:if="${order.orderStatus == 2 and !order.hasReview}" type="button"
+                            <!-- 已完成且可申請退貨（72小時內且尚未評價） -->
+                            <button th:if="${order.orderStatus == 2 and !order.hasReview and canApplyReturn}" type="button"
                                 class="btn btn-outline btn-sm"
                                 th:onclick="'openReturnModal(' + ${order.orderId} + ', ' + ${order.orderTotal} + ')'">
                                 <i class="fas fa-undo"></i> 申請退貨
                             </button>
+                            <!-- 已完成但已超過退貨期限 -->
+                            <span th:if="${order.orderStatus == 2 and !order.hasReview and !canApplyReturn}"
+                                style="color: #999; font-size: 0.85rem;" title="收貨超過24小時，無法申請退貨">
+                                <i class="fas fa-clock"></i> 已過退貨期限
+                            </span>
 
                             <!-- 查看詳情 -->
                             <button type="button" class="btn btn-outline btn-sm"

@@ -63,7 +63,7 @@ public class SellerReviewController {
     @PostMapping("/report")
     public String submitReport(@RequestParam Integer reviewId,
                                @RequestParam String reportReason,
-                               @RequestParam(required = false, defaultValue = "/checkout") String redirectUrl,
+                               @RequestParam(required = false, defaultValue = "/store/checkout") String redirectUrl,
                                HttpSession session,
                                RedirectAttributes redirectAttr) {
         Integer memId = getCurrentMemId(session);

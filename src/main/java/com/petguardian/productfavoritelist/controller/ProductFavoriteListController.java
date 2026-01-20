@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * 商品收藏控制器
@@ -33,18 +36,61 @@ public class ProductFavoriteListController {
     }
 
     /**
-     * 收藏列表頁面（會員中心）
-     * 注意：此路由已在 ProductPageController 定義，此處僅供參考
+     * 會員中心 - 收藏列表
+     * GET /dashboard/favorites
      */
-    // @GetMapping("/dashboard/favorites")
-    // public String favoritesPage(Model model, HttpSession session) {
-    // Integer memId = getCurrentMemId(session);
-    // List<Map<String, Object>> favorites =
-    // favoriteService.getFavoritesWithProductInfo(memId);
-    // model.addAttribute("favorites", favorites);
-    // model.addAttribute("memId", memId);
-    // return "frontend/orders/dashboard-favorites";
-    // }
+    @GetMapping("/dashboard/favorites")
+    public String dashboardFavoritesPage(Model model, HttpSession session) {
+        Integer memId = getCurrentMemId(session);
+
+        List<Map<String, Object>> favorites = favoriteService.getFavoritesWithProductInfo(memId);
+        model.addAttribute("favorites", favorites);
+        model.addAttribute("memId", memId);
+
+        return "frontend/orders/dashboard-favorites";
+    }
+
+    /**
+     * 加入收藏
+     * POST /favorites/add
+     */
+    @PostMapping("/favorites/add")
+    public String addFavorite(@RequestParam Integer proId,
+            @RequestParam(required = false, defaultValue = "/store") String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        Integer memId = getCurrentMemId(session);
+
+        try {
+            favoriteService.addFavorite(memId, proId);
+            redirectAttr.addFlashAttribute("message", "已加入收藏");
+        } catch (Exception e) {
+            redirectAttr.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:" + redirectUrl;
+    }
+
+    /**
+     * 取消收藏
+     * POST /favorites/remove
+     */
+    @PostMapping("/favorites/remove")
+    public String removeFavorite(@RequestParam Integer proId,
+            @RequestParam(required = false, defaultValue = "/dashboard/favorites") String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
+        Integer memId = getCurrentMemId(session);
+
+        try {
+            favoriteService.removeFavorite(memId, proId);
+            redirectAttr.addFlashAttribute("message", "已取消收藏");
+        } catch (Exception e) {
+            redirectAttr.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:" + redirectUrl;
+    }
 
     /**
      * 加入收藏 (API 備用)

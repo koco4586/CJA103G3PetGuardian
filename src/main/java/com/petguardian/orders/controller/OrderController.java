@@ -35,7 +35,7 @@ public class OrderController {
     @Autowired
     private ReturnOrderService returnOrderService;
 
-//    取得當前會員 ID（含模擬登入邏輯）
+    // 取得當前會員 ID（含模擬登入邏輯）
     private Integer getCurrentMemId(HttpSession session) {
         Integer memId = (Integer) session.getAttribute("memId");
         if (memId == null) {
@@ -45,7 +45,7 @@ public class OrderController {
         return memId;
     }
 
-//    取得或建立購物車
+    // 取得或建立購物車
     @SuppressWarnings("unchecked")
     private List<CartItem> getOrCreateCart(HttpSession session) {
         List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
@@ -56,10 +56,10 @@ public class OrderController {
         return cart;
     }
 
-//    訂單完成頁面
+    // 訂單完成頁面
     @GetMapping("/complete/{orderId}")
     public String orderCompletePage(@PathVariable Integer orderId,
-                                    Model model, HttpSession session) {
+            Model model, HttpSession session) {
         getCurrentMemId(session);
 
         if (orderId == null) {
@@ -77,15 +77,15 @@ public class OrderController {
         }
     }
 
-//    提交訂單（POST 表單）
+    // 提交訂單（POST 表單）
     @PostMapping("/submit")
     public String submitOrder(@RequestParam Integer sellerId,
-                              @RequestParam String receiverName,
-                              @RequestParam String receiverPhone,
-                              @RequestParam String receiverAddress,
-                              @RequestParam(required = false) String specialInstructions,
-                              HttpSession session,
-                              RedirectAttributes redirectAttr) {
+            @RequestParam String receiverName,
+            @RequestParam String receiverPhone,
+            @RequestParam String receiverAddress,
+            @RequestParam(required = false) String specialInstructions,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
         Integer memId = getCurrentMemId(session);
 
         // 取得購物車
@@ -126,37 +126,20 @@ public class OrderController {
 
         } catch (Exception e) {
             redirectAttr.addFlashAttribute("error", e.getMessage());
-            return "redirect:/checkout";
+            return "redirect:/store/checkout";
         }
     }
 
-//    確認收貨（完成訂單）
-    @PostMapping("/{orderId}/complete")
-    public String confirmOrder(@PathVariable Integer orderId,
-                               HttpSession session,
-                               RedirectAttributes redirectAttr) {
-        getCurrentMemId(session);
-
-        try {
-            ordersService.updateOrderStatus(orderId, 2); // 2 = 已完成
-            redirectAttr.addFlashAttribute("message", "已確認收貨");
-        } catch (Exception e) {
-            redirectAttr.addFlashAttribute("error", e.getMessage());
-        }
-
-        return "redirect:/dashboard/orders";
-    }
-
-//    取消訂單
+    // 取消訂單（含退款）
     @PostMapping("/{orderId}/cancel")
     public String cancelOrder(@PathVariable Integer orderId,
-                              HttpSession session,
-                              RedirectAttributes redirectAttr) {
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
         getCurrentMemId(session);
 
         try {
-            ordersService.updateOrderStatus(orderId, 3); // 3 = 已取消
-            redirectAttr.addFlashAttribute("message", "訂單已取消");
+            ordersService.cancelOrderWithRefund(orderId);
+            redirectAttr.addFlashAttribute("message", "訂單已取消，款項已退回錢包");
         } catch (Exception e) {
             redirectAttr.addFlashAttribute("error", e.getMessage());
         }
@@ -164,13 +147,13 @@ public class OrderController {
         return "redirect:/dashboard/orders";
     }
 
-//    申請退貨
+    // 申請退貨
     @PostMapping("/return")
     public String applyReturn(@RequestParam Integer orderId,
-                              @RequestParam String returnReason,
-                              @RequestParam(required = false) String returnDescription,
-                              HttpSession session,
-                              RedirectAttributes redirectAttr) {
+            @RequestParam String returnReason,
+            @RequestParam(required = false) String returnDescription,
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
         getCurrentMemId(session);
 
         try {
@@ -190,11 +173,11 @@ public class OrderController {
         return "redirect:/dashboard/orders";
     }
 
-//    確認收貨（已出貨 → 已完成）
+    // 確認收貨（已出貨 → 已完成）
     @PostMapping("/{orderId}/confirm")
     public String confirmReceipt(@PathVariable Integer orderId,
-                                 HttpSession session,
-                                 RedirectAttributes redirectAttr) {
+            HttpSession session,
+            RedirectAttributes redirectAttr) {
         getCurrentMemId(session);
 
         try {

@@ -24,6 +24,9 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
     @Autowired
     private OrdersRepository ordersDAO;
 
+    @Autowired
+    private OrdersService ordersService;
+
     // 退貨狀態常數
     public static final Integer RETURN_STATUS_PENDING = 0; // 審核中
     public static final Integer RETURN_STATUS_APPROVED = 1; // 退貨通過
@@ -139,10 +142,13 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
 
         if (newStatus.equals(RETURN_STATUS_APPROVED)) {
             order.setOrderStatus(ORDER_STATUS_REFUNDED); // 退貨完成
+            ordersDAO.save(order);
+            // 退貨通過，退款到買家錢包
+            ordersService.refundToBuyerWallet(returnOrder.getOrderId());
         } else if (newStatus.equals(RETURN_STATUS_REJECTED)) {
             order.setOrderStatus(ORDER_STATUS_COMPLETED); // 恢復已完成
+            ordersDAO.save(order);
         }
-        ordersDAO.save(order);
 
         return updatedReturn;
     }
