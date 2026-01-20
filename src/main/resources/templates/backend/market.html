@@ -12,164 +12,196 @@
 </head>
 
 <body>
-    <script th:src="@{/js/backend/sidebar.js}"></script>
-    <div class="main-content">
-        <header>
-            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+<script th:src="@{/js/backend/sidebar.js}"></script>
 
-            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
-                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+<div class="main-content">
+    <header>
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+            <h1>二手商城管理</h1>
+            <div class="sub">處理訂單撥款與退款爭議</div>
+        </div>
+    </header>
 
-            <div>
-                <h1>二手商城管理</h1>
-                <div class="sub">處理訂單撥款與退款爭議</div>
-            </div>
-        </header>
+    <section>
+        <!-- 成功訊息 -->
+        <div th:if="${successMessage}" class="alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">操作成功</span>
+        </div>
 
-        <section>
-            <div class="tab-container">
-                <button class="tab-btn active" onclick="switchTab('orders')">
-                    <i class="fa-solid fa-file-invoice-dollar"></i> 訂單紀錄 (撥款)
-                </button>
-                <button class="tab-btn" onclick="switchTab('refunds')">
-                    <i class="fa-solid fa-rotate-left"></i> 退款審核申請
-                </button>
-            </div>
+        <!-- 錯誤訊息 -->
+        <div th:if="${error}" class="alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${error}">操作失敗</span>
+        </div>
 
-            <div id="panel-orders" class="panel active">
-                <div class="card">
-                    <h3>待撥款訂單列表</h3>
-                    <div class="sub" style="margin-bottom:15px; color:#666;">
-                        當買家確認收貨後，系統將顯示於此，管理員需手動或確認自動撥款給賣家。
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>訂單編號</th>
-                                <th>商品名稱</th>
-                                <th>買家</th>
-                                <th>賣家</th>
-                                <th>金額</th>
-                                <th>訂單狀態</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>#ORD-202401</td>
-                                <td>全新自動餵食器</td>
-                                <td>王小明</td>
-                                <td>陳大發</td>
-                                <td>$1,500</td>
-                                <td><span
-                                        style="color:green; background:#e6fffa; padding:4px 8px; border-radius:4px;">買家已收貨</span>
-                                </td>
-                                <td>
-                                    <button class="btn" onclick="alert('已撥款給賣家！')">撥款給賣家</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#ORD-202405</td>
-                                <td>寵物推車 (九成新)</td>
-                                <td>林依依</td>
-                                <td>張三</td>
-                                <td>$2,200</td>
-                                <td><span
-                                        style="color:#666; background:#eee; padding:4px 8px; border-radius:4px;">運送中</span>
-                                </td>
-                                <td>
-                                    <button class="btn ghost" disabled>尚未完成</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#ORD-202408</td>
-                                <td>貓咪罐頭 x 24</td>
-                                <td>Kevin</td>
-                                <td>寵物小舖</td>
-                                <td>$800</td>
-                                <td><span
-                                        style="color:blue; background:#e6f7ff; padding:4px 8px; border-radius:4px;">已完成撥款</span>
-                                </td>
-                                <td>
-                                    <button class="btn ghost" disabled>已結案</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <!-- 分頁標籤 -->
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchTab('orders')">
+                <i class="fa-solid fa-file-invoice-dollar"></i> 查閱訂單紀錄及撥款
+            </button>
+            <button class="tab-btn" onclick="switchTab('refunds')">
+                <i class="fa-solid fa-rotate-left"></i> 退款審核申請
+            </button>
+        </div>
+
+        <!-- ========== 訂單撥款區塊 ========== -->
+        <div id="panel-orders" class="panel active">
+            <div class="card">
+                <h3>待撥款訂單列表</h3>
+                <div class="sub" style="margin-bottom:15px; color:#666;">
+                    當買家確認收貨後（訂單狀態為「已完成」），系統將顯示於此，管理員需手動撥款給賣家。
                 </div>
-            </div>
 
-            <div id="panel-refunds" class="panel">
-                <div class="card">
-                    <h3>退款爭議審核</h3>
-                    <div class="sub" style="margin-bottom:15px; color:#666;">
-                        買家發起退款申請，需人工介入審核是否符合退貨標準。
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>申請編號</th>
-                                <th>訂單 / 商品</th>
-                                <th>申請人</th>
-                                <th>退款原因</th>
-                                <th>佐證圖片</th>
-                                <th>狀態</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>REF-009</td>
-                                <td>二手貓砂盆 (#ORD-202403)</td>
-                                <td>李四</td>
-                                <td>商品破損嚴重，與描述不符</td>
-                                <td><a href="#" style="color:var(--orange)">查看圖片</a></td>
-                                <td><span style="color:orange; font-weight:bold;">待審核</span></td>
-                                <td>
-                                    <button class="btn" style="background:#4CAF50;"
-                                        onclick="alert('已批准退款')">批准退款</button>
-                                    <button class="btn" style="background:#d9534f;" onclick="alert('已駁回申請')">駁回</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>REF-012</td>
-                                <td>過期飼料 (#ORD-202407)</td>
-                                <td>Unknown</td>
-                                <td>賣家寄錯商品</td>
-                                <td><a href="#" style="color:var(--orange)">查看圖片</a></td>
-                                <td><span style="color:red; font-weight:bold;">申訴中</span></td>
-                                <td>
-                                    <button class="btn" style="background:#4CAF50;">批准退款</button>
-                                    <button class="btn" style="background:#d9534f;">駁回</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>訂單編號</th>
+                        <th>買家</th>
+                        <th>賣家</th>
+                        <th>訂單金額</th>
+                        <th>下單時間</th>
+                        <th>完成時間</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="orderData : ${ordersWithDetails}">
+                        <td th:text="'#' + ${orderData.order.orderId}">#ORD-001</td>
+                        <td th:text="${orderData.buyerName}">王小明</td>
+                        <td th:text="${orderData.sellerName}">陳大發</td>
+                        <td style="font-weight: 600; color: var(--orange);"
+                            th:text="'$' + ${#numbers.formatInteger(orderData.order.orderTotal, 0, 'COMMA')}">
+                            $1,500
+                        </td>
+                        <td th:text="${#temporals.format(orderData.order.orderTime, 'yyyy-MM-dd HH:mm')}">
+                            2024-01-01 10:00
+                        </td>
+                        <td th:text="${#temporals.format(orderData.order.orderTime, 'yyyy-MM-dd HH:mm')}">
+                            2024-01-05 15:30
+                        </td>
+                        <td>
+                            <form th:action="@{/admin/marketplace/payout}" method="post" style="display: inline;">
+                                <input type="hidden" name="orderId" th:value="${orderData.order.orderId}">
+                                <button type="submit" class="btn"
+                                        onclick="return confirm('確定要撥款給賣家嗎？')">
+                                    <i class="fa-solid fa-money-bill-transfer"></i> 撥款給賣家
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <!-- 空狀態 -->
+                    <tr th:if="${#lists.isEmpty(ordersWithDetails)}">
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: #999;">
+                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1rem;"></i>
+                            <p>目前沒有待撥款訂單</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 退款審核區塊 ========== -->
+        <div id="panel-refunds" class="panel">
+            <div class="card">
+                <h3>退款爭議審核</h3>
+                <div class="sub" style="margin-bottom:15px; color:#666;">
+                    買家發起退款申請，需人工介入審核是否符合退貨標準。
                 </div>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>申請編號</th>
+                        <th>訂單編號</th>
+                        <th>申請人</th>
+                        <th>退款金額</th>
+                        <th>退款原因</th>
+                        <th>申請時間</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="returnData : ${returnsWithDetails}">
+                        <td th:text="'#REF-' + ${returnData.returnOrder.returnId}">#REF-009</td>
+                        <td th:text="'#' + ${returnData.returnOrder.orderId}">#ORD-001</td>
+                        <td th:text="${returnData.buyerName}">李四</td>
+                        <td style="font-weight: 600; color: var(--orange);"
+                            th:text="'$' + ${#numbers.formatInteger(returnData.returnOrder.refundAmount, 0, 'COMMA')}">
+                            $1,500
+                        </td>
+                        <td>
+                            <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                                 th:text="${returnData.returnOrder.returnReason}"
+                                 th:title="${returnData.returnOrder.returnReason}">
+                                商品破損嚴重，與描述不符
+                            </div>
+                        </td>
+                        <td th:text="${#temporals.format(returnData.returnOrder.applyTime, 'yyyy-MM-dd HH:mm')}">
+                            2024-01-06 10:00
+                        </td>
+                        <td>
+                                    <span th:if="${returnData.returnOrder.returnStatus == 0}"
+                                          style="color:orange; font-weight:bold;">
+                                        <i class="fa-solid fa-clock"></i> 待審核
+                                    </span>
+                            <span th:if="${returnData.returnOrder.returnStatus == 1}"
+                                  style="color:green; font-weight:bold;">
+                                        <i class="fa-solid fa-check"></i> 已批准
+                                    </span>
+                            <span th:if="${returnData.returnOrder.returnStatus == 2}"
+                                  style="color:red; font-weight:bold;">
+                                        <i class="fa-solid fa-times"></i> 已駁回
+                                    </span>
+                        </td>
+                        <td>
+                            <!-- 待審核狀態：顯示批准和駁回按鈕 -->
+                            <div th:if="${returnData.returnOrder.returnStatus == 0}"
+                                 style="display: flex; gap: 8px;">
+                                <form th:action="@{/admin/marketplace/return/approve}" method="post" style="display: inline;">
+                                    <input type="hidden" name="returnId" th:value="${returnData.returnOrder.returnId}">
+                                    <button type="submit" class="btn" style="background:#4CAF50;"
+                                            onclick="return confirm('確定批准退款並撥款給買家嗎？')">
+                                        <i class="fa-solid fa-check"></i> 批准退款
+                                    </button>
+                                </form>
+
+                                <form th:action="@{/admin/marketplace/return/reject}" method="post" style="display: inline;">
+                                    <input type="hidden" name="returnId" th:value="${returnData.returnOrder.returnId}">
+                                    <button type="submit" class="btn" style="background:#d9534f;"
+                                            onclick="return confirm('確定駁回退款申請嗎？')">
+                                        <i class="fa-solid fa-times"></i> 駁回
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- 已處理狀態 -->
+                            <div th:if="${returnData.returnOrder.returnStatus != 0}">
+                                <span style="color: #999;">已處理</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 空狀態 -->
+                    <tr th:if="${#lists.isEmpty(returnsWithDetails)}">
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: #999;">
+                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1rem;"></i>
+                            <p>目前沒有退款申請</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-        </section>
-    </div>
-    <script>
-        function switchTab(tabName) {
-            // 1. 移除所有按鈕的 active 樣式
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+    </section>
+</div>
 
-            // 2. 隱藏所有區塊
-            document.querySelectorAll('.panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-
-            // 3. 加上 active 到被點擊的按鈕
-            // 這裡使用了 event.currentTarget 來抓取觸發點擊的按鈕
-            event.currentTarget.classList.add('active');
-
-            // 4. 顯示對應的區塊
-            document.getElementById('panel-' + tabName).classList.add('active');
-        }
-    </script>
+<script th:src="@{/js/backend/store/store.js}"></script>
 </body>
 
 </html>
