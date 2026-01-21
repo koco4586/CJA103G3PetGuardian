@@ -88,4 +88,27 @@ public class SitterServiceImpl implements SitterService {
         vo.setSitterAdd(sitterAdd);
         return repository.save(vo);
     }
+
+    @Override
+    @Transactional
+    public SitterVO updateServiceTime(Integer sitterId, String serviceTime) {
+        System.out.println("=== Service 層 Debug ===");
+        System.out.println("收到 sitterId: " + sitterId);
+        System.out.println("收到 serviceTime: " + serviceTime);
+
+        Optional<SitterVO> optional = repository.findById(sitterId);
+        if (!optional.isPresent()) {
+            throw new IllegalArgumentException("保姆不存在: " + sitterId);
+        }
+        SitterVO vo = optional.get();
+        System.out.println("更新前 serviceTime: " + vo.getServiceTime());
+
+        vo.setServiceTime(serviceTime);
+        SitterVO saved = repository.save(vo);
+
+        System.out.println("更新後 serviceTime: " + saved.getServiceTime());
+        System.out.println("====================");
+
+        return saved;
+    }
 }

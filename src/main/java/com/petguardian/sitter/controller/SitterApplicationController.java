@@ -5,16 +5,19 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petguardian.sitter.model.SitterApplicationDTO;
 import com.petguardian.sitter.model.SitterApplicationVO;
 import com.petguardian.sitter.service.SitterApplicationService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 /**
  * 保姆申請控制器
@@ -23,7 +26,7 @@ import jakarta.servlet.http.HttpSession;
  * 符合開發規範的 URL 命名 (kebab-case)
  */
 @Controller
-@RequestMapping("/sitter-application")
+@RequestMapping("/sitter")
 public class SitterApplicationController {
 
     @Autowired
@@ -31,67 +34,107 @@ public class SitterApplicationController {
 
     /**
      * 導向申請表格頁面
-     * URL: GET /sitter-application/apply
+     * URL: GET /sitter/apply
      */
     @GetMapping("/apply")
-    public String showApplyForm(HttpSession session, RedirectAttributes redirectAttributes) {
-        // 檢查是否已登入
-        Integer memId = (Integer) session.getAttribute("memId");
-        if (memId == null) {
-            redirectAttributes.addFlashAttribute("error", "請先登入才能申請成為保姆");
-            return "redirect:/member/login";
-        }
+    public String showApplyForm(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        // ========== 測試模式：暫時繞過登入檢查 ==========
+        // TODO: 測試完成後請恢復登入檢查
 
-        return "frontend/sitter/application-form"; // 對應 templates/frontend/sitter/application-form.html
+        // 檢查是否已登入（暫時註解）
+        // Integer memId = (Integer) session.getAttribute("memId");
+        // if (memId == null) {
+        // redirectAttributes.addFlashAttribute("errorMessage", "請先登入才能申請成為保姆");
+        // return "redirect:/member/login";
+        // }
+
+        // 測試用假資料
+        Integer memId = 1001;
+        String memName = "測試會員";
+        String memPhone = "0912345678";
+        String avatarUrl = null;
+
+        // ✅ 準備 Model 屬性
+        // 1. 建立空的 DTO 供表單綁定
+        SitterApplicationDTO dto = new SitterApplicationDTO();
+        dto.setMemId(memId); // 預填 memId
+        model.addAttribute("sitterApplication", dto);
+
+        // 2. 從 Session 取得會員資訊（顯示用）- 改用測試資料
+        // String memName = (String) session.getAttribute("memName");
+        // String memPhone = (String) session.getAttribute("memPhone");
+        // String avatarUrl = (String) session.getAttribute("avatarUrl");
+
+        model.addAttribute("memName", memName != null ? memName : "會員姓名");
+        model.addAttribute("memPhone", memPhone != null ? memPhone : "未設定");
+        model.addAttribute("avatarUrl", avatarUrl);
+        model.addAttribute("memberRole", "一般會員");
+
+        // 3. 預留的預設值（可選）
+        model.addAttribute("defaultCity", "台北市");
+        model.addAttribute("defaultDistrict", "大安區");
+
+        return "frontend/dashboard-sitter-registration";
     }
 
     /**
      * 處理申請送出
-     * URL: POST /sitter-application/submit
+     * URL: POST /sitter/apply
      */
-    @PostMapping("/submit")
+    @PostMapping("/apply")
     public String submitApplication(
-            @RequestParam("intro") String intro,
-            @RequestParam("experience") String experience,
+            @Valid @ModelAttribute("sitterApplication") SitterApplicationDTO dto,
+            BindingResult bindingResult,
             HttpSession session,
+            Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
-            // 從 Session 取得當前登入會員 ID
+            // 檢查是否已登入
             Integer memId = (Integer) session.getAttribute("memId");
             if (memId == null) {
-                redirectAttributes.addFlashAttribute("error", "請先登入才能申請成為保姆");
+                redirectAttributes.addFlashAttribute("errorMessage", "請先登入才能申請成為保姆");
                 return "redirect:/member/login";
             }
 
+            // ✅ 檢查驗證錯誤
+            if (bindingResult.hasErrors()) {
+                // 重新準備 Model 屬性（因為表單驗證失敗要重新顯示）
+                prepareModelAttributes(session, model);
+                return "frontend/dashboard-sitter-registration";
+            }
+
+            // 確保 memId 正確
+            dto.setMemId(memId);
+
             // 呼叫 Service 新增申請
-            service.createApplication(memId, intro, experience);
+            service.createApplication(memId, dto.getAppIntro(), dto.getAppExperience());
 
             // 成功訊息
-            redirectAttributes.addFlashAttribute("success", "申請已送出,請等待管理員審核");
-            return "redirect:/sitter-application/list";
+            redirectAttributes.addFlashAttribute("successMessage", "申請已送出，我們將在 1-3 個工作天內完成審核！");
+            return "redirect:/sitter/apply";
 
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // 業務邏輯錯誤 (如:會員不存在、重複申請)
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/sitter-application/apply";
+            // 業務邏輯錯誤 (如:重複申請)
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/sitter/apply";
         } catch (Exception e) {
             // 其他未預期錯誤
-            redirectAttributes.addFlashAttribute("error", "系統錯誤,請稍後再試");
-            return "redirect:/sitter-application/apply";
+            redirectAttributes.addFlashAttribute("errorMessage", "系統錯誤，請稍後再試");
+            return "redirect:/sitter/apply";
         }
     }
 
     /**
      * 查詢會員的申請列表
-     * URL: GET /sitter-application/list
+     * URL: GET /sitter/applications
      */
-    @GetMapping("/list")
+    @GetMapping("/applications")
     public String listApplications(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         // 從 Session 取得當前登入會員 ID
         Integer memId = (Integer) session.getAttribute("memId");
         if (memId == null) {
-            redirectAttributes.addFlashAttribute("error", "請先登入");
+            redirectAttributes.addFlashAttribute("errorMessage", "請先登入");
             return "redirect:/member/login";
         }
 
@@ -99,6 +142,22 @@ public class SitterApplicationController {
         List<SitterApplicationVO> list = service.getApplicationsByMember(memId);
         model.addAttribute("applications", list);
 
-        return "frontend/sitter/application-list"; // 對應 templates/frontend/sitter/application-list.html
+        return "frontend/sitter/application-list";
+    }
+
+    /**
+     * 輔助方法：準備 Model 屬性
+     */
+    private void prepareModelAttributes(HttpSession session, Model model) {
+        String memName = (String) session.getAttribute("memName");
+        String memPhone = (String) session.getAttribute("memPhone");
+        String avatarUrl = (String) session.getAttribute("avatarUrl");
+
+        model.addAttribute("memName", memName != null ? memName : "會員姓名");
+        model.addAttribute("memPhone", memPhone != null ? memPhone : "未設定");
+        model.addAttribute("avatarUrl", avatarUrl);
+        model.addAttribute("memberRole", "一般會員");
+        model.addAttribute("defaultCity", "台北市");
+        model.addAttribute("defaultDistrict", "大安區");
     }
 }

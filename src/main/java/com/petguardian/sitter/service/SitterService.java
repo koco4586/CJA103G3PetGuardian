@@ -64,4 +64,13 @@ public interface SitterService {
      * @return SitterVO 更新後的保姆物件
      */
     SitterVO updateSitterInfo(Integer sitterId, String sitterName, String sitterAdd);
+
+    /**
+     * 更新保姆服務時間（營業時間設定）
+     * 
+     * @param sitterId    保姆編號
+     * @param serviceTime 服務時間（24字元字串，0=不可預約, 1=可預約）
+     * @return SitterVO 更新後的保姆物件
+     */
+    SitterVO updateServiceTime(Integer sitterId, String serviceTime);
 }

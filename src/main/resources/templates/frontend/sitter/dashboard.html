@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保姆主頁 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/dashboard.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar">
+                </div>
+                <h4 th:text="${sitter.sitterName}">保姆姓名</h4>
+                <p style="color: #999; font-size: 0.9rem;">保姆專區</p>
+            </div>
+            <nav>
+                <a href="/sitter/dashboard" class="menu-item active">
+                    <i class="fas fa-home"></i> 保姆主頁
+                </a>
+                <a href="/sitter/profile/settings" class="menu-item">
+                    <i class="fas fa-cog"></i> 個人設定
+                </a>
+                <a href="/sitter/bookings" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 預約管理
+                </a>
+                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
+                    onclick="alert('已登出'); window.location.href='/member/login'">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="mb-2">歡迎回來，<span th:text="${sitter.sitterName}">保姆</span>！</h2>
+            <p style="color: #666; margin-bottom: 2rem;">這是您的保姆控制台，查看您的服務概況。</p>
+
+            <!-- 數據概覽卡片 -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+
+                <!-- 服務項目卡片 -->
+                <div class="card" style="text-align: center; padding: 2rem;">
+                    <div
+                        style="background: #e3f2fd; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-list-ul" style="font-size: 1.5rem; color: #1976d2;"></i>
+                    </div>
+                    <h3 style="font-size: 1.2rem; color: #333; margin-bottom: 0.5rem;">服務項目</h3>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #1976d2; margin-bottom: 0.5rem;"
+                        th:text="${serviceCount}">0</div>
+                    <p style="color: #666; margin-bottom: 1.5rem;">項已上架服務</p>
+                    <a href="/sitter/profile/settings" class="btn btn-outline-primary" style="width: 100%;">管理服務</a>
+                </div>
+
+                <!-- 服務地區卡片 -->
+                <div class="card" style="text-align: center; padding: 2rem;">
+                    <div
+                        style="background: #e8f5e9; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-map-marker-alt" style="font-size: 1.5rem; color: #2e7d32;"></i>
+                    </div>
+                    <h3 style="font-size: 1.2rem; color: #333; margin-bottom: 0.5rem;">服務地區</h3>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #2e7d32; margin-bottom: 0.5rem;"
+                        th:text="${areaCount}">0</div>
+                    <p style="color: #666; margin-bottom: 1.5rem;">個服務區域</p>
+                    <a href="/sitter/profile/settings" class="btn btn-outline-primary" style="width: 100%;">管理地區</a>
+                </div>
+
+                <!-- 評價分數卡片 (目前為靜態假資料) -->
+                <div class="card" style="text-align: center; padding: 2rem;">
+                    <div
+                        style="background: #fff3e0; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-star" style="font-size: 1.5rem; color: #f57c00;"></i>
+                    </div>
+                    <h3 style="font-size: 1.2rem; color: #333; margin-bottom: 0.5rem;">評價分數</h3>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #f57c00; margin-bottom: 0.5rem;">4.8</div>
+                    <p style="color: #666; margin-bottom: 1.5rem;">(12 則評價)</p>
+                    <button class="btn btn-disabled"
+                        style="width: 100%; cursor: not-allowed; opacity: 0.6;">查看評價</button>
+                </div>
+            </div>
+
+            <!-- 本週行程表 -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.2rem; color: var(--primary-color);">本週行程表</h3>
+                    <div style="display: flex; gap: 1rem; font-size: 0.85rem;">
+                        <span><span
+                                style="display: inline-block; width: 12px; height: 12px; background: #4caf50; border-radius: 2px; margin-right: 4px;"></span>可預約</span>
+                        <span><span
+                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border-radius: 2px; margin-right: 4px;"></span>休息</span>
+                        <span><span
+                                style="display: inline-block; width: 12px; height: 12px; background: #ff9800; border-radius: 2px; margin-right: 4px;"></span>已預約</span>
+                    </div>
+                </div>
+
+                <!-- 週次切換控制 -->
+                <div
+                    style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 0.8rem; background: #f8f9fa; border-radius: 6px;">
+                    <button id="prevWeek" class="btn btn-outline-primary" style="padding: 0.4rem 1rem;">
+                        <i class="fas fa-chevron-left"></i> 上一週
+                    </button>
+                    <span id="weekDisplay"
+                        style="font-weight: 500; font-size: 1rem; min-width: 200px; text-align: center;">
+                        2026年 1月 第1週
+                    </span>
+                    <button id="nextWeek" class="btn btn-outline-primary" style="padding: 0.4rem 1rem;">
+                        下一週 <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- 行程表網格 -->
+                <div style="overflow-x: auto;">
+                    <table id="scheduleTable" style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; width: 80px; font-size: 0.9rem;">
+                                    時段</th>
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; font-size: 0.9rem;">週一<br><span
+                                        style="font-size: 0.8rem; color: #666;">01/20</span></th>
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; font-size: 0.9rem;">週二<br><span
+                                        style="font-size: 0.8rem; color: #666;">01/21</span></th>
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; font-size: 0.9rem;">週三<br><span
+                                        style="font-size: 0.8rem; color: #666;">01/22</span></th>
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; font-size: 0.9rem;">週四<br><span
+                                        style="font-size: 0.8rem; color: #666;">01/23</span></th>
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; font-size: 0.9rem;">週五<br><span
+                                        style="font-size: 0.8rem; color: #666;">01/24</span></th>
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; font-size: 0.9rem;">週六<br><span
+                                        style="font-size: 0.8rem; color: #666;">01/25</span></th>
+                                <th style="padding: 0.5rem; border: 1px solid #dee2e6; font-size: 0.9rem;">週日<br><span
+                                        style="font-size: 0.8rem; color: #666;">01/26</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleBody">
+                            <!-- 時段行將由 JavaScript 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 儲存按鈕 -->
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <button id="saveSchedule" class="btn btn-primary" style="padding: 0.8rem 3rem; font-size: 1rem;">
+                        <i class="fas fa-save"></i> 儲存變更
+                    </button>
+                    <div id="saveMessage" style="margin-top: 1rem; font-size: 0.9rem; display: none;"></div>
+                </div>
+            </div>
+
+            <!-- 詳細資訊區域 -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+
+                <!-- 服務價目表 -->
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務價目表</h3>
+                        <a href="/sitter/profile/settings" style="font-size: 0.9rem; color: #666;">編輯</a>
+                    </div>
+                    <table class="table" style="margin-bottom: 0;">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 0.5rem;">項目</th>
+                                <th style="padding: 0.5rem;">價格</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(services)}">
+                                <td colspan="2" style="text-align: center; color: #999; padding: 1rem;">尚未設定服務</td>
+                            </tr>
+                            <tr th:each="service : ${services}">
+                                <td style="padding: 0.8rem 0.5rem;"
+                                    th:text="${service.serviceItemId == 1 ? '散步' : (service.serviceItemId == 2 ? '餵食' : '洗澡')}">
+                                    散步</td>
+                                <td style="padding: 0.8rem 0.5rem; font-weight: bold; color: #28a745;"
+                                    th:text="${service.defaultPrice} + ' 元'">500 元</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 服務地區列表 -->
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務地區</h3>
+                        <a href="/sitter/profile/settings" style="font-size: 0.9rem; color: #666;">編輯</a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(areas)}" style="text-align: center; color: #999; padding: 1rem;">
+                        尚未設定服務地區
+                    </div>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        <span th:each="area : ${areas}"
+                            style="background: #e3f2fd; color: #1565c0; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 0.8rem; margin-right: 4px;"></i>
+                            <span th:text="${area.area.cityName + area.area.district}">台北市大安區</span>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+
+    <script>
+        // 生成本週行程表
+        let currentWeekOffset = 0; // 0 = 本週, -1 = 上週, 1 = 下週
+
+        // 從後端讀取保母的 service_time（24 字元字串）
+        const savedServiceTime = /*[[${sitter.serviceTime}]]*/ '000000000000000000000000';
+        console.log('從資料庫讀取的 serviceTime:', savedServiceTime);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const scheduleBody = document.getElementById('scheduleBody');
+            if (!scheduleBody) return;
+
+            // 初始化行程表
+            generateSchedule();
+
+            // 週次切換按鈕事件
+            document.getElementById('prevWeek').addEventListener('click', function () {
+                currentWeekOffset--;
+                updateSchedule();
+            });
+
+            document.getElementById('nextWeek').addEventListener('click', function () {
+                currentWeekOffset++;
+                updateSchedule();
+            });
+
+            // 儲存按鈕事件
+            document.getElementById('saveSchedule').addEventListener('click', function () {
+                saveScheduleToServer();
+            });
+        });
+
+        function generateSchedule() {
+            const scheduleBody = document.getElementById('scheduleBody');
+            scheduleBody.innerHTML = ''; // 清空
+
+            // 生成 08:00 到 20:00 的時段
+            const startHour = 8;
+            const endHour = 20;
+
+            for (let hour = startHour; hour <= endHour; hour++) {
+                const row = document.createElement('tr');
+
+                // 時段欄位
+                const timeCell = document.createElement('td');
+                timeCell.style.cssText = 'padding: 0.5rem; border: 1px solid #dee2e6; text-align: center; font-size: 0.85rem; background: #f8f9fa; font-weight: 500;';
+                timeCell.textContent = `${hour.toString().padStart(2, '0')}:00`;
+                row.appendChild(timeCell);
+
+                // 7 天的時段格子
+                for (let day = 0; day < 7; day++) {
+                    const cell = document.createElement('td');
+                    // 只設定基礎樣式，不使用 cssText 避免覆蓋
+                    cell.style.border = '1px solid #dee2e6';
+                    cell.style.height = '40px';
+                    cell.style.cursor = 'pointer';
+                    cell.style.transition = 'all 0.2s';
+                    cell.className = 'schedule-cell';
+                    cell.dataset.day = day;
+                    cell.dataset.hour = hour;
+
+                    // 根據資料庫的 serviceTime 設定初始狀態
+                    // serviceTime[hour]: '1' = 可預約, '0' = 不可預約
+                    // 前端狀態: '0' = 可預約, '2' = 休息
+                    let initialStatus = '2'; // 預設為休息
+                    if (savedServiceTime && hour < savedServiceTime.length) {
+                        initialStatus = savedServiceTime.charAt(hour) === '1' ? '0' : '2';
+                    }
+                    cell.dataset.status = initialStatus;
+                    updateCellStyle(cell, initialStatus);
+
+                    // 點擊事件：切換狀態
+                    cell.addEventListener('click', function () {
+                        const currentStatus = this.dataset.status;
+                        if (currentStatus === '0') {
+                            this.dataset.status = '2';
+                            updateCellStyle(this, '2');
+                        } else if (currentStatus === '2') {
+                            this.dataset.status = '0';
+                            updateCellStyle(this, '0');
+                        }
+                    });
+
+                    // Hover 效果
+                    cell.addEventListener('mouseenter', function () {
+                        if (this.dataset.status !== '1') {
+                            this.style.opacity = '0.7';
+                        }
+                    });
+                    cell.addEventListener('mouseleave', function () {
+                        this.style.opacity = '1';
+                    });
+
+                    row.appendChild(cell);
+                }
+
+                scheduleBody.appendChild(row);
+            }
+
+            // 示範：設定幾個「已預約」的時段（假資料）
+            if (currentWeekOffset === 0) {
+                setTimeout(() => {
+                    const cells = document.querySelectorAll('.schedule-cell');
+                    const cell1 = Array.from(cells).find(c => c.dataset.day === '0' && c.dataset.hour === '10');
+                    if (cell1) {
+                        cell1.dataset.status = '1';
+                        updateCellStyle(cell1, '1');
+                    }
+                    const cell2 = Array.from(cells).find(c => c.dataset.day === '2' && c.dataset.hour === '14');
+                    if (cell2) {
+                        cell2.dataset.status = '1';
+                        updateCellStyle(cell2, '1');
+                    }
+                }, 100);
+            }
+        }
+
+        function updateSchedule() {
+            // 更新表頭日期
+            updateTableHeader();
+            // 更新週次顯示
+            updateWeekDisplay();
+            // 重新生成行程表
+            generateSchedule();
+        }
+
+        function updateTableHeader() {
+            const today = new Date();
+            const currentDay = today.getDay(); // 0 = 週日, 1 = 週一, ...
+            const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay; // 計算到週一的偏移
+            const monday = new Date(today);
+            monday.setDate(today.getDate() + mondayOffset + (currentWeekOffset * 7));
+
+            const headers = document.querySelectorAll('#scheduleTable thead th');
+            for (let i = 1; i < headers.length; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + (i - 1));
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+                const dayName = dayNames[date.getDay()];
+                headers[i].innerHTML = `${dayName}<br><span style="font-size: 0.8rem; color: #666;">${month}/${day}</span>`;
+            }
+        }
+
+        function updateWeekDisplay() {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+            const monday = new Date(today);
+            monday.setDate(today.getDate() + mondayOffset + (currentWeekOffset * 7));
+
+            const year = monday.getFullYear();
+            const month = monday.getMonth() + 1;
+
+            // 計算是該月的第幾週
+            const firstDayOfMonth = new Date(year, monday.getMonth(), 1);
+            const weekOfMonth = Math.ceil((monday.getDate() + firstDayOfMonth.getDay()) / 7);
+
+            const weekDisplay = document.getElementById('weekDisplay');
+            if (currentWeekOffset === 0) {
+                weekDisplay.textContent = `${year}年 ${month}月 第${weekOfMonth}週 (本週)`;
+            } else if (currentWeekOffset === -1) {
+                weekDisplay.textContent = `${year}年 ${month}月 第${weekOfMonth}週 (上週)`;
+            } else if (currentWeekOffset === 1) {
+                weekDisplay.textContent = `${year}年 ${month}月 第${weekOfMonth}週 (下週)`;
+            } else {
+                weekDisplay.textContent = `${year}年 ${month}月 第${weekOfMonth}週`;
+            }
+        }
+
+        // 更新格子樣式
+        function updateCellStyle(cell, status) {
+            // 設定共用樣式（保持 table-cell 顯示模式）
+            cell.style.fontSize = '0.75rem';
+            cell.style.fontWeight = '500';
+            cell.style.padding = '0.5rem 0.3rem';
+            cell.style.textAlign = 'center';
+            cell.style.verticalAlign = 'middle';
+            cell.style.lineHeight = '1.2';
+
+            switch (status) {
+                case '0': // 可預約
+                    cell.style.background = '#4caf50';
+                    cell.style.color = 'white';
+                    cell.textContent = '可預約';
+                    break;
+                case '1': // 已預約
+                    cell.style.background = '#ff9800';
+                    cell.style.color = 'white';
+                    cell.style.cursor = 'not-allowed';
+                    cell.textContent = '已預約';
+                    break;
+                case '2': // 休息
+                    cell.style.background = '#e0e0e0';
+                    cell.style.color = '#666';
+                    cell.textContent = '休息';
+                    break;
+            }
+        }
+
+        // 儲存行程到伺服器
+        function saveScheduleToServer() {
+            const saveBtn = document.getElementById('saveSchedule');
+            const saveMsg = document.getElementById('saveMessage');
+
+            // 收集當前週的所有時段狀態
+            const scheduleData = {};
+            const cells = document.querySelectorAll('.schedule-cell');
+
+            cells.forEach(cell => {
+                const day = cell.dataset.day;
+                const hour = cell.dataset.hour;
+                const status = cell.dataset.status;
+
+                if (!scheduleData[day]) {
+                    scheduleData[day] = {};
+                }
+                scheduleData[day][hour] = status;
+            });
+
+            // 顯示載入狀態
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
+            saveMsg.style.display = 'none';
+
+            // 發送 AJAX 請求
+            fetch('/sitter/profile/update-schedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    weekOffset: currentWeekOffset,
+                    scheduleData: scheduleData
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> 儲存變更';
+
+                    if (data.success) {
+                        saveMsg.style.display = 'block';
+                        saveMsg.style.color = '#28a745';
+                        saveMsg.style.fontWeight = 'bold';
+                        saveMsg.innerHTML = '<i class="fas fa-check-circle"></i> 已更新行程！您的營業時間設定已儲存';
+                    } else {
+                        saveMsg.style.display = 'block';
+                        saveMsg.style.color = '#dc3545';
+                        saveMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> 儲存失敗：' + (data.message || '未知錯誤');
+                    }
+
+                    // 5秒後隱藏訊息
+                    setTimeout(() => {
+                        saveMsg.style.display = 'none';
+                    }, 5000);
+                })
+                .catch(error => {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> 儲存變更';
+                    saveMsg.style.display = 'block';
+                    saveMsg.style.color = '#dc3545';
+                    saveMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> 網路錯誤，請稍後再試';
+
+                    setTimeout(() => {
+                        saveMsg.style.display = 'none';
+                    }, 3000);
+                });
+        }
+    </script>
+
+</body>
+
+</html>
