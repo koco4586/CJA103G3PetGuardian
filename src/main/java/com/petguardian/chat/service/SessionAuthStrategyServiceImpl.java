@@ -9,9 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Session-based authentication strategy implementation for Spring Security
- * integration.
- * Reads member ID from HttpSession (set by teammate's Spring Security).
+ * Reads member ID from HttpSession (set by teammate).
  * 
  * Expected session attribute: "memId" (Integer)
  * 

@@ -44,6 +44,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         chatMessageDTO.setContent(chatMessageEntity.getMessage());
         chatMessageDTO.setSenderName(sender != null ? sender.getMemName() : "Unknown");
         chatMessageDTO.setChatroomId(chatMessageEntity.getChatroomId());
+        chatMessageDTO.setChatTime(chatMessageEntity.getChatTime());
 
         if (chatMessageEntity.getReplyToMessageId() != null) {
             chatMessageDTO.setReplyToId(chatMessageEntity.getReplyToMessageId());

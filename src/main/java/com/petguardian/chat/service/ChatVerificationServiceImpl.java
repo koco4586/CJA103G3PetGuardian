@@ -23,10 +23,10 @@ public class ChatVerificationServiceImpl implements ChatVerificationService {
     public ChatRoomEntity verifyMembership(Integer chatroomId, Integer userId) {
         ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
         if (chatroom == null) {
-            throw new RuntimeException("Chatroom not found: " + chatroomId);
+            throw new IllegalArgumentException("Chatroom not found: " + chatroomId);
         }
         if (!isMemberInternal(chatroom, userId)) {
-            throw new RuntimeException("Access denied: User " + userId + " is not a member of chatroom " + chatroomId);
+            throw new SecurityException("Access denied: User " + userId + " is not a member of chatroom " + chatroomId);
         }
         return chatroom;
     }
