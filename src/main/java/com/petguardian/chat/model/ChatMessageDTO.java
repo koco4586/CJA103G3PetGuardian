@@ -3,6 +3,7 @@ package com.petguardian.chat.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 /**
  * DTO for WebSocket chat message payload
@@ -22,4 +23,5 @@ public class ChatMessageDTO {
     private String replyToSenderName;
     private Integer chatroomId;
     private Boolean isRead;
+    private LocalDateTime chatTime;
 }

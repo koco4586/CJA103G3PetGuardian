@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.petguardian.chat.model.ChatMessageDTO;
+import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.service.AuthStrategyService;
+import com.petguardian.chat.service.ChatRoomMapper;
 import com.petguardian.chat.service.ChatService;
-
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -38,14 +38,14 @@ public class ChatApiController {
     // ============================================================
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final ChatRoomMapper chatRoomMapper;
 
     public ChatApiController(AuthStrategyService authStrategyService,
             ChatService chatService,
-            SimpMessagingTemplate messagingTemplate) {
+            ChatRoomMapper chatRoomMapper) {
         this.authStrategyService = authStrategyService;
         this.chatService = chatService;
-        this.messagingTemplate = messagingTemplate;
+        this.chatRoomMapper = chatRoomMapper;
     }
 
     // ============================================================
@@ -61,7 +61,7 @@ public class ChatApiController {
      * @return ChatRoomEntity or 404 Not Found
      */
     @GetMapping
-    public ResponseEntity<ChatRoomEntity> findChatroom(
+    public ResponseEntity<ChatRoomDTO> findChatroom(
             HttpServletRequest request,
             @RequestParam Integer partnerId,
             @RequestParam(required = false, defaultValue = "0") Integer chatroomType) {
@@ -77,7 +77,7 @@ public class ChatApiController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(chatroom);
+        return ResponseEntity.ok(chatRoomMapper.toDto(chatroom, currentUserId));
     }
 
     /**
@@ -103,9 +103,10 @@ public class ChatApiController {
         try {
             List<ChatMessageDTO> dtos = chatService.getChatHistory(chatroomId, currentUserId, page, size);
             return ResponseEntity.ok(dtos);
-        } catch (RuntimeException e) {
-            // Usually indicates Access Denied / Not a member
+        } catch (SecurityException e) {
             return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -140,12 +141,6 @@ public class ChatApiController {
         }
 
         chatService.markRoomAsRead(chatroomId, currentUserId);
-
-        // Broadcast read receipt to partner via WebSocket
-        ChatMessageDTO readReceipt = new ChatMessageDTO();
-        readReceipt.setChatroomId(chatroomId);
-        readReceipt.setIsRead(true);
-        messagingTemplate.convertAndSend("/topic/chatroom." + chatroomId + ".read", readReceipt);
 
         // Return new global status
         boolean hasUnread = chatService.hasUnreadMessages(currentUserId);
