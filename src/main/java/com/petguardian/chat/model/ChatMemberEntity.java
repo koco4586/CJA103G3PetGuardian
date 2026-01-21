@@ -28,4 +28,19 @@ public class ChatMemberEntity implements Serializable {
 
     @Column(name = "mem_name")
     private String memName;
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+        if (!(object instanceof ChatMemberEntity))
+            return false;
+        ChatMemberEntity that = (ChatMemberEntity) object;
+        return memId != null && memId.equals(that.memId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

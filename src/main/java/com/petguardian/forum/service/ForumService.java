@@ -25,7 +25,7 @@ public class ForumService {
 	
 	public ForumVO getOneForum(Integer forumId) {
 		Optional<ForumVO> optional = repository.findById(forumId);
-		return optional.orElse(null);
+		return optional.orElseThrow(() -> new RuntimeException("找不到此討論區，編號：" + forumId));
 	}
 	
 	public List<ForumVO> getAll(){

@@ -42,8 +42,8 @@ public class ForumPostVO implements Serializable{
 	private Member member;
 	
 	// 測試用
-	@Transient
-	private Integer memId;
+//	@Transient
+//	private Integer memId;
 	
 	@ManyToOne
 	@JoinColumn(name = "forum_id", referencedColumnName = "forum_id")
@@ -85,7 +85,7 @@ public class ForumPostVO implements Serializable{
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("commentId asc")
-	private Set<ForumPostCommentVO> forumPostComments;
+	private Set<ForumCommentVO> forumPostComments;
 	
 	@OneToMany(mappedBy = "forumPost")
 	@OrderBy("reportId asc")
@@ -135,11 +135,11 @@ public class ForumPostVO implements Serializable{
 		this.forumPostPics = forumPostPics;
 	}
 
-	public Set<ForumPostCommentVO> getForumPostComments() {
+	public Set<ForumCommentVO> getForumPostComments() {
 		return forumPostComments;
 	}
 
-	public void setForumPostComments(Set<ForumPostCommentVO> forumPostComments) {
+	public void setForumPostComments(Set<ForumCommentVO> forumPostComments) {
 		this.forumPostComments = forumPostComments;
 	}
 
@@ -159,13 +159,13 @@ public class ForumPostVO implements Serializable{
 		this.postId = postId;
 	}
 	
-	public Integer getMemId() {
-		return memId;
-	}
-	
-	public void setMemId(Integer memId) {
-		this.memId = memId;
-	}
+//	public Integer getMemId() {
+//		return memId;
+//	}
+//	
+//	public void setMemId(Integer memId) {
+//		this.memId = memId;
+//	}
 	
 //	public Integer getForumId() {
 //		return forumId;

@@ -5,21 +5,22 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.petguardian.forum.model.ForumPostCommentRepository;
-import com.petguardian.forum.model.ForumPostCommentVO;
+import com.petguardian.forum.model.ForumCommentRepository;
+import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostRepository;
 import com.petguardian.forum.model.ForumPostVO;
+import com.petguardian.member.model.Member;
 
 @Service
-public class ForumPostCommentService {
+public class ForumCommentService {
 	
 	@Autowired
-	ForumPostCommentRepository repo;
+	ForumCommentRepository repo;
 	
 	@Autowired
 	ForumPostRepository postRepo;
 	
-	public List<ForumPostCommentVO> getCommentsByPostId(Integer postId) {
+	public List<ForumCommentVO> getCommentsByPostId(Integer postId) {
 		return repo.findCommentsByPostId(postId);
 	}
 	
@@ -37,14 +38,16 @@ public class ForumPostCommentService {
 		ForumPostVO forumPostVO = postRepo.findById(postId)
 				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
 		
-		ForumPostCommentVO forumPostCommentVO = new ForumPostCommentVO();
-		forumPostCommentVO.setCommentContent(commentContent);
-		forumPostCommentVO.setForumPost(forumPostVO);
+		ForumCommentVO forumCommentVO = new ForumCommentVO();
+		forumCommentVO.setCommentContent(commentContent);
+		forumCommentVO.setForumPost(forumPostVO);
 		
 		// 測試用
-		forumPostCommentVO.setMemId(1015);
+		Member member = new Member();
+		member.setMemId(1005);
+		forumCommentVO.setMember(member);
 		
-		repo.save(forumPostCommentVO);
+		repo.save(forumCommentVO);
 		
 	}
 	

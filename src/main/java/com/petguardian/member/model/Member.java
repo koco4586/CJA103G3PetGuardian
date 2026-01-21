@@ -2,6 +2,8 @@ package com.petguardian.member.model;
 
 import jakarta.persistence.*;
 
+import com.petguardian.forum.model.ForumCommentReportVO;
+import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostReportVO;
 import com.petguardian.forum.model.ForumPostVO;
 
@@ -78,6 +80,24 @@ public class Member {
     private Set<ForumPostReportVO> forumPostReports;
     
     // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumCommentVO> forumComments;
+    
+    // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumCommentReportVO> forumCommentReports;
+    
+    // 羽澈
+    public Set<ForumCommentReportVO> getForumCommentReports() {
+		return forumCommentReports;
+	}
+    
+    // 羽澈
+	public void setForumCommentReports(Set<ForumCommentReportVO> forumCommentReports) {
+		this.forumCommentReports = forumCommentReports;
+	}
+
+	// 羽澈
     public Set<ForumPostReportVO> getForumPostReports() {
 		return forumPostReports;
 	}
@@ -85,6 +105,16 @@ public class Member {
     // 羽澈
 	public void setForumPostReports(Set<ForumPostReportVO> forumPostReports) {
 		this.forumPostReports = forumPostReports;
+	}
+	
+	// 羽澈
+	public Set<ForumCommentVO> getForumComments() {
+		return forumComments;
+	}
+	
+	// 羽澈
+	public void setForumComments(Set<ForumCommentVO> forumComments) {
+		this.forumComments = forumComments;
 	}
 
 	// 羽澈

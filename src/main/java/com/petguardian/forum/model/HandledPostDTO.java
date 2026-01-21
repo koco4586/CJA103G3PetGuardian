@@ -21,5 +21,53 @@ public class HandledPostDTO {
 		this.reportType = reportType;
 		this.handleTime = handleTime;
 	}
+
+	public Integer getPostId() {
+		return postId;
+	}
+
+	public void setPostId(Integer postId) {
+		this.postId = postId;
+	}
+
+	public String getPostTitle() {
+		return postTitle;
+	}
+
+	public void setPostTitle(String postTitle) {
+		this.postTitle = postTitle;
+	}
+
+	public String getForumName() {
+		return forumName;
+	}
+
+	public void setForumName(String forumName) {
+		this.forumName = forumName;
+	}
+
+	public Integer getMemId() {
+		return memId;
+	}
+
+	public void setMemId(Integer memId) {
+		this.memId = memId;
+	}
+
+	public Integer getReportType() {
+		return reportType;
+	}
+
+	public void setReportType(Integer reportType) {
+		this.reportType = reportType;
+	}
+
+	public Timestamp getHandleTime() {
+		return handleTime;
+	}
+
+	public void setHandleTime(Timestamp handleTime) {
+		this.handleTime = handleTime;
+	}
 	
 }

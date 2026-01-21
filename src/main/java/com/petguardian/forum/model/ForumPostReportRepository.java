@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ForumPostReportRepository extends JpaRepository<ForumPostReportVO, Integer> {
+	
 	@Query("""
 			select new com.petguardian.forum.model.HandledPostDTO(
 				p.postId, p.postTitle, f.forumName, p.member.memId, r.reportType, r.handleTime
@@ -17,4 +18,7 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 			order by r.handleTime desc
 	""")
 	public List<HandledPostDTO> findAllHandledPosts();
+
+
+
 }

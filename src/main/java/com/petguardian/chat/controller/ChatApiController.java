@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.petguardian.chat.model.ChatMessageDTO;
+import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.service.AuthStrategyService;
+import com.petguardian.chat.service.ChatRoomMapper;
 import com.petguardian.chat.service.ChatService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,11 +38,14 @@ public class ChatApiController {
     // ============================================================
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
+    private final ChatRoomMapper chatRoomMapper;
 
     public ChatApiController(AuthStrategyService authStrategyService,
-            ChatService chatService) {
+            ChatService chatService,
+            ChatRoomMapper chatRoomMapper) {
         this.authStrategyService = authStrategyService;
         this.chatService = chatService;
+        this.chatRoomMapper = chatRoomMapper;
     }
 
     // ============================================================
@@ -56,7 +61,7 @@ public class ChatApiController {
      * @return ChatRoomEntity or 404 Not Found
      */
     @GetMapping
-    public ResponseEntity<ChatRoomEntity> findChatroom(
+    public ResponseEntity<ChatRoomDTO> findChatroom(
             HttpServletRequest request,
             @RequestParam Integer partnerId,
             @RequestParam(required = false, defaultValue = "0") Integer chatroomType) {
@@ -72,7 +77,7 @@ public class ChatApiController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(chatroom);
+        return ResponseEntity.ok(chatRoomMapper.toDto(chatroom, currentUserId));
     }
 
     /**
@@ -98,9 +103,10 @@ public class ChatApiController {
         try {
             List<ChatMessageDTO> dtos = chatService.getChatHistory(chatroomId, currentUserId, page, size);
             return ResponseEntity.ok(dtos);
-        } catch (RuntimeException e) {
-            // Usually indicates Access Denied / Not a member
+        } catch (SecurityException e) {
             return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -119,10 +125,6 @@ public class ChatApiController {
         return ResponseEntity.ok(Collections.singletonMap("hasUnread", hasUnread));
     }
 
-    /**
-     * Marks a room as read.
-     * Called when opening a chat or focusing on the window.
-     */
     /**
      * Marks a room as read.
      * Called when opening a chat or focusing on the window.
