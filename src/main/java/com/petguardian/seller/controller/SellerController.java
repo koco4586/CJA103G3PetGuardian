@@ -34,7 +34,7 @@ public class SellerController {
     private SellerOrderService sellerOrderService;
 
     @Autowired
-    private AuthStrategyService authService; //  使用現有的認證服務
+    private AuthStrategyService authService; //  使用科宏
 
     @Autowired
     private WalletRepository walletRepository;
@@ -59,7 +59,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login"; // 未登入導向登入頁
+            return "redirect:/store"; // 未登入導向登入頁
         }
 
         // 查詢賣家的所有商品
@@ -68,7 +68,7 @@ public class SellerController {
         // 查詢賣家的所有訂單
         List<OrdersVO> allOrders = sellerOrderService.getSellerOrders(sellerId);
 
-        // ✨ 統計數據
+        // 統計數據
         long totalProducts = allProducts.size();
         long activeProducts = allProducts.stream()
                 .filter(p -> p.getProState() == 1)
@@ -78,7 +78,7 @@ public class SellerController {
                 .filter(o -> o.getOrderStatus() == 0)
                 .count();
 
-        // ✨ 評分統計
+        // 評分統計
         Map<String, Object> ratingStats = sellerReviewService.getSellerRatingStats(sellerId);
         Double averageRating = (Double) ratingStats.get("averageRating");
         Long totalReviews = (Long) ratingStats.get("reviewCount");
@@ -87,7 +87,7 @@ public class SellerController {
         @SuppressWarnings("unchecked")
         List<SellerReviewVO> allReviews = (List<SellerReviewVO>) ratingStats.get("reviews");
 
-        // ✨ 為每個評論加入訂單資訊
+        //  為每個評論加入訂單資訊
         List<Map<String, Object>> reviewsWithOrderInfo = allReviews.stream()
                 .map(review -> {
                     Map<String, Object> reviewMap = new HashMap<>();
@@ -131,7 +131,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login";
+            return "redirect:/store";
         }
 
         List<Product> products = productService.getSellerProducts(sellerId);
@@ -153,7 +153,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login";
+            return "redirect:/store";
         }
 
         List<OrdersVO> orders = sellerOrderService.getSellerOrders(sellerId);
@@ -182,7 +182,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login";
+            return "redirect:/store";
         }
 
         Product product;
@@ -233,7 +233,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login";
+            return "redirect:/store";
         }
 
         // 驗證商品是否屬於當前賣家
@@ -263,7 +263,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login";
+            return "redirect:/store";
         }
 
         // 驗證訂單是否屬於當前賣家
@@ -293,7 +293,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login";
+            return "redirect:/store";
         }
 
         // 驗證訂單是否屬於當前賣家
@@ -345,7 +345,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/login";
+            return "redirect:/store";
         }
 
         // 驗證訂單是否屬於當前賣家
