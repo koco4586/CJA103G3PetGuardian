@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>我的預約列表 - Pet Guardian</title>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" th:href="@{/css/backend/style.css}">
+<link rel="stylesheet" th:href="@{/css/backend/sidebar.css}">
+<link rel="stylesheet" th:href="@{/css/backend/bookings.css}">
+</head>
+<body>
+	<main class="main-content">
+		<div class="top-header">
+			<button class="toggle-btn" onclick="toggleSidebar()">
+				<i class="fa-solid fa-bars"></i>
+			</button>
+			<h2>預約管理 > 會員預約列表</h2>
+		</div>
+
+		<div class="content-container">
+			<div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}" style="color: green; margin-bottom: 10px;"></div>
+			<div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}" style="color: red; margin-bottom: 10px;"></div>
+
+			<table class="table">
+				<thead>
+					<tr>
+						<th>訂單編號</th>
+						<th>保母名稱</th>
+						<th>預約時間</th>
+						<th>金額</th>
+						<th>狀態</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="order : ${bookingList}">
+						<td th:text="${order.bookingOrderId}">1</td>
+						
+						<td th:text="${order.sitterName != null ? order.sitterName : '保母(' + order.sitterId + ')'}">優質保姆</td>
+
+						<td th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}">2026-01-20 14:00</td>
+						
+						<td th:text="'$' + ${order.reservationFee}">$500</td>
+						
+						<td>
+							<span th:if="${order.orderStatus == 0}" class="badge bg-warning">待確認</span> 
+							<span th:if="${order.orderStatus == 1}" class="badge bg-primary">已支付</span>
+							<span th:if="${order.orderStatus == 2}" class="badge bg-success">服務完成</span>
+							<span th:if="${order.orderStatus == 3}" class="badge bg-danger">已取消</span>
+							<span th:if="${order.orderStatus == 4}" class="badge bg-secondary">已退款</span>
+							<span th:if="${order.orderStatus == 5}" class="badge bg-dark">已結案</span>
+						</td>
+						
+						<td>
+							<button th:if="${order.orderStatus < 2}" type="button"
+								class="btn btn-sm btn-danger"
+								th:onclick="openCancelModal([[${order.bookingOrderId}]])">
+								<i class="fa-solid fa-trash-can"></i> 取消預約
+							</button> 
+							<span th:if="${order.orderStatus >= 2}">-</span>
+						</td>
+					</tr>
+					<tr th:if="${#lists.isEmpty(bookingList)}">
+						<td colspan="6" style="text-align: center;">目前沒有預約紀錄</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</main>
+
+	<div id="cancelModal" class="custom-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+		<div class="modal-content" style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 8px; width: 400px;">
+			<h3>取消預約</h3>
+			<p>請輸入取消原因 (必填)：</p>
+			<form th:action="@{/booking/cancel}" method="post">
+				<input type="hidden" id="modalOrderId" name="orderId">
+				<textarea name="reason" id="cancelReason" rows="4"
+					style="width: 100%; margin-bottom: 10px;"
+					placeholder="例如：臨時有事、行程變更..." required></textarea>
+
+				<div class="modal-actions" style="text-align: right;">
+					<button type="button" class="btn btn-secondary"
+						onclick="closeCancelModal()">再想想</button>
+					<button type="submit" class="btn btn-danger">確認取消</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script th:src="@{/js/backend/sidebar.js}"></script>
+	<script>
+		function openCancelModal(orderId) {
+			document.getElementById('modalOrderId').value = orderId;
+			document.getElementById('cancelModal').style.display = 'block';
+		}
+
+		function closeCancelModal() {
+			document.getElementById('cancelModal').style.display = 'none';
+		}
+
+		// 點擊視窗外部也可以關閉
+		window.onclick = function(event) {
+			const modal = document.getElementById('cancelModal');
+			if (event.target == modal) {
+				closeCancelModal();
+			}
+		}
+	</script>
+	
+</body>
+</html>

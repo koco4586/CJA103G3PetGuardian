@@ -26,12 +26,32 @@ public interface PetSitterServicePetTypeService {
             Integer sizeId);
 
     /**
+     * 新增保姆服務寵物對象配置 (透過會員 ID)
+     * 
+     * @param memId         會員編號
+     * @param serviceItemId 服務項目編號 (1:散步, 2:餵食, 3:洗澡)
+     * @param typeId        寵物種類編號 (1:貓, 2:狗)
+     * @param sizeId        寵物體型編號 (1:小型, 2:中型, 3:大型)
+     * @return PetSitterServicePetTypeVO 新增的配置
+     */
+    PetSitterServicePetTypeVO addServicePetTypeForMember(Integer memId, Integer serviceItemId, Integer typeId,
+            Integer sizeId);
+
+    /**
      * 查詢某保姆的所有服務寵物對象配置
      * 
      * @param sitterId 保姆編號
      * @return List<PetSitterServicePetTypeVO> 該保姆的所有配置
      */
     List<PetSitterServicePetTypeVO> getServicePetTypesBySitter(Integer sitterId);
+
+    /**
+     * 查詢某保姆的所有服務寵物對象配置 (透過會員 ID)
+     * 
+     * @param memId 會員編號
+     * @return List<PetSitterServicePetTypeVO> 該保姆的所有配置
+     */
+    List<PetSitterServicePetTypeVO> getServicePetTypesByMember(Integer memId);
 
     /**
      * 查詢某保姆某服務項目的所有寵物對象配置
@@ -66,6 +86,14 @@ public interface PetSitterServicePetTypeService {
      * @throws IllegalArgumentException 若配置不存在
      */
     void deleteServicePetType(Integer servicePetId);
+
+    /**
+     * 刪除服務寵物對象配置 (透過會員 ID 進行權限檢查)
+     * 
+     * @param memId        會員編號
+     * @param servicePetId 服務寵物對象編號
+     */
+    void deleteServicePetTypeForMember(Integer memId, Integer servicePetId);
 
     /**
      * 檢查某保姆的某服務是否支援特定寵物種類與體型

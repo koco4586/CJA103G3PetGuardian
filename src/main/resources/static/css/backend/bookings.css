@@ -1,41 +1,113 @@
-       /* --- 內容區塊控制 --- */
-    .panel {
-        display: none;
-        animation: fadeIn 0.3s ease-out;
-    }
+/* --- 內容區塊控制 --- */
+.panel {
+	display: none;
+	animation: fadeIn 0.3s ease-out;
+}
 
-    .panel.active {
-        display: block;
-    }
+.panel.active {
+	display: block;
+}
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+@keyframes fadeIn {from { opacity:0;
+	transform: translateY(5px);
+}
 
-    /* --- 狀態標籤 (Badges) --- */
-    /* 這裡微調了字體，讓它比表格內文字稍微小一點，看起來比較精緻 */
-    .badge {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        display: inline-block;
-        white-space: nowrap;
-    }
-    
-    .status-ongoing { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
-    .status-ready   { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
-    .status-wait    { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
-    .status-refund  { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+to {
+	opacity: 1;
+	transform: translateY(0);
+}
 
-    /* --- 表格內文字微調 --- */
-    table th {
-        font-size: 0.9rem;
-        color: #444;
-        background-color: #fafafa;
-    }
+}
+/* --- 狀態標籤 (Badges) --- */
+/* 這裡微調了字體，讓它比表格內文字稍微小一點，看起來比較精緻 */
+.badge {
+	padding: 4px 10px;
+	border-radius: 6px;
+	font-size: 0.85rem;
+	font-weight: 700;
+	display: inline-block;
+	white-space: nowrap;
+}
 
-    table td {
-        font-size: 0.95rem; 
-        }  /*
+.status-ongoing {
+	background: #fff7ed;
+	color: #ea580c;
+	border: 1px solid #ffedd5;
+}
+
+.status-ready {
+	background: #f0fdf4;
+	color: #15803d;
+	border: 1px solid #dcfce7;
+}
+
+.status-wait {
+	background: #eff6ff;
+	color: #1d4ed8;
+	border: 1px solid #dbeafe;
+}
+
+.status-refund {
+	background: #fef2f2;
+	color: #b91c1c;
+	border: 1px solid #fee2e2;
+}
+
+/* --- 表格內文字微調 --- */
+table th {
+	font-size: 0.9rem;
+	color: #444;
+	background-color: #fafafa;
+}
+
+table td {
+	font-size: 0.95rem;
+}
+/* 預設在手機版/小螢幕顯示漢堡按鈕 */
+.toggle-btn {
+	display: inline-block;
+	background: none;
+	border: none;
+	font-size: 24px;
+	cursor: pointer;
+}
+/* 當螢幕寬度大於 992px (桌面版) 時，隱藏漢堡按鈕 */
+@media ( min-width : 992px) {
+	.toggle-btn {
+		display: none !important;
+	}
+
+	/* 同時確保主要內容區塊有留白給側邊欄，不會被遮住 */
+	.main-content {
+		margin-left: 250px; /* 這裡的 250px 請根據你側邊欄的實際寬度調整 */
+	}
+}
+.custom-modal {
+    display: none; /* 預設隱藏 */
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5); /* 半透明黑背景 */
+}
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s;
+}
+.modal-content textarea {
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    resize: none;
+}
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保母個人設定 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/dashboard.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar">
+                </div>
+                <h4 th:text="${sitter.sitterName}">保姆姓名</h4>
+                <p style="color: #999; font-size: 0.9rem;">保姆專區</p>
+            </div>
+            <nav>
+                <a href="/sitter/dashboard" class="menu-item">
+                    <i class="fas fa-home"></i> 保姆主頁
+                </a>
+                <a href="/sitter/profile/settings" class="menu-item active">
+                    <i class="fas fa-cog"></i> 個人設定
+                </a>
+                <a href="/sitter/bookings" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 預約管理
+                </a>
+                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
+                    onclick="alert('已登出'); window.location.href='/member/login'">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="sitter-settings">
+                <h2 class="mb-2">保姆個人設定</h2>
+                <p style="color: #666; margin-bottom: 2rem;">設定您的服務項目、價格和服務地區</p>
+
+                <!-- 成功/錯誤訊息 -->
+                <div th:if="${successMessage}" class="alert alert-success"
+                    style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger"
+                    style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+                </div>
+
+                <!-- 1. 基本資料設定 -->
+                <div class="card mb-3">
+                    <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">基本資料</h3>
+                    <form th:action="@{/sitter/profile/update-name}" method="post">
+                        <div class="form-group mb-3">
+                            <label class="form-label">保姆名稱</label>
+                            <input type="text" name="sitterName" class="form-control" th:value="${sitter.sitterName}"
+                                placeholder="請輸入保姆名稱" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">更新名稱</button>
+                    </form>
+                </div>
+
+                <!-- 2. 服務項目設定 -->
+                <div class="card mb-3">
+                    <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">服務項目設定</h3>
+
+                    <!-- 已設定的服務列表 -->
+                    <div th:if="${!#lists.isEmpty(services)}" class="mb-3">
+                        <h4 style="font-size: 1rem; margin-bottom: 1rem;">已設定的服務</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>服務項目</th>
+                                    <th>價格</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="service : ${services}">
+                                    <td th:text="${service.serviceItemId == 1 ? '散步' : 
+                                                  (service.serviceItemId == 2 ? '餵食' : '洗澡')}">散步</td>
+                                    <td th:text="${service.defaultPrice} + ' 元'">500 元</td>
+                                    <td>
+                                        <form th:action="@{/sitter/profile/service/delete}" method="post"
+                                            style="display:inline;">
+                                            <input type="hidden" name="serviceItemId"
+                                                th:value="${service.serviceItemId}">
+                                            <button type="submit" class="btn ghost"
+                                                style="font-size: 0.9rem;">移除</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 新增服務表單 -->
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem;">新增服務</h4>
+                    <form th:action="@{/sitter/profile/service/set}" method="post">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+                            <div class="form-group">
+                                <label class="form-label">服務項目</label>
+                                <select name="serviceItemId" class="form-control" required>
+                                    <option value="">請選擇</option>
+                                    <option value="1">散步</option>
+                                    <option value="2">餵食</option>
+                                    <option value="3">洗澡</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">價格（400-1000元）</label>
+                                <input type="number" name="price" class="form-control" min="400" max="1000"
+                                    placeholder="500" required
+                                    oninvalid="if(this.value==''){this.setCustomValidity('請輸入價格')}else{this.setCustomValidity('價格必須在 400-1000 元之間')}"
+                                    oninput="this.setCustomValidity('')">
+                            </div>
+                            <button type="submit" class="btn btn-primary">新增服務</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 3. 服務對象設定（寵物種類+體型） -->
+                <div class="card mb-3">
+                    <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">服務對象設定</h3>
+                    <div
+                        style="background: #fff3cd; color: #856404; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>注意：</strong>請先在「服務項目設定」中新增服務項目，才能設定該服務的服務對象。
+                    </div>
+
+                    <!-- 已設定的服務對象列表 -->
+                    <div th:if="${!#lists.isEmpty(servicePetTypes)}" class="mb-3">
+                        <h4 style="font-size: 1rem; margin-bottom: 1rem;">已設定的服務對象</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>服務項目</th>
+                                    <th>寵物種類</th>
+                                    <th>體型</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="spt : ${servicePetTypes}">
+                                    <td th:text="${spt.serviceItemId == 1 ? '散步' : 
+                                                  (spt.serviceItemId == 2 ? '餵食' : '洗澡')}">散步</td>
+                                    <td th:text="${spt.typeId == 1 ? '貓' : '狗'}">狗</td>
+                                    <td th:text="${spt.sizeId == 1 ? '小型' : 
+                                                  (spt.sizeId == 2 ? '中型' : '大型')}">中型</td>
+                                    <td>
+                                        <form th:action="@{/sitter/profile/service/pet-type/delete}" method="post"
+                                            style="display:inline;">
+                                            <input type="hidden" name="servicePetId" th:value="${spt.servicePetId}">
+                                            <button type="submit" class="btn ghost"
+                                                style="font-size: 0.9rem;">移除</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 新增服務對象表單 -->
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem;">新增服務對象</h4>
+                    <form th:action="@{/sitter/profile/service/pet-type/add}" method="post">
+                        <div
+                            style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                            <div class="form-group">
+                                <label class="form-label">服務項目</label>
+                                <select name="serviceItemId" class="form-control" required>
+                                    <option value="">請選擇</option>
+                                    <option th:each="service : ${services}" th:value="${service.serviceItemId}"
+                                        th:text="${service.serviceItemId == 1 ? '散步' : (service.serviceItemId == 2 ? '餵食' : '洗澡')}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">寵物種類</label>
+                                <select name="typeId" class="form-control" required>
+                                    <option value="">請選擇</option>
+                                    <option value="1">貓</option>
+                                    <option value="2">狗</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">體型大小</label>
+                                <select name="sizeId" class="form-control" required>
+                                    <option value="">請選擇</option>
+                                    <option value="1">小型</option>
+                                    <option value="2">中型</option>
+                                    <option value="3">大型</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">新增</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 4. 服務地區設定 -->
+                <div class="card">
+                    <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">服務地區設定</h3>
+
+                    <!-- 已設定的服務地區列表 -->
+                    <div th:if="${!#lists.isEmpty(serviceAreas)}" class="mb-3">
+                        <h4 style="font-size: 1rem; margin-bottom: 1rem;">已設定的服務地區</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+                            <span th:each="area : ${serviceAreas}"
+                                style="background: #e3f2fd; color: #1976d2; padding: 0.5rem 1rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.5rem;">
+                                <span th:text="${area.area.cityName + area.area.district}">台北市大安區</span>
+                                <form th:action="@{/sitter/profile/area/delete}" method="post"
+                                    style="display:inline; margin: 0;">
+                                    <input type="hidden" name="areaId" th:value="${area.area.areaId}">
+                                    <button type="submit"
+                                        style="background: none; border: none; color: #1976d2; cursor: pointer; padding: 0;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 新增服務地區表單 -->
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem;">新增服務地區</h4>
+                    <form th:action="@{/sitter/profile/area/add}" method="post">
+                        <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                            <div class="form-group">
+                                <label class="form-label">選擇縣市</label>
+                                <select id="citySelect" class="form-control" required>
+                                    <option value="">請選擇縣市</option>
+                                    <option th:each="city : ${availableCities}" th:value="${city}" th:text="${city}">台北市
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">選擇地區</label>
+                                <select id="districtSelect" name="areaId" class="form-control" required>
+                                    <option value="">請先選擇縣市</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">新增地區</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- 設定完成按鈕 -->
+            <div class="text-center mt-4 mb-5">
+                <a href="/sitter/dashboard" class="btn btn-primary btn-lg"
+                    style="padding: 0.8rem 3rem; font-size: 1.1rem; border-radius: 50px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fas fa-check-circle"></i> 設定完成
+                </a>
+            </div>
+
+        </div>
+    </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+
+    <script>
+        // 縣市選擇改變時，動態載入該縣市的地區
+        document.getElementById('citySelect').addEventListener('change', function () {
+            const city = this.value;
+            const districtSelect = document.getElementById('districtSelect');
+
+            if (city) {
+                // 發送 AJAX 請求取得該縣市的地區
+                fetch(`/sitter/profile/districts?city=${encodeURIComponent(city)}`)
+                    .then(response => response.json())
+                    .then(districts => {
+                        districtSelect.innerHTML = '<option value="">請選擇地區</option>';
+                        districts.forEach(area => {
+                            const option = document.createElement('option');
+                            option.value = area.areaId;
+                            option.text = area.district;
+                            districtSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('載入地區失敗:', error);
+                        districtSelect.innerHTML = '<option value="">載入失敗，請重試</option>';
+                    });
+            } else {
+                districtSelect.innerHTML = '<option value="">請先選擇縣市</option>';
+            }
+        });
+    </script>
+
+</body>
+
+</html>

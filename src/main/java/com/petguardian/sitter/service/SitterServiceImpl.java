@@ -1,5 +1,6 @@
 package com.petguardian.sitter.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,8 +11,19 @@ import org.springframework.transaction.annotation.Transactional;
 import com.petguardian.member.repository.register.MemberRegisterRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.sitter.model.SitterSearchCriteria;
+import com.petguardian.sitter.model.SitterSearchDTO;
+import com.petguardian.booking.model.BookingScheduleVO;
+import com.petguardian.booking.model.BookingScheduleRepository;
+import java.time.LocalDate;
+import java.util.stream.Collectors;
 
-@Service
+/**
+ * 保姆業務邏輯實作
+ * 
+ * 提供保姆資料管理、保姆搜尋等功能的實作
+ */
+@Service("sitterService")
 public class SitterServiceImpl implements SitterService {
 
     @Autowired
@@ -20,6 +32,22 @@ public class SitterServiceImpl implements SitterService {
     @Autowired
     private MemberRegisterRepository memberRepository;
 
+    @Autowired
+    private com.petguardian.area.model.AreaRepository areaRepository;
+
+    @Autowired
+    private BookingScheduleRepository bookingScheduleRepository;
+
+    /**
+     * 建立保姆資料
+     * 
+     * @param memId      會員編號
+     * @param sitterName 保姆姓名
+     * @param sitterAdd  服務地址
+     * @return SitterVO 新增的保姆物件
+     * @throws IllegalArgumentException 若會員不存在
+     * @throws IllegalStateException    若該會員已是保姆
+     */
     @Override
     @Transactional
     public SitterVO createSitter(Integer memId, String sitterName, String sitterAdd) {
@@ -44,26 +72,57 @@ public class SitterServiceImpl implements SitterService {
         return repository.save(vo);
     }
 
+    /**
+     * 依會員編號查詢保姆
+     * 
+     * @param memId 會員編號
+     * @return SitterVO 該會員的保姆資料,若不存在則返回 null
+     */
     @Override
     public SitterVO getSitterByMemId(Integer memId) {
         return repository.findByMemId(memId);
     }
 
+    /**
+     * 依保姆編號查詢
+     * 
+     * @param sitterId 保姆編號
+     * @return SitterVO 保姆資料,若不存在則返回 null
+     */
     @Override
     public SitterVO getSitterById(Integer sitterId) {
         return repository.findById(sitterId).orElse(null);
     }
 
+    /**
+     * 查詢所有保姆
+     * 
+     * @return List<SitterVO> 所有保姆列表
+     */
     @Override
     public List<SitterVO> getAllSitters() {
         return repository.findAll();
     }
 
+    /**
+     * 依狀態查詢保姆
+     * 
+     * @param status 保姆狀態 (0:啟用, 1:停用)
+     * @return List<SitterVO> 符合狀態的保姆列表
+     */
     @Override
     public List<SitterVO> getSittersByStatus(Byte status) {
         return repository.findBySitterStatus(status);
     }
 
+    /**
+     * 更新保姆狀態
+     * 
+     * @param sitterId 保姆編號
+     * @param status   新狀態 (0:啟用, 1:停用)
+     * @return SitterVO 更新後的保姆物件
+     * @throws IllegalArgumentException 若保姆不存在
+     */
     @Override
     @Transactional
     public SitterVO updateSitterStatus(Integer sitterId, Byte status) {
@@ -76,6 +135,15 @@ public class SitterServiceImpl implements SitterService {
         return repository.save(vo);
     }
 
+    /**
+     * 更新保姆資訊
+     * 
+     * @param sitterId   保姆編號
+     * @param sitterName 保姆姓名
+     * @param sitterAdd  服務地址
+     * @return SitterVO 更新後的保姆物件
+     * @throws IllegalArgumentException 若保姆不存在
+     */
     @Override
     @Transactional
     public SitterVO updateSitterInfo(Integer sitterId, String sitterName, String sitterAdd) {
@@ -87,5 +155,305 @@ public class SitterServiceImpl implements SitterService {
         vo.setSitterName(sitterName);
         vo.setSitterAdd(sitterAdd);
         return repository.save(vo);
+    }
+
+    /**
+     * 更新保姆服務時間（營業時間設定）
+     * 
+     * @param sitterId    保姆編號
+     * @param serviceTime 服務時間（24字元字串，0=不可預約, 1=可預約）
+     * @return SitterVO 更新後的保姆物件
+     * @throws IllegalArgumentException 若保姆不存在
+     */
+    @Override
+    @Transactional
+    public SitterVO updateServiceTime(Integer sitterId, String serviceTime) {
+        System.out.println("=== Service 層 Debug (Direct Update) ===");
+        System.out.println("收到 sitterId: " + sitterId);
+        System.out.println("收到 serviceTime: " + serviceTime);
+
+        // 使用自定義的 JPQL 更新，繞過 JPA 的髒檢查機制確保寫入
+        repository.updateServiceTime(sitterId, serviceTime);
+
+        // 重新查詢以確認更新
+        Optional<SitterVO> optional = repository.findById(sitterId);
+        if (!optional.isPresent()) {
+            throw new IllegalArgumentException("保姆不存在: " + sitterId);
+        }
+
+        SitterVO saved = optional.get();
+        System.out.println("DB 更新後 serviceTime: " + saved.getServiceTime());
+        System.out.println("================================");
+
+        return saved;
+    }
+
+    // ========== 排程相關功能 (透過會員 ID) ==========
+
+    @Override
+    public List<BookingScheduleVO> getScheduleByMember(Integer memId, int year, int month) {
+        SitterVO sitter = repository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        Integer sitterId = sitter.getSitterId();
+
+        // 由於 BookingScheduleRepository 只有 findAll，暫時用 Java filter
+        List<BookingScheduleVO> allSchedules = bookingScheduleRepository.findAll();
+
+        return allSchedules.stream()
+                .filter(s -> s.getSitterId().equals(sitterId))
+                .filter(s -> {
+                    LocalDate d = s.getScheduleDate();
+                    return d.getYear() == year && d.getMonthValue() == month;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void updateScheduleForMember(Integer memId, LocalDate date, String status) {
+        SitterVO sitter = repository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        Integer sitterId = sitter.getSitterId();
+
+        // 檢查該日期是否已有資料 (使用 Repository 現有方法)
+        Optional<BookingScheduleVO> existingOpt = bookingScheduleRepository.findBySitterIdAndScheduleDate(sitterId,
+                date);
+
+        BookingScheduleVO schedule;
+        if (existingOpt.isPresent()) {
+            schedule = existingOpt.get();
+            schedule.setBookingStatus(status);
+        } else {
+            schedule = new BookingScheduleVO();
+            schedule.setSitterId(sitterId);
+            schedule.setScheduleDate(date);
+            schedule.setBookingStatus(status);
+        }
+        bookingScheduleRepository.save(schedule);
+    }
+
+    // ========== 會員搜尋保姆功能 ==========
+
+    /**
+     * 根據條件搜尋保姆
+     * 
+     * @param criteria 搜尋條件（地區、服務項目、寵物類型、價格範圍、排序方式）
+     * @return List<SitterSearchDTO> 符合條件的保姆列表
+     */
+    @Override
+    public List<SitterSearchDTO> searchSitters(SitterSearchCriteria criteria) {
+        // 1. 根據地區篩選取得保姆列表
+        List<SitterVO> sitters;
+
+        // 處理地區篩選邏輯（使用縣市和區域名稱）
+        if (criteria.getCityName() != null && !criteria.getCityName().isEmpty()) {
+            List<Integer> areaIds = new ArrayList<>();
+
+            // 情況 1: 只選擇縣市（沒有選擇區域）
+            if (criteria.getDistrict() == null || criteria.getDistrict().isEmpty()) {
+                // 查詢該縣市的所有區域
+                List<com.petguardian.area.model.AreaVO> areas = areaRepository.findByCityName(criteria.getCityName());
+                for (com.petguardian.area.model.AreaVO area : areas) {
+                    areaIds.add(area.getAreaId());
+                }
+            }
+            // 情況 2: 選擇縣市 + 區域
+            else {
+                // 查詢該縣市+區域對應的單一 area_id
+                com.petguardian.area.model.AreaVO area = areaRepository.findByCityNameAndDistrict(
+                        criteria.getCityName(),
+                        criteria.getDistrict());
+                if (area != null) {
+                    areaIds.add(area.getAreaId());
+                }
+            }
+
+            // 如果找到對應的 area_id，進行搜尋
+            if (!areaIds.isEmpty()) {
+                sitters = repository.findByServiceAreas(areaIds, (byte) 0);
+            } else {
+                // 找不到對應地區，返回空列表
+                return new ArrayList<>();
+            }
+        }
+        // 原有邏輯：使用 areaIds 直接篩選（保留向後相容）
+        else if (criteria.getAreaIds() != null && !criteria.getAreaIds().isEmpty()) {
+            sitters = repository.findByServiceAreas(criteria.getAreaIds(), (byte) 0);
+        }
+        // 無地區篩選，取得所有啟用保姆
+        else {
+            sitters = repository.findBySitterStatusOrderBySitterRatingCountDesc((byte) 0);
+        }
+
+        // 2. 將 SitterVO 轉換為 SitterSearchDTO，並進行進一步篩選
+        List<SitterSearchDTO> results = new ArrayList<>();
+
+        for (SitterVO sitter : sitters) {
+            SitterSearchDTO dto = convertToSearchDTO(sitter);
+
+            // 3. 根據服務項目篩選
+            if (criteria.getServiceItemIds() != null && !criteria.getServiceItemIds().isEmpty()) {
+                boolean hasMatchingService = dto.getServiceNames() != null &&
+                        dto.getServiceNames().stream()
+                                .anyMatch(serviceName -> criteria.getServiceItemIds()
+                                        .contains(getServiceIdByName(serviceName)));
+                if (!hasMatchingService) {
+                    continue; // 不符合，跳過
+                }
+            }
+
+            // 4. 根據寵物類型篩選
+            if (criteria.getPetTypeIds() != null && !criteria.getPetTypeIds().isEmpty()) {
+                boolean hasMatchingPetType = dto.getPetTypes() != null &&
+                        dto.getPetTypes().stream()
+                                .anyMatch(petType -> criteria.getPetTypeIds().contains(getPetTypeIdByName(petType)));
+                if (!hasMatchingPetType) {
+                    continue; // 不符合，跳過
+                }
+            }
+
+            // 5. 根據價格範圍篩選
+            if (criteria.getMinPrice() != null && dto.getMinPrice() != null) {
+                if (dto.getMinPrice() < criteria.getMinPrice()) {
+                    continue; // 最低價低於篩選條件，跳過
+                }
+            }
+            if (criteria.getMaxPrice() != null && dto.getMaxPrice() != null) {
+                if (dto.getMaxPrice() > criteria.getMaxPrice()) {
+                    continue; // 最高價高於篩選條件，跳過
+                }
+            }
+
+            results.add(dto);
+        }
+
+        // 6. 排序
+        sortResults(results, criteria.getSortBy());
+
+        return results;
+    }
+
+    /**
+     * 取得所有啟用中的保姆（用於無篩選條件時）
+     * 
+     * @return List<SitterSearchDTO> 所有啟用中的保姆列表
+     */
+    @Override
+    public List<SitterSearchDTO> getAllActiveSitters() {
+        List<SitterVO> sitters = repository.findBySitterStatusOrderBySitterRatingCountDesc((byte) 0);
+        List<SitterSearchDTO> results = new ArrayList<>();
+
+        for (SitterVO sitter : sitters) {
+            results.add(convertToSearchDTO(sitter));
+        }
+
+        return results;
+    }
+
+    // ========== 私有輔助方法 ==========
+
+    /**
+     * 將 SitterVO 轉換為 SitterSearchDTO
+     */
+    private SitterSearchDTO convertToSearchDTO(SitterVO sitter) {
+        SitterSearchDTO dto = new SitterSearchDTO();
+
+        // 保姆基本資訊
+        dto.setSitterId(sitter.getSitterId());
+        dto.setSitterName(sitter.getSitterName());
+        dto.setSitterAdd(sitter.getSitterAdd());
+
+        // 評價資訊
+        dto.setRatingCount(sitter.getSitterRatingCount());
+        dto.setStarCount(sitter.getSitterStarCount());
+
+        // 計算平均評分
+        if (sitter.getSitterRatingCount() != null && sitter.getSitterRatingCount() > 0) {
+            double avgRating = (double) sitter.getSitterStarCount() / sitter.getSitterRatingCount();
+            dto.setAverageRating(avgRating);
+        } else {
+            dto.setAverageRating(0.0);
+        }
+
+        // TODO: 需要注入其他 Repository 來查詢服務項目、寵物類型、價格
+        // 這部分需要在建構子注入 PetSitterServiceRepository 等
+
+        // 填入服務地區
+        if (sitter.getServiceAreas() != null && !sitter.getServiceAreas().isEmpty()) {
+            java.util.List<String> areas = new ArrayList<>();
+            for (com.petguardian.service.model.ServiceAreaVO sa : sitter.getServiceAreas()) {
+                if (sa.getArea() != null) {
+                    areas.add(sa.getArea().getCityName() + sa.getArea().getDistrict());
+                }
+            }
+            dto.setServiceAreas(areas);
+        } else {
+            dto.setServiceAreas(new ArrayList<>());
+        }
+
+        // 暫時設定為空列表
+        dto.setServiceNames(new ArrayList<>());
+        dto.setPetTypes(new ArrayList<>());
+        dto.setMinPrice(null);
+        dto.setMaxPrice(null);
+
+        return dto;
+    }
+
+    /**
+     * 根據排序條件排序結果
+     */
+    private void sortResults(List<SitterSearchDTO> results, String sortBy) {
+        if (sortBy == null) {
+            return;
+
+        }
+
+        switch (sortBy) {
+            case "price_asc":
+                results.sort((a, b) -> {
+                    if (a.getMinPrice() == null)
+                        return 1;
+                    if (b.getMinPrice() == null)
+                        return -1;
+                    return a.getMinPrice().compareTo(b.getMinPrice());
+                });
+
+                break;
+            case "price_desc":
+                results.sort((a, b) -> {
+                    if (a.getMaxPrice() == null)
+                        return 1;
+                    if (b.getMaxPrice() == null)
+                        return -1;
+                    return b.getMaxPrice().compareTo(a.getMaxPrice());
+                });
+                break;
+            case "rating_desc":
+            default:
+                results.sort((a, b) -> {
+                    if (a.getAverageRating() == null)
+                        return 1;
+                    if (b.getAverageRating() == null)
+                        return -1;
+                    return b.getAverageRating().compareTo(a.getAverageRating());
+                });
+                break;
+        }
+    }
+
+    // 這兩個方法是暫時的佔位符，實際需要查詢資料庫
+    private Integer getServiceIdByName(String serviceName) {
+        // TODO: 實作從 service_item 表查詢
+        return null;
+    }
+
+    private Integer getPetTypeIdByName(String petTypeName) {
+        // TODO: 實作從 pet_type 表查詢
+        return null;
     }
 }

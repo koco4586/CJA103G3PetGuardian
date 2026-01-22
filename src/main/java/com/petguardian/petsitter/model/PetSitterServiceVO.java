@@ -17,7 +17,14 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-@Entity // 保姆服務資訊table
+/**
+ * 保姆服務項目 Entity
+ * 對應資料表: pet_sitter_service
+ * 
+ * 定義每位保姆提供的服務項目及其定價
+ * 複合主鍵: SitterVO (sitter_id) + serviceItemId
+ */
+@Entity
 @Table(name = "pet_sitter_service")
 @IdClass(PetSitterServiceId.class)
 public class PetSitterServiceVO implements Serializable {
