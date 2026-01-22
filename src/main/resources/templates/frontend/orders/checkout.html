@@ -87,7 +87,7 @@
                             <div class="seller-avatar"
                                 th:text="${checkout.sellerInfo.sellerName != null ? checkout.sellerInfo.sellerName.substring(0, 1) : '?'}">
                                 賣</div>
-                            <div>
+                            <div style="flex: 1;">
                                 <div class="seller-name" th:text="${checkout.sellerInfo.sellerName}">賣家名稱</div>
                                 <div class="seller-rating">
                                     <span class="rating-stars">
@@ -101,6 +101,10 @@
                                     </span>
                                 </div>
                             </div>
+                            <!-- 聯絡賣家按鈕 -->
+                            <a href="#" class="btn btn-outline" th:onclick="'openChatWithSeller(' + ${sellerId} + ')'" style="white-space: nowrap;">
+                                <i class="fas fa-comment-dots"></i> 聯絡賣家
+                            </a>
                         </div>
 
                         <!-- 評論展開區 -->
@@ -492,6 +496,23 @@
             if (form) {
                 form.classList.toggle('show');
             }
+        }
+
+        // 開啟與賣家的聊天室
+        function openChatWithSeller(sellerId) {
+            event.preventDefault();
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/chat';
+
+            const receiverInput = document.createElement('input');
+            receiverInput.type = 'hidden';
+            receiverInput.name = 'receiverId';
+            receiverInput.value = sellerId;
+
+            form.appendChild(receiverInput);
+            document.body.appendChild(form);
+            form.submit();
         }
     </script>
 

@@ -337,6 +337,10 @@ public class StoreController {
     @GetMapping("/dashboard/orders")
     public String dashboardOrdersPage(@RequestParam(required = false) String filter,
             Model model, HttpSession session) {
+        // 檢查是否已登入
+        if (!authService.isLoggedIn(session)) {
+            return "redirect:/store";
+        }
         Integer memId = authService.getCurrentMemId(session);
 
         List<Map<String, Object>> orders = ordersService.getBuyerOrdersWithItems(memId);
