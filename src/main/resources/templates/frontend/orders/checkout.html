@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>結帳 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/orders/checkout.css">
+
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <!-- Flash Messages -->
+    <div th:if="${message}" class="flash-message success">
+        <i class="fas fa-check-circle"></i> <span th:text="${message}">成功訊息</span>
+    </div>
+    <div th:if="${error}" class="flash-message error">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">錯誤訊息</span>
+    </div>
+
+    <div class="container" style="margin-top: 2rem; margin-bottom: 4rem;">
+
+        <!-- 購物車空白提示 -->
+        <div th:if="${checkout == null || #lists.isEmpty(checkout.cartItems)}" class="empty-cart"
+            style="text-align: center; padding: 4rem 2rem;">
+            <i class="fas fa-shopping-cart" style="font-size: 4rem; color: #ddd; margin-bottom: 1rem;"></i>
+            <h2>購物車是空的</h2>
+            <p style="color: #999; margin-bottom: 2rem;">請先選購商品再進行結帳</p>
+            <a th:href="@{/store}" class="btn btn-primary">
+                <i class="fas fa-store"></i> 前往商城
+            </a>
+        </div>
+
+        <!-- 有商品時顯示結帳流程 -->
+        <div th:if="${checkout != null && !#lists.isEmpty(checkout.cartItems)}">
+
+            <!-- 進度條 -->
+            <div class="checkout-progress">
+                <div class="progress-step active completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">選擇商品</span>
+                </div>
+                <div class="progress-line active"></div>
+                <div class="progress-step active">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">填寫資料</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">完成訂單</span>
+                </div>
+            </div>
+
+            <!-- 主要內容區域 -->
+            <div class="checkout-container">
+
+                <!-- 左側：表單區域 -->
+                <div class="checkout-form-section">
+
+                    <!-- 賣家信譽區塊 -->
+                    <div class="seller-info-card">
+                        <!-- 商品預覽 -->
+                        <div class="product-preview" th:if="${!#lists.isEmpty(checkout.cartItems)}">
+                            <img th:src="${checkout.cartItems[0].imageBase64}" th:alt="${checkout.cartItems[0].proName}"
+                                class="product-preview-img">
+                            <div class="product-preview-info">
+                                <div class="product-preview-name" th:text="${checkout.cartItems[0].proName}">商品名稱</div>
+                                <div class="product-preview-price"
+                                    th:text="'$' + ${#numbers.formatInteger(checkout.cartItems[0].proPrice, 1, 'COMMA')}">
+                                    $0</div>
+                                <div th:if="${#lists.size(checkout.cartItems) > 1}"
+                                    style="font-size: 0.85rem; color: #999; margin-top: 0.25rem;">
+                                    <i class="fas fa-plus"></i> 另有 <span
+                                        th:text="${#lists.size(checkout.cartItems) - 1}">0</span> 件商品
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="seller-header">
+                            <div class="seller-avatar"
+                                th:text="${checkout.sellerInfo.sellerName != null ? checkout.sellerInfo.sellerName.substring(0, 1) : '?'}">
+                                賣</div>
+                            <div style="flex: 1;">
+                                <div class="seller-name" th:text="${checkout.sellerInfo.sellerName}">賣家名稱</div>
+                                <div class="seller-rating">
+                                    <span class="rating-stars">
+                                        <i th:each="i : ${#numbers.sequence(1, 5)}"
+                                            th:class="${i <= checkout.sellerInfo.averageRating} ? 'fas fa-star' : 'far fa-star'"></i>
+                                    </span>
+                                    <span class="rating-text">
+                                        <span
+                                            th:text="${#numbers.formatDecimal(checkout.sellerInfo.averageRating, 1, 1)}">0.0</span>
+                                        分 / <span th:text="${checkout.sellerInfo.reviewCount}">0</span> 則評價
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- 聯絡賣家按鈕 -->
+                            <a href="#" class="btn btn-outline" th:onclick="'openChatWithSeller(' + ${sellerId} + ')'" style="white-space: nowrap;">
+                                <i class="fas fa-comment-dots"></i> 聯絡賣家
+                            </a>
+                        </div>
+
+                        <!-- 評論展開區 -->
+                        <details class="reviews-details">
+                            <summary class="review-toggle">
+                                <i class="fas fa-comments"></i>
+                                查看 <span th:text="${checkout.sellerInfo.reviewCount}">0</span> 則買家評價
+                            </summary>
+                            <div class="reviews-section">
+                                <!-- 無評價 -->
+                                <div th:if="${#lists.isEmpty(checkout.sellerInfo.reviews)}" class="no-reviews">
+                                    <i class="fas fa-comment-slash" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                    <p>目前還沒有評價</p>
+                                </div>
+
+                                <!-- 評價列表 -->
+                                <div th:each="review : ${checkout.sellerInfo.reviews}" class="review-item">
+                                    <div class="review-header">
+                                        <span class="review-buyer">
+                                            <i class="fas fa-user-circle"></i>
+                                            <span th:text="${review.buyerName}">買家</span>
+                                        </span>
+                                        <span class="review-time" th:text="${review.reviewTime}">2024-01-01</span>
+                                    </div>
+                                    <div class="review-stars">
+                                        <i th:each="i : ${#numbers.sequence(1, 5)}"
+                                            th:class="${i <= review.rating} ? 'fas fa-star' : 'far fa-star'"></i>
+                                    </div>
+                                    <p class="review-content"
+                                        th:text="${review.reviewContent != null && !review.reviewContent.isEmpty() ? review.reviewContent : '買家未留下評語'}">
+                                        評論內容</p>
+
+                                    <!-- 檢舉按鈕 -->
+                                    <div class="d-flex justify-end">
+                                        <button type="button" class="btn-report" th:data-review-id="${review.reviewId}"
+                                            onclick="toggleReportForm(this)">
+                                            <i class="fas fa-flag"></i> 檢舉
+                                        </button>
+                                    </div>
+
+                                    <!-- 檢舉表單（隱藏） -->
+                                    <form th:action="@{/reviews/report}" method="post" class="report-form"
+                                        th:id="'report-form-' + ${review.reviewId}">
+                                        <input type="hidden" name="reviewId" th:value="${review.reviewId}">
+                                        <input type="hidden" name="redirectUrl" value="/store/checkout">
+                                        <textarea name="reportReason" placeholder="請說明檢舉原因..." rows="2" required
+                                            maxlength="200"></textarea>
+                                        <div class="d-flex gap-sm justify-end">
+                                            <button type="button" class="btn btn-outline btn-sm"
+                                                onclick="toggleReportForm(this)">取消</button>
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-paper-plane"></i> 提交檢舉
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
+
+                    <!-- 同店加購區 -->
+                    <div th:if="${checkout.upsellProducts != null && !#lists.isEmpty(checkout.upsellProducts)}"
+                        class="card upsell-section">
+                        <h3 class="mb-1">
+                            <i class="fas fa-plus-circle" style="color: var(--success); margin-right: 0.5rem;"></i>
+                            同店加購
+                        </h3>
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">這位賣家還有其他商品，一起購買更划算！</p>
+
+                        <div class="upsell-grid">
+                            <div th:each="product : ${checkout.upsellProducts}" class="upsell-card">
+                                <!-- Base64 圖片 -->
+                                <img th:src="${product.imageBase64}" th:alt="${product.proName}">
+                                <div class="title" th:text="${product.proName}">商品名稱</div>
+                                <div class="price" th:text="'$' + ${product.proPrice}">$0</div>
+                                <form th:action="@{/cart/upsell}" method="post">
+                                    <input type="hidden" name="proId" th:value="${product.proId}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-primary btn-add"
+                                        th:disabled="${product.stockQuantity == null || product.stockQuantity <= 0}">
+                                        <i class="fas fa-plus"></i>
+                                        <span
+                                            th:text="${product.stockQuantity != null && product.stockQuantity > 0 ? '加購' : '售完'}">加購</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 結帳表單 -->
+                    <form th:action="@{/orders/submit}" method="post" id="checkout-form">
+
+                        <!-- 隱藏欄位：賣家 ID -->
+                        <input type="hidden" name="sellerId" th:value="${sellerId}">
+
+                        <!-- 收件人資訊 -->
+                        <div class="card">
+                            <h3 class="mb-2">
+                                <i class="fas fa-user-circle"
+                                    style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                                收件人資訊
+                            </h3>
+
+                            <div class="form-group">
+                                <label class="form-label required">收件人姓名</label>
+                                <input type="text" class="form-control" id="receiverName" name="receiverName"
+                                    placeholder="請輸入收件人姓名" required maxlength="20" th:value="${param.receiverName}">
+                                <span class="error-message" id="error-receiverName"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">聯絡電話</label>
+                                <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone"
+                                    placeholder="例如：0912345678" required maxlength="20" pattern="[0-9]{10}"
+                                    th:value="${param.receiverPhone}">
+                                <span class="error-message" id="error-receiverPhone"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">收件地址</label>
+                                <input type="text" class="form-control" id="receiverAddress" name="receiverAddress"
+                                    placeholder="請輸入完整地址（含縣市、區、街道）" required maxlength="100"
+                                    th:value="${param.receiverAddress}">
+                                <span class="error-message" id="error-receiverAddress"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">備註說明（選填）</label>
+                                <textarea class="form-control" id="specialInstructions" name="specialInstructions"
+                                    rows="3" placeholder="例如：請勿按門鈴、放管理室..." maxlength="200"
+                                    th:text="${param.specialInstructions}"></textarea>
+                                <small style="color: #999; font-size: 0.85rem;">最多 200 字</small>
+                            </div>
+                        </div>
+
+                        <!-- 付款方式 -->
+                        <div class="card">
+                            <h3 class="mb-2">
+                                <i class="fas fa-wallet" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                                付款方式
+                            </h3>
+
+                            <!-- 固定使用錢包付款 -->
+                            <input type="hidden" name="paymentMethod" value="0">
+
+                            <div class="payment-info"
+                                style="background: var(--secondary-color); padding: 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                                <i class="fas fa-wallet" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">錢包餘額付款</div>
+                                    <small style="color: #666;">使用您的平台錢包餘額進行付款</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 注意事項 -->
+                        <div class="card notice-card">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-color);">
+                                <i class="fas fa-info-circle" style="color: var(--warning);"></i>
+                                購買須知
+                            </h4>
+                            <ul style="list-style: disc; padding-left: 1.5rem; color: #666; line-height: 1.8;">
+                                <li>收到商品後請盡快確認，3天內可退貨</li>
+                                <li>商品照片與描述僅供參考，實際狀況以商品為準</li>
+                                <li>如有問題請聯繫客服：0800-000-000</li>
+                            </ul>
+                        </div>
+
+                        <!-- 按鈕區 -->
+                        <div class="d-flex gap-md" style="margin-top: 2rem;">
+                            <a th:href="@{/store}" class="btn btn-outline" style="flex: 1;">
+                                <i class="fas fa-arrow-left"></i> 返回商品
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submit-order-btn" style="flex: 2;">
+                                <i class="fas fa-lock"></i> 確認並付款
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+
+                <!-- 右側：訂單摘要 (桌面版) -->
+                <div class="order-summary-desktop">
+                    <div class="card sticky-summary">
+                        <h3 class="mb-2">
+                            <i class="fas fa-shopping-bag"
+                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            訂單摘要
+                            <span style="font-size: 0.9rem; font-weight: normal; color: #999;"
+                                th:text="'（' + ${#lists.size(checkout.cartItems)} + ' 件）'">（0 件）</span>
+                        </h3>
+
+                        <!-- 商品列表 -->
+                        <div id="order-items-list" style="margin-bottom: 1.5rem;">
+                            <div th:each="item : ${checkout.cartItems}" class="cart-item-card">
+                                <!-- Base64 圖片 -->
+                                <img th:src="${item.imageBase64}" th:alt="${item.proName}" class="cart-item-img">
+                                <div class="cart-item-info">
+                                    <div>
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;"
+                                            th:text="${item.proName}">
+                                            商品名稱</div>
+                                        <div style="color: var(--primary-color); font-weight: 700;"
+                                            th:text="'$' + ${item.proPrice}">$0</div>
+                                    </div>
+                                    <div class="d-flex justify-between align-center">
+                                        <!-- 數量調整 -->
+                                        <form th:action="@{/cart/update}" method="post" class="quantity-control">
+                                            <input type="hidden" name="proId" th:value="${item.proId}">
+                                            <label style="font-size: 0.85rem; color: #666;">數量：</label>
+                                            <select name="quantity" onchange="this.form.submit()"
+                                                th:with="maxQty=${item.stockQuantity != null and item.stockQuantity > 10 ? 10 : (item.stockQuantity != null ? item.stockQuantity : 10)}">
+                                                <option th:each="i : ${#numbers.sequence(1, maxQty)}" th:value="${i}"
+                                                    th:text="${i}" th:selected="${i == item.quantity}">1
+                                                </option>
+                                            </select>
+                                        </form>
+                                        <div class="d-flex align-center gap-md">
+                                            <span style="font-weight: 700; color: var(--primary-color);"
+                                                th:text="'$' + ${item.subtotal}">$0</span>
+                                            <!-- 移除按鈕 -->
+                                            <form th:action="@{/cart/remove}" method="post" style="display: inline;">
+                                                <input type="hidden" name="proId" th:value="${item.proId}">
+                                                <button type="submit" class="btn-remove" title="移除"
+                                                    onclick="return confirm('確定要移除此商品嗎？');">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- 費用明細 -->
+                        <div class="d-flex justify-between mb-1">
+                            <span style="color: #666;">商品小計（<span th:text="${#lists.size(checkout.cartItems)}">0</span>
+                                件）</span>
+                            <span th:text="'$' + ${checkout.orderTotal}">$0</span>
+                        </div>
+                        <div class="d-flex justify-between mb-3"
+                            style="font-size: 1.3rem; font-weight: 800; color: var(--primary-color);">
+                            <span>總金額</span>
+                            <span th:text="'$' + ${checkout.orderTotal}">$0</span>
+                        </div>
+
+                        <!-- 安全提示 -->
+                        <div
+                            style="background: var(--secondary-color); padding: 1rem; border-radius: 12px; text-align: center;">
+                            <i class="fas fa-shield-alt"
+                                style="font-size: 2rem; color: var(--success); margin-bottom: 0.5rem;"></i>
+                            <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                                <strong>安全交易保障</strong><br>
+                                由寵護家平台擔保交易安全
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="background-color: #f9f9f9;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+
+    <!-- JavaScript：表單驗證與訊息處理 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-hide flash messages
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(msg => {
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                    setTimeout(() => msg.remove(), 300);
+                }, 3000);
+            });
+
+            const form = document.getElementById('checkout-form');
+            if (!form) return;
+
+            // 表單驗證
+            form.addEventListener('submit', function (e) {
+                let isValid = true;
+
+                // 驗證姓名
+                const name = document.getElementById('receiverName');
+                if (name && name.value.trim().length < 2) {
+                    showError('receiverName', '姓名至少需要 2 個字');
+                    isValid = false;
+                } else {
+                    clearError('receiverName');
+                }
+
+                // 驗證電話
+                const phone = document.getElementById('receiverPhone');
+                const phonePattern = /^[0-9]{10}$/;
+                if (phone && !phonePattern.test(phone.value.trim())) {
+                    showError('receiverPhone', '請輸入有效的 10 碼電話號碼');
+                    isValid = false;
+                } else {
+                    clearError('receiverPhone');
+                }
+
+                // 驗證地址
+                const address = document.getElementById('receiverAddress');
+                if (address && address.value.trim().length < 10) {
+                    showError('receiverAddress', '請輸入完整地址（至少 10 個字）');
+                    isValid = false;
+                } else {
+                    clearError('receiverAddress');
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                } else {
+                    // 顯示載入狀態
+                    const btn = document.getElementById('submit-order-btn');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 處理中...';
+                    }
+                }
+            });
+
+            // 即時驗證
+            const inputs = form.querySelectorAll('input[required]');
+            inputs.forEach(input => {
+                input.addEventListener('blur', () => validateField(input));
+                input.addEventListener('input', () => {
+                    if (input.classList.contains('error')) {
+                        validateField(input);
+                    }
+                });
+            });
+        });
+
+        function validateField(input) {
+            const name = input.name;
+            const value = input.value.trim();
+
+            switch (name) {
+                case 'receiverName':
+                    if (value.length < 2) {
+                        showError(name, '姓名至少需要 2 個字');
+                    } else {
+                        clearError(name);
+                    }
+                    break;
+                case 'receiverPhone':
+                    if (!/^[0-9]{10}$/.test(value)) {
+                        showError(name, '請輸入有效的 10 碼電話號碼');
+                    } else {
+                        clearError(name);
+                    }
+                    break;
+                case 'receiverAddress':
+                    if (value.length < 10) {
+                        showError(name, '請輸入完整地址（至少 10 個字）');
+                    } else {
+                        clearError(name);
+                    }
+                    break;
+            }
+        }
+
+        function showError(fieldName, message) {
+            const input = document.getElementById(fieldName);
+            const errorSpan = document.getElementById('error-' + fieldName);
+            if (input) input.classList.add('error');
+            if (errorSpan) errorSpan.textContent = message;
+        }
+
+        function clearError(fieldName) {
+            const input = document.getElementById(fieldName);
+            const errorSpan = document.getElementById('error-' + fieldName);
+            if (input) input.classList.remove('error');
+            if (errorSpan) errorSpan.textContent = '';
+        }
+
+        // 檢舉表單切換
+        function toggleReportForm(btn) {
+            const reviewId = btn.dataset.reviewId || btn.closest('.report-form').querySelector('input[name="reviewId"]').value;
+            const form = document.getElementById('report-form-' + reviewId);
+            if (form) {
+                form.classList.toggle('show');
+            }
+        }
+
+        // 開啟與賣家的聊天室
+        function openChatWithSeller(sellerId) {
+            event.preventDefault();
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/chat';
+
+            const receiverInput = document.createElement('input');
+            receiverInput.type = 'hidden';
+            receiverInput.name = 'receiverId';
+            receiverInput.value = sellerId;
+
+            form.appendChild(receiverInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+</body>
+
+</html>

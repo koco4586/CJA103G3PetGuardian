@@ -279,34 +279,23 @@ nav.active {
 
 /* --- 響應式調整 --- */
 @media (max-width: 992px) {
-    .menu-btn {
-        display: block;
-        /* 手機版顯示漢堡按鈕 */
-    }
+    .menu-btn { display: block; }
 
     nav {
-        nav {
-            transform: translateX(-100%);
-            left: 0;
-        }
-
-        .main-content {
-            margin-left: 0;
-            width: 100%;
-            padding: 16px;
-        }
-
-        header {
-            padding: 16px;
-            gap: 12px;
-        }
+        transform: translateX(-100%);
     }
 
-    .sub {
-        font-size: 12px;
-        opacity: .8;
+    nav.active {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
     }
 }
+
 
 /* 分頁按鈕樣式 */
 .tab-container {
