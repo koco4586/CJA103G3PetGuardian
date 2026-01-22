@@ -16,7 +16,7 @@ import com.petguardian.booking.model.BookingScheduleVO;
 import com.petguardian.booking.model.SitterDTO;
 
 /**
- * 預約服務邏輯層 (Service Layer) 負責處理預約訂單的建立、退款審核、撥款流程以及同步更新保母排程。
+ * 負責處理預約訂單的建立、退款審核、撥款流程以及同步更新保母排程。
  */
 @Service
 @Transactional

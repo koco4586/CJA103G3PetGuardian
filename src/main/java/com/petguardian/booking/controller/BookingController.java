@@ -25,9 +25,9 @@ import jakarta.servlet.http.HttpSession;
  */
 //================= 對接開發標註 =================
 //1. SitterID: 目前假資料預設是 1~5。
-// 待【保姆模組】完成後，需確認 SitterVO 的主鍵名稱。
+// 待【保姆】完成後，需確認 SitterVO 的主鍵名稱。
 //2. MemID & PetID: 目前假資料是 1001 開始。
-// 待【會員模組】完成後，需確認登入狀態下的 Session 如何取得當前 memId。
+// 待【會員】完成後，需確認登入狀態下的 Session 如何取得當前 memId。
 //3. ServiceItemId: 目前對應 service_items 表的 1(散步), 2(餵食), 3(洗澡)。
 //==============================================
 @Controller
@@ -120,7 +120,7 @@ public class BookingController {
              order.setSitterName(name);
          }
          
-         // model.addAttribute("bookingList", list);
+       // model.addAttribute("bookingList", list);
       // 2. 把這份清單取名為 "bookingList" 送往網頁
          model.addAttribute("bookingList", list);
          model.addAttribute("memId", memId);
@@ -140,7 +140,7 @@ public class BookingController {
     }
 
     /**
-     * 【5. 處理取消預約】
+     * 【5. 取消預約】
      * 會員或保母取消尚未開始的預約，並寫入取消原因。
      * @param orderId 訂單編號
      * @param reason 取消的原因
@@ -152,10 +152,10 @@ public class BookingController {
             BookingOrderVO order = bookingService.getOrderById(orderId); 
             Integer memberId = order.getMemId();
 
-            // 2. 執行取消邏輯 (你需要確保 Service 有這個方法)
+            // 2. 執行取消邏輯 (需要 Service 有這個方法)
             bookingService.cancelBooking(orderId, reason);
             
-            // 3. 重點：導回正確的會員 ID 路徑，不要寫 "current"
+            // 3. 重點：導回正確的會員 ID 路徑
             ra.addFlashAttribute("successMessage", "訂單已成功取消");
             return "redirect:/booking/list/member/" + memberId;
         } catch (Exception e) {
@@ -174,9 +174,9 @@ public class BookingController {
         // --- 1. 取得登入會員 ID ---
         Integer memId = (Integer) session.getAttribute("memId");
 
-        // 【測試用邏輯】如果你還沒寫登入功能，Session 會是空的，這時強行給它 1001 方便測試
+        // 【測試用】還沒登入功能，Session 會是空的，這時強行給它 1001 方便測試
         if (memId == null) {
-            memId = 1001; // <--- 測試完畢記得改回來或刪除
+            memId = 1001; 
         }
 
         // --- 2. 獲取訂單清單 ---
@@ -197,7 +197,6 @@ public class BookingController {
         model.addAttribute("memId", memId);
 
         // --- 5. 跳轉頁面 ---
-        // 注意：如果你之前的列表頁面路徑是 backend/booking/booking-member-list，就回傳那個路徑
         return "backend/booking/booking-member-list"; 
     }
 

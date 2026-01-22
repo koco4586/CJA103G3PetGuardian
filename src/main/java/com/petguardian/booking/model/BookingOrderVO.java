@@ -69,4 +69,5 @@ public class BookingOrderVO {
     private LocalDateTime updatedAt;
     @jakarta.persistence.Transient // 告訴 JPA 不要把這個存進資料庫
     private String sitterName;
+    
 }

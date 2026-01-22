@@ -40,7 +40,7 @@ public class AdminBookingController {
         return "backend/bookings"; // 對應 HTML 檔案位置
     }
     @PostMapping("/approveRefund")
-    @ResponseBody // 加上這個註解，代表回傳的是純文字或 JSON，而不是跳轉頁面
+    @ResponseBody // 代表回傳的是純文字或 JSON，而不是跳轉頁面
     public String approveRefund(@RequestParam Integer orderId) {
         try {
             // 1. 呼叫 Service 執行狀態修改與時段釋出

@@ -12,4 +12,5 @@ public interface BookingOrderRepository extends JpaRepository<BookingOrderVO, In
     
     // 根據保姆 ID 查詢其收到的所有預約
     List<BookingOrderVO> findBySitterId(Integer sitterId);
+    
 }

@@ -15,4 +15,5 @@ public class MemberDTO {
         this.memId = memId;
         this.name = name;
     }
+    
 }

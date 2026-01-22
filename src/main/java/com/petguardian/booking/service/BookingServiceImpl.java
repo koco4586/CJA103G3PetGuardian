@@ -29,7 +29,7 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
      */
     @Override
     public List<BookingOrderVO> getOrdersByMemberId(Integer memId) {
-        // 這裡要呼叫 Repository 幫你去資料庫撈資料
+        // 這裡要呼叫 Repository 去資料庫撈資料
         return orderRepository.findByMemId(memId);
     }
     /**
@@ -58,7 +58,7 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
             throw new IllegalArgumentException("預約失敗：無法預約過去的時間點。");
         }
 
-        // 2. 獲取服務定價 (從保母模組透過Interface獲取)
+        // 2. 獲取服務定價 (從保母那邊透過Interface獲取)
         SitterDTO sitter = getSitterInfo(order.getSitterId(), order.getServiceItemId());
 
         // 3. 計算總金額：不足一小時以一小時計
@@ -167,7 +167,7 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
         order.setOrderStatus(5);
         orderRepository.save(order);
         
-        //可在此接保母虛擬錢包
+        //可在此接虛擬錢包
     }
 //	以下測試用
 	
@@ -185,5 +185,4 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
     public SitterDTO getSitterInfo(Integer sitterId, Integer serviceItemId) {
         return new SitterDTO(sitterId, "假資料保母", serviceItemId, 500);
     }
-
 }

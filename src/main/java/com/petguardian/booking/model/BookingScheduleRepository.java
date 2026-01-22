@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BookingScheduleRepository extends JpaRepository<BookingScheduleVO, Integer> {
-    
     /**
      * 核心功能：找尋該保姆在特定日期的排程
      * Optional 可以優雅地處理「如果當天還沒有排程紀錄」的情況

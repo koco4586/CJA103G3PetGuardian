@@ -12,4 +12,5 @@ public class SitterDTO {
     private String sitterName;     // 保母名稱
     private Integer serviceItemId; // 服務項目編號
     private Integer price;         // 每小時單價 (用來算 reservation_fee)
+    
 }

@@ -32,4 +32,5 @@ public class BookingScheduleVO {
     // 24個1小時狀態字串
     @Column(name = "booking_status", nullable = false, length = 24)
     private String bookingStatus = "000000000000000000000000";
+    
 }

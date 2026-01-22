@@ -133,7 +133,7 @@
             document.getElementById('panel-' + tabName).classList.add('active');
         }
 
-        // 2. 核准退款 (Approve Refund)
+        // 2. 核准退款
         function approveRefund(orderId) {
             if (!confirm('確定要「核准」退款嗎？\n核准後訂單將結案，且保姆的預約時段將會釋出。')) return;
 
@@ -154,7 +154,7 @@
             .catch(error => alert('連線異常，請稍後再試'));
         }
 
-        // 3. 駁回退款 (Reject Refund)
+        // 3. 駁回退款 
         function rejectRefund(orderId) {
             if (!confirm('確定要「駁回」退款申請嗎？\n駁回後訂單將回到「進行中」狀態。')) return;
 
@@ -175,7 +175,7 @@
             .catch(error => alert('連線異常，請稍後再試'));
         }
 
-        // 4. 執行撥款 (Execute Payout)
+        // 4. 執行撥款 
         function executePayout(orderId) {
             if (!confirm('確定要「執行撥款」給保母嗎？\n一旦撥款，該筆訂單將標記為已結案。')) return;
 
@@ -196,6 +196,6 @@
             .catch(error => alert('連線異常，請稍後再試'));
         }
     </script>
+    
 </body>
-
 </html>

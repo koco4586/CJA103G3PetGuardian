@@ -18,4 +18,5 @@ public interface BookingExternalDataService {
     SitterDTO getSitterInfo(Integer sitterId, Integer serviceItemId);
 
     List<BookingOrderVO> getOrdersByMemberId(Integer memId);
+    
 }

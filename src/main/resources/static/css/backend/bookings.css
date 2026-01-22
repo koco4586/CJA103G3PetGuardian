@@ -18,7 +18,6 @@ to {
 }
 
 }
-
 /* --- 狀態標籤 (Badges) --- */
 /* 這裡微調了字體，讓它比表格內文字稍微小一點，看起來比較精緻 */
 .badge {
@@ -72,7 +71,6 @@ table td {
 	font-size: 24px;
 	cursor: pointer;
 }
-
 /* 當螢幕寬度大於 992px (桌面版) 時，隱藏漢堡按鈕 */
 @media ( min-width : 992px) {
 	.toggle-btn {
