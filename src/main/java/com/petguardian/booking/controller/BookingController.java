@@ -112,8 +112,8 @@ public class BookingController {
      */
     @GetMapping("/list/member/{memId}")
     public String memberBookingList(@PathVariable Integer memId, Model model) {
-        // 需在 Service 實作 getOrdersByMemberId 方法並回傳清單
-         List<BookingOrderVO> list = bookingService.getOrdersByMemberId(memId);
+        // 需在 Service 實作 getActiveOrdersByMemberId 方法並回傳清單
+         List<BookingOrderVO> list = bookingService.getActiveOrdersByMemberId(memId);
       // 幫每筆訂單補上名字
          for (BookingOrderVO order : list) {
              String name = externalDataService.getSitterInfo(order.getSitterId(), order.getServiceItemId()).getSitterName();
@@ -180,10 +180,18 @@ public class BookingController {
         }
 
         // --- 2. 獲取訂單清單 ---
-        List<BookingOrderVO> orders = bookingService.getOrdersByMemberId(memId);
+        List<BookingOrderVO> allOrders = bookingService.getActiveOrdersByMemberId(memId);
 
-        // --- 3. 補上顯示用的名稱 (讓頁面顯示保母名字而不是只有 ID) ---
-        for (BookingOrderVO order : orders) {
+        // 3. 過濾掉：狀態為 2 (服務完成)、3 (已取消)、5 (已結案) 的訂單
+        // 只保留 0 (待確認/待支付) 與 1 (已支付/進行中)
+        List<BookingOrderVO> activeOrders = allOrders.stream()
+                .filter(order -> order.getOrderStatus() != 2 && 
+                                 order.getOrderStatus() != 3 && 
+                                 order.getOrderStatus() != 5)
+                .toList();
+        
+        // --- 4. 補上顯示用的名稱 (讓頁面顯示保母名字而不是只有 ID) ---
+        for (BookingOrderVO order : activeOrders) {
             try {
                 String name = externalDataService.getSitterInfo(order.getSitterId(), order.getServiceItemId()).getSitterName();
                 order.setSitterName(name);
@@ -192,11 +200,10 @@ public class BookingController {
             }
         }
 
-        // --- 4. 資料傳往前端 ---
-        model.addAttribute("bookingList", orders); // 注意：這裡名稱要跟 HTML 裡的 th:each 一致
+     // 4. 傳送過濾後的清單到前端
+        model.addAttribute("bookingList", activeOrders); 
         model.addAttribute("memId", memId);
 
-        // --- 5. 跳轉頁面 ---
         return "backend/booking/booking-member-list"; 
     }
 

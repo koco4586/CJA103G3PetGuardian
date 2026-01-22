@@ -23,6 +23,8 @@ import com.petguardian.booking.model.SitterDTO;
 public interface BookingService {
 
 	List<BookingOrderVO> getOrdersByMemberId(Integer memId);
+	
+	List<BookingOrderVO> getActiveOrdersByMemberId(Integer memId);
 
 	BookingOrderVO getOrderById(Integer orderId);
 

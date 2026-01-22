@@ -32,6 +32,16 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
         // 這裡要呼叫 Repository 去資料庫撈資料
         return orderRepository.findByMemId(memId);
     }
+    
+    @Override
+    public List<BookingOrderVO> getActiveOrdersByMemberId(Integer memId) {
+        List<BookingOrderVO> allOrders = orderRepository.findByMemId(memId);
+        // 只保留 0(待確認) 與 1(已支付)
+        return allOrders.stream()
+                .filter(o -> o.getOrderStatus() == 0 || o.getOrderStatus() == 1)
+                .toList();
+    }
+    
     /**
      * 【功能：查詢單筆預約詳情】 
      */
@@ -53,8 +63,8 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
     	LocalDateTime now = LocalDateTime.now();
     	
         // 1. 時間邏輯檢查
-        if (order.getEndTime().isBefore(order.getStartTime())) {
-            throw new IllegalArgumentException("預約失敗：結束時間不能早於開始時間。");
+    	if (!order.getEndTime().isAfter(order.getStartTime())) {
+            throw new IllegalArgumentException("預約失敗：結束時間必須晚於開始時間，且至少預約 1 小時。");
         }
         
         // 2. 限制：最晚要在 2 小時前預約 (給保母準備時間)
