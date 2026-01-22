@@ -45,7 +45,7 @@
             </button>
             <button class="tab-btn" onclick="switchMainTab('refunds')">
                 <i class="fa-solid fa-rotate-left"></i>
-                退款申請審核
+                退貨申請審核
                 <span class="badge" th:text="${refundPendingCount}" th:if="${refundPendingCount > 0}">0</span>
             </button>
         </div>
@@ -56,13 +56,13 @@
             <!-- 子分頁按鈕 -->
             <div class="sub-tab-container">
                 <button class="sub-tab-btn active" onclick="switchOrderTab('pending')">
-                    待完成 <span class="count" th:text="'(' + ${pendingCount} + ')'">(0)</span>
+                    待完成訂單 <span class="count" th:text="'(' + ${pendingCount} + ')'">(0)</span>
                 </button>
                 <button class="sub-tab-btn" onclick="switchOrderTab('closed')">
                     結案訂單 <span class="count" th:text="'(' + ${closedCount} + ')'">(0)</span>
                 </button>
                 <button class="sub-tab-btn" onclick="switchOrderTab('return')">
-                    退貨 <span class="count" th:text="'(' + ${returnCount} + ')'">(0)</span>
+                    退貨訂單 <span class="count" th:text="'(' + ${returnCount} + ')'">(0)</span>
                 </button>
             </div>
 
@@ -230,8 +230,8 @@
         <!-- ========== 退款申請審核區塊 ========== -->
         <div id="panel-refunds" class="panel">
             <div class="card">
-                <h3>退款爭議審核</h3>
-                <div class="sub">買家發起退款申請，需人工介入審核是否符合退貨標準。</div>
+                <h3>退貨爭議審核</h3>
+                <div class="sub">買家發起退貨申請，需管理員審核是否符合退貨標準。</div>
 
                 <table>
                     <thead>
@@ -336,10 +336,6 @@
                 <span class="detail-value" id="modal-sellerName">-</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">訂單金額</span>
-                <span class="detail-value" id="modal-orderTotal">-</span>
-            </div>
-            <div class="detail-row">
                 <span class="detail-label">退款金額</span>
                 <span class="detail-value" id="modal-refundAmount" style="color: #e67e22; font-weight: 600;">-</span>
             </div>
@@ -348,7 +344,7 @@
                 <span class="detail-value" id="modal-applyTime">-</span>
             </div>
             <div class="detail-row" style="flex-direction: column;">
-                <span class="detail-label" style="margin-bottom: 8px;">退款原因</span>
+                <span class="detail-label" style="margin-bottom: 8px;">退貨原因</span>
                 <div id="modal-returnReason" style="background: #f9f9f9; padding: 12px; border-radius: 8px; color: #333;">
                     -
                 </div>
