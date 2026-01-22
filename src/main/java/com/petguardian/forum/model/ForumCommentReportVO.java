@@ -35,7 +35,7 @@ public class ForumCommentReportVO implements Serializable{
 	
 	@ManyToOne
 	@JoinColumn(name = "comment_id", referencedColumnName = "comment_id")
-	private ForumCommentVO forumPostComment;
+	private ForumCommentVO forumComment;
 	
 //	@Column(name = "comment_id", updatable = false)
 //	private Integer commentId;
@@ -69,12 +69,12 @@ public class ForumCommentReportVO implements Serializable{
 		this.member = member;
 	}
 
-	public ForumCommentVO getForumPostComment() {
-		return forumPostComment;
+	public ForumCommentVO getForumComment() {
+		return forumComment;
 	}
 
-	public void setForumPostComment(ForumCommentVO forumPostComment) {
-		this.forumPostComment = forumPostComment;
+	public void setForumComment(ForumCommentVO forumComment) {
+		this.forumComment = forumComment;
 	}
 
 	public Integer getReportId() {

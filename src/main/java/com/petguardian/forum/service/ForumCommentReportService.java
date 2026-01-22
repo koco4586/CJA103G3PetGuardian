@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.petguardian.forum.model.ForumCommentReportRepository;
 import com.petguardian.forum.model.HandledCommentDTO;
+import com.petguardian.forum.model.PendingCommentDTO;
+import com.petguardian.forum.model.RejectedCommentDTO;
 
 @Service
 public class ForumCommentReportService {
@@ -16,6 +18,14 @@ public class ForumCommentReportService {
 	
 	public List<HandledCommentDTO> getAllHandledComments() {
 		return repo.findAllHandledComments();
+	}
+	
+	public List<PendingCommentDTO> getAllPendingComments() {
+		return repo.findAllPendingComments();
+	}
+	
+	public List<RejectedCommentDTO> getAllRejectedComments() {
+		return repo.findAllRejectedComments();
 	}
 	
 }
