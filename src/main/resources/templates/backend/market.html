@@ -20,7 +20,7 @@
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
         <div>
             <h1>二手商城管理</h1>
-            <div class="sub">處理訂單撥款與退款爭議</div>
+            <div class="sub">處理訂單撥款與退貨審核</div>
         </div>
     </header>
 
@@ -56,13 +56,13 @@
             <!-- 子分頁按鈕 -->
             <div class="sub-tab-container">
                 <button class="sub-tab-btn active" onclick="switchOrderTab('pending')">
-                    待完成訂單 <span class="count" th:text="'(' + ${pendingCount} + ')'">(0)</span>
+                    待完成 <span class="count" th:text="'(' + ${pendingCount} + ')'">(0)</span>
                 </button>
                 <button class="sub-tab-btn" onclick="switchOrderTab('closed')">
                     結案訂單 <span class="count" th:text="'(' + ${closedCount} + ')'">(0)</span>
                 </button>
                 <button class="sub-tab-btn" onclick="switchOrderTab('return')">
-                    退貨訂單 <span class="count" th:text="'(' + ${returnCount} + ')'">(0)</span>
+                    退貨 <span class="count" th:text="'(' + ${returnCount} + ')'">(0)</span>
                 </button>
             </div>
 
@@ -227,11 +227,11 @@
             </div>
         </div>
 
-        <!-- ========== 退款申請審核區塊 ========== -->
+        <!-- ========== 退貨申請審核區塊 ========== -->
         <div id="panel-refunds" class="panel">
             <div class="card">
                 <h3>退貨爭議審核</h3>
-                <div class="sub">買家發起退貨申請，需管理員審核是否符合退貨標準。</div>
+                <div class="sub">買家發起退貨申請，需管理員介入審核是否符合退貨標準。</div>
 
                 <table>
                     <thead>
@@ -301,7 +301,7 @@
                     <tr th:if="${#lists.isEmpty(returnsWithDetails)}">
                         <td colspan="6" class="empty-state">
                             <i class="fas fa-inbox"></i>
-                            <p>目前沒有退款申請</p>
+                            <p>目前沒有退貨申請</p>
                         </td>
                     </tr>
                     </tbody>
@@ -344,7 +344,7 @@
                 <span class="detail-value" id="modal-applyTime">-</span>
             </div>
             <div class="detail-row" style="flex-direction: column;">
-                <span class="detail-label" style="margin-bottom: 8px;">退貨原因</span>
+                <span class="detail-label" style="margin-bottom: 8px;">退款原因</span>
                 <div id="modal-returnReason" style="background: #f9f9f9; padding: 12px; border-radius: 8px; color: #333;">
                     -
                 </div>
