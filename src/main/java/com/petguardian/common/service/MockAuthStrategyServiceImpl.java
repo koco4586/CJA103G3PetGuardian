@@ -3,8 +3,8 @@ package com.petguardian.common.service;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatMemberEntity;
+import com.petguardian.member.model.Member;
+import com.petguardian.member.repository.login.MemberLoginRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -28,9 +28,9 @@ public class MockAuthStrategyServiceImpl implements AuthStrategyService {
 
     private static final String SESSION_MEMBER_ID = "memId";
 
-    private final ChatMemberRepository memberRepository;
+    private final MemberLoginRepository memberRepository;
 
-    public MockAuthStrategyServiceImpl(ChatMemberRepository memberRepository) {
+    public MockAuthStrategyServiceImpl(MemberLoginRepository memberRepository) {
         this.memberRepository = memberRepository;
     }
 
@@ -92,7 +92,7 @@ public class MockAuthStrategyServiceImpl implements AuthStrategyService {
         if (userId == null) {
             return null;
         }
-        ChatMemberEntity member = memberRepository.findById(userId).orElse(null);
+        Member member = memberRepository.findById(userId).orElse(null);
         return member != null ? member.getMemName() : "User " + userId;
     }
 }
