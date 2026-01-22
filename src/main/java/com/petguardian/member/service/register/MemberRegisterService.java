@@ -1,8 +1,7 @@
 package com.petguardian.member.service.register;
 
-import com.petguardian.member.config.MemberRegisterConfig;
 import com.petguardian.member.model.Member;
-import com.petguardian.member.model.register.MemberRegisterDTO;
+import com.petguardian.member.dto.MemberRegisterDTO;
 import com.petguardian.member.repository.register.MemberRegisterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

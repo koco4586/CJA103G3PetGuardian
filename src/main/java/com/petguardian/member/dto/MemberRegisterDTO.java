@@ -1,4 +1,4 @@
-package com.petguardian.member.model.register;
+package com.petguardian.member.dto;
 
 public class MemberRegisterDTO {
 
