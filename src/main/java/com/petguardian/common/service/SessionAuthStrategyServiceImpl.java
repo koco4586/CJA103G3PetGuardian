@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.common.service;
 
 import org.springframework.stereotype.Service;
 

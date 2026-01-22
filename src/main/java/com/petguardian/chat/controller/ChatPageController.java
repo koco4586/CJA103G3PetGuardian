@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.petguardian.chat.model.ChatMemberDTO;
 import com.petguardian.chat.model.ChatRoomDTO;
-import com.petguardian.chat.service.AuthStrategyService;
+import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatPageService;
 
 import jakarta.servlet.http.HttpServletRequest;
