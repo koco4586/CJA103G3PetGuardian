@@ -34,7 +34,7 @@ public class SellerController {
     private SellerOrderService sellerOrderService;
 
     @Autowired
-    private AuthStrategyService authService; // ✨ 使用現有的認證服務
+    private AuthStrategyService authService; //  使用現有的認證服務
 
     @Autowired
     private WalletRepository walletRepository;
