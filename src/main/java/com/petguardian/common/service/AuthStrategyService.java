@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.common.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 

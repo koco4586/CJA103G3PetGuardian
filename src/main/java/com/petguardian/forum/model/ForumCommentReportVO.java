@@ -45,7 +45,7 @@ public class ForumCommentReportVO implements Serializable{
 	
 	@Column(name = "report_reason")
 	@NotBlank(message = "檢舉原因請勿空白")
-	@Size(min = 20, max = 800, message = "檢舉原因長度必需在{min}到{max}字之間")
+	@Size(min = 20, max = 800, message = "檢舉原因必需在{min}到{max}字之間")
 	private String reportReason;
 	
 	@Column(name = "report_status", insertable = false)
@@ -56,6 +56,10 @@ public class ForumCommentReportVO implements Serializable{
 	
 	@Column(name = "handle_time", insertable = false, updatable = false)
 	private Timestamp handleTime;
+	
+	@Column(name = "handle_result", nullable = true)
+	@Size(max = 800, message = "處理結果最多不可超過{max}個字")
+	private String handleResult;
 	
 	public ForumCommentReportVO() {
 		super();
