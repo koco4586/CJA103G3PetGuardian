@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>確認寵物資料圖片</title>
+    <style>
+        /* 原有的樣式維持不變 */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #333;
+            font-family: sans-serif;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .preview-img {
+            max-width: 90vw;
+            max-height: 70vh;
+            border: 3px solid white;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .timer-text {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            transition: 0.3s; /* 讓閃爍平滑一點 */
+        }
+        /* 新增：三秒閃爍的 CSS 動畫 */
+        .flash {
+            color: #ff4d4d;
+            font-weight: bold;
+            animation: blinker 0.5s linear infinite;
+        }
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        .btn-group { margin-top: 20px; }
+        button {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            margin: 0 10px;
+            transition: 0.3s;
+        }
+        #btn_confirm { background-color: #28a745; color: white; }
+        #btn_back { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+
+
+<input type="hidden" name="petId" id="petId">
+
+    <div class="container">
+        <div id="timer_container" class="timer-text">確認這張圖片嗎？ (<span id="timer">10</span>s)</div>
+        
+        <div id="display_area"></div>
+
+        <div class="btn-group">
+            <button id="btn_confirm">確認送出</button>
+            <button id="btn_back">返回修改</button>
+        </div>
+    </div>
+
+<script th:inline="javascript">
+    // --- 1. 判斷來源路徑 ---
+    // 取得前一頁的網址
+    
+    // 如果來源網址包含 dashboard，就把回退網址改掉
+    
+
+    let pendingData = JSON.parse(sessionStorage.getItem("pending_data"));
+    
+    const displayArea = document.getElementById("display_area");
+    
+    if (pendingData && pendingData.petId) {
+        document.getElementById("petId").value = pendingData.petId;
+    }
+    
+    const referrer = document.referrer;
+    let backUrl = (pendingData && pendingData.fromPage) ? pendingData.fromPage : referrer;
+    let successUrl = "/pet/dashboard";    // 預設成功回 dashboard
+    
+    
+    
+    
+ // --- 2. 顯示邏輯 ---
+    if (pendingData) {
+    if (pendingData.img_base64 && pendingData.img_base64.length > 0) {
+        // 只要有圖 (不管是新增合成的，還是修改後重新合成的)，通通秀圖
+        displayArea.innerHTML = `<img src="${pendingData.img_base64}" class="preview-img">`;
+    } else {
+        // 只有在「完全沒圖 (被刪掉)」的情況，才秀出你的純文字框
+        displayArea.innerHTML = `
+            <div style="background:white; color:black; padding:20px; border-radius:10px; text-align:left; display:inline-block;">
+                <p><b>寵物姓名：</b>${pendingData.petName}</p>
+                <p><b>性別：</b>${pendingData.petGender == '1' ? '公' : '母'}</p>
+                <p style="color:red;">(此更新已移除寵物圖片)</p>
+            </div>`;
+    }
+}
+
+    function goBackWithData() {
+        const rawData = sessionStorage.getItem("pending_data");
+        if (rawData) {
+            const data = JSON.parse(rawData);
+            const keepImage = confirm("是否要保留原圖片？\n[要] 保留圖片與資料\n[不要] 僅保留文字資料");
+            
+            if (!keepImage) {
+                // 使用者選擇「取消」，清空圖片資料
+                data.img_base64 = ""; 
+                
+                
+            }sessionStorage.setItem("pending_data", JSON.stringify(data));
+        }
+            // 如果選擇「確定」，則不變動 data 內容，直接帶回上一頁
+            setTimeout(() => {
+                location.href = backUrl;
+            }, 100);
+            
+            
+        }
+    
+    
+    
+    // --- 2. 倒數計時與三秒閃爍 ---
+    let time = 10;
+    let hasJumped = false;
+    const timer_el = document.getElementById("timer");
+    const timer_container = document.getElementById("timer_container");
+
+    const countdown = setInterval(() => {
+        time--;
+        timer_el.textContent = time;
+
+        // 剩餘三秒時閃爍
+        if (time <= 3 && time > 0) {
+            timer_container.classList.add("flash");
+        }
+
+        if (time <= 0) {
+            clearInterval(countdown);
+            if (!hasJumped) {
+                hasJumped = true;
+                alert("超時！自動返回。");
+                location.href = backUrl; // 使用判斷後的來源網址
+                
+            }
+        }
+    }, 1000);
+
+    // --- 3. 按鈕事件 ---
+    document.getElementById("btn_confirm").addEventListener("click", function() {
+        clearInterval(countdown);
+        const btn = this;
+        if (btn.disabled) return;
+        
+        const pendingData = JSON.parse(sessionStorage.getItem("pending_data"));
+        
+        
+        if (!pendingData) { alert("找不到資料!"); return; }
+        
+        console.log("當前 Session 資料：", pendingData);
+        
+       
+        
+
+        
+        btn.disabled = true;
+        btn.innerText = "處理中...";
+        
+        const params = new URLSearchParams();
+        
+       
+        const finalId = pendingData.petId || pendingData.PetId;
+        if (finalId) {
+            // 使用 .set 確保這個 Key 在 params 裡是唯一的
+            params.set("petId", finalId.toString()); 
+        }
+        
+        
+        let imgValue = pendingData.img_base64 || "";
+        if (imgValue.startsWith("/pet/img")) {
+            imgValue = ""; 
+        }
+        
+        
+      
+        
+        params.set("petId", String(finalId).trim());
+        params.append("action", "insert_base64");
+        params.append("petImageBase64", imgValue);
+        params.append("petName", pendingData.petName || "");
+        params.append("typeId", pendingData.typeId || pendingData.typeId);
+        params.append("petGender", pendingData.petGender || pendingData.petGender); // 確保抓得到值
+        params.append("petAge", pendingData.petAge || "0");
+        params.append("sizeId", pendingData.sizeId || "1");
+        params.append("petDescription", pendingData.petDescription || "");
+        params.append("lng", pendingData.lng || "");
+        params.append("lat", pendingData.lat || "");
+
+       
+        
+        let targetUrl = pendingData.petId ? "/pet/update" : "/pet/insertBase64";
+        
+        fetch(targetUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+            body: params.toString()
+        })
+        .then(response => response.text())
+        .then(text => {
+        	
+        	if (text.includes("java.lang.RuntimeException") || text.includes("Internal Server Error")) {
+                throw new Error(text);
+            }
+        	
+            if (text.includes("success") || text.includes("pet/one")) {
+                alert("資料已成功存入資料庫!");
+                sessionStorage.removeItem("pending_data"); // 成功後清除暫存
+                window.location.href = "/pet/dashboard";
+            } else {
+                alert("存取失敗" );
+                console.error("完整錯誤訊息：", text);
+                btn.disabled = false;
+               
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("發生錯誤");
+            btn.disabled = false;
+        });
+    });
+    
+   
+
+    document.getElementById("btn_back").addEventListener("click", () => {
+        if (hasJumped) return;
+        hasJumped = true;
+        clearInterval(countdown);
+        
+        goBackWithData();
+    });
+    
+</script>
+</body>
+</html>

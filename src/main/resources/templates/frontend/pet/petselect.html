@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>我的寵物管理系統: Home</title>
+
+
+    <style>
+      body {
+        background-image: url("/images/pet/full.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+    /* 這裡的 rgba 最後一個參數 0.8 是透明度，可以自行調整 */
+    background-color: rgba(255, 255, 255, 0.85); 
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    width: 550px;
+    text-align: left;
+  }
+
+  /* 移除原本 table-1 的樣式，改為標題區域樣式 */
+  .header-area {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #CCCCFF; /* 保留一點原本的藍紫色調做裝飾 */
+  }
+
+  /* 保留你原本的字體與功能設定 */
+  .header-area h2 { margin: 0; color: #333; }
+  h4 { color: blue; display: inline; font-size: 0.85em; }
+  h3 { margin-top: 25px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color: #444; }
+
+  ul { line-height: 2.5; list-style: none; padding-left: 10px; }
+  b { color: #333; }
+
+  /* 輸入框與按鈕樣式保留 */
+  input[type="text"] {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+  }
+
+  input[type="submit"] {
+    cursor: pointer;
+    padding: 8px 18px;
+    background: #f8f8f8;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    transition: 0.3s;
+  }
+
+  input[type="submit"]:hover {
+    background: #eee;
+  }
+
+  .error-msgs { color: red; margin-bottom: 10px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header-area">
+        <h2>寵物管理系統: Home</h2>
+        <h4>( MVC )</h4>
+    </div>
+
+    <h3>資料查詢:</h3>
+
+    <div class="error-msgs" th:if="${errorMsgs != null}">
+        <b>請修正以下錯誤:</b>
+        <ul>
+            <li th:each="msg : ${errorMsgs}" th:text="${msg}"></li>
+        </ul>
+    </div>
+
+    <ul>
+        <li>
+            <a th:href="@{/pet/all}">列出所有寵物</a>
+            <h4>(MVC 分頁模式)</h4>
+        </li>
+
+        <li>
+            <form method="get" th:action="@{/pet/one}">
+                <b>輸入寵物編號 (如 1):</b><br>
+                <input type="text" name="petId">
+                <input type="submit" value="送出查詢">
+            </form>
+        </li>
+
+        <li>
+            <form method="post" th:action="@{/pet/byName}">
+                <b>輸入寵物姓名:</b><br>
+                <input type="text" name="petName">
+                <input type="submit" value="送出">
+            </form>
+        </li>
+    </ul>
+
+    <h3>資料管理:</h3>
+    <ul>
+        <li>
+            <a th:href="@{/pet/add_page}">新增寵物資料</a>
+            
+        </li>
+    </ul>
+    <div>
+    <input type="button" value="回首頁" class="btn-submit" onclick="location.href='/pet/dashboard'">
+    
+    </div>
+
+</div>
+
+
+
+</body>
+</html>
