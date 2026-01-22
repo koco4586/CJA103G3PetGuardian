@@ -1,9 +1,9 @@
-package com.petguardian.chat.service;
+package com.petguardian.common.service;
 
 import org.springframework.stereotype.Service;
 
-import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatMemberEntity;
+import com.petguardian.member.model.Member;
+import com.petguardian.member.repository.login.MemberLoginRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -23,9 +23,9 @@ public class SessionAuthStrategyServiceImpl implements AuthStrategyService {
     private static final String SESSION_MEMBER_ID = "memId";
     private static final String SESSION_MEMBER_NAME = "memName";
 
-    private final ChatMemberRepository memberRepository;
+    private final MemberLoginRepository memberRepository;
 
-    public SessionAuthStrategyServiceImpl(ChatMemberRepository memberRepository) {
+    public SessionAuthStrategyServiceImpl(MemberLoginRepository memberRepository) {
         this.memberRepository = memberRepository;
     }
 
@@ -67,7 +67,7 @@ public class SessionAuthStrategyServiceImpl implements AuthStrategyService {
         if (userId == null) {
             return null;
         }
-        ChatMemberEntity member = memberRepository.findById(userId).orElse(null);
+        Member member = memberRepository.findById(userId).orElse(null);
         return member != null ? member.getMemName() : null;
     }
 }
