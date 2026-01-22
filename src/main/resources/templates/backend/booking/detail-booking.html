@@ -1,0 +1,99 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>預約明細 - Pet Guardian</title>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" th:href="@{/css/backend/style.css}">
+<link rel="stylesheet" th:href="@{/css/backend/bookings.css}">
+<style>
+.success-banner {
+	background-color: #f0fdf4;
+	border: 1px solid #bbf7d0;
+	color: #166534;
+	padding: 20px;
+	border-radius: 10px;
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.detail-row {
+	display: flex;
+	justify-content: space-between;
+	padding: 12px 0;
+	border-bottom: 1px dashed #eee;
+}
+
+.detail-label {
+	color: #666;
+	font-weight: 500;
+}
+
+.detail-value {
+	color: #333;
+	font-weight: 700;
+}
+
+.total-amount {
+	font-size: 1.5rem;
+	color: #ea580c;
+}
+</style>
+</head>
+<body>
+	<div class="main-content">
+		<button class="toggle-btn" onclick="toggleSidebar()">
+			<i class="fa-solid fa-bars"></i>
+		</button>
+		<header>
+			<h1>預約已送出</h1>
+			<div class="sub">請靜候保母確認訂單</div>
+		</header>
+
+		<section class="card">
+			<div class="success-banner">
+				<i class="fa-solid fa-circle-check fa-2x"></i>
+				<h2 style="margin-top: 10px;">預約申請成功！</h2>
+				<p th:text="'訂單編號：#BK-' + ${result.bookingOrderId}"></p>
+			</div>
+
+			<div class="booking-details">
+				<div class="detail-row">
+					<span class="detail-label">預約時段 (開始)</span> <span
+						class="detail-value"
+						th:text="${#temporals.format(result.startTime, 'yyyy-MM-dd HH:mm')}"></span>
+				</div>
+				<div class="detail-row">
+					<span class="detail-label">預約時段 (結束)</span> <span
+						class="detail-value"
+						th:text="${#temporals.format(result.endTime, 'yyyy-MM-dd HH:mm')}"></span>
+				</div>
+				<div class="detail-row">
+					<span class="detail-label">保母編號</span> <span class="detail-value"
+						th:text="${result.sitterId}"></span>
+				</div>
+				<div class="detail-row">
+					<span class="detail-label">服務項目 ID</span> <span
+						class="detail-value" th:text="${result.serviceItemId}"></span>
+				</div>
+				<div class="detail-row"
+					style="border-bottom: none; margin-top: 15px;">
+					<span class="detail-label">預約總計金額</span> <span
+						class="detail-value total-amount"
+						th:text="'$' + ${result.reservationFee}"></span>
+				</div>
+			</div>
+
+			<div style="margin-top: 30px; display: flex; gap: 10px;">
+				<a th:href="@{/booking/list/member/{id}(id=${result.memId})}"
+					class="btn" style="text-align: center; flex: 1;"> 查看我的預約列表 </a> <a
+					href="/" class="btn ghost" style="text-align: center; flex: 1;">
+					回首頁 </a>
+			</div>
+		</section>
+	</div>
+	<script th:src="@{/js/backend/sidebar.js}"></script>
+</body>
+</html>
