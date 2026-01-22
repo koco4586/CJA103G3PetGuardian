@@ -282,24 +282,22 @@
                 <table id="example" class="display">
                     <thead>
                         <tr>
+                            <th>檢舉編號</th>
+                            <th>檢舉者ID</th>
                             <th>留言編號</th>
-                            <th>留言內容</th>
-                            <th>發文者ID</th>
-                            <th>所屬文章ID</th>
-                            <th>下架原因</th>
-                            <th>處理時間</th>
+                            <th>留言者ID</th>
+                            <th>檢舉類型</th>
+                            <th>檢舉時間</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         <th:block th:each="dto : ${commentList}">
                             <tr>
+                                <td th:text="${dto.reportId}"></td>
+                                <td th:text="${dto.memId}" style="font-weight: bold; color: green;"></td>
                                 <td th:text="${dto.commentId}"></td>
-                                <td title="將鼠標移上來可查看完整內容">
-								    <div class="comment-text" th:text="${dto.commentContent}"></div>
-								</td>
-                                <td th:text="${dto.memId}"></td>
-                                <td th:text="${dto.postId}"></td>
+                                <td th:text="${dto.authorId}" style="font-weight: bold; color: red;"></td>
                                 <td>
                                     <span class="badge-report" th:switch="${dto.reportType}">
                                         <span th:case="0">騷擾</span>
@@ -309,7 +307,7 @@
                                         <span th:case="*">其他</span>
                                     </span>
                                 </td>
-                                <td th:text="${#dates.format(dto.handleTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                                <td th:text="${#dates.format(dto.reportTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
                                 <td>
                                     <form method="post" th:action="@{/admin/forum/get-one-for-update}">
                                         <input type="hidden" name="commentId" th:value="${dto.commentId}">
