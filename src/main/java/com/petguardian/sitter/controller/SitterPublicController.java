@@ -37,10 +37,10 @@ public class SitterPublicController {
     private SitterMemberRepository sitterMemberRepository;
 
     @Autowired
-    private com.petguardian.area.model.AreaRepository areaRepository;
+    private com.petguardian.common.service.AuthStrategyService authStrategyService;
 
-    // 假的會員 ID，用於測試（等會員系統完成後移除）
-    private static final Integer FAKE_MEMBER_ID = 1001;
+    @Autowired
+    private com.petguardian.area.model.AreaRepository areaRepository;
 
     /**
      * 顯示公開的保姆搜尋頁面
@@ -50,16 +50,17 @@ public class SitterPublicController {
      * @return String 保姆搜尋頁面路徑 "frontend/sitter/public-search"
      */
     @GetMapping("/search")
-    public String showSearchPage(Model model) {
-        // 從資料庫撈取假會員資料
-        Optional<SitterMemberVO> memberVO = sitterMemberRepository.findById(FAKE_MEMBER_ID);
+    public String showSearchPage(jakarta.servlet.http.HttpServletRequest request, Model model) {
+        // 從資料庫撈取會員資料 (如果已登入)
+        Integer memId = authStrategyService.getCurrentUserId(request);
 
-        if (memberVO.isPresent()) {
-            SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO.get());
-            model.addAttribute("currentMember", fakeMember);
-        } else {
-            // 如果找不到，只傳 ID
-            model.addAttribute("currentMemberId", FAKE_MEMBER_ID);
+        if (memId != null) {
+            Optional<SitterMemberVO> memberVO = sitterMemberRepository.findById(memId);
+            if (memberVO.isPresent()) {
+                SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO.get());
+                model.addAttribute("currentMember", fakeMember);
+            }
+            model.addAttribute("currentMemberId", memId);
         }
 
         return "frontend/sitter/public-search";
@@ -166,7 +167,8 @@ public class SitterPublicController {
      * @return String 保姆詳情頁面路徑 "frontend/sitter/sitter-detail"，若保姆不存在則導回搜尋頁
      */
     @GetMapping("/detail/{sitterId}")
-    public String showSitterDetail(@PathVariable Integer sitterId, Model model) {
+    public String showSitterDetail(@PathVariable Integer sitterId, jakarta.servlet.http.HttpServletRequest request,
+            Model model) {
         try {
             SitterVO sitter = sitterService.getSitterById(sitterId);
 
@@ -174,11 +176,14 @@ public class SitterPublicController {
                 return "redirect:/public/sitter/search";
             }
 
-            // 撈取假會員資料
-            Optional<SitterMemberVO> memberVO = sitterMemberRepository.findById(FAKE_MEMBER_ID);
-            if (memberVO.isPresent()) {
-                SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO.get());
-                model.addAttribute("currentMember", fakeMember);
+            // 撈取會員資料 (如果已登入)
+            Integer memId = authStrategyService.getCurrentUserId(request);
+            if (memId != null) {
+                Optional<SitterMemberVO> memberVO = sitterMemberRepository.findById(memId);
+                if (memberVO.isPresent()) {
+                    SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO.get());
+                    model.addAttribute("currentMember", fakeMember);
+                }
             }
 
             model.addAttribute("sitter", sitter);

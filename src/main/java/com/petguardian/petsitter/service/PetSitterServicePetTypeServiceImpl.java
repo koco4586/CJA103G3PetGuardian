@@ -41,7 +41,7 @@ public class PetSitterServicePetTypeServiceImpl implements PetSitterServicePetTy
     public PetSitterServicePetTypeVO addServicePetType(Integer sitterId, Integer serviceItemId, Integer typeId,
             Integer sizeId) {
         // 1. 驗證保姆是否存在
-        if (!sitterRepository.existsById(sitterId)) {
+        if (sitterId == null || !sitterRepository.existsById(sitterId)) {
             throw new IllegalArgumentException("保姆不存在: " + sitterId);
         }
 
@@ -64,6 +64,17 @@ public class PetSitterServicePetTypeServiceImpl implements PetSitterServicePetTy
         return repository.save(vo);
     }
 
+    @Override
+    @Transactional
+    public PetSitterServicePetTypeVO addServicePetTypeForMember(Integer memId, Integer serviceItemId, Integer typeId,
+            Integer sizeId) {
+        com.petguardian.sitter.model.SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        return addServicePetType(sitter.getSitterId(), serviceItemId, typeId, sizeId);
+    }
+
     /**
      * 查詢保姆的所有服務對象配置
      * 
@@ -73,6 +84,15 @@ public class PetSitterServicePetTypeServiceImpl implements PetSitterServicePetTy
     @Override
     public List<PetSitterServicePetTypeVO> getServicePetTypesBySitter(Integer sitterId) {
         return repository.findBySitterId(sitterId);
+    }
+
+    @Override
+    public List<PetSitterServicePetTypeVO> getServicePetTypesByMember(Integer memId) {
+        com.petguardian.sitter.model.SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        return getServicePetTypesBySitter(sitter.getSitterId());
     }
 
     /**
@@ -133,6 +153,27 @@ public class PetSitterServicePetTypeServiceImpl implements PetSitterServicePetTy
         }
 
         repository.deleteById(servicePetId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteServicePetTypeForMember(Integer memId, Integer servicePetId) {
+        // 1. 檢查會員是否為保姆
+        com.petguardian.sitter.model.SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+
+        // 2. 檢查該服務配置是否屬於該保姆
+        Optional<PetSitterServicePetTypeVO> existingOpt = repository.findById(servicePetId);
+        if (!existingOpt.isPresent()) {
+            throw new IllegalArgumentException("服務配置不存在: " + servicePetId);
+        }
+        if (!existingOpt.get().getSitterId().equals(sitter.getSitterId())) {
+            throw new IllegalArgumentException("無權刪除此配置");
+        }
+
+        deleteServicePetType(servicePetId);
     }
 
     /**

@@ -13,6 +13,10 @@ import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.model.SitterSearchCriteria;
 import com.petguardian.sitter.model.SitterSearchDTO;
+import com.petguardian.booking.model.BookingScheduleVO;
+import com.petguardian.booking.model.BookingScheduleRepository;
+import java.time.LocalDate;
+import java.util.stream.Collectors;
 
 /**
  * 保姆業務邏輯實作
@@ -30,6 +34,9 @@ public class SitterServiceImpl implements SitterService {
 
     @Autowired
     private com.petguardian.area.model.AreaRepository areaRepository;
+
+    @Autowired
+    private BookingScheduleRepository bookingScheduleRepository;
 
     /**
      * 建立保姆資料
@@ -179,6 +186,54 @@ public class SitterServiceImpl implements SitterService {
         System.out.println("================================");
 
         return saved;
+    }
+
+    // ========== 排程相關功能 (透過會員 ID) ==========
+
+    @Override
+    public List<BookingScheduleVO> getScheduleByMember(Integer memId, int year, int month) {
+        SitterVO sitter = repository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        Integer sitterId = sitter.getSitterId();
+
+        // 由於 BookingScheduleRepository 只有 findAll，暫時用 Java filter
+        List<BookingScheduleVO> allSchedules = bookingScheduleRepository.findAll();
+
+        return allSchedules.stream()
+                .filter(s -> s.getSitterId().equals(sitterId))
+                .filter(s -> {
+                    LocalDate d = s.getScheduleDate();
+                    return d.getYear() == year && d.getMonthValue() == month;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void updateScheduleForMember(Integer memId, LocalDate date, String status) {
+        SitterVO sitter = repository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        Integer sitterId = sitter.getSitterId();
+
+        // 檢查該日期是否已有資料 (使用 Repository 現有方法)
+        Optional<BookingScheduleVO> existingOpt = bookingScheduleRepository.findBySitterIdAndScheduleDate(sitterId,
+                date);
+
+        BookingScheduleVO schedule;
+        if (existingOpt.isPresent()) {
+            schedule = existingOpt.get();
+            schedule.setBookingStatus(status);
+        } else {
+            schedule = new BookingScheduleVO();
+            schedule.setSitterId(sitterId);
+            schedule.setScheduleDate(date);
+            schedule.setBookingStatus(status);
+        }
+        bookingScheduleRepository.save(schedule);
     }
 
     // ========== 會員搜尋保姆功能 ==========

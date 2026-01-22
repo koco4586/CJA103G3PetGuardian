@@ -30,6 +30,9 @@ import jakarta.validation.Valid;
 public class SitterApplicationController {
 
     @Autowired
+    private com.petguardian.common.service.AuthStrategyService authStrategyService;
+
+    @Autowired
     private SitterApplicationService service;
 
     /**
@@ -42,22 +45,14 @@ public class SitterApplicationController {
      * @return 申請頁面路徑或重導向路徑
      */
     @GetMapping("/apply")
-    public String showApplyForm(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-        // ========== 測試模式：暫時繞過登入檢查 ==========
-        // TODO: 測試完成後請恢復登入檢查
+    public String showApplyForm(jakarta.servlet.http.HttpServletRequest request, HttpSession session, Model model,
+            RedirectAttributes redirectAttributes) {
 
-        // 檢查是否已登入（暫時註解）
-        // Integer memId = (Integer) session.getAttribute("memId");
-        // if (memId == null) {
-        // redirectAttributes.addFlashAttribute("errorMessage", "請先登入才能申請成為保姆");
-        // return "redirect:/member/login";
-        // }
-
-        // 測試用假資料
-        Integer memId = 1001;
-        String memName = "測試會員";
-        String memPhone = "0912345678";
-        String avatarUrl = null;
+        Integer memId = authStrategyService.getCurrentUserId(request);
+        if (memId == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "請先登入才能申請成為保姆");
+            return "redirect:/member/login";
+        }
 
         // ✅ 準備 Model 屬性
         // 1. 建立空的 DTO 供表單綁定
@@ -65,10 +60,10 @@ public class SitterApplicationController {
         dto.setMemId(memId); // 預填 memId
         model.addAttribute("sitterApplication", dto);
 
-        // 2. 從 Session 取得會員資訊（顯示用）- 改用測試資料
-        // String memName = (String) session.getAttribute("memName");
-        // String memPhone = (String) session.getAttribute("memPhone");
-        // String avatarUrl = (String) session.getAttribute("avatarUrl");
+        // 2. 從 AuthStrategy/Session 取得會員資訊
+        String memName = authStrategyService.getCurrentUserName(request);
+        String memPhone = (String) session.getAttribute("memPhone");
+        String avatarUrl = (String) session.getAttribute("avatarUrl");
 
         model.addAttribute("memName", memName != null ? memName : "會員姓名");
         model.addAttribute("memPhone", memPhone != null ? memPhone : "未設定");
@@ -97,13 +92,14 @@ public class SitterApplicationController {
     public String submitApplication(
             @Valid @ModelAttribute("sitterApplication") SitterApplicationDTO dto,
             BindingResult bindingResult,
+            jakarta.servlet.http.HttpServletRequest request,
             HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
 
         try {
             // 檢查是否已登入
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
                 redirectAttributes.addFlashAttribute("errorMessage", "請先登入才能申請成為保姆");
                 return "redirect:/member/login";
@@ -112,7 +108,7 @@ public class SitterApplicationController {
             // ✅ 檢查驗證錯誤
             if (bindingResult.hasErrors()) {
                 // 重新準備 Model 屬性（因為表單驗證失敗要重新顯示）
-                prepareModelAttributes(session, model);
+                prepareModelAttributes(request, session, model);
                 return "frontend/dashboard-sitter-registration";
             }
 
@@ -147,9 +143,10 @@ public class SitterApplicationController {
      * @return 申請列表頁面路徑
      */
     @GetMapping("/applications")
-    public String listApplications(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String listApplications(jakarta.servlet.http.HttpServletRequest request, HttpSession session, Model model,
+            RedirectAttributes redirectAttributes) {
         // 從 Session 取得當前登入會員 ID
-        Integer memId = (Integer) session.getAttribute("memId");
+        Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "請先登入");
             return "redirect:/member/login";
@@ -170,8 +167,9 @@ public class SitterApplicationController {
      * @param session HttpSession
      * @param model   Spring Model
      */
-    private void prepareModelAttributes(HttpSession session, Model model) {
-        String memName = (String) session.getAttribute("memName");
+    private void prepareModelAttributes(jakarta.servlet.http.HttpServletRequest request, HttpSession session,
+            Model model) {
+        String memName = authStrategyService.getCurrentUserName(request);
         String memPhone = (String) session.getAttribute("memPhone");
         String avatarUrl = (String) session.getAttribute("avatarUrl");
 

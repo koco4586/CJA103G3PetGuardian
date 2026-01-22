@@ -35,20 +35,23 @@ public class SitterDashboardController {
     @Autowired
     private ServiceAreaService serviceAreaService;
 
+    @Autowired
+    private com.petguardian.common.service.AuthStrategyService authStrategyService;
+
     /**
-     * 保姆主頁 (Dashboard)
+     * 保母主頁 (Dashboard)
      * URL: /sitter/dashboard
      * 
-     * @param session HttpSession 用於取得登入會員 ID
+     * @param request HttpServletRequest 用於取得登入會員 ID
      * @param model   Spring Model 用於傳遞保姆資料與統計數據
      * @return 儀表板頁面路徑 (frontend/sitter/dashboard) 或重導向至申請頁
      */
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, Model model) {
+    public String dashboard(jakarta.servlet.http.HttpServletRequest request, Model model) {
         // 1. 檢查登入
-        Integer memId = (Integer) session.getAttribute("memId");
+        Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-            memId = 1001; // TODO: 測試模式 (周小禾)
+            return "redirect:/member/login";
         }
 
         // 2. 查詢保母資料
@@ -85,9 +88,6 @@ public class SitterDashboardController {
         return "frontend/sitter/dashboard";
     }
 
-    @Autowired
-    private com.petguardian.booking.model.BookingScheduleRepository bookingScheduleRepository;
-
     /**
      * API: 獲取保母特定月份的排程狀態
      * URL: /sitter/api/schedule?year=2026&month=1
@@ -95,36 +95,15 @@ public class SitterDashboardController {
     @GetMapping("/api/schedule")
     @org.springframework.web.bind.annotation.ResponseBody
     public List<com.petguardian.booking.model.BookingScheduleVO> getSchedule(
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             @org.springframework.web.bind.annotation.RequestParam int year,
             @org.springframework.web.bind.annotation.RequestParam int month) {
 
-        Integer memId = (Integer) session.getAttribute("memId");
+        Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null)
-            memId = 1001; // 測試用
-
-        SitterVO sitter = sitterService.getSitterByMemId(memId);
-        if (sitter == null)
             return List.of();
 
-        // 計算該月份的開始與結束日期
-        java.time.LocalDate startDate = java.time.LocalDate.of(year, month, 1);
-        java.time.LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-
-        // 使用 Repository 查詢區間內的資料 (需確認 Repository 是否支援區間查詢，若無則暫時用迴圈或 findAll 過濾，
-        // 但為了效能建議在 Repository 加方法。這邊先示範用 findAll 過濾，或者若您 Repository 沒這方法，我先略過
-        // Repository 修改，
-        // 改用單日查詢拼湊? 不，這樣效能太差。
-        // 讓我檢查一下 BookingScheduleRepository 是否有區間查詢。
-        // 剛才的 file_view 顯示 BookingScheduleRepository 只有 findBySitterIdAndScheduleDate。
-        // 為了不更動 Repository (用戶只准改這兩支)，我這裡先用 findAll 並在 Java 層過濾 (雖然效能較差但符合「只改兩支檔案」的限制)。
-        // 或者更聰明的方式：因為資料量不大，這樣做是可以接受的。
-
-        List<com.petguardian.booking.model.BookingScheduleVO> allSchedules = bookingScheduleRepository.findAll();
-        return allSchedules.stream()
-                .filter(s -> s.getSitterId().equals(sitter.getSitterId()))
-                .filter(s -> !s.getScheduleDate().isBefore(startDate) && !s.getScheduleDate().isAfter(endDate))
-                .toList();
+        return sitterService.getScheduleByMember(memId, year, month);
     }
 
     /**
@@ -135,38 +114,29 @@ public class SitterDashboardController {
     @org.springframework.web.bind.annotation.PostMapping("/api/schedule")
     @org.springframework.web.bind.annotation.ResponseBody
     public String saveSchedule(
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             @org.springframework.web.bind.annotation.RequestBody java.util.Map<String, String> payload) {
 
-        Integer memId = (Integer) session.getAttribute("memId");
+        Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null)
-            memId = 1001;
-
-        SitterVO sitter = sitterService.getSitterByMemId(memId);
-        if (sitter == null)
             return "fail: not authorized";
 
-        String dateStr = payload.get("date");
-        String status = payload.get("status");
+        try {
+            String dateStr = payload.get("date");
+            String status = payload.get("status");
 
-        if (dateStr == null || status == null || status.length() != 24) {
-            return "fail: invalid data";
+            if (dateStr == null || status == null || status.length() != 24) {
+                return "fail: invalid data";
+            }
+
+            java.time.LocalDate date = java.time.LocalDate.parse(dateStr);
+
+            sitterService.updateScheduleForMember(memId, date, status);
+
+            return "success";
+
+        } catch (Exception e) {
+            return "fail: " + e.getMessage();
         }
-
-        java.time.LocalDate date = java.time.LocalDate.parse(dateStr);
-
-        com.petguardian.booking.model.BookingScheduleVO schedule = bookingScheduleRepository
-                .findBySitterIdAndScheduleDate(sitter.getSitterId(), date)
-                .orElse(new com.petguardian.booking.model.BookingScheduleVO());
-
-        if (schedule.getScheduleId() == null) {
-            schedule.setSitterId(sitter.getSitterId());
-            schedule.setScheduleDate(date);
-        }
-
-        schedule.setBookingStatus(status);
-        bookingScheduleRepository.save(schedule);
-
-        return "success";
     }
 }

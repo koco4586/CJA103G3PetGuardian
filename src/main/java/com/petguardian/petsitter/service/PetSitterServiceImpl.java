@@ -71,6 +71,16 @@ public class PetSitterServiceImpl implements PetSitterService {
         return repository.save(vo);
     }
 
+    @Override
+    @Transactional
+    public PetSitterServiceVO setServicePriceForMember(Integer memId, Integer serviceItemId, Integer price) {
+        SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        return setServicePrice(sitter.getSitterId(), serviceItemId, price);
+    }
+
     /**
      * 查詢保姆的所有服務項目
      * 
@@ -80,6 +90,15 @@ public class PetSitterServiceImpl implements PetSitterService {
     @Override
     public List<PetSitterServiceVO> getServicesBySitter(Integer sitterId) {
         return repository.findBySitter_SitterId(sitterId);
+    }
+
+    @Override
+    public List<PetSitterServiceVO> getServicesByMember(Integer memId) {
+        SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        return getServicesBySitter(sitter.getSitterId());
     }
 
     /**
@@ -113,6 +132,16 @@ public class PetSitterServiceImpl implements PetSitterService {
         }
 
         repository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void deleteServiceForMember(Integer memId, Integer serviceItemId) {
+        SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        deleteService(sitter.getSitterId(), serviceItemId);
     }
 
     /**

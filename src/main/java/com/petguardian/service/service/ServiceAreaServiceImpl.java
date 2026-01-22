@@ -65,6 +65,16 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
         return repository.save(vo);
     }
 
+    @Override
+    @Transactional
+    public ServiceAreaVO addServiceAreaForMember(Integer memId, Integer areaId) {
+        SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        return addServiceArea(sitter.getSitterId(), areaId);
+    }
+
     /**
      * 保姆刪除服務地區
      * 
@@ -84,6 +94,16 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
         repository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public void deleteServiceAreaForMember(Integer memId, Integer areaId) {
+        SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        deleteServiceArea(sitter.getSitterId(), areaId);
+    }
+
     /**
      * 查詢保姆的所有服務地區
      * 
@@ -93,6 +113,15 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
     @Override
     public List<ServiceAreaVO> getServiceAreasBySitter(Integer sitterId) {
         return repository.findBySitter_SitterId(sitterId);
+    }
+
+    @Override
+    public List<ServiceAreaVO> getServiceAreasByMember(Integer memId) {
+        SitterVO sitter = sitterRepository.findByMemId(memId);
+        if (sitter == null) {
+            throw new IllegalArgumentException("會員尚未成為保姆");
+        }
+        return getServiceAreasBySitter(sitter.getSitterId());
     }
 
     /**

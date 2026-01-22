@@ -34,6 +34,9 @@ import jakarta.servlet.http.HttpSession;
 public class SitterProfileController {
 
     @Autowired
+    private com.petguardian.common.service.AuthStrategyService authStrategyService;
+
+    @Autowired
     private SitterService sitterService;
 
     @Autowired
@@ -58,12 +61,12 @@ public class SitterProfileController {
      * @return String 設定頁面路徑 "frontend/sitter/profile-settings"
      */
     @GetMapping("/settings")
-    public String showSettingsPage(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String showSettingsPage(jakarta.servlet.http.HttpServletRequest request, Model model,
+            RedirectAttributes redirectAttributes) {
         // 1. 檢查登入
-        Integer memId = (Integer) session.getAttribute("memId");
+        Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-            // TODO: 測試模式，使用假資料
-            memId = 1001;
+            return "redirect:/member/login";
         }
 
         // 2. 查詢保母資料
@@ -108,13 +111,13 @@ public class SitterProfileController {
     @PostMapping("/update-name")
     public String updateSitterName(
             @RequestParam String sitterName,
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                memId = 1001; // TODO: 測試模式
+                return "redirect:/member/login";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -128,7 +131,9 @@ public class SitterProfileController {
 
             redirectAttributes.addFlashAttribute("successMessage", "保母名稱更新成功");
 
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "更新失敗：" + e.getMessage());
         }
 
@@ -149,13 +154,13 @@ public class SitterProfileController {
     public String setServicePrice(
             @RequestParam Integer serviceItemId,
             @RequestParam Integer price,
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                memId = 1001; // TODO: 測試模式
+                return "redirect:/member/login";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -171,7 +176,7 @@ public class SitterProfileController {
             }
 
             // 設定服務價格
-            petSitterService.setServicePrice(sitter.getSitterId(), serviceItemId, price);
+            petSitterService.setServicePriceForMember(memId, serviceItemId, price);
 
             redirectAttributes.addFlashAttribute("successMessage", "服務價格設定成功");
 
@@ -194,13 +199,13 @@ public class SitterProfileController {
     @PostMapping("/service/delete")
     public String deleteService(
             @RequestParam Integer serviceItemId,
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                memId = 1001; // TODO: 測試模式
+                return "redirect:/member/login";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -210,7 +215,7 @@ public class SitterProfileController {
             }
 
             // 刪除服務
-            petSitterService.deleteService(sitter.getSitterId(), serviceItemId);
+            petSitterService.deleteServiceForMember(memId, serviceItemId);
 
             redirectAttributes.addFlashAttribute("successMessage", "服務已移除");
 
@@ -237,13 +242,13 @@ public class SitterProfileController {
             @RequestParam Integer serviceItemId,
             @RequestParam Integer typeId,
             @RequestParam Integer sizeId,
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                memId = 1001; // TODO: 測試模式
+                return "redirect:/member/login";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -253,8 +258,7 @@ public class SitterProfileController {
             }
 
             // 新增服務對象
-            petSitterServicePetTypeService.addServicePetType(
-                    sitter.getSitterId(), serviceItemId, typeId, sizeId);
+            petSitterServicePetTypeService.addServicePetTypeForMember(memId, serviceItemId, typeId, sizeId);
 
             redirectAttributes.addFlashAttribute("successMessage", "服務對象新增成功");
 
@@ -276,11 +280,16 @@ public class SitterProfileController {
     @PostMapping("/service/pet-type/delete")
     public String deleteServicePetType(
             @RequestParam Integer servicePetId,
+            jakarta.servlet.http.HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
+            Integer memId = authStrategyService.getCurrentUserId(request);
+            if (memId == null) {
+                return "redirect:/member/login";
+            }
             // 刪除服務對象
-            petSitterServicePetTypeService.deleteServicePetType(servicePetId);
+            petSitterServicePetTypeService.deleteServicePetTypeForMember(memId, servicePetId);
 
             redirectAttributes.addFlashAttribute("successMessage", "服務對象已移除");
 
@@ -303,23 +312,17 @@ public class SitterProfileController {
     @PostMapping("/area/add")
     public String addServiceArea(
             @RequestParam Integer areaId,
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                memId = 1001; // TODO: 測試模式
-            }
-
-            SitterVO sitter = sitterService.getSitterByMemId(memId);
-            if (sitter == null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "您尚未成為保母");
-                return "redirect:/sitter/apply";
+                return "redirect:/member/login";
             }
 
             // 新增服務地區
-            serviceAreaService.addServiceArea(sitter.getSitterId(), areaId);
+            serviceAreaService.addServiceAreaForMember(memId, areaId);
 
             redirectAttributes.addFlashAttribute("successMessage", "服務地區新增成功");
 
@@ -342,23 +345,17 @@ public class SitterProfileController {
     @PostMapping("/area/delete")
     public String deleteServiceArea(
             @RequestParam Integer areaId,
-            HttpSession session,
+            jakarta.servlet.http.HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                memId = 1001; // TODO: 測試模式
-            }
-
-            SitterVO sitter = sitterService.getSitterByMemId(memId);
-            if (sitter == null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "您尚未成為保母");
-                return "redirect:/sitter/apply";
+                return "redirect:/member/login";
             }
 
             // 刪除服務地區
-            serviceAreaService.deleteServiceArea(sitter.getSitterId(), areaId);
+            serviceAreaService.deleteServiceAreaForMember(memId, areaId);
 
             redirectAttributes.addFlashAttribute("successMessage", "服務地區已移除");
 
@@ -379,14 +376,17 @@ public class SitterProfileController {
      */
     @PostMapping("/update-schedule")
     @ResponseBody
-    public Map<String, Object> updateSchedule(@RequestBody Map<String, Object> requestData, HttpSession session) {
+    public Map<String, Object> updateSchedule(@RequestBody Map<String, Object> requestData,
+            jakarta.servlet.http.HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
 
         try {
             // 1. 檢查登入
-            Integer memId = (Integer) session.getAttribute("memId");
+            Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                memId = 1001; // TODO: 測試模式
+                response.put("success", false);
+                response.put("message", "請先登入");
+                return response;
             }
 
             // 2. 查詢保母資料
@@ -450,7 +450,9 @@ public class SitterProfileController {
             response.put("success", true);
             response.put("message", "儲存成功");
 
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
         }

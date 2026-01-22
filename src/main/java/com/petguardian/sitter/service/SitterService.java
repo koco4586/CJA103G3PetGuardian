@@ -4,6 +4,8 @@ import java.util.List;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.model.SitterSearchCriteria;
 import com.petguardian.sitter.model.SitterSearchDTO;
+import com.petguardian.booking.model.BookingScheduleVO;
+import java.time.LocalDate;
 
 public interface SitterService {
 
@@ -75,6 +77,27 @@ public interface SitterService {
      * @return SitterVO 更新後的保姆物件
      */
     SitterVO updateServiceTime(Integer sitterId, String serviceTime);
+
+    // ========== 排程相關功能 (透過會員 ID) ==========
+
+    /**
+     * 取得會員(保姆)的月行程
+     * 
+     * @param memId 會員編號
+     * @param year  年份
+     * @param month 月份
+     * @return List<BookingScheduleVO> 該月行程
+     */
+    List<BookingScheduleVO> getScheduleByMember(Integer memId, int year, int month);
+
+    /**
+     * 更新會員(保姆)的單日行程
+     * 
+     * @param memId  會員編號
+     * @param date   日期
+     * @param status 24小時狀態字串
+     */
+    void updateScheduleForMember(Integer memId, LocalDate date, String status);
 
     // ========== 以下為會員搜尋保姆功能新增的方法 ==========
 
