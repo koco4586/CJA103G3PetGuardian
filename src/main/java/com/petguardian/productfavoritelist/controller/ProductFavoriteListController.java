@@ -1,12 +1,12 @@
 package com.petguardian.productfavoritelist.controller;
 
-import com.petguardian.common.service.AuthService;
+import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.productfavoritelist.service.ProductFavoriteListService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 import org.springframework.ui.Model;
@@ -19,37 +19,39 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class ProductFavoriteListController {
 
-//    private static final Integer TEST_MEM_ID = 1001;
+    // private static final Integer TEST_MEM_ID = 1001;
+    @Autowired
+    private AuthStrategyService authStrategyService;
 
     @Autowired
     private ProductFavoriteListService favoriteService;
 
     @Autowired
-    private AuthService authService;
+    private AuthStrategyService authService;
 
     /**
      * 取得當前會員 ID（含模擬登入邏輯）
      */
-//    private Integer getCurrentMemId(HttpSession session) {
-//        Integer memId = (Integer) session.getAttribute("memId");
-//        if (memId == null) {
-//            memId = TEST_MEM_ID;
-//            session.setAttribute("memId", memId);
-//        }
-//        return memId;
-//    }
+    // private Integer getCurrentMemId(HttpSession session) {
+    // Integer memId = (Integer) session.getAttribute("memId");
+    // if (memId == null) {
+    // memId = TEST_MEM_ID;
+    // session.setAttribute("memId", memId);
+    // }
+    // return memId;
+    // }
 
     /**
      * 會員中心 - 收藏列表
      * GET /dashboard/favorites
      */
     @GetMapping("/dashboard/favorites")
-    public String dashboardFavoritesPage(Model model, HttpSession session) {
+    public String dashboardFavoritesPage(Model model, HttpSession session, HttpServletRequest request) {
         // 檢查是否已登入
-        if (!authService.isLoggedIn(session)) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
             return "redirect:/store";
         }
-        Integer memId = authService.getCurrentMemId(session);
 
         List<Map<String, Object>> favorites = favoriteService.getFavoritesWithProductInfo(memId);
         model.addAttribute("favorites", favorites);
@@ -66,8 +68,13 @@ public class ProductFavoriteListController {
     public String addFavorite(@RequestParam Integer proId,
             @RequestParam(required = false, defaultValue = "/store") String redirectUrl,
             HttpSession session,
-            RedirectAttributes redirectAttr) {
-        Integer memId = authService.getCurrentMemId(session);
+            RedirectAttributes redirectAttr,
+            HttpServletRequest request) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
+            redirectAttr.addFlashAttribute("error", "請先登入");
+            return "redirect:/store";
+        }
 
         try {
             favoriteService.addFavorite(memId, proId);
@@ -87,8 +94,12 @@ public class ProductFavoriteListController {
     public String removeFavorite(@RequestParam Integer proId,
             @RequestParam(required = false, defaultValue = "/dashboard/favorites") String redirectUrl,
             HttpSession session,
-            RedirectAttributes redirectAttr) {
-        Integer memId = authService.getCurrentMemId(session);
+            RedirectAttributes redirectAttr,
+            HttpServletRequest request) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
+            return "redirect:/store";
+        }
 
         try {
             favoriteService.removeFavorite(memId, proId);
@@ -106,8 +117,11 @@ public class ProductFavoriteListController {
     @PostMapping("/api/favorites/add")
     @ResponseBody
     public Map<String, Object> addFavoriteApi(@RequestParam Integer proId,
-            HttpSession session) {
-        Integer memId = authService.getCurrentMemId(session);
+            HttpSession session, HttpServletRequest request) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
+            return Map.of("success", false, "error", "Unauthorized");
+        }
         return favoriteService.toggleFavorite(memId, proId);
     }
 
@@ -117,8 +131,11 @@ public class ProductFavoriteListController {
     @PostMapping("/api/favorites/remove")
     @ResponseBody
     public Map<String, Object> removeFavoriteApi(@RequestParam Integer proId,
-            HttpSession session) {
-        Integer memId = authService.getCurrentMemId(session);
+            HttpSession session, HttpServletRequest request) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
+            return Map.of("success", false, "error", "Unauthorized");
+        }
         favoriteService.removeFavorite(memId, proId);
         return Map.of("success", true, "favorited", false);
     }
@@ -129,8 +146,11 @@ public class ProductFavoriteListController {
     @PostMapping("/api/favorites/toggle")
     @ResponseBody
     public Map<String, Object> toggleFavoriteApi(@RequestParam Integer proId,
-            HttpSession session) {
-        Integer memId = authService.getCurrentMemId(session);
+            HttpSession session, HttpServletRequest request) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
+            return Map.of("success", false, "error", "Unauthorized");
+        }
         return favoriteService.toggleFavorite(memId, proId);
     }
 }

@@ -283,12 +283,11 @@
                     <thead>
                         <tr>
                             <th>留言編號</th>
-                            <th>留言內容</th>
-                            <th>發文者ID</th>
-                            <th>所屬文章ID</th>
-                            <th>下架原因</th>
-                            <th>處理時間</th>
-                            <th>操作</th>
+				            <th>留言內容</th>
+				            <th>留言者ID</th>
+				            <th>所屬文章ID</th>
+				            <th>刪除時間</th>
+				            <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -300,16 +299,7 @@
 								</td>
                                 <td th:text="${dto.memId}"></td>
                                 <td th:text="${dto.postId}"></td>
-                                <td>
-                                    <span class="badge-report" th:switch="${dto.reportType}">
-                                        <span th:case="0">騷擾</span>
-                                        <span th:case="1">垃圾訊息</span>
-                                        <span th:case="2">不當內容</span>
-                                        <span th:case="3">詐騙</span>
-                                        <span th:case="*">其他</span>
-                                    </span>
-                                </td>
-                                <td th:text="${#dates.format(dto.handleTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                                <td th:text="${#dates.format(dto.lastEditedAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
                                 <td>
                                     <form method="post" th:action="@{/admin/forum/get-one-for-update}">
                                         <input type="hidden" name="commentId" th:value="${dto.commentId}">
