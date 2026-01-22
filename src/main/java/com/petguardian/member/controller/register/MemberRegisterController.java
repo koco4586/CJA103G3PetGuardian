@@ -1,6 +1,6 @@
 package com.petguardian.member.controller.register;
 
-import com.petguardian.member.model.register.MemberRegisterDTO;
+import com.petguardian.member.dto.MemberRegisterDTO;
 import com.petguardian.member.service.register.MemberRegisterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
