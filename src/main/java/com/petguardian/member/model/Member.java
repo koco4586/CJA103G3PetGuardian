@@ -1,8 +1,6 @@
 package com.petguardian.member.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 
 import com.petguardian.forum.model.ForumCommentReportVO;
 import com.petguardian.forum.model.ForumCommentVO;
@@ -15,8 +13,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "member")
-@DynamicInsert  // INSERT 時只插入非 null 欄位
-@DynamicUpdate  // UPDATE 時只更新有改變的欄位
 public class Member {
 
     @Id

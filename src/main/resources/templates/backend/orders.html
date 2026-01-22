@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 訂單管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../../static/css/backend/style.css">
+</head>
+
+<body>
+    <script src="../../static/js/backend/sidebar.js"></script>
+
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>訂單管理</h1>
+                <div class="sub">管理所有二手商城訂單</div>
+            </div>
+        </header>
+
+        <!-- 統計卡片 -->
+        <section class="stats-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card">
+                <i class="fa-solid fa-clock" style="color:#f39c12"></i>
+                <div>
+                    <div class="stat-value" id="stat-pending">0</div>
+                    <div>已付款</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fa-solid fa-truck" style="color:#3498db"></i>
+                <div>
+                    <div class="stat-value" id="stat-shipped">0</div>
+                    <div>已出貨</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fa-solid fa-check-circle" style="color:#2ecc71"></i>
+                <div>
+                    <div class="stat-value" id="stat-completed">0</div>
+                    <div>已完成</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fa-solid fa-undo" style="color:#e74c3c"></i>
+                <div>
+                    <div class="stat-value" id="stat-returns">0</div>
+                    <div>申請退貨</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="tab-container" style="margin-bottom: 1.5rem;">
+                <button class="tab-btn active" onclick="filterOrders('all', this)">
+                    <i class="fa-solid fa-list"></i> 全部訂單
+                </button>
+                <button class="tab-btn" onclick="filterOrders(0, this)">
+                    <i class="fa-solid fa-clock"></i> 已付款
+                </button>
+                <button class="tab-btn" onclick="filterOrders(1, this)">
+                    <i class="fa-solid fa-truck"></i> 已出貨
+                </button>
+                <button class="tab-btn" onclick="filterOrders(2, this)">
+                    <i class="fa-solid fa-check-circle"></i> 已完成
+                </button>
+                <button class="tab-btn" onclick="filterOrders(3, this)">
+                    <i class="fa-solid fa-times-circle"></i> 已取消
+                </button>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>訂單列表</h3>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="searchInput" placeholder="搜尋訂單編號、收件人..."
+                            style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+                        <button class="btn" onclick="searchOrders()" style="background: var(--primary-color);">
+                            <i class="fa-solid fa-search"></i> 搜尋
+                        </button>
+                    </div>
+                </div>
+
+                <table id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>訂單編號</th>
+                            <th>訂單時間</th>
+                            <th>買家</th>
+                            <th>商品資訊</th>
+                            <th>訂單金額</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- JavaScript 會動態填入訂單資料 -->
+                    </tbody>
+                </table>
+
+                <div id="pagination" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem;">
+                    <!-- Pagination will be inserted here -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 訂單詳情視窗 -->
+    <div id="orderDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:12px; padding:2rem; max-width:700px; width:90%; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;">訂單詳情</h2>
+                <button onclick="closeOrderDetail()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+
+            <div id="orderDetailContent">
+                <!-- 訂單詳情內容會由 JavaScript 填入 -->
+            </div>
+
+            <div style="display:flex; gap:1rem; margin-top:2rem;">
+                <button class="btn ghost" onclick="closeOrderDetail()" style="flex:1;">關閉</button>
+                <button class="btn" onclick="updateOrderStatusFromModal()" style="flex:1; background:var(--primary-color);">
+                    更新狀態
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../static/js/backend/orders.js"></script>
+</body>
+
+</html>
