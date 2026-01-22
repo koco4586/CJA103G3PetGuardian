@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.petguardian.forum.model.DeletedCommentDTO;
 import com.petguardian.forum.model.ForumCommentRepository;
 import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostRepository;
@@ -50,5 +51,9 @@ public class ForumCommentService {
 		repo.save(forumCommentVO);
 
 	}
-
+	
+	public List<DeletedCommentDTO> getAllDeletedComments() {
+		return repo.findAllDeletedComments();
+	}
+	
 }

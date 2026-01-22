@@ -19,6 +19,22 @@ public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer>
 	@Query(value = "select p from ForumPostVO p where p.forum.forumId = :forumId and p.postStatus = 1 order by p.postId desc")
 	public List<ForumPostVO> findPostsByForumId(@Param("forumId") Integer forumId);
 	
+	//	找所有被發文者刪除的貼文 (改用DTO)
+//	@Query(value = "select p from ForumPostVO p join fetch p.forum f join fetch p.member m where p.postStatus = 2 order by p.lastEditedAt desc")
+//	public List<ForumPostVO> findAllDeletedPosts();
+	
+	@Query("""
+			select new com.petguardian.forum.model.DeletedPostDTO(
+				p.postId, p.postTitle, m.memId, f.forumName, p.lastEditedAt
+			)
+			from ForumPostVO p
+			join p.member m
+			join p.forum f
+			where p.postStatus = 2
+			order by p.lastEditedAt desc
+	""")
+	public List<DeletedPostDTO> findAllDeletedPosts();
+	
 	//	只拿主頁圖片方法
 	@Query(value = "select p.postPic from ForumPostVO p where p.postId = :postId")
 	public byte[] getPicture(@Param("postId") Integer postId);

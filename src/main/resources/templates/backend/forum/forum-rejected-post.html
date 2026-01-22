@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pet Guardian - 留言檢舉管理</title>
+    <title>Pet Guardian - 貼文檢舉管理</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" />
@@ -131,19 +131,19 @@
 		
 		/* --- 重點：針對不同按鈕的 Active 狀態單獨設定顏色 --- */
 		
-		/* 1. 已處理留言選中時：維持綠色 */
+		/* 1. 已處理貼文選中時：維持綠色 */
 		.btn-handled.active {
 		    background-color: #388E3C !important; /* 選中時用深綠色 */
 		    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4), 0 0 10px rgba(0,0,0,0.2) !important;
 		}
 		
-		/* 2. 待處理留言選中時：維持黃/橘色 */
+		/* 2. 待處理貼文選中時：維持黃/橘色 */
 		.btn-pending.active {
 		    background-color: #f57f17 !important; /* 選中時用深黃色 */
 		    box-shadow: 0 0 0 3px rgba(251, 192, 45, 0.4), 0 0 10px rgba(0,0,0,0.2) !important;
 		}
 		
-		/* 3. 已刪除留言選中時：維持紅色 */
+		/* 3. 已刪除貼文選中時：維持紅色 */
 		.btn-deleted.active {
 		    background-color: #d32f2f !important; /* 選中時用深紅色 */
 		    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.4), 0 0 10px rgba(0,0,0,0.2) !important;
@@ -224,16 +224,6 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
-        
-        /* 留言內容文字截斷處理 */
-		.comment-text {
-		    max-width: 200px;         /* 你可以根據需求調整寬度 */
-		    white-space: nowrap;      /* 強制不換行 */
-		    overflow: hidden;         /* 隱藏超出部分 */
-		    text-overflow: ellipsis;  /* 超出部分顯示 ... */
-		    margin: 0 auto;           /* 配合置中 */
-		}
-        
     </style>
 </head>
 
@@ -245,13 +235,13 @@
                 alt="logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
             
             <div style="display: flex; align-items: center; justify-content: space-between; flex: 1; margin-left: 15px;">
-                <h1>留言檢舉管理</h1>
+                <h1>貼文檢舉管理</h1>
                 <div class="header-action-btns">
                     <a th:href="@{/admin/forum/list-all-forum}" class="btn-manage-posts">
                         <i class="fas fa-list"></i> 討論區管理
                     </a>
-                    <a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-manage-comments">
-                        <i class="fas fa-comments"></i> 貼文檢舉管理
+                    <a th:href="@{/admin/forum/get-all-handled-comments}" class="btn-manage-comments">
+                        <i class="fas fa-comments"></i> 留言檢舉管理
                     </a>
                 </div>
             </div>
@@ -261,45 +251,43 @@
             <div class="card">
             
                 <div class="status-filter-container">
-				    <a th:href="@{/admin/forum/get-all-handled-comments}" class="btn-filter btn-handled status-link">
-				        <i class="fas fa-check-circle"></i> 已處理留言
+				    <a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-filter btn-handled status-link">
+				        <i class="fas fa-check-circle"></i> 已處理貼文
 				    </a>
 				    
-				    <a th:href="@{/admin/forum/get-all-pending-comments}" class="btn-filter btn-pending status-link">
-				        <i class="fas fa-exclamation-circle"></i> 待處理留言
+				    <a th:href="@{/admin/forum/get-all-pending-posts}" class="btn-filter btn-pending status-link">
+				        <i class="fas fa-exclamation-circle"></i> 待處理貼文
 				    </a>
 				    
-				    <a th:href="@{/admin/forum/get-all-rejected-comments}" class="btn-filter btn-rejected status-link">
-				        <i class="fas fa-times-circle"></i> 已駁回留言
+				    <a th:href="@{/admin/forum/get-all-rejected-posts}" class="btn-filter btn-rejected status-link">
+				        <i class="fas fa-times-circle"></i> 已駁回貼文
 				    </a>
 				    
-				    <a th:href="@{/admin/forum/get-all-deleted-comments}" class="btn-filter btn-deleted status-link">
-				        <i class="fas fa-trash-alt"></i> 已刪除留言
+				    <a th:href="@{/admin/forum/get-all-deleted-posts}" class="btn-filter btn-deleted status-link">
+				        <i class="fas fa-trash-alt"></i> 已刪除貼文
 				    </a>
-				    
+								    
 				</div>
 
                 <table id="example" class="display">
                     <thead>
                         <tr>
-                            <th>留言編號</th>
-                            <th>留言內容</th>
+                            <th>文章編號</th>
+                            <th>文章標題</th>
                             <th>發文者ID</th>
-                            <th>所屬文章ID</th>
-                            <th>下架原因</th>
+                            <th>所屬論壇</th>
+                            <th>檢舉原因</th>
                             <th>處理時間</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <th:block th:each="dto : ${commentList}">
+                        <th:block th:each="dto : ${postList}">
                             <tr>
-                                <td th:text="${dto.commentId}"></td>
-                                <td title="將鼠標移上來可查看完整內容">
-								    <div class="comment-text" th:text="${dto.commentContent}"></div>
-								</td>
-                                <td th:text="${dto.memId}"></td>
                                 <td th:text="${dto.postId}"></td>
+                                <td th:text="${dto.postTitle}"></td>
+                                <td th:text="${dto.memId}"></td>
+                                <td th:text="${dto.forumName}"></td>
                                 <td>
                                     <span class="badge-report" th:switch="${dto.reportType}">
                                         <span th:case="0">騷擾</span>
@@ -312,7 +300,7 @@
                                 <td th:text="${#dates.format(dto.handleTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
                                 <td>
                                     <form method="post" th:action="@{/admin/forum/get-one-for-update}">
-                                        <input type="hidden" name="commentId" th:value="${dto.commentId}">
+                                        <input type="hidden" name="postId" th:value="${dto.postId}">
                                         <input class="btn-view-style" type="submit" value="查看">
                                     </form>
                                 </td>
