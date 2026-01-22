@@ -1,5 +1,6 @@
 package com.petguardian.booking.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,5 +13,6 @@ public interface BookingOrderRepository extends JpaRepository<BookingOrderVO, In
     
     // 根據保姆 ID 查詢其收到的所有預約
     List<BookingOrderVO> findBySitterId(Integer sitterId);
-    
+    // 支援時間區間查詢
+    List<BookingOrderVO> findBySitterIdAndStartTimeBetween(Integer sitterId, LocalDateTime start, LocalDateTime end);
 }
