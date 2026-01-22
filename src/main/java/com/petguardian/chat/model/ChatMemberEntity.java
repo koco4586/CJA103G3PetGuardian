@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
 
 /**
  * Read-only entity for member table.
- * Used by chat module to avoid modifying teammate's MemberVO.
+ * Used by chat module to avoid modifying teammate's Member.
  */
 @Entity
 @Immutable
 @Table(name = "member")
 @Data
 @NoArgsConstructor
-public class ChatMemberVO implements Serializable {
+public class ChatMemberEntity implements Serializable {
 
     @Id
     @Column(name = "mem_id")
@@ -28,4 +28,19 @@ public class ChatMemberVO implements Serializable {
 
     @Column(name = "mem_name")
     private String memName;
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+        if (!(object instanceof ChatMemberEntity))
+            return false;
+        ChatMemberEntity that = (ChatMemberEntity) object;
+        return memId != null && memId.equals(that.memId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

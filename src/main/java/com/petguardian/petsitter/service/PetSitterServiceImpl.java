@@ -15,8 +15,10 @@ import com.petguardian.sitter.model.SitterVO;
 
 /**
  * 保姆服務資訊業務邏輯實作
+ * 
+ * 提供保姆設定服務價格、查詢服務項目等功能的實作
  */
-@Service
+@Service("petSitterService")
 public class PetSitterServiceImpl implements PetSitterService {
 
     @Autowired
@@ -25,6 +27,15 @@ public class PetSitterServiceImpl implements PetSitterService {
     @Autowired
     private SitterRepository sitterRepository;
 
+    /**
+     * 保姆設定服務項目價格
+     * 
+     * @param sitterId      保姆編號
+     * @param serviceItemId 服務項目編號 (1:散步, 2:餵食, 3:洗澡)
+     * @param price         價格 (400-1000)
+     * @return PetSitterServiceVO 設定後的服務資訊
+     * @throws IllegalArgumentException 若保姆不存在或價格不符合規範
+     */
     @Override
     @Transactional
     public PetSitterServiceVO setServicePrice(Integer sitterId, Integer serviceItemId, Integer price) {
@@ -60,17 +71,37 @@ public class PetSitterServiceImpl implements PetSitterService {
         return repository.save(vo);
     }
 
+    /**
+     * 查詢保姆的所有服務項目
+     * 
+     * @param sitterId 保姆編號
+     * @return List<PetSitterServiceVO> 該保姆的所有服務項目
+     */
     @Override
     public List<PetSitterServiceVO> getServicesBySitter(Integer sitterId) {
         return repository.findBySitter_SitterId(sitterId);
     }
 
+    /**
+     * 查詢單筆服務資訊
+     * 
+     * @param sitterId      保姆編號
+     * @param serviceItemId 服務項目編號
+     * @return PetSitterServiceVO 服務資訊,若不存在則返回 null
+     */
     @Override
     public PetSitterServiceVO getService(Integer sitterId, Integer serviceItemId) {
         PetSitterServiceId id = new PetSitterServiceId(serviceItemId, sitterId);
         return repository.findById(id).orElse(null);
     }
 
+    /**
+     * 刪除保姆的服務項目
+     * 
+     * @param sitterId      保姆編號
+     * @param serviceItemId 服務項目編號
+     * @throws IllegalArgumentException 若服務不存在
+     */
     @Override
     @Transactional
     public void deleteService(Integer sitterId, Integer serviceItemId) {
@@ -84,6 +115,12 @@ public class PetSitterServiceImpl implements PetSitterService {
         repository.deleteById(id);
     }
 
+    /**
+     * 查詢提供某服務的所有保姆
+     * 
+     * @param serviceItemId 服務項目編號
+     * @return List<PetSitterServiceVO> 提供該服務的所有保姆
+     */
     @Override
     public List<PetSitterServiceVO> getSittersByService(Integer serviceItemId) {
         return repository.findByServiceItemId(serviceItemId);

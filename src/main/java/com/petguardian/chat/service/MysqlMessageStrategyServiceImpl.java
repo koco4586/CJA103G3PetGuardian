@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.chat.model.ChatMessageRepository;
-import com.petguardian.chat.model.ChatMessageVO;
+import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 import io.hypersistence.tsid.TSID;
 
@@ -54,11 +54,11 @@ public class MysqlMessageStrategyServiceImpl implements MessageStrategyService {
      */
     @Override
     @Transactional
-    public ChatMessageVO save(Integer chatroomId, Integer senderId, String content, String replyToId) {
+    public ChatMessageEntity save(Integer chatroomId, Integer senderId, String content, String replyToId) {
         // Generate distributed-safe ID (TSID)
         String messageId = tsidFactory.generate().toString();
 
-        ChatMessageVO message = new ChatMessageVO();
+        ChatMessageEntity message = new ChatMessageEntity();
         message.setMessageId(messageId);
         message.setChatroomId(chatroomId);
         message.setMemberId(senderId);
@@ -68,10 +68,10 @@ public class MysqlMessageStrategyServiceImpl implements MessageStrategyService {
             message.setReplyToMessageId(replyToId);
         }
 
-        ChatMessageVO savedMessage = messageRepository.save(message);
+        ChatMessageEntity savedMessage = messageRepository.save(message);
 
         // Update chatroom metadata for sidebar preview optimization
-        ChatRoomVO chatroom = chatroomRepository.findById(chatroomId).orElse(null);
+        ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
         if (chatroom != null) {
             chatroom.setLastMessageAt(LocalDateTime.now());
             // Truncate preview to fit DB column
@@ -89,19 +89,19 @@ public class MysqlMessageStrategyServiceImpl implements MessageStrategyService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ChatMessageVO> findLatestMessages(Integer chatroomId, Pageable pageable) {
+    public List<ChatMessageEntity> findLatestMessages(Integer chatroomId, Pageable pageable) {
         return messageRepository.findLatest(chatroomId, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ChatMessageVO> findById(String messageId) {
+    public Optional<ChatMessageEntity> findById(String messageId) {
         return messageRepository.findById(messageId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ChatMessageVO> findAllById(Iterable<String> messageIds) {
+    public List<ChatMessageEntity> findAllById(Iterable<String> messageIds) {
         return messageRepository.findAllById(messageIds);
     }
 }

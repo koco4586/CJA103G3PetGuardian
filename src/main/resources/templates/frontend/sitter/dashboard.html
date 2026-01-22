@@ -15,6 +15,12 @@
 
     <header id="main-header" class="header"></header>
 
+    <!-- Debug 區域 -->
+    <div style="background:red; color:white; padding:10px; text-align:center;">
+        <h3 th:text="'Debug ServiceTime (Model): ' + ${serviceTime}"></h3>
+        <h3 th:text="'Debug Sitter.ServiceTime: ' + ${sitter.serviceTime}"></h3>
+    </div>
+
     <div class="container dashboard-container">
         <!-- Sidebar -->
         <div class="sidebar">
@@ -221,13 +227,15 @@
 
     <script src="/js/frontend/main.js"></script>
 
-    <script>
+    <script th:inline="javascript">
         // 生成本週行程表
         let currentWeekOffset = 0; // 0 = 本週, -1 = 上週, 1 = 下週
 
         // 從後端讀取保母的 service_time（24 字元字串）
-        const savedServiceTime = /*[[${sitter.serviceTime}]]*/ '000000000000000000000000';
+        // 改用單獨傳遞的變數，確保值是最新的
+        const savedServiceTime = /*[[${serviceTime != null ? serviceTime : '000000000000000000000000'}]]*/ '000000000000000000000000';
         console.log('從資料庫讀取的 serviceTime:', savedServiceTime);
+        console.log('serviceTime 長度:', savedServiceTime.length);
 
         document.addEventListener('DOMContentLoaded', function () {
             const scheduleBody = document.getElementById('scheduleBody');
@@ -282,12 +290,15 @@
                     cell.dataset.day = day;
                     cell.dataset.hour = hour;
 
-                    // 根據資料庫的 serviceTime 設定初始狀態
-                    // serviceTime[hour]: '1' = 可預約, '0' = 不可預約
+                    // 根據資料庫的 serviceTime 設定初始狀態 (168小時制)
+                    // serviceTime[day*24 + hour]: '1' = 可預約, '0' = 不可預約
                     // 前端狀態: '0' = 可預約, '2' = 休息
                     let initialStatus = '2'; // 預設為休息
-                    if (savedServiceTime && hour < savedServiceTime.length) {
-                        initialStatus = savedServiceTime.charAt(hour) === '1' ? '0' : '2';
+                    if (savedServiceTime) {
+                        const index = (day * 24) + hour;
+                        if (index < savedServiceTime.length) {
+                            initialStatus = savedServiceTime.charAt(index) === '1' ? '0' : '2';
+                        }
                     }
                     cell.dataset.status = initialStatus;
                     updateCellStyle(cell, initialStatus);
@@ -424,12 +435,18 @@
 
         // 儲存行程到伺服器
         function saveScheduleToServer() {
+            console.log('=== 儲存按鈕被點擊 ===');
             const saveBtn = document.getElementById('saveSchedule');
             const saveMsg = document.getElementById('saveMessage');
+
+            console.log('saveBtn:', saveBtn);
+            console.log('saveMsg:', saveMsg);
 
             // 收集當前週的所有時段狀態
             const scheduleData = {};
             const cells = document.querySelectorAll('.schedule-cell');
+
+            console.log('找到的格子數量:', cells.length);
 
             cells.forEach(cell => {
                 const day = cell.dataset.day;
@@ -442,12 +459,21 @@
                 scheduleData[day][hour] = status;
             });
 
+            console.log('收集到的 scheduleData:', scheduleData);
+
             // 顯示載入狀態
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
             saveMsg.style.display = 'none';
 
             // 發送 AJAX 請求
+            console.log('準備發送 fetch 請求...');
+            console.log('URL: /sitter/profile/update-schedule');
+            console.log('Data:', {
+                weekOffset: currentWeekOffset,
+                scheduleData: scheduleData
+            });
+
             fetch('/sitter/profile/update-schedule', {
                 method: 'POST',
                 headers: {
@@ -458,7 +484,10 @@
                     scheduleData: scheduleData
                 })
             })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('收到 response:', response);
+                    return response.json();
+                })
                 .then(data => {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="fas fa-save"></i> 儲存變更';

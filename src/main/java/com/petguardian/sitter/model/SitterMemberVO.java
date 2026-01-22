@@ -12,9 +12,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Read-only entity for member table.
- * Used by sitter module to avoid modifying member module's MemberVO.
- * Decouples sitter application from member registration/login functionality.
+ * 會員資料唯讀 Entity (Sitter模組專用)
+ * 對應資料表: member (唯讀)
+ * 
+ * 用於保姆模組查詢會員基本資料，避免直接依賴會員模組的 MemberVO
+ * 實現與會員註冊/登入功能的解耦
  */
 @Entity
 @Immutable

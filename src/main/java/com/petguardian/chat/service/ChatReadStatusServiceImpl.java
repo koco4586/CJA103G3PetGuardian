@@ -1,12 +1,10 @@
 package com.petguardian.chat.service;
 
-import java.time.LocalDateTime;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Implementation for managing chat read/unread status.
@@ -29,22 +27,12 @@ public class ChatReadStatusServiceImpl implements ChatReadStatusService {
     @Override
     @Transactional
     public void markRoomAsRead(Integer chatroomId, Integer userId) {
-        ChatRoomVO chatroom = chatroomRepository.findById(chatroomId).orElse(null);
+        ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
         if (chatroom == null) {
             return;
         }
 
-        boolean dirty = false;
-        if (userId.equals(chatroom.getMemId1())) {
-            chatroom.setMem1LastReadAt(LocalDateTime.now());
-            dirty = true;
-        } else if (userId.equals(chatroom.getMemId2())) {
-            chatroom.setMem2LastReadAt(LocalDateTime.now());
-            dirty = true;
-        }
-
-        if (dirty) {
-            chatroomRepository.save(chatroom);
-        }
+        chatroom.updateLastReadAt(userId);
+        chatroomRepository.save(chatroom);
     }
 }

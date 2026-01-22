@@ -3,7 +3,7 @@ package com.petguardian.chat.service;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatMemberVO;
+import com.petguardian.chat.model.ChatMemberEntity;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -69,7 +69,7 @@ public class SessionAuthStrategyServiceImpl implements AuthStrategyService {
         if (userId == null) {
             return null;
         }
-        ChatMemberVO member = memberRepository.findById(userId).orElse(null);
+        ChatMemberEntity member = memberRepository.findById(userId).orElse(null);
         return member != null ? member.getMemName() : null;
     }
 }

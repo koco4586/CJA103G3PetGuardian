@@ -32,6 +32,9 @@ public class SitterController {
     /**
      * 顯示後台保母管理頁面
      * URL: GET /admin/sitter/manage
+     * 
+     * @param model Spring Model
+     * @return 後台管理頁面路徑
      */
     @GetMapping("/manage")
     public String showManagePage(Model model) {
@@ -48,6 +51,11 @@ public class SitterController {
     /**
      * 審核通過申請
      * URL: POST /admin/sitter/approve/{appId}
+     * 
+     * @param appId              申請編號
+     * @param reviewNote         審核備註
+     * @param redirectAttributes RedirectAttributes
+     * @return 重導向至管理頁面
      */
     @PostMapping("/approve/{appId}")
     public String approveApplication(
@@ -92,6 +100,11 @@ public class SitterController {
     /**
      * 駁回申請
      * URL: POST /admin/sitter/reject/{appId}
+     * 
+     * @param appId              申請編號
+     * @param reviewNote         駁回原因 (必填)
+     * @param redirectAttributes RedirectAttributes
+     * @return 重導向至管理頁面
      */
     @PostMapping("/reject/{appId}")
     public String rejectApplication(
@@ -132,6 +145,10 @@ public class SitterController {
     /**
      * 停權保母帳號
      * URL: POST /admin/sitter/suspend/{sitterId}
+     * 
+     * @param sitterId           保姆編號
+     * @param redirectAttributes RedirectAttributes
+     * @return 重導向至管理頁面
      */
     @PostMapping("/suspend/{sitterId}")
     public String suspendSitter(
@@ -166,6 +183,10 @@ public class SitterController {
     /**
      * 恢復保母帳號
      * URL: POST /admin/sitter/restore/{sitterId}
+     * 
+     * @param sitterId           保姆編號
+     * @param redirectAttributes RedirectAttributes
+     * @return 重導向至管理頁面
      */
     @PostMapping("/restore/{sitterId}")
     public String restoreSitter(

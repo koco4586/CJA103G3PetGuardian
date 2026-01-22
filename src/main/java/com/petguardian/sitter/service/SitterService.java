@@ -2,6 +2,8 @@ package com.petguardian.sitter.service;
 
 import java.util.List;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.sitter.model.SitterSearchCriteria;
+import com.petguardian.sitter.model.SitterSearchDTO;
 
 public interface SitterService {
 
@@ -73,4 +75,21 @@ public interface SitterService {
      * @return SitterVO 更新後的保姆物件
      */
     SitterVO updateServiceTime(Integer sitterId, String serviceTime);
+
+    // ========== 以下為會員搜尋保姆功能新增的方法 ==========
+
+    /**
+     * 根據條件搜尋保姆
+     * 
+     * @param criteria 搜尋條件
+     * @return List<SitterSearchDTO> 符合條件的保姆列表
+     */
+    List<SitterSearchDTO> searchSitters(SitterSearchCriteria criteria);
+
+    /**
+     * 取得所有啟用中的保姆（用於無篩選條件時）
+     * 
+     * @return List<SitterSearchDTO> 所有啟用中的保姆列表
+     */
+    List<SitterSearchDTO> getAllActiveSitters();
 }

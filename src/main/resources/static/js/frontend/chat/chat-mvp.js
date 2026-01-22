@@ -38,7 +38,9 @@ const ChatState = {
     messageIds: new Set(), // O(1) deduplication
     currentChatroomId: null,
     // Partner context for sending messages
-    currentPartnerId: null
+    currentPartnerId: null,
+    // Read receipt subscription
+    readSubscription: null
 };
 
 // ============================================================
@@ -249,7 +251,37 @@ function selectRoom(chatroomId, partnerName, partnerId) {
         DOM.chatInputForm.style.display = 'flex';
     }
 
+    // Subscribe to read receipts for this room
+    if (ChatState.readSubscription) {
+        ChatState.readSubscription.unsubscribe();
+    }
+    ChatState.readSubscription = ChatState.stompClient.subscribe(
+        '/topic/chatroom.' + ChatState.currentChatroomId + '.read',
+        function () {
+            markLastMessageAsRead();
+        }
+    );
+
     loadChatHistory(ChatState.currentChatroomId);
+}
+
+/**
+ * Shows 已讀 on the last sent message only.
+ * Removes any existing read status first.
+ */
+function markLastMessageAsRead() {
+    // Remove all existing read status
+    document.querySelectorAll('.read-status').forEach(el => el.remove());
+
+    const messages = document.querySelectorAll('.message.sent');
+    if (messages.length === 0) return;
+    const lastSent = messages[messages.length - 1];
+    if (lastSent) {
+        const span = document.createElement('span');
+        span.className = 'read-status';
+        span.textContent = '已讀';
+        lastSent.appendChild(span);
+    }
 }
 
 // ============================================================
@@ -337,6 +369,11 @@ async function loadChatHistory(chatroomId, isLoadMore = false) {
             } else {
                 renderMessagesBatch(messages, DOM.messageList, true);
                 attachScrollListener(DOM.messageList, chatroomId); // Attach to room ID
+
+                // Check if partner has read (any message has isRead=true)
+                if (messages.some(m => m.isRead)) {
+                    markLastMessageAsRead();
+                }
             }
         } else if (messages.length > 0) {
             renderMessagesBatch(messages, DOM.messageList, false);
@@ -381,7 +418,7 @@ function renderMessagesBatch(messages, container, scrollToBottom) {
         if (msg.messageId) ChatState.messageIds.add(msg.messageId);
 
         const isSentByMe = (msg.senderId === ChatState.currentUserId);
-        const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName);
+        const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName, msg.isRead);
         fragment.appendChild(msgEl);
     });
 
@@ -400,7 +437,7 @@ function renderMessagesBatch(messages, container, scrollToBottom) {
 /**
  * Create message DOM element (XSS-safe via createTextNode).
  */
-function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName) {
+function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isSent ? 'sent' : 'received');
 

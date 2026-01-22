@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 留言檢舉管理</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" th:href="@{/css/backend/style.css}">
+
+    <style>
+        /* =========================
+           表格基礎樣式 (含置中修正)
+           ========================= */
+        table#example {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+        table#example thead th, 
+        table#example tbody td {
+            text-align: center !important;
+            vertical-align: middle !important;
+            padding: 12px;
+        }
+
+        .badge-report {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            display: inline-block;
+        }
+
+        /* =========================
+           按鈕 Focus 與 跳起交互效果
+           ========================= */
+        .btn-manage-posts, .btn-manage-comments, .btn-filter, .btn-view-style {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            outline: none !important;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+        }
+
+        /* 統一 Focus & Hover 跳起效果 */
+        .btn-manage-posts:focus, .btn-manage-comments:focus, .btn-filter:focus, .btn-view-style:focus {
+            box-shadow: 0 0 0 3px rgba(206, 135, 91, 0.5) !important;
+        }
+
+        .btn-manage-posts:hover, .btn-manage-comments:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2) !important;
+            opacity: 0.95;
+        }
+
+        .header-action-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-manage-posts { background-color: #5d4037; color: white !important; font-weight: bold; padding: 8px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-manage-comments { background-color: #455a64; color: white !important; font-weight: bold; padding: 8px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+
+        .btn-view-style {
+            background-color: #ce875be8 !important; 
+            color: white !important;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .btn-view-style:hover { 
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        /* =========================
+           狀態過濾器 (含配色與跳起)
+           ========================= */
+        .status-filter-container { display: flex; gap: 12px; margin-bottom: 25px; }
+        
+        .btn-filter { 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            color: white !important;
+            font-weight: bold; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+            filter: brightness(0.9);
+        }
+        
+        /* =========================
+		   狀態過濾器 (修正 Active 顏色)
+		   ========================= */
+		.status-filter-container { display: flex; gap: 12px; margin-bottom: 25px; }
+		
+		.btn-filter { 
+		    padding: 10px 20px; 
+		    border-radius: 8px; 
+		    color: white !important;
+		    font-weight: bold; 
+		    display: flex; 
+		    align-items: center; 
+		    gap: 8px; 
+		    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+		
+		/* 鼠標懸停效果：顏色變深並跳起 */
+		.btn-filter:hover {
+		    transform: translateY(-2px) !important;
+		    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+		    filter: brightness(0.9);
+		}
+		
+		/* 基礎顏色定義 */
+		.btn-handled { background-color: #4CAF50 !important; }
+		.btn-pending { background-color: #fbc02d !important; }
+		.btn-deleted { background-color: #f44336 !important; }
+		
+		/* --- 重點：針對不同按鈕的 Active 狀態單獨設定顏色 --- */
+		
+		/* 1. 已處理留言選中時：維持綠色 */
+		.btn-handled.active {
+		    background-color: #388E3C !important; /* 選中時用深綠色 */
+		    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4), 0 0 10px rgba(0,0,0,0.2) !important;
+		}
+		
+		/* 2. 待處理留言選中時：維持黃/橘色 */
+		.btn-pending.active {
+		    background-color: #f57f17 !important; /* 選中時用深黃色 */
+		    box-shadow: 0 0 0 3px rgba(251, 192, 45, 0.4), 0 0 10px rgba(0,0,0,0.2) !important;
+		}
+		
+		/* 3. 已刪除留言選中時：維持紅色 */
+		.btn-deleted.active {
+		    background-color: #d32f2f !important; /* 選中時用深紅色 */
+		    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.4), 0 0 10px rgba(0,0,0,0.2) !important;
+		}
+		
+		/* 已駁回：藍色 (#2196F3) -> 深藍 (#1976D2) */
+		.btn-rejected { 
+		    background-color: #2196F3 !important; 
+		}
+		
+		.btn-rejected:hover { 
+		    background-color: #1976D2 !important; 
+		}
+		
+		/* 已駁回按鈕選中時 (Active)：維持藍色發光 */
+		.btn-rejected.active {
+		    background-color: #1565C0 !important; /* 選中時用更深的藍色 */
+		    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.4), 0 0 10px rgba(0,0,0,0.2) !important;
+		}
+
+        /* =========================
+           DataTables 搜尋、資訊與分頁佈局
+           ========================= */
+        .dataTables_wrapper .dataTables_filter {
+            float: none !important;
+            text-align: left !important;
+            margin-bottom: 25px !important;
+            width: 100% !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            width: 100% !important;
+            height: 45px !important;
+            margin: 10px 0 0 0 !important;
+            padding: 10px 20px !important;
+            border-radius: 15px !important;
+            border: 1px solid #ddd !important;
+            box-sizing: border-box;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+            display: block !important;
+        }
+
+        .dataTables_wrapper .dataTables_info {
+            text-align: left !important;
+            float: left !important;
+            margin-top: 25px !important;
+            width: auto !important;
+            color: #666 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            display: flex !important;
+            justify-content: center !important;
+            float: none !important;
+            clear: both !important;
+            margin-top: 20px !important;
+            padding-bottom: 20px !important;
+            width: 100% !important;
+            gap: 6px !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            background: #f5f5f5 !important;
+            border: none !important;
+            color: #666 !important;
+            transition: all 0.3s ease;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #ce875be8 !important; 
+            color: white !important; 
+            font-weight: 600 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        /* 留言內容文字截斷處理 */
+		.comment-text {
+		    max-width: 200px;         /* 你可以根據需求調整寬度 */
+		    white-space: nowrap;      /* 強制不換行 */
+		    overflow: hidden;         /* 隱藏超出部分 */
+		    text-overflow: ellipsis;  /* 超出部分顯示 ... */
+		    margin: 0 auto;           /* 配合置中 */
+		}
+        
+    </style>
+</head>
+
+<body>
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; flex: 1; margin-left: 15px;">
+                <h1>留言檢舉管理</h1>
+                <div class="header-action-btns">
+                    <a th:href="@{/admin/forum/list-all-forum}" class="btn-manage-posts">
+                        <i class="fas fa-list"></i> 討論區管理
+                    </a>
+                    <a th:href="@{/admin/forum/get-all-handled-posts}" class="btn-manage-comments">
+                        <i class="fas fa-comments"></i> 貼文檢舉管理
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <section>
+            <div class="card">
+            
+                <div class="status-filter-container">
+				    <a th:href="@{/admin/forum/get-all-handled-comments}" class="btn-filter btn-handled status-link">
+				        <i class="fas fa-check-circle"></i> 已處理留言
+				    </a>
+				    
+				    <a th:href="@{/admin/forum/get-all-pending-comments}" class="btn-filter btn-pending status-link">
+				        <i class="fas fa-exclamation-circle"></i> 待處理留言
+				    </a>
+				    
+				    <a th:href="@{/admin/forum/get-all-rejected-comments}" class="btn-filter btn-rejected status-link">
+				        <i class="fas fa-times-circle"></i> 已駁回留言
+				    </a>
+				    
+				    <a th:href="@{/admin/forum/get-all-deleted-comments}" class="btn-filter btn-deleted status-link">
+				        <i class="fas fa-trash-alt"></i> 已刪除留言
+				    </a>
+				    
+				</div>
+
+                <table id="example" class="display">
+                    <thead>
+                        <tr>
+                            <th>留言編號</th>
+                            <th>留言內容</th>
+                            <th>發文者ID</th>
+                            <th>所屬貼文ID</th>
+                            <th>下架原因</th>
+                            <th>處理時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <th:block th:each="dto : ${commentList}">
+                            <tr>
+                                <td th:text="${dto.commentId}"></td>
+                                <td title="將鼠標移上來可查看完整內容">
+								    <div class="comment-text" th:text="${dto.commentContent}"></div>
+								</td>
+                                <td th:text="${dto.memId}"></td>
+                                <td th:text="${dto.postId}"></td>
+                                <td>
+                                    <span class="badge-report" th:switch="${dto.reportType}">
+                                        <span th:case="0">騷擾</span>
+                                        <span th:case="1">垃圾訊息</span>
+                                        <span th:case="2">不當內容</span>
+                                        <span th:case="3">詐騙</span>
+                                        <span th:case="*">其他</span>
+                                    </span>
+                                </td>
+                                <td th:text="${#dates.format(dto.handleTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                                <td>
+                                    <form method="post" th:action="@{/admin/forum/get-one-for-update}">
+                                        <input type="hidden" name="commentId" th:value="${dto.commentId}">
+                                        <input class="btn-view-style" type="submit" value="查看">
+                                    </form>
+                                </td>
+                            </tr>
+                        </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script th:src="@{/js/backend/sidebar.js}"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#example').DataTable({
+                "lengthChange": false,
+                "pageLength": 5,
+                "searching": true,
+                "ordering": false,
+                "language": {
+                    "processing": "處理中...",
+                    "loadingRecords": "載入中...",
+                    "info": "顯示第 _START_ 至 _END_ 筆結果，共<font color=red> _TOTAL_ </font>筆",
+                    "infoEmpty": "顯示第 0 至 0 筆結果，共 0 筆",
+                    "search": "搜尋:",
+                    "paginate": {
+                        "first": "第一頁",
+                        "previous": "上一頁",
+                        "next": "下一頁",
+                        "last": "最後一頁"
+                    }
+                }
+            });
+
+            // 處理狀態按鈕 Active 邏輯
+            const currentPath = window.location.pathname;
+            $('.status-link').each(function() {
+                const linkPath = $(this).attr('href');
+                if (currentPath.includes(linkPath)) {
+                    $(this).addClass('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

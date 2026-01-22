@@ -4,8 +4,14 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.petguardian.forum.model.ForumCommentReportVO;
+import com.petguardian.forum.model.ForumCommentVO;
+import com.petguardian.forum.model.ForumPostReportVO;
+import com.petguardian.forum.model.ForumPostVO;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "member")
@@ -68,8 +74,64 @@ public class Member {
 
     @Column(name = "mem_login_attempts")
     private Integer memLoginAttempts;
+    
+    // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumPostVO> forumPosts;
+    
+    // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumPostReportVO> forumPostReports;
+    
+    // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumCommentVO> forumComments;
+    
+    // 羽澈
+    @OneToMany(mappedBy = "member")
+    private Set<ForumCommentReportVO> forumCommentReports;
+    
+    // 羽澈
+    public Set<ForumCommentReportVO> getForumCommentReports() {
+		return forumCommentReports;
+	}
+    
+    // 羽澈
+	public void setForumCommentReports(Set<ForumCommentReportVO> forumCommentReports) {
+		this.forumCommentReports = forumCommentReports;
+	}
 
-    public Integer getMemId() {
+	// 羽澈
+    public Set<ForumPostReportVO> getForumPostReports() {
+		return forumPostReports;
+	}
+    
+    // 羽澈
+	public void setForumPostReports(Set<ForumPostReportVO> forumPostReports) {
+		this.forumPostReports = forumPostReports;
+	}
+	
+	// 羽澈
+	public Set<ForumCommentVO> getForumComments() {
+		return forumComments;
+	}
+	
+	// 羽澈
+	public void setForumComments(Set<ForumCommentVO> forumComments) {
+		this.forumComments = forumComments;
+	}
+
+	// 羽澈
+    public Set<ForumPostVO> getForumPosts() {
+		return forumPosts;
+	}
+    
+    // 羽澈
+	public void setForumPosts(Set<ForumPostVO> forumPosts) {
+		this.forumPosts = forumPosts;
+	}
+
+	public Integer getMemId() {
         return memId;
     }
 

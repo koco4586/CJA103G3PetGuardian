@@ -1,6 +1,6 @@
 package com.petguardian.chat.service;
 
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Strategy interface for chatroom creation.
@@ -14,9 +14,9 @@ public interface ChatRoomCreationStrategy {
      * @param userA        First user ID
      * @param userB        Second user ID
      * @param chatroomType The type of the chatroom (e.g., 0=Service, 1=Product)
-     * @return The resolved or created ChatRoomVO
+     * @return The resolved or created ChatRoomEntity
      */
-    ChatRoomVO findOrCreate(Integer userA, Integer userB, Integer chatroomType);
+    ChatRoomEntity findOrCreate(Integer userA, Integer userB, Integer chatroomType);
 
     /**
      * Updates the name of an existing chatroom.

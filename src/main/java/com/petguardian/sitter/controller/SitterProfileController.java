@@ -51,6 +51,11 @@ public class SitterProfileController {
     /**
      * 顯示保母個人設定頁面
      * URL: GET /sitter/profile/settings
+     * 
+     * @param session            HttpSession 用於取得登入會員 ID
+     * @param model              Spring Model 用於傳遞保姆資料、服務、地區等資訊
+     * @param redirectAttributes RedirectAttributes 用於傳遞錯誤或成功訊息
+     * @return String 設定頁面路徑 "frontend/sitter/profile-settings"
      */
     @GetMapping("/settings")
     public String showSettingsPage(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -94,6 +99,11 @@ public class SitterProfileController {
     /**
      * 更新保母名稱
      * URL: POST /sitter/profile/update-name
+     * 
+     * @param sitterName         String 新的保姆名稱
+     * @param session            HttpSession 用於取得登入會員 ID
+     * @param redirectAttributes RedirectAttributes 用於傳遞操作結果訊息
+     * @return String 重導向回設定頁面
      */
     @PostMapping("/update-name")
     public String updateSitterName(
@@ -128,6 +138,12 @@ public class SitterProfileController {
     /**
      * 設定服務價格
      * URL: POST /sitter/profile/service/set
+     * 
+     * @param serviceItemId      Integer 服務項目 ID
+     * @param price              Integer 設定的價格 (需在 400-1000 之間)
+     * @param session            HttpSession 用於取得登入會員 ID
+     * @param redirectAttributes RedirectAttributes 用於傳遞操作結果訊息
+     * @return String 重導向回設定頁面
      */
     @PostMapping("/service/set")
     public String setServicePrice(
@@ -169,6 +185,11 @@ public class SitterProfileController {
     /**
      * 刪除服務
      * URL: POST /sitter/profile/service/delete
+     * 
+     * @param serviceItemId      Integer 欲刪除的服務項目 ID
+     * @param session            HttpSession 用於驗證保姆身分
+     * @param redirectAttributes RedirectAttributes 用於傳遞操作結果訊息
+     * @return String 重導向回設定頁面
      */
     @PostMapping("/service/delete")
     public String deleteService(
@@ -203,6 +224,13 @@ public class SitterProfileController {
     /**
      * 新增服務對象（寵物種類+體型）
      * URL: POST /sitter/profile/service/pet-type/add
+     * 
+     * @param serviceItemId      Integer 服務項目 ID
+     * @param typeId             Integer 寵物種類 ID
+     * @param sizeId             Integer 體型 ID
+     * @param session            HttpSession 用於驗證保姆身分
+     * @param redirectAttributes RedirectAttributes 用於傳遞操作結果訊息
+     * @return String 重導向回設定頁面
      */
     @PostMapping("/service/pet-type/add")
     public String addServicePetType(
@@ -240,6 +268,10 @@ public class SitterProfileController {
     /**
      * 刪除服務對象
      * URL: POST /sitter/profile/service/pet-type/delete
+     * 
+     * @param servicePetId       Integer 服務對象關聯 ID
+     * @param redirectAttributes RedirectAttributes 用於傳遞操作結果訊息
+     * @return String 重導向回設定頁面
      */
     @PostMapping("/service/pet-type/delete")
     public String deleteServicePetType(
@@ -262,6 +294,11 @@ public class SitterProfileController {
     /**
      * 新增服務地區
      * URL: POST /sitter/profile/area/add
+     * 
+     * @param areaId             Integer 地區 ID
+     * @param session            HttpSession 用於驗證保姆身分
+     * @param redirectAttributes RedirectAttributes 用於傳遞操作結果訊息
+     * @return String 重導向回設定頁面
      */
     @PostMapping("/area/add")
     public String addServiceArea(
@@ -296,6 +333,11 @@ public class SitterProfileController {
     /**
      * 刪除服務地區
      * URL: POST /sitter/profile/area/delete
+     * 
+     * @param areaId             Integer 欲刪除的地區 ID
+     * @param session            HttpSession 用於驗證保姆身分
+     * @param redirectAttributes RedirectAttributes 用於傳遞操作結果訊息
+     * @return String 重導向回設定頁面
      */
     @PostMapping("/area/delete")
     public String deleteServiceArea(
@@ -330,6 +372,10 @@ public class SitterProfileController {
     /**
      * 更新保母行程設定（營業時間）
      * URL: POST /sitter/profile/update-schedule
+     * 
+     * @param requestData JSON 格式資料，包含 "scheduleData" (七天 24 小時的預約狀態)
+     * @param session     HttpSession 用於取得登入會員 ID
+     * @return Map&lt;String, Object&gt; 回傳 JSON 結果 (success, message)
      */
     @PostMapping("/update-schedule")
     @ResponseBody
@@ -359,7 +405,7 @@ public class SitterProfileController {
                     .get("scheduleData");
 
             // 4. 建立 24 小時的狀態字串（合併七天的資料）
-            System.out.println("=== 解析前端資料 ===");
+            System.out.println("=== 解析前端資料 (Daily Mode) ===");
             System.out.println("scheduleData keys: " + scheduleData.keySet());
 
             char[] serviceTimeArray = new char[24];
@@ -373,16 +419,15 @@ public class SitterProfileController {
                 String dayKey = String.valueOf(day);
                 if (scheduleData.containsKey(dayKey)) {
                     Map<String, String> daySchedule = scheduleData.get(dayKey);
-                    System.out.println("Day " + day + " 的資料: " + daySchedule);
+
                     for (int hour = 0; hour < 24; hour++) {
                         String hourStr = String.valueOf(hour);
                         if (daySchedule.containsKey(hourStr)) {
                             String status = daySchedule.get(hourStr);
-                            System.out.println("  Hour " + hour + ": status = " + status);
-                            // 0: 可預約, 2: 休息
+                            // 0: 可預約
                             // service_time: 0=不可預約, 1=可預約
-                            // 只要任何一天這個時段是可預約，就設為可預約
                             if (status.equals("0")) {
+                                // 只要任何一天這個時段是可預約，就設為可預約
                                 serviceTimeArray[hour] = '1';
                             }
                         }
@@ -416,6 +461,9 @@ public class SitterProfileController {
     /**
      * 根據縣市查詢地區（AJAX API）
      * URL: GET /sitter/profile/districts?city=台北市
+     * 
+     * @param city String 縣市名稱
+     * @return List&lt;AreaVO&gt; 該縣市的行政區列表 JSON
      */
     @GetMapping("/districts")
     @ResponseBody

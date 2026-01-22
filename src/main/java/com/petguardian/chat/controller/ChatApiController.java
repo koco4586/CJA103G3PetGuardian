@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatRoomVO;
+import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatService;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,11 +38,14 @@ public class ChatApiController {
     // ============================================================
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatApiController(AuthStrategyService authStrategyService,
-            ChatService chatService) {
+            ChatService chatService,
+            SimpMessagingTemplate messagingTemplate) {
         this.authStrategyService = authStrategyService;
         this.chatService = chatService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // ============================================================
@@ -53,10 +58,10 @@ public class ChatApiController {
      * 
      * @param partnerId    Target User ID
      * @param chatroomType Room Type (Default: 0 for 1-on-1)
-     * @return ChatRoomVO or 404 Not Found
+     * @return ChatRoomEntity or 404 Not Found
      */
     @GetMapping
-    public ResponseEntity<ChatRoomVO> findChatroom(
+    public ResponseEntity<ChatRoomEntity> findChatroom(
             HttpServletRequest request,
             @RequestParam Integer partnerId,
             @RequestParam(required = false, defaultValue = "0") Integer chatroomType) {
@@ -66,7 +71,7 @@ public class ChatApiController {
             return ResponseEntity.status(401).build();
         }
 
-        ChatRoomVO chatroom = chatService.findChatroom(currentUserId, partnerId, chatroomType);
+        ChatRoomEntity chatroom = chatService.findChatroom(currentUserId, partnerId, chatroomType);
 
         if (chatroom == null) {
             return ResponseEntity.notFound().build();
@@ -122,10 +127,6 @@ public class ChatApiController {
     /**
      * Marks a room as read.
      * Called when opening a chat or focusing on the window.
-     */
-    /**
-     * Marks a room as read.
-     * Called when opening a chat or focusing on the window.
      * Returns the UPDATED global unread status.
      */
     @PostMapping("/{chatroomId}/read")
@@ -139,6 +140,12 @@ public class ChatApiController {
         }
 
         chatService.markRoomAsRead(chatroomId, currentUserId);
+
+        // Broadcast read receipt to partner via WebSocket
+        ChatMessageDTO readReceipt = new ChatMessageDTO();
+        readReceipt.setChatroomId(chatroomId);
+        readReceipt.setIsRead(true);
+        messagingTemplate.convertAndSend("/topic/chatroom." + chatroomId + ".read", readReceipt);
 
         // Return new global status
         boolean hasUnread = chatService.hasUnreadMessages(currentUserId);

@@ -35,6 +35,11 @@ public class SitterApplicationController {
     /**
      * 導向申請表格頁面
      * URL: GET /sitter/apply
+     * 
+     * @param session            HttpSession 用於取得會員資訊
+     * @param model              Spring Model 用於傳遞資料到視圖
+     * @param redirectAttributes 用於重導向時傳遞訊息
+     * @return 申請頁面路徑或重導向路徑
      */
     @GetMapping("/apply")
     public String showApplyForm(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -80,6 +85,13 @@ public class SitterApplicationController {
     /**
      * 處理申請送出
      * URL: POST /sitter/apply
+     * 
+     * @param dto                表單綁定物件
+     * @param bindingResult      驗證結果
+     * @param session            HttpSession
+     * @param model              Spring Model
+     * @param redirectAttributes RedirectAttributes
+     * @return 成功或失敗的重導向路徑
      */
     @PostMapping("/apply")
     public String submitApplication(
@@ -128,6 +140,11 @@ public class SitterApplicationController {
     /**
      * 查詢會員的申請列表
      * URL: GET /sitter/applications
+     * 
+     * @param session            HttpSession
+     * @param model              Spring Model
+     * @param redirectAttributes RedirectAttributes
+     * @return 申請列表頁面路徑
      */
     @GetMapping("/applications")
     public String listApplications(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -147,6 +164,11 @@ public class SitterApplicationController {
 
     /**
      * 輔助方法：準備 Model 屬性
+     * 
+     * 當表單驗證失敗時，重新載入頁面所需的顯示資料
+     * 
+     * @param session HttpSession
+     * @param model   Spring Model
      */
     private void prepareModelAttributes(HttpSession session, Model model) {
         String memName = (String) session.getAttribute("memName");

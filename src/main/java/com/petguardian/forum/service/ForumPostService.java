@@ -49,12 +49,8 @@ public class ForumPostService {
 	
 	public ForumPostVO getOnePost(Integer postId) {
 		Optional<ForumPostVO> optional = repo.findById(postId);
-		return optional.orElse(null);
+		return optional.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
 	}
-	
-//	public List<ForumPostVO> getAllActive(){
-//		return repo.findAll();
-//	}
 	
 	public List<ForumPostVO> getAllActiveByForumId(Integer forumId){
 		return repo.findPostsByForumId(forumId);
@@ -62,10 +58,6 @@ public class ForumPostService {
 	
 	public List<ForumPostVO> getPostBykeyword(String keyword, Integer forumId){
 		return repo.findByKeyword(keyword, forumId);
-	}
-	
-	public List<ForumPostVO> getAllHandledPosts(){
-		return repo.getAllHandledPosts();
 	}
 	
 	public byte[] getPostPic(Integer postId) {

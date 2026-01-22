@@ -17,6 +17,11 @@ import com.petguardian.sitter.service.SitterService;
 
 import jakarta.servlet.http.HttpSession;
 
+/**
+ * 保姆主頁面控制器
+ * 
+ * 負責顯示保姆儀表板資訊，包含服務數量、地區數量等統計數據
+ */
 @Controller
 @RequestMapping("/sitter")
 public class SitterDashboardController {
@@ -31,8 +36,12 @@ public class SitterDashboardController {
     private ServiceAreaService serviceAreaService;
 
     /**
-     * 保母主頁 (Dashboard)
+     * 保姆主頁 (Dashboard)
      * URL: /sitter/dashboard
+     * 
+     * @param session HttpSession 用於取得登入會員 ID
+     * @param model   Spring Model 用於傳遞保姆資料與統計數據
+     * @return 儀表板頁面路徑 (frontend/sitter/dashboard) 或重導向至申請頁
      */
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
@@ -60,7 +69,14 @@ public class SitterDashboardController {
         int areaCount = areas.size();
 
         // 4. 準備 Model
+        System.out.println("=== Dashboard 載入 Debug ===");
+        System.out.println("sitter.getSitterId(): " + sitter.getSitterId());
+        System.out.println("sitter.getSitterName(): " + sitter.getSitterName());
+        System.out.println("sitter.getServiceTime(): " + sitter.getServiceTime());
+        System.out.println("===========================");
+
         model.addAttribute("sitter", sitter);
+        model.addAttribute("serviceTime", sitter.getServiceTime()); // 單獨傳遞，避免物件狀態問題
         model.addAttribute("serviceCount", serviceCount);
         model.addAttribute("areaCount", areaCount);
         model.addAttribute("services", services); // 新增詳細列表

@@ -16,7 +16,7 @@ public interface AreaService {
      * 
      * @return List<AreaVO> 所有地區列表
      */
-    List<AreaVO> getAllAreas();
+    List<AreaVO> getAll();
 
     /**
      * 查詢所有縣市
@@ -39,7 +39,7 @@ public interface AreaService {
      * @param areaId 地區編號
      * @return AreaVO 地區資料,若不存在則返回 null
      */
-    AreaVO getAreaById(Integer areaId);
+    AreaVO getOneArea(Integer areaId);
 
     /**
      * 根據縣市與行政區查詢地區

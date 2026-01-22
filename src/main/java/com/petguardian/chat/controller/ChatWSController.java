@@ -14,7 +14,7 @@ import com.petguardian.chat.service.ChatService;
  * Responsibilities:
  * - Handles STOMP message events
  * - Orchestrates message persistence via ChatService
- * - Boradcasts events to targeted user topics
+ * - Broadcasts events to targeted user topics
  */
 @Controller
 public class ChatWSController {

@@ -2,8 +2,8 @@ package com.petguardian.chat.service;
 
 import java.util.List;
 import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatMessageVO;
-import com.petguardian.chat.model.ChatMemberVO;
+import com.petguardian.chat.model.ChatMessageEntity;
+import com.petguardian.chat.model.ChatMemberEntity;
 
 /**
  * Service for mapping Chat Entities to DTOs.
@@ -15,7 +15,7 @@ public interface ChatMessageMapper {
     /**
      * Converts a single message entity to DTO with provided context.
      */
-    ChatMessageDTO toDto(ChatMessageVO entity, ChatMemberVO sender, String replyContent, String replySenderName,
+    ChatMessageDTO toDto(ChatMessageEntity entity, ChatMemberEntity sender, String replyContent, String replySenderName,
             Integer currentUserId, Integer partnerId);
 
     /**
@@ -23,7 +23,7 @@ public interface ChatMessageMapper {
      * Efficiently resolves all dependencies (members, replies) to avoid N+1
      * queries.
      */
-    List<ChatMessageDTO> toDtoList(List<ChatMessageVO> entities, Integer currentUserId, Integer partnerId);
+    List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> entities, Integer currentUserId, Integer partnerId);
 
     /**
      * enriching a DTO with reply context.

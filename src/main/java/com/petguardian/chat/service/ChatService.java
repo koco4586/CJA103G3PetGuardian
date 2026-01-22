@@ -3,6 +3,7 @@ package com.petguardian.chat.service;
 import java.util.List;
 
 import com.petguardian.chat.model.ChatMessageDTO;
+import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Service Interface for Core Chat Operations.
@@ -52,5 +53,6 @@ public interface ChatService {
      * @param chatroomType  Room type (0=Service, 1=Product)
      * @return ChatRoomVO if found, null otherwise
      */
-    com.petguardian.chat.model.ChatRoomVO findChatroom(Integer currentUserId, Integer partnerId, Integer chatroomType);
+    ChatRoomEntity findChatroom(Integer currentUserId, Integer partnerId,
+            Integer chatroomType);
 }

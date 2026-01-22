@@ -14,7 +14,12 @@ import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterVO;
 
-@Service
+/**
+ * 保姆申請業務邏輯實作
+ * 
+ * 提供會員申請成為保姆、管理員審核申請等功能的實作
+ */
+@Service("sitterApplicationService")
 public class SitterApplicationServiceImpl implements SitterApplicationService {
 
     @Autowired
@@ -26,6 +31,15 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
     @Autowired
     private SitterService sitterService;
 
+    /**
+     * 會員申請成為保姆
+     * 
+     * @param memId      會員編號
+     * @param intro      自我介紹
+     * @param experience 經驗說明
+     * @return SitterApplicationVO 申請記錄
+     * @throws IllegalStateException 若已有待審核或通過的申請
+     */
     @Override
     @Transactional
     public SitterApplicationVO createApplication(Integer memId, String intro, String experience) {
@@ -50,6 +64,15 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
         return repository.save(vo);
     }
 
+    /**
+     * 管理員審核保姆申請
+     * 
+     * @param appId      申請編號
+     * @param status     審核狀態 (0:待審核, 1:通過, 2:拒絕)
+     * @param reviewNote 審核備註
+     * @return SitterApplicationVO 審核後的申請記錄
+     * @throws IllegalArgumentException 若申請不存在
+     */
     @Override
     @Transactional
     public SitterApplicationVO reviewApplication(Integer appId, Byte status, String reviewNote) {
@@ -107,21 +130,44 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
         return repository.save(vo);
     }
 
+    /**
+     * 查詢會員的所有申請記錄
+     * 
+     * @param memId 會員編號
+     * @return List<SitterApplicationVO> 該會員的所有申請
+     */
     @Override
     public List<SitterApplicationVO> getApplicationsByMember(Integer memId) {
         return repository.findByMemId(memId);
     }
 
+    /**
+     * 查詢特定狀態的所有申請
+     * 
+     * @param status 審核狀態 (0:待審核, 1:通過, 2:拒絕)
+     * @return List<SitterApplicationVO> 符合狀態的所有申請
+     */
     @Override
     public List<SitterApplicationVO> getApplicationsByStatus(Byte status) {
         return repository.findByAppStatus(status);
     }
 
+    /**
+     * 查詢單筆申請記錄
+     * 
+     * @param appId 申請編號
+     * @return SitterApplicationVO 申請記錄,若不存在則返回 null
+     */
     @Override
     public SitterApplicationVO getApplicationById(Integer appId) {
         return repository.findById(appId).orElse(null);
     }
 
+    /**
+     * 查詢所有申請記錄
+     * 
+     * @return List<SitterApplicationVO> 所有申請
+     */
     @Override
     public List<SitterApplicationVO> getAllApplications() {
         return repository.findAll();

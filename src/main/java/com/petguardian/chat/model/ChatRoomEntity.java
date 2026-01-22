@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "chatroom")
 @Data
 @NoArgsConstructor
-public class ChatRoomVO implements Serializable {
+public class ChatRoomEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -82,5 +82,34 @@ public class ChatRoomVO implements Serializable {
             return memId1;
         }
         return null;
+    }
+
+    /**
+     * Updates the last read timestamp for a specific user.
+     * 
+     * @param userId The ID of the user marking the room as read
+     */
+    public void updateLastReadAt(Integer userId) {
+        LocalDateTime now = LocalDateTime.now();
+        if (userId.equals(memId1)) {
+            this.mem1LastReadAt = now;
+        } else if (userId.equals(memId2)) {
+            this.mem2LastReadAt = now;
+        }
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+        if (!(object instanceof ChatRoomEntity))
+            return false;
+        ChatRoomEntity that = (ChatRoomEntity) object;
+        return chatroomId != null && chatroomId.equals(that.chatroomId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

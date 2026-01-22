@@ -9,9 +9,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-//保姆申請table
+/**
+ * 保姆申請 Entity
+ * 對應資料表: sitter_application
+ * 
+ * 紀錄會員申請成為保姆的詳細資料、審核狀態與歷程
+ */
 @Entity
-@Table(name = "sitter_application") // 保姆申請Table
+@Table(name = "sitter_application")
 public class SitterApplicationVO implements Serializable {//
     private static final long serialVersionUID = 1L;
 
