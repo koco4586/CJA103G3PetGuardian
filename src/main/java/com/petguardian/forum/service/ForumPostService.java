@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.petguardian.forum.model.DeletedPostDTO;
 import com.petguardian.forum.model.ForumPostPicsRepository;
 import com.petguardian.forum.model.ForumPostPicsVO;
 import com.petguardian.forum.model.ForumPostRepository;
@@ -58,6 +59,10 @@ public class ForumPostService {
 	
 	public List<ForumPostVO> getPostBykeyword(String keyword, Integer forumId){
 		return repo.findByKeyword(keyword, forumId);
+	}
+	
+	public List<DeletedPostDTO> getAllDeletedPosts(){
+		return repo.findAllDeletedPosts();
 	}
 	
 	public byte[] getPostPic(Integer postId) {
