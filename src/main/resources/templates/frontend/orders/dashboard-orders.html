@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城訂單紀錄 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/dashboard.css">
+    <style>
+        .flash-message {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-items {
+            margin-bottom: 1rem;
+        }
+
+        .order-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-paid {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-shipped {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-completed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status-canceled {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .status-refunding {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .status-refunded {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .rating-star {
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .rating-star:hover {
+            transform: scale(1.2);
+        }
+
+        .rating-star.active {
+            color: #ffd43b;
+        }
+
+        /* 訂單詳情樣式 */
+        .detail-section {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .detail-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .detail-label {
+            color: #999;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+
+        .detail-value {
+            text-align: right;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        /* 時間軸樣式 */
+        .timeline-container {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+            padding-left: 1rem;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ddd;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #ddd;
+        }
+
+        .timeline-item.completed::before {
+            background: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .timeline-item.active::before {
+            background: #fff;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .timeline-item.cancelled::before {
+            background: var(--danger);
+            box-shadow: 0 0 0 2px var(--danger);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -21px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% - 10px);
+            background: #ddd;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-item.completed::after {
+            background: var(--primary-color);
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-desc {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .timeline-item.completed .timeline-title {
+            color: var(--primary-color);
+        }
+
+        .timeline-item.cancelled .timeline-title {
+            color: var(--danger);
+        }
+
+        /* ========================================
+           Modal 彈窗樣式
+           ======================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay[style*="display: flex"] {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        .modal-content.modal-sm {
+            max-width: 400px;
+        }
+
+        .modal-content.modal-md {
+            max-width: 550px;
+        }
+
+        .modal-content.modal-lg {
+            max-width: 700px;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        /* 圖片上傳區域樣式 */
+        .image-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--primary-color);
+            background: #f5f5f5;
+        }
+
+        .image-upload-area.dragover {
+            border-color: var(--primary-color);
+            background: #e3f2fd;
+        }
+
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+
+        .image-preview-item .remove-btn:hover {
+            background: var(--danger);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <!-- Flash Messages -->
+    <div th:if="${message}" class="flash-message success">
+        <i class="fas fa-check-circle"></i> <span th:text="${message}">成功訊息</span>
+    </div>
+    <div th:if="${error}" class="flash-message error">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">錯誤訊息</span>
+    </div>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
+                </div>
+                <h4 th:text="${memberName} ?: '會員'">會員名稱</h4>
+                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
+            </div>
+            <nav>
+                <a href="/dashboard" class="menu-item">
+                    <i class="fas fa-user"></i> 個人資料
+                </a>
+                <a href="/dashboard/pets" class="menu-item">
+                    <i class="fas fa-paw"></i> 我的寵物
+                </a>
+                <a th:href="@{/dashboard/orders}" class="menu-item active">
+                    <i class="fas fa-receipt"></i> 商城訂單紀錄
+                </a>
+                <a href="/dashboard/bookings" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
+                </a>
+                <a th:href="@{/dashboard/favorites}" class="menu-item">
+                    <i class="fas fa-heart"></i> 收藏列表
+                </a>
+                <a href="/dashboard/sitter-registration" class="menu-item"
+                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
+                    <i class="fas fa-user-plus"></i> 成為保母
+                </a>
+                <a href="/logout" class="menu-item" style="color: var(--danger);">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="d-flex justify-between align-center mb-2">
+                <h2 style="margin: 0;">商城訂單紀錄</h2>
+                <span style="color: #999; font-size: 0.9rem;" th:text="'共 ' + ${#lists.size(orders)} + ' 筆訂單'">共 0
+                    筆訂單</span>
+            </div>
+
+            <!-- 篩選按鈕 -->
+            <div class="d-flex gap-sm mb-2">
+                <a th:href="@{/dashboard/orders}" class="btn btn-outline btn-sm"
+                    th:classappend="${filter == null or filter == 'all'} ? 'active' : ''">全部</a>
+                <a th:href="@{/dashboard/orders(filter='processing')}" class="btn btn-outline btn-sm"
+                    th:classappend="${filter == 'processing'} ? 'active' : ''">進行中</a>
+                <a th:href="@{/dashboard/orders(filter='completed')}" class="btn btn-outline btn-sm"
+                    th:classappend="${filter == 'completed'} ? 'active' : ''">已完成</a>
+                <a th:href="@{/dashboard/orders(filter='cancelled')}" class="btn btn-outline btn-sm"
+                    th:classappend="${filter == 'cancelled'} ? 'active' : ''">已取消</a>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 4rem 2rem;">
+                <i class="fas fa-receipt" style="font-size: 4rem; color: #ddd; margin-bottom: 1rem;"></i>
+                <h3 style="color: #999;">目前沒有訂單</h3>
+                <p style="color: #999; margin-bottom: 2rem;">快去商城選購商品吧！</p>
+                <a th:href="@{/store}" class="btn btn-primary">
+                    <i class="fas fa-store"></i> 前往商城
+                </a>
+            </div>
+
+            <!-- 訂單列表 -->
+            <div class="order-list" th:if="${!#lists.isEmpty(orders)}">
+                <div th:each="orderData : ${orders}" class="order-card"
+                    th:with="order=${orderData['order']}, items=${orderData['orderItems']}, returnOrder=${orderData['returnOrder']}, canCancel=${orderData['canCancel']}, canApplyReturn=${orderData['canApplyReturn']}"
+                    th:data-order-id="${order.orderId}" th:data-order-status="${order.orderStatus}"
+                    th:data-order-time="${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm')}"
+                    th:data-order-total="${order.orderTotal}" th:data-receiver-name="${order.receiverName}"
+                    th:data-receiver-phone="${order.receiverPhone}" th:data-receiver-address="${order.receiverAddress}"
+                    th:data-special-instructions="${order.specialInstructions}"
+                    th:data-return-status="${returnOrder != null ? returnOrder.returnStatus : ''}"
+                    th:data-return-reason="${returnOrder != null ? returnOrder.returnReason : ''}">
+
+                    <!-- Order Header -->
+                    <div class="order-header">
+                        <div>
+                            <span style="color: #999; font-size: 0.85rem;">訂單編號</span>
+                            <span style="font-weight: 700; margin-left: 0.5rem;"
+                                th:text="${order.orderId}">#ORD001</span>
+                        </div>
+                        <div>
+                            <span th:switch="${order.orderStatus}">
+                                <span th:case="0" class="status-badge status-paid">已付款</span>
+                                <span th:case="1" class="status-badge status-shipped">已出貨</span>
+                                <span th:case="2" class="status-badge status-completed">已完成</span>
+                                <span th:case="3" class="status-badge status-canceled">已取消</span>
+                                <span th:case="4" class="status-badge status-refunding">申請退貨中</span>
+                                <span th:case="5" class="status-badge status-refunded">退貨完成</span>
+                                <span th:case="*" class="status-badge">未知狀態</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="order-items">
+                        <div th:each="item : ${items}" class="order-item">
+                            <img th:src="${item.productImg}" th:alt="${item.productTitle}">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;" th:text="${item.productTitle}">商品名稱</div>
+                                <small style="color: #999;">
+                                    <span th:text="'$' + ${item.proPrice}">$0</span>
+                                    <span th:text="' x ' + ${item.quantity}">x 1</span>
+                                </small>
+                            </div>
+                            <div style="font-weight: 700; color: var(--primary-color);"
+                                th:text="'$' + ${item.subtotal}">$0</div>
+                        </div>
+                    </div>
+
+                    <!-- Order Footer -->
+                    <div class="order-footer">
+                        <div>
+                            <span style="color: #999; font-size: 0.9rem;">訂單金額</span>
+                            <span
+                                style="font-size: 1.2rem; font-weight: 700; color: var(--primary-color); margin-left: 0.5rem;"
+                                th:text="'$' + ${order.orderTotal}">$0</span>
+                        </div>
+                        <div class="d-flex gap-sm">
+                            <!-- 已付款且可取消（24小時內）：可取消訂單 -->
+                            <form th:if="${order.orderStatus == 0 and canCancel}"
+                                th:action="@{/orders/{id}/cancel(id=${order.orderId})}" method="post"
+                                onsubmit="return confirm('確定要取消此訂單嗎？款項將退回錢包。');">
+                                <button type="submit" class="btn btn-outline btn-sm">
+                                    <i class="fas fa-times"></i> 取消訂單
+                                </button>
+                            </form>
+                            <!-- 已付款但已超過取消期限 -->
+                            <span th:if="${order.orderStatus == 0 and !canCancel}"
+                                style="color: #999; font-size: 0.85rem;" title="下單超過24小時，無法取消">
+                                <i class="fas fa-clock"></i> 已過取消期限
+                            </span>
+
+                            <!-- 已出貨：可確認收貨 -->
+                            <form th:if="${order.orderStatus == 1}"
+                                th:action="@{/orders/{id}/confirm(id=${order.orderId})}" method="post"
+                                onsubmit="return confirm('確定已收到商品嗎？');">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-check"></i> 確認收貨
+                                </button>
+                            </form>
+
+                            <!-- 已完成：可評價（若尚未評價） -->
+                            <button th:if="${order.orderStatus == 2 and !order.hasReview}" type="button"
+                                class="btn btn-primary btn-sm" th:onclick="'openReviewModal(' + ${order.orderId} + ')'">
+                                <i class="fas fa-star"></i> 評價
+                            </button>
+
+                            <!-- 已完成：顯示已評價 -->
+                            <span th:if="${order.orderStatus == 2 and order.hasReview}"
+                                style="color: #999; font-size: 0.85rem;">
+                                <i class="fas fa-check"></i> 已評價
+                            </span>
+
+                            <!-- 已完成且可申請退貨（72小時內且尚未評價） -->
+                            <button th:if="${order.orderStatus == 2 and !order.hasReview and canApplyReturn}" type="button"
+                                class="btn btn-outline btn-sm"
+                                th:onclick="'openReturnModal(' + ${order.orderId} + ', ' + ${order.orderTotal} + ')'">
+                                <i class="fas fa-undo"></i> 申請退貨
+                            </button>
+                            <!-- 已完成但已超過退貨期限 -->
+                            <span th:if="${order.orderStatus == 2 and !order.hasReview and !canApplyReturn}"
+                                style="color: #999; font-size: 0.85rem;" title="收貨超過24小時，無法申請退貨">
+                                <i class="fas fa-clock"></i> 已過退貨期限
+                            </span>
+
+                            <!-- 查看詳情 -->
+                            <button type="button" class="btn btn-outline btn-sm"
+                                th:onclick="'openDetailModal(' + ${order.orderId} + ')'">
+                                <i class="fas fa-eye"></i> 查看詳情
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Order Time -->
+                    <div style="text-align: right; margin-top: 0.5rem;">
+                        <small style="color: #999;"
+                            th:text="'下單時間：' + ${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm')}">
+                            下單時間：2024-01-01 12:00
+                        </small>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         評價視窗 (POST 表單)
+         ======================================== -->
+    <div id="reviewModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content modal-sm">
+            <button onclick="closeReviewModal()" class="modal-close">&times;</button>
+
+            <h3 class="mb-2">
+                <i class="fas fa-star" style="color: #ffd43b;"></i> 評價賣家
+            </h3>
+
+            <form th:action="@{/reviews/submit}" method="post" id="reviewForm">
+                <input type="hidden" name="orderId" id="reviewOrderId">
+
+                <!-- 評分 -->
+                <div class="form-group mb-2">
+                    <label class="form-label">評分 <span style="color: var(--danger);">*</span></label>
+                    <input type="hidden" name="rating" id="ratingInput" value="5" required>
+                    <div style="font-size: 2rem; color: #ddd;">
+                        <i class="fas fa-star rating-star active" onclick="setRating(1)" data-rating="1"></i>
+                        <i class="fas fa-star rating-star active" onclick="setRating(2)" data-rating="2"></i>
+                        <i class="fas fa-star rating-star active" onclick="setRating(3)" data-rating="3"></i>
+                        <i class="fas fa-star rating-star active" onclick="setRating(4)" data-rating="4"></i>
+                        <i class="fas fa-star rating-star active" onclick="setRating(5)" data-rating="5"></i>
+                    </div>
+                </div>
+
+                <!-- 評價內容 -->
+                <div class="form-group mb-2">
+                    <label class="form-label">評價內容（選填）</label>
+                    <textarea name="reviewContent" class="form-control" rows="3" placeholder="分享您的購物體驗..."
+                        maxlength="500"></textarea>
+                </div>
+
+                <!-- 按鈕 -->
+                <div class="d-flex gap-md">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeReviewModal()">
+                        取消
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        提交評價
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================
+         退貨申請視窗 (POST 表單)
+         ======================================== -->
+    <div id="returnModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content modal-md" style="max-height: 90vh; overflow-y: auto;">
+            <button onclick="closeReturnModal()" class="modal-close">&times;</button>
+
+            <h3 class="mb-2">
+                <i class="fas fa-undo" style="color: var(--danger);"></i> 申請退貨
+            </h3>
+
+            <div class="notice-box mb-2" style="background: #fff3e0; padding: 1rem; border-radius: 8px;">
+                <i class="fas fa-info-circle" style="color: #f57c00;"></i>
+                收貨後 3 天內可申請退貨，商品需保持原包裝完整
+            </div>
+
+            <form th:action="@{/orders/return}" method="post" id="returnForm" enctype="multipart/form-data">
+                <input type="hidden" name="orderId" id="returnOrderIdInput">
+
+                <!-- 退款金額 -->
+                <div class="form-group mb-2">
+                    <label class="form-label">退款金額</label>
+                    <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary-color);">
+                        $<span id="returnRefundAmount">0</span>
+                    </div>
+                </div>
+
+                <!-- 退貨原因 -->
+                <div class="form-group mb-2">
+                    <label class="form-label">退貨原因 <span style="color: var(--danger);">*</span></label>
+                    <select name="returnReason" class="form-control" required>
+                        <option value="">請選擇...</option>
+                        <option value="商品有瑕疵/損壞">商品有瑕疵 / 損壞</option>
+                        <option value="商品與描述不符">商品與描述不符</option>
+                        <option value="寄錯商品">寄錯商品</option>
+                        <option value="商品尺寸不合">商品尺寸不合</option>
+                        <option value="其他原因">其他原因</option>
+                    </select>
+                </div>
+
+                <!-- 詳細說明 -->
+                <div class="form-group mb-2">
+                    <label class="form-label">詳細說明 <span style="color: var(--danger);">*</span></label>
+                    <textarea name="returnDescription" class="form-control" rows="3"
+                        placeholder="請詳細描述商品問題（最多 500 字）..." maxlength="500" required></textarea>
+                    <small style="color: #999; font-size: 0.85rem;">最多 500 字</small>
+                </div>
+
+                <!-- 上傳圖片 -->
+                <div class="form-group mb-2">
+                    <label class="form-label">上傳圖片（選填，最多 5 張）</label>
+                    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('returnImages').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #999; margin-bottom: 0.5rem;"></i>
+                        <p style="color: #999; margin: 0;">點擊或拖曳圖片至此處上傳</p>
+                        <small style="color: #bbb;">支援 JPG、PNG 格式，單張最大 5MB</small>
+                    </div>
+                    <input type="file" id="returnImages" name="returnImages" multiple accept="image/jpeg,image/png"
+                        style="display: none;" onchange="previewImages(this)">
+                    <div id="imagePreviewContainer" class="image-preview-container"></div>
+                </div>
+
+                <!-- 按鈕 -->
+                <div class="d-flex gap-md">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeReturnModal()">
+                        取消
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                        style="flex: 1; background: var(--danger); border-color: var(--danger);">
+                        提交申請
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================
+         訂單詳情視窗
+         ======================================== -->
+    <div id="detailModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content modal-lg" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <button onclick="closeDetailModal()" class="modal-close">&times;</button>
+
+            <h3 class="mb-2">
+                <i class="fas fa-file-invoice" style="color: var(--primary-color);"></i>
+                訂單詳情
+                <span id="detailOrderId" style="font-weight: 400; color: #999; margin-left: 0.5rem;">#0</span>
+            </h3>
+
+            <!-- 訂單流程時間軸 -->
+            <div class="order-timeline mb-2">
+                <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                    <i class="fas fa-route" style="color: var(--primary-color);"></i> 訂單流程
+                </h4>
+                <div class="timeline-container" id="orderTimeline">
+                    <!-- 動態生成時間軸 -->
+                </div>
+            </div>
+
+            <!-- 訂單資訊 -->
+            <div class="detail-section mb-2">
+                <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                    <i class="fas fa-info-circle" style="color: var(--primary-color);"></i> 訂單資訊
+                </h4>
+                <div class="detail-grid">
+                    <div class="detail-row">
+                        <span class="detail-label">訂單狀態</span>
+                        <span class="detail-value" id="detailStatus">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">下單時間</span>
+                        <span class="detail-value" id="detailOrderTime">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">訂單金額</span>
+                        <span class="detail-value" id="detailTotal"
+                            style="color: var(--primary-color); font-weight: 700;">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 收件人資訊 -->
+            <div class="detail-section mb-2">
+                <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                    <i class="fas fa-truck" style="color: var(--primary-color);"></i> 收件人資訊
+                </h4>
+                <div class="detail-grid">
+                    <div class="detail-row">
+                        <span class="detail-label">收件人</span>
+                        <span class="detail-value" id="detailReceiverName">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">聯絡電話</span>
+                        <span class="detail-value" id="detailReceiverPhone">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">收件地址</span>
+                        <span class="detail-value" id="detailReceiverAddress">-</span>
+                    </div>
+                    <div class="detail-row" id="detailSpecialRow" style="display: none;">
+                        <span class="detail-label">備註</span>
+                        <span class="detail-value" id="detailSpecialInstructions">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 退貨資訊（如果有） -->
+            <div class="detail-section mb-2" id="detailReturnSection" style="display: none;">
+                <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                    <i class="fas fa-undo" style="color: var(--danger);"></i> 退貨資訊
+                </h4>
+                <div class="detail-grid">
+                    <div class="detail-row">
+                        <span class="detail-label">退貨狀態</span>
+                        <span class="detail-value" id="detailReturnStatus">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">退貨原因</span>
+                        <span class="detail-value" id="detailReturnReason">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 關閉按鈕 -->
+            <div class="d-flex justify-center mt-2">
+                <button type="button" class="btn btn-outline" onclick="closeDetailModal()">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+    <script>
+        // Auto-hide flash messages
+        document.addEventListener('DOMContentLoaded', function () {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(msg => {
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                    setTimeout(() => msg.remove(), 300);
+                }, 3000);
+            });
+        });
+
+        // Review Modal
+        function openReviewModal(orderId) {
+            document.getElementById('reviewOrderId').value = orderId;
+            document.getElementById('reviewModal').style.display = 'flex';
+            setRating(5); // Default 5 stars
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+        }
+
+        function setRating(rating) {
+            document.getElementById('ratingInput').value = rating;
+            const stars = document.querySelectorAll('.rating-star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                    star.style.color = '#ffd43b';
+                } else {
+                    star.classList.remove('active');
+                    star.style.color = '#ddd';
+                }
+            });
+        }
+
+        // Return Modal
+        let selectedFiles = []; // 儲存選擇的檔案
+
+        function openReturnModal(orderId, amount) {
+            document.getElementById('returnOrderIdInput').value = orderId;
+            document.getElementById('returnRefundAmount').textContent = amount;
+            document.getElementById('returnModal').style.display = 'flex';
+            // 重置圖片上傳
+            selectedFiles = [];
+            document.getElementById('returnImages').value = '';
+            document.getElementById('imagePreviewContainer').innerHTML = '';
+        }
+
+        function closeReturnModal() {
+            document.getElementById('returnModal').style.display = 'none';
+            // 重置圖片上傳
+            selectedFiles = [];
+            document.getElementById('returnImages').value = '';
+            document.getElementById('imagePreviewContainer').innerHTML = '';
+        }
+
+        // 圖片預覽功能
+        function previewImages(input) {
+            const container = document.getElementById('imagePreviewContainer');
+            const maxFiles = 5;
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (input.files) {
+                // 合併現有檔案與新選擇的檔案
+                const newFiles = Array.from(input.files);
+
+                for (const file of newFiles) {
+                    // 檢查檔案數量
+                    if (selectedFiles.length >= maxFiles) {
+                        alert('最多只能上傳 ' + maxFiles + ' 張圖片');
+                        break;
+                    }
+
+                    // 檢查檔案大小
+                    if (file.size > maxSize) {
+                        alert('檔案 "' + file.name + '" 超過 5MB 限制');
+                        continue;
+                    }
+
+                    // 檢查檔案類型
+                    if (!file.type.match(/image\/(jpeg|png)/)) {
+                        alert('檔案 "' + file.name + '" 格式不支援，請上傳 JPG 或 PNG 格式');
+                        continue;
+                    }
+
+                    selectedFiles.push(file);
+                }
+
+                // 更新預覽
+                updateImagePreview();
+                // 更新 input 的 files
+                updateFileInput();
+            }
+        }
+
+        function updateImagePreview() {
+            const container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'image-preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="預覽圖片">
+                        <button type="button" class="remove-btn" onclick="removeImage(${index})">&times;</button>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeImage(index) {
+            selectedFiles.splice(index, 1);
+            updateImagePreview();
+            updateFileInput();
+        }
+
+        function updateFileInput() {
+            // 建立新的 DataTransfer 來更新 input files
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            document.getElementById('returnImages').files = dt.files;
+        }
+
+        // 拖曳上傳功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('imageUploadArea');
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        // 模擬 input change 事件
+                        const input = document.getElementById('returnImages');
+                        const dt = new DataTransfer();
+                        Array.from(files).forEach(file => dt.items.add(file));
+                        input.files = dt.files;
+                        previewImages(input);
+                    }
+                });
+            }
+        });
+
+        // Close modals when clicking overlay
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+        // Detail Modal
+        function openDetailModal(orderId) {
+            const orderCard = document.querySelector(`.order-card[data-order-id="${orderId}"]`);
+            if (!orderCard) return;
+
+            const status = parseInt(orderCard.dataset.orderStatus);
+            const orderTime = orderCard.dataset.orderTime;
+            const orderTotal = orderCard.dataset.orderTotal;
+            const receiverName = orderCard.dataset.receiverName;
+            const receiverPhone = orderCard.dataset.receiverPhone;
+            const receiverAddress = orderCard.dataset.receiverAddress;
+            const specialInstructions = orderCard.dataset.specialInstructions;
+            const returnStatus = orderCard.dataset.returnStatus;
+            const returnReason = orderCard.dataset.returnReason;
+
+            // 設定訂單編號
+            document.getElementById('detailOrderId').textContent = '#' + orderId;
+
+            // 設定訂單狀態
+            const statusMap = {
+                0: '<span class="status-badge status-paid">已付款</span>',
+                1: '<span class="status-badge status-shipped">已出貨</span>',
+                2: '<span class="status-badge status-completed">已完成</span>',
+                3: '<span class="status-badge status-canceled">已取消</span>',
+                4: '<span class="status-badge status-refunding">申請退貨中</span>',
+                5: '<span class="status-badge status-refunded">退貨完成</span>'
+            };
+            document.getElementById('detailStatus').innerHTML = statusMap[status] || '未知狀態';
+
+            // 設定基本資訊
+            document.getElementById('detailOrderTime').textContent = orderTime;
+            document.getElementById('detailTotal').textContent = '$' + orderTotal;
+            document.getElementById('detailReceiverName').textContent = receiverName;
+            document.getElementById('detailReceiverPhone').textContent = receiverPhone;
+            document.getElementById('detailReceiverAddress').textContent = receiverAddress;
+
+            // 備註
+            if (specialInstructions && specialInstructions.trim()) {
+                document.getElementById('detailSpecialRow').style.display = 'flex';
+                document.getElementById('detailSpecialInstructions').textContent = specialInstructions;
+            } else {
+                document.getElementById('detailSpecialRow').style.display = 'none';
+            }
+
+            // 退貨資訊
+            if (returnStatus !== '' && returnStatus !== null && returnStatus !== undefined) {
+                document.getElementById('detailReturnSection').style.display = 'block';
+                const returnStatusMap = {
+                    '0': '<span class="status-badge status-refunding">審核中</span>',
+                    '1': '<span class="status-badge status-completed">退貨通過</span>',
+                    '2': '<span class="status-badge status-canceled">退貨失敗</span>'
+                };
+                document.getElementById('detailReturnStatus').innerHTML = returnStatusMap[returnStatus] || '未知';
+                document.getElementById('detailReturnReason').textContent = returnReason || '-';
+            } else {
+                document.getElementById('detailReturnSection').style.display = 'none';
+            }
+
+            // 生成時間軸
+            generateTimeline(status, returnStatus);
+
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        function generateTimeline(status, returnStatus) {
+            const timeline = document.getElementById('orderTimeline');
+            let html = '';
+
+            // 正常訂單流程
+            const normalFlow = [
+                { step: 0, title: '訂單成立', desc: '買家已付款，等待賣家出貨' },
+                { step: 1, title: '賣家已出貨', desc: '商品運送中，請耐心等候' },
+                { step: 2, title: '訂單完成', desc: '買家已確認收貨' }
+            ];
+
+            // 判斷訂單流程類型
+            if (status === 3) {
+                // 已取消
+                html += `
+                    <div class="timeline-item completed">
+                        <div class="timeline-title">訂單成立</div>
+                        <div class="timeline-desc">買家已付款</div>
+                    </div>
+                    <div class="timeline-item cancelled">
+                        <div class="timeline-title">訂單已取消</div>
+                        <div class="timeline-desc">訂單已被取消</div>
+                    </div>
+                `;
+            } else if (status === 4 || status === 5) {
+                // 退貨流程
+                normalFlow.forEach((item, index) => {
+                    const isCompleted = index <= 1; // 至少到已出貨
+                    html += `
+                        <div class="timeline-item ${isCompleted ? 'completed' : ''}">
+                            <div class="timeline-title">${item.title}</div>
+                            <div class="timeline-desc">${item.desc}</div>
+                        </div>
+                    `;
+                });
+
+                // 退貨節點
+                html += `
+                    <div class="timeline-item ${status === 4 ? 'active' : 'completed'}">
+                        <div class="timeline-title">申請退貨</div>
+                        <div class="timeline-desc">買家已提交退貨申請</div>
+                    </div>
+                `;
+
+                if (status === 5) {
+                    if (returnStatus === '1') {
+                        html += `
+                            <div class="timeline-item completed">
+                                <div class="timeline-title">退貨完成</div>
+                                <div class="timeline-desc">退貨已通過，款項已退回</div>
+                            </div>
+                        `;
+                    } else if (returnStatus === '2') {
+                        html += `
+                            <div class="timeline-item cancelled">
+                                <div class="timeline-title">退貨失敗</div>
+                                <div class="timeline-desc">退貨申請被拒絕</div>
+                            </div>
+                        `;
+                    }
+                }
+            } else {
+                // 正常流程
+                normalFlow.forEach((item, index) => {
+                    let itemClass = '';
+                    if (index < status) {
+                        itemClass = 'completed';
+                    } else if (index === status) {
+                        itemClass = 'active';
+                    }
+                    html += `
+                        <div class="timeline-item ${itemClass}">
+                            <div class="timeline-title">${item.title}</div>
+                            <div class="timeline-desc">${item.desc}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            timeline.innerHTML = html;
+        }
+    </script>
+
+</body>
+
+</html>

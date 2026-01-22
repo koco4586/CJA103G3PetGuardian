@@ -14,6 +14,7 @@ import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 /**
  * Service Implementation for Core Chat Functionality.
@@ -22,6 +23,7 @@ import com.petguardian.chat.model.ChatRoomEntity;
  * - Orchestrates the message processing flow (Validation -> Persistence ->
  * Notification)
  * - Manages chat history retrieval with pagination
+ * - Handles real-time WebSocket notifications
  * 
  * Architecture Note:
  * - DTO mapping is delegated to {@link ChatMessageMapper}
@@ -31,6 +33,10 @@ import com.petguardian.chat.model.ChatRoomEntity;
  */
 @Service
 public class ChatServiceImpl implements ChatService {
+    // ============================================================
+    // CONSTANTS
+    // ============================================================
+    private static final int MAX_PREVIEW_LENGTH = 200;
 
     // ============================================================
     // DEPENDENCIES
@@ -38,11 +44,10 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRoomRepository chatroomRepository;
     private final MessageStrategyService messageStrategyService;
     private final ChatRoomCreationStrategy chatRoomCreationStrategy;
-
-    // Extracted Services (P1 Refactoring)
     private final ChatMessageMapper messageMapper;
     private final ChatReadStatusService readStatusService;
     private final ChatVerificationService verificationService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatServiceImpl(
             ChatRoomRepository chatroomRepository,
@@ -50,13 +55,15 @@ public class ChatServiceImpl implements ChatService {
             ChatRoomCreationStrategy chatRoomCreationStrategy,
             ChatMessageMapper messageMapper,
             ChatReadStatusService readStatusService,
-            ChatVerificationService verificationService) {
+            ChatVerificationService verificationService,
+            SimpMessagingTemplate messagingTemplate) {
         this.chatroomRepository = chatroomRepository;
         this.messageStrategyService = messageStrategyService;
         this.chatRoomCreationStrategy = chatRoomCreationStrategy;
         this.messageMapper = messageMapper;
         this.readStatusService = readStatusService;
         this.verificationService = verificationService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // ============================================================
@@ -111,19 +118,8 @@ public class ChatServiceImpl implements ChatService {
         List<ChatMessageDTO> dtos = messageMapper.toDtoList(messages, currentUserId, partnerId);
 
         // Mark last sent message as read if partner has read (only for first page)
-        if (page == 0) {
-            LocalDateTime partnerLastReadAt = currentUserId.equals(chatroom.getMemId1())
-                    ? chatroom.getMem2LastReadAt()
-                    : chatroom.getMem1LastReadAt();
-            if (partnerLastReadAt != null) {
-                for (int i = dtos.size() - 1; i >= 0; i--) {
-                    if (currentUserId.equals(dtos.get(i).getSenderId())) {
-                        dtos.get(i).setIsRead(true);
-                        break;
-                    }
-                }
-            }
-        }
+        // Mark last sent message as read if partner has read (only for first page)
+        markLatestSelfMessageAsRead(dtos, chatroom, currentUserId, page);
 
         return dtos;
     }
@@ -140,12 +136,19 @@ public class ChatServiceImpl implements ChatService {
 
     /**
      * Marks the chatroom as read for the specific user.
-     * Delegates to ChatReadStatusService.
+     * Updates persistence layer via {@link ChatReadStatusService} and broadcasts
+     * a read receipt via WebSocket.
      */
     @Override
     @Transactional
     public void markRoomAsRead(Integer chatroomId, Integer userId) {
         readStatusService.markRoomAsRead(chatroomId, userId);
+
+        // Broadcast Read Receipt
+        ChatMessageDTO readReceipt = new ChatMessageDTO();
+        readReceipt.setChatroomId(chatroomId);
+        readReceipt.setIsRead(true);
+        messagingTemplate.convertAndSend("/topic/chatroom." + chatroomId + ".read", readReceipt);
     }
 
     /**
@@ -179,7 +182,7 @@ public class ChatServiceImpl implements ChatService {
 
     private void updateChatroomAfterMessage(ChatRoomEntity chatroom, Integer senderId, String content) {
         chatroom.setLastMessageAt(LocalDateTime.now());
-        String preview = content.length() > 200 ? content.substring(0, 200) : content;
+        String preview = content.length() > MAX_PREVIEW_LENGTH ? content.substring(0, MAX_PREVIEW_LENGTH) : content;
         chatroom.setLastMessagePreview(preview);
 
         // Update sender's read status
@@ -208,5 +211,31 @@ public class ChatServiceImpl implements ChatService {
         List<ChatMessageEntity> asc = new ArrayList<>(desc);
         Collections.reverse(asc);
         return asc;
+    }
+
+    private void markLatestSelfMessageAsRead(List<ChatMessageDTO> dtos, ChatRoomEntity chatroom,
+            Integer currentUserId,
+            int page) {
+        if (page != 0) {
+            return;
+        }
+
+        LocalDateTime partnerLastReadAt = currentUserId.equals(chatroom.getMemId1())
+                ? chatroom.getMem2LastReadAt()
+                : chatroom.getMem1LastReadAt();
+
+        if (partnerLastReadAt == null) {
+            return;
+        }
+
+        for (int i = dtos.size() - 1; i >= 0; i--) {
+            ChatMessageDTO msg = dtos.get(i);
+            if (currentUserId.equals(msg.getSenderId())) {
+                if (msg.getChatTime() != null && !msg.getChatTime().isAfter(partnerLastReadAt)) {
+                    msg.setIsRead(true);
+                }
+                break;
+            }
+        }
     }
 }

@@ -6,170 +6,363 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Pet Guardian - 二手商城管理</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../static/css/backend/style.css">
-    <link rel="stylesheet" href="../../static/css/backend/market.css">
+    <link rel="stylesheet" th:href="@{/css/backend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/backend/market.css}">
+
 </head>
 
 <body>
-    <script src="../../static/js/backend/sidebar.js"></script>
+<script th:src="@{/js/backend/sidebar.js}"></script>
+<script th:src="@{/js/backend/market/market.js}"></script>
 
-    <div class="main-content">
-        <header>
-            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+<div class="main-content">
+    <header>
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+            <h1>二手商城管理</h1>
+            <div class="sub">處理訂單撥款與退款爭議</div>
+        </div>
+    </header>
 
-            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
-                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+    <section>
+        <!-- 成功訊息 -->
+        <div th:if="${successMessage}" class="alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">操作成功</span>
+        </div>
 
-            <div>
-                <h1>二手商城管理</h1>
-                <div class="sub">處理訂單撥款與退款爭議</div>
-            </div>
-        </header>
+        <!-- 錯誤訊息 -->
+        <div th:if="${error}" class="alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${error}">操作失敗</span>
+        </div>
 
-        <section>
-            <div class="tab-container">
-                <button class="tab-btn active" onclick="switchTab('orders')">
-                    <i class="fa-solid fa-file-invoice-dollar"></i> 訂單紀錄 (撥款)
+        <!-- 主要分頁標籤 -->
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchMainTab('orders')">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                查閱訂單紀錄
+            </button>
+            <button class="tab-btn" onclick="switchMainTab('refunds')">
+                <i class="fa-solid fa-rotate-left"></i>
+                退款申請審核
+                <span class="badge" th:text="${refundPendingCount}" th:if="${refundPendingCount > 0}">0</span>
+            </button>
+        </div>
+
+        <!-- ========== 查閱訂單紀錄區塊 ========== -->
+        <div id="panel-orders" class="panel active">
+
+            <!-- 子分頁按鈕 -->
+            <div class="sub-tab-container">
+                <button class="sub-tab-btn active" onclick="switchOrderTab('pending')">
+                    待完成 <span class="count" th:text="'(' + ${pendingCount} + ')'">(0)</span>
                 </button>
-                <button class="tab-btn" onclick="switchTab('refunds')">
-                    <i class="fa-solid fa-rotate-left"></i> 退款審核申請
+                <button class="sub-tab-btn" onclick="switchOrderTab('closed')">
+                    結案訂單 <span class="count" th:text="'(' + ${closedCount} + ')'">(0)</span>
+                </button>
+                <button class="sub-tab-btn" onclick="switchOrderTab('return')">
+                    退貨 <span class="count" th:text="'(' + ${returnCount} + ')'">(0)</span>
                 </button>
             </div>
 
-            <div id="panel-orders" class="panel active">
+            <!-- 待完成訂單 -->
+            <div id="order-pending" class="sub-panel active">
                 <div class="card">
-                    <h3>待撥款訂單列表</h3>
-                    <div class="sub" style="margin-bottom:15px; color:#666;">
-                        當買家確認收貨後，系統將顯示於此，管理員需手動或確認自動撥款給賣家。
-                    </div>
+                    <h3>待完成訂單</h3>
+                    <div class="sub">訂單狀態為「已付款」或「已出貨」</div>
+
                     <table>
                         <thead>
-                            <tr>
-                                <th>訂單編號</th>
-                                <th>商品名稱</th>
-                                <th>買家</th>
-                                <th>賣家</th>
-                                <th>金額</th>
-                                <th>訂單狀態</th>
-                                <th>操作</th>
-                            </tr>
+                        <tr>
+                            <th>訂單編號</th>
+                            <th>買家</th>
+                            <th>賣家</th>
+                            <th>訂單金額</th>
+                            <th>訂單狀態</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>#ORD-202401</td>
-                                <td>全新自動餵食器</td>
-                                <td>王小明</td>
-                                <td>陳大發</td>
-                                <td>$1,500</td>
-                                <td><span
-                                        style="color:green; background:#e6fffa; padding:4px 8px; border-radius:4px;">買家已收貨</span>
-                                </td>
-                                <td>
-                                    <button class="btn" onclick="alert('已撥款給賣家！')">撥款給賣家</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#ORD-202405</td>
-                                <td>寵物推車 (九成新)</td>
-                                <td>林依依</td>
-                                <td>張三</td>
-                                <td>$2,200</td>
-                                <td><span
-                                        style="color:#666; background:#eee; padding:4px 8px; border-radius:4px;">運送中</span>
-                                </td>
-                                <td>
-                                    <button class="btn ghost" disabled>尚未完成</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#ORD-202408</td>
-                                <td>貓咪罐頭 x 24</td>
-                                <td>Kevin</td>
-                                <td>寵物小舖</td>
-                                <td>$800</td>
-                                <td><span
-                                        style="color:blue; background:#e6f7ff; padding:4px 8px; border-radius:4px;">已完成撥款</span>
-                                </td>
-                                <td>
-                                    <button class="btn ghost" disabled>已結案</button>
-                                </td>
-                            </tr>
+                        <tr th:each="orderData : ${pendingOrders}">
+                            <td th:text="'#' + ${orderData.order.orderId}">#001</td>
+                            <td th:text="${orderData.buyerName}">買家名稱</td>
+                            <td th:text="${orderData.sellerName}">賣家名稱</td>
+                            <td style="font-weight: 600; color: #4a90a4;"
+                                th:text="'$' + ${#numbers.formatInteger(orderData.order.orderTotal, 0, 'COMMA')}">
+                                $0
+                            </td>
+                            <td>
+                                        <span class="status-badge status-paid"
+                                              th:if="${orderData.order.orderStatus == 0}">已付款</span>
+                                <span class="status-badge status-shipped"
+                                      th:if="${orderData.order.orderStatus == 1}">已出貨</span>
+                            </td>
+                        </tr>
+
+                        <!-- 空狀態 -->
+                        <tr th:if="${#lists.isEmpty(pendingOrders)}">
+                            <td colspan="5" class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>目前沒有待完成訂單</p>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="panel-refunds" class="panel">
+            <!-- 結案訂單 -->
+            <div id="order-closed" class="sub-panel">
                 <div class="card">
-                    <h3>退款爭議審核</h3>
-                    <div class="sub" style="margin-bottom:15px; color:#666;">
-                        買家發起退款申請，需人工介入審核是否符合退貨標準。
-                    </div>
+                    <h3>結案訂單</h3>
+                    <div class="sub">訂單狀態為「已完成」或「已取消」。已完成的訂單可進行撥款操作。</div>
+
                     <table>
                         <thead>
-                            <tr>
-                                <th>申請編號</th>
-                                <th>訂單 / 商品</th>
-                                <th>申請人</th>
-                                <th>退款原因</th>
-                                <th>佐證圖片</th>
-                                <th>狀態</th>
-                                <th>操作</th>
-                            </tr>
+                        <tr>
+                            <th>訂單編號</th>
+                            <th>買家</th>
+                            <th>賣家</th>
+                            <th>訂單金額</th>
+                            <th>訂單狀態</th>
+                            <th>操作</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>REF-009</td>
-                                <td>二手貓砂盆 (#ORD-202403)</td>
-                                <td>李四</td>
-                                <td>商品破損嚴重，與描述不符</td>
-                                <td><a href="#" style="color:var(--orange)">查看圖片</a></td>
-                                <td><span style="color:orange; font-weight:bold;">待審核</span></td>
-                                <td>
-                                    <button class="btn" style="background:#4CAF50;"
-                                        onclick="alert('已批准退款')">批准退款</button>
-                                    <button class="btn" style="background:#d9534f;" onclick="alert('已駁回申請')">駁回</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>REF-012</td>
-                                <td>過期飼料 (#ORD-202407)</td>
-                                <td>Unknown</td>
-                                <td>賣家寄錯商品</td>
-                                <td><a href="#" style="color:var(--orange)">查看圖片</a></td>
-                                <td><span style="color:red; font-weight:bold;">申訴中</span></td>
-                                <td>
-                                    <button class="btn" style="background:#4CAF50;">批准退款</button>
-                                    <button class="btn" style="background:#d9534f;">駁回</button>
-                                </td>
-                            </tr>
+                        <tr th:each="orderData : ${closedOrders}">
+                            <td th:text="'#' + ${orderData.order.orderId}">#001</td>
+                            <td th:text="${orderData.buyerName}">買家名稱</td>
+                            <td th:text="${orderData.sellerName}">賣家名稱</td>
+                            <td style="font-weight: 600; color: #4a90a4;"
+                                th:text="'$' + ${#numbers.formatInteger(orderData.order.orderTotal, 0, 'COMMA')}">
+                                $0
+                            </td>
+                            <td>
+                                        <span class="status-badge status-completed"
+                                              th:if="${orderData.order.orderStatus == 2}">已完成</span>
+                                <span class="status-badge status-canceled"
+                                      th:if="${orderData.order.orderStatus == 3}">已取消</span>
+                                <span class="status-badge status-paidout"
+                                      th:if="${orderData.order.orderStatus == 6}">已撥款</span>
+                            </td>
+                            <td>
+                                <!-- 已完成 -> 可撥款 -->
+                                <form th:if="${orderData.order.orderStatus == 2}"
+                                      th:action="@{/admin/store/payout}" method="post" style="display: inline;">
+                                    <input type="hidden" name="orderId" th:value="${orderData.order.orderId}">
+                                    <button type="submit" class="btn btn-primary"
+                                            onclick="return confirm('確定撥款給賣家嗎？')">
+                                        <i class="fa-solid fa-money-bill-transfer"></i> 撥款給賣家
+                                    </button>
+                                </form>
+
+                                <!-- 已撥款 -> 灰色按鈕 -->
+                                <button th:if="${orderData.order.orderStatus == 6}"
+                                        class="btn" disabled style="background: #ccc;">
+                                    <i class="fa-solid fa-check"></i> 已撥款
+                                </button>
+
+                                <!-- 已取消 -> 無操作 -->
+                                <span th:if="${orderData.order.orderStatus == 3}" style="color: #999;">
+                                            -
+                                        </span>
+                            </td>
+                        </tr>
+
+                        <!-- 空狀態 -->
+                        <tr th:if="${#lists.isEmpty(closedOrders)}">
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>目前沒有結案訂單</p>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-        </section>
+            <!-- 退貨訂單 -->
+            <div id="order-return" class="sub-panel">
+                <div class="card">
+                    <h3>退貨訂單</h3>
+                    <div class="sub">訂單狀態為「申請退貨中」或「退貨完成」</div>
+
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>訂單編號</th>
+                            <th>買家</th>
+                            <th>賣家</th>
+                            <th>訂單金額</th>
+                            <th>訂單狀態</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="orderData : ${returnOrders}">
+                            <td th:text="'#' + ${orderData.order.orderId}">#001</td>
+                            <td th:text="${orderData.buyerName}">買家名稱</td>
+                            <td th:text="${orderData.sellerName}">賣家名稱</td>
+                            <td style="font-weight: 600; color: #4a90a4;"
+                                th:text="'$' + ${#numbers.formatInteger(orderData.order.orderTotal, 0, 'COMMA')}">
+                                $0
+                            </td>
+                            <td>
+                                        <span class="status-badge status-refunding"
+                                              th:if="${orderData.order.orderStatus == 4}">申請退貨中</span>
+                                <span class="status-badge status-refunded"
+                                      th:if="${orderData.order.orderStatus == 5}">退貨完成</span>
+                            </td>
+                        </tr>
+
+                        <!-- 空狀態 -->
+                        <tr th:if="${#lists.isEmpty(returnOrders)}">
+                            <td colspan="5" class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>目前沒有退貨訂單</p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 退款申請審核區塊 ========== -->
+        <div id="panel-refunds" class="panel">
+            <div class="card">
+                <h3>退款爭議審核</h3>
+                <div class="sub">買家發起退款申請，需人工介入審核是否符合退貨標準。</div>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>退貨訂單編號</th>
+                        <th>訂單編號</th>
+                        <th>申請人</th>
+                        <th>退款金額</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="returnData : ${returnsWithDetails}">
+                        <td th:text="'#REF-' + ${returnData.returnOrder.returnId}">#REF-001</td>
+                        <td th:text="'#' + ${returnData.returnOrder.orderId}">#ORD-001</td>
+                        <td th:text="${returnData.buyerName}">申請人</td>
+                        <td style="font-weight: 600; color: #e67e22;"
+                            th:text="'$' + ${#numbers.formatInteger(returnData.returnOrder.refundAmount, 0, 'COMMA')}">
+                            $0
+                        </td>
+                        <td>
+                                    <span class="status-badge return-pending"
+                                          th:if="${returnData.isPending}">審核中</span>
+                            <span class="status-badge return-approved"
+                                  th:if="${returnData.isApproved}">已通過</span>
+                            <span class="status-badge return-rejected"
+                                  th:if="${returnData.isRejected}">已駁回</span>
+                        </td>
+                        <td>
+                            <!-- 待審核狀態：顯示三個按鈕 -->
+                            <div th:if="${returnData.isPending}" class="action-btns">
+                                <button type="button" class="btn btn-info"
+                                        th:onclick="'showReturnDetail(' + ${returnData.returnOrder.returnId} + ')'">
+                                    <i class="fa-solid fa-eye"></i> 查看內容
+                                </button>
+
+                                <form th:action="@{/admin/store/return/approve}" method="post" style="display: inline;">
+                                    <input type="hidden" name="returnId" th:value="${returnData.returnOrder.returnId}">
+                                    <button type="submit" class="btn btn-primary"
+                                            onclick="return confirm('確定批准退款並撥款給買家嗎？')">
+                                        <i class="fa-solid fa-check"></i> 批准退款
+                                    </button>
+                                </form>
+
+                                <form th:action="@{/admin/store/return/reject}" method="post" style="display: inline;">
+                                    <input type="hidden" name="returnId" th:value="${returnData.returnOrder.returnId}">
+                                    <button type="submit" class="btn btn-danger"
+                                            onclick="return confirm('確定駁回退款申請嗎？駁回後訂單金額將撥給賣家。')">
+                                        <i class="fa-solid fa-times"></i> 駁回
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- 已處理狀態 -->
+                            <div th:unless="${returnData.isPending}">
+                                <button type="button" class="btn btn-info"
+                                        th:onclick="'showReturnDetail(' + ${returnData.returnOrder.returnId} + ')'">
+                                    <i class="fa-solid fa-eye"></i> 查看內容
+                                </button>
+                                <span style="color: #999; margin-left: 10px;">已處理</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- 空狀態 -->
+                    <tr th:if="${#lists.isEmpty(returnsWithDetails)}">
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>目前沒有退款申請</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 退貨詳情 Modal -->
+<div id="returnDetailModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-file-lines"></i> 退貨申請詳情</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-row">
+                <span class="detail-label">退貨單編號</span>
+                <span class="detail-value" id="modal-returnId">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">訂單編號</span>
+                <span class="detail-value" id="modal-orderId">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">申請人</span>
+                <span class="detail-value" id="modal-buyerName">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">賣家</span>
+                <span class="detail-value" id="modal-sellerName">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">訂單金額</span>
+                <span class="detail-value" id="modal-orderTotal">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">退款金額</span>
+                <span class="detail-value" id="modal-refundAmount" style="color: #e67e22; font-weight: 600;">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">申請時間</span>
+                <span class="detail-value" id="modal-applyTime">-</span>
+            </div>
+            <div class="detail-row" style="flex-direction: column;">
+                <span class="detail-label" style="margin-bottom: 8px;">退款原因</span>
+                <div id="modal-returnReason" style="background: #f9f9f9; padding: 12px; border-radius: 8px; color: #333;">
+                    -
+                </div>
+            </div>
+            <div id="modal-images-container" style="margin-top: 15px; display: none;">
+                <span class="detail-label" style="margin-bottom: 8px; display: block;">退貨圖片</span>
+                <div id="modal-images" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <!-- 圖片會動態載入 -->
+                </div>
+            </div>
+        </div>
     </div>
-    <script>
-        function switchTab(tabName) {
-            // 1. 移除所有按鈕的 active 樣式
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+</div>
 
-            // 2. 隱藏所有區塊
-            document.querySelectorAll('.panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-
-            // 3. 加上 active 到被點擊的按鈕
-            // 這裡使用了 event.currentTarget 來抓取觸發點擊的按鈕
-            event.currentTarget.classList.add('active');
-
-            // 4. 顯示對應的區塊
-            document.getElementById('panel-' + tabName).classList.add('active');
-        }
-    </script>
 </body>
 
 </html>

@@ -1,86 +1,176 @@
 <!doctype html>
-<html lang="zh-Hant">
-
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pet Guardian - 活動文章</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../static/css/backend/style.css">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Pet Guardian - 消息管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/backend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/backend/news.css}">
+
 </head>
 
 <body>
-    <script src="../../static/js/backend/sidebar.js"></script>
+<!-- 側邊欄（由 sidebar.js 自動生成） -->
+<script th:src="@{/js/backend/sidebar.js}"></script>
 
-    <div class="main-content">
-        <header>
-            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+<div class="main-content">
+    <header>
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+            <h1>消息管理</h1>
+            <div class="sub">發布與編輯站內最新消息</div>
+        </div>
+    </header>
 
-            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
-                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
-            <div>
-                <h1>活動與文章管理</h1>
-                <div class="sub">發布最新消息與衛教文章</div>
+    <section>
+        <!-- 成功訊息提示 -->
+        <div th:if="${successMessage}" class="alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">操作成功</span>
+        </div>
+
+        <!-- 新增按鈕 -->
+        <div style="margin-bottom:16px;">
+            <button class="btn" onclick="openModal()">
+                <i class="fa-solid fa-plus"></i> 新增消息
+            </button>
+        </div>
+
+        <!-- 消息列表 -->
+        <div class="card">
+            <h3>消息列表</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>標題</th>
+                    <th>分類</th>
+                    <th>發布日期</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="news : ${newsList}">
+                    <td th:text="${news.newsId}">301</td>
+                    <td th:text="${news.title}">標題</td>
+                    <td>
+                        <span th:text="${news.newsType != null ? news.newsType.newsTypeName : '未分類'}">分類</span>
+                    </td>
+                    <td th:text="${#temporals.format(news.publishDate, 'yyyy-MM-dd HH:mm')}">2026-01-01</td>
+                    <td>
+                        <span th:if="${news.isPublished == 1}" style="color:green">已發布</span>
+                        <span th:if="${news.isPublished == 0}" style="color:#999">草稿</span>
+                    </td>
+                    <td>
+                        <!-- 編輯按鈕 -->
+                        <button class="btn"
+                                th:data-id="${news.newsId}"
+                                th:data-title="${news.title}"
+                                th:data-type="${news.newsType != null ? news.newsType.newsTypeId : ''}"
+                                th:data-content="${news.content}"
+                                th:data-date="${news.publishDate}"
+                                th:data-published="${news.isPublished}"
+                                onclick="editNews(this)">編輯
+                        </button>
+
+                        <!-- 刪除按鈕 -->
+                        <form th:action="@{/admin/news/delete}" method="post" style="display:inline"
+                              onsubmit="return confirm('確定要刪除嗎？');">
+                            <input type="hidden" name="id" th:value="${news.newsId}">
+                            <button type="submit" class="btn ghost">刪除</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- 新增/編輯 Modal -->
+<div id="newsModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">新增消息</h3>
+        <form th:action="@{/admin/news/save}" method="post">
+            <input type="hidden" id="newsId" name="newsId">
+
+            <div class="form-group">
+                <label>標題</label>
+                <input type="text" id="title" name="title" class="form-control" required>
             </div>
-        </header>
 
-        <section>
-            <div style="margin-bottom:16px;">
-                <button class="btn"><i class="fa-solid fa-plus"></i> 新增文章 / 活動</button>
+            <div class="form-group">
+                <label>分類</label>
+                <select id="newsTypeId" name="newsTypeId" class="form-control">
+                    <option th:each="type : ${newsTypeList}"
+                            th:value="${type.newsTypeId}"
+                            th:text="${type.newsTypeName}">分類
+                    </option>
+                </select>
             </div>
 
-            <div class="card">
-                <h3>已發布列表</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>標題</th>
-                            <th>分類</th>
-                            <th>發布日期</th>
-                            <th>狀態</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>301</td>
-                            <td>寒假寵物照顧注意事項</td>
-                            <td>衛教知識</td>
-                            <td>2026-01-01</td>
-                            <td><span style="color:green">已發布</span></td>
-                            <td>
-                                <button class="btn">編輯</button>
-                                <button class="btn ghost">下架</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>302</td>
-                            <td>2026 新年保母媒合優惠活動</td>
-                            <td>官方活動</td>
-                            <td>2026-01-05</td>
-                            <td><span style="color:green">進行中</span></td>
-                            <td>
-                                <button class="btn">編輯</button>
-                                <button class="btn ghost">結束活動</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>303</td>
-                            <td>系統維護公告 (1/10)</td>
-                            <td>系統公告</td>
-                            <td>2026-01-08</td>
-                            <td><span style="color:#999">排程中</span></td>
-                            <td>
-                                <button class="btn">編輯</button>
-                                <button class="btn ghost">刪除</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="form-group">
+                <label>發布日期</label>
+                <input type="datetime-local" id="publishDate" name="publishDate" class="form-control" required>
             </div>
-        </section>
+
+            <div class="form-group">
+                <label>內容</label>
+                <textarea id="content" name="content" class="form-control" rows="8" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>狀態</label>
+                <select id="isPublished" name="isPublished" class="form-control">
+                    <option value="1">發布</option>
+                    <option value="0">草稿</option>
+                </select>
+            </div>
+
+            <div style="text-align: right; margin-top: 10px;">
+                <button type="button" class="btn ghost" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn">儲存</button>
+            </div>
+        </form>
     </div>
-</body>
+</div>
 
+<script>
+    // 開啟新增 Modal
+    function openModal() {
+        document.getElementById('newsModal').classList.add('active');
+        document.getElementById('modalTitle').innerText = '新增消息';
+        document.getElementById('newsId').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('content').value = '';
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('publishDate').value = now.toISOString().slice(0, 16);
+    }
+
+    // 關閉 Modal
+    function closeModal() {
+        document.getElementById('newsModal').classList.remove('active');
+    }
+
+    // 編輯消息
+    function editNews(btn) {
+        document.getElementById('newsModal').classList.add('active');
+        document.getElementById('modalTitle').innerText = '編輯消息';
+
+        document.getElementById('newsId').value = btn.getAttribute('data-id');
+        document.getElementById('title').value = btn.getAttribute('data-title');
+        document.getElementById('newsTypeId').value = btn.getAttribute('data-type');
+        document.getElementById('content').value = btn.getAttribute('data-content');
+        document.getElementById('isPublished').value = btn.getAttribute('data-published');
+
+        let dateStr = btn.getAttribute('data-date');
+        if (dateStr) {
+            document.getElementById('publishDate').value = dateStr.slice(0, 16);
+        }
+    }
+</script>
+</body>
 </html>

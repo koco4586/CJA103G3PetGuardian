@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員登入｜Petguardian</title>
+</head>
+
+<body>
+    <h3>PetGuardian</h3>
+    <h1>會員登入</h1>
+    <form>
+        <span>使用者帳號</span><br><br>
+        <input type="text" placeholder="請輸入使用者帳號" class="loginacc" required><br><br>
+        <span>使用者密碼</span><br><br>
+        <input type="password" placeholder="請輸入使用者密碼" class="loginpw" required><br><br>
+        <button class="submit">立即登入</button>
+        <button type="reset">清除重填</button>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <script>
+
+            function init() {
+
+                function login(e) {
+
+                    e.preventDefault();
+
+                    let loginaccount = $(".loginacc").val();
+                    let loginpassword = $(".loginpw").val();
+
+                    let loginobject = {
+                        "memAcc": loginaccount,
+                        "memPw": loginpassword
+                    }
+
+
+                    let fetch_url = "http://localhost:8080/login";
+
+                    fetch(fetch_url, {
+                        method: "POST",
+                        body: JSON.stringify(loginobject),
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }).then(res => res.json()).then(data => {
+                        console.log(data);
+                        if (data.result === "登入成功") {  // 後端返回 {result: true}
+                            // window.location.href = "#";
+                        }
+                    });
+
+                };
+
+                $(".submit").on("click", login)
+
+            };
+
+            $(window).on("load", init);
+
+        </script>
+
+</body>
+
+</html>
