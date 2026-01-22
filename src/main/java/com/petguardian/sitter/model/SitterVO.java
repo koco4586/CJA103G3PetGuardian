@@ -18,7 +18,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-@Entity // 保姆table
+/**
+ * 保姆 Entity
+ * 對應資料表: sitter
+ * 
+ * 包含保姆基本資料、服務狀態、評價統計與排程資訊
+ */
+@Entity
 @Table(name = "sitter")
 public class SitterVO implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -68,11 +74,13 @@ public class SitterVO implements Serializable {
 	private Byte sitterStatus;
 
 	/**
-	 * 服務時間（varchar(24) NOT NULL） - 24 小時字串：0=可預約,1=已預約,2=不可預約 - 因規格表未明確寫 DB
-	 * default，為避免 insert 時為 null 造成錯誤 這裡直接在 Java 給預設值（24 個 0）
+	 * 服務時間（varchar(24) NOT NULL） - 每日 24 小時字串：0=不可預約,1=可預約
+	 * 目前設定為 24 (日曆模式)，僅記錄一天的狀態。
+	 * 若要支援每週差異排程 (如平日/週末不同)，需改回 168 (週曆模式)。
 	 */
-	@Column(name = "service_time", nullable = false, length = 24, insertable = false)
-	private String serviceTime;
+	@Column(name = "service_time", nullable = false, length = 24)
+
+	private String serviceTime = "0".repeat(24);
 
 	/** 保姆總評價數（DEFAULT 0） */
 	@Column(name = "sitter_rating_count", insertable = false)

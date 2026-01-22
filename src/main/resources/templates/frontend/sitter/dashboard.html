@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保姆主頁 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/dashboard.css">
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <!-- Debug 區域 -->
+    <div style="background:red; color:white; padding:10px; text-align:center;">
+        <h3 th:text="'Debug ServiceTime (Model): ' + ${serviceTime}"></h3>
+        <h3 th:text="'Debug Sitter.ServiceTime: ' + ${sitter.serviceTime}"></h3>
+    </div>
+
+    <div class="container dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="text-center mb-2">
+                <div class="avatar-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar">
+                </div>
+                <h4 th:text="${sitter.sitterName}">保姆姓名</h4>
+                <p style="color: #999; font-size: 0.9rem;">保姆專區</p>
+            </div>
+            <nav>
+                <a href="/sitter/dashboard" class="menu-item active">
+                    <i class="fas fa-home"></i> 保姆主頁
+                </a>
+                <a href="/sitter/profile/settings" class="menu-item">
+                    <i class="fas fa-cog"></i> 個人設定
+                </a>
+                <a href="/sitter/bookings" class="menu-item">
+                    <i class="fas fa-calendar-check"></i> 預約管理
+                </a>
+                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
+                    onclick="alert('已登出'); window.location.href='/member/login'">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="mb-2">歡迎回來，<span th:text="${sitter.sitterName}">保姆</span>！</h2>
+            <p style="color: #666; margin-bottom: 2rem;">這是您的保姆控制台，查看您的服務概況。</p>
+
+            <!-- 數據概覽卡片 -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+
+                <!-- 服務項目卡片 -->
+                <div class="card" style="text-align: center; padding: 2rem;">
+                    <div
+                        style="background: #e3f2fd; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-list-ul" style="font-size: 1.5rem; color: #1976d2;"></i>
+                    </div>
+                    <h3 style="font-size: 1.2rem; color: #333; margin-bottom: 0.5rem;">服務項目</h3>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #1976d2; margin-bottom: 0.5rem;"
+                        th:text="${serviceCount}">0</div>
+                    <p style="color: #666; margin-bottom: 1.5rem;">項已上架服務</p>
+                    <a href="/sitter/profile/settings" class="btn btn-outline-primary" style="width: 100%;">管理服務</a>
+                </div>
+
+                <!-- 服務地區卡片 -->
+                <div class="card" style="text-align: center; padding: 2rem;">
+                    <div
+                        style="background: #e8f5e9; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-map-marker-alt" style="font-size: 1.5rem; color: #2e7d32;"></i>
+                    </div>
+                    <h3 style="font-size: 1.2rem; color: #333; margin-bottom: 0.5rem;">服務地區</h3>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #2e7d32; margin-bottom: 0.5rem;"
+                        th:text="${areaCount}">0</div>
+                    <p style="color: #666; margin-bottom: 1.5rem;">個服務區域</p>
+                    <a href="/sitter/profile/settings" class="btn btn-outline-primary" style="width: 100%;">管理地區</a>
+                </div>
+
+                <!-- 評價分數卡片 (目前為靜態假資料) -->
+                <div class="card" style="text-align: center; padding: 2rem;">
+                    <div
+                        style="background: #fff3e0; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-star" style="font-size: 1.5rem; color: #f57c00;"></i>
+                    </div>
+                    <h3 style="font-size: 1.2rem; color: #333; margin-bottom: 0.5rem;">評價分數</h3>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #f57c00; margin-bottom: 0.5rem;">4.8</div>
+                    <p style="color: #666; margin-bottom: 1.5rem;">(12 則評價)</p>
+                    <button class="btn btn-disabled"
+                        style="width: 100%; cursor: not-allowed; opacity: 0.6;">查看評價</button>
+                </div>
+            </div>
+
+            <!-- 月曆行程表 -->
+            <div class="card" id="calendar-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務行事曆 (月檢視)</h3>
+                    <div style="display: flex; gap: 1rem; font-size: 0.85rem;">
+                        <span><span
+                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border:1px solid #ccc; margin-right: 4px;"></span>未排班</span>
+                        <span><span
+                                style="display: inline-block; width: 12px; height: 12px; background: #4caf50; margin-right: 4px;"></span>可預約</span>
+                        <span><span
+                                style="display: inline-block; width: 12px; height: 12px; background: #ff9800; margin-right: 4px;"></span>已有預約</span>
+                    </div>
+                </div>
+
+                <!-- 月份切換 -->
+                <div class="calendar-header"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 0 10px;">
+                    <button id="prevMonth" class="btn btn-outline-primary"><i class="fas fa-chevron-left"></i>
+                        上個月</button>
+                    <h4 id="currentMonthDisplay" style="margin:0; font-weight:bold;">2026年 1月</h4>
+                    <button id="nextMonth" class="btn btn-outline-primary">下個月 <i
+                            class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <!-- 星期標題 -->
+                <div
+                    style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-weight: bold; margin-bottom: 5px; color: #666;">
+                    <div>週日</div>
+                    <div>週一</div>
+                    <div>週二</div>
+                    <div>週三</div>
+                    <div>週四</div>
+                    <div>週五</div>
+                    <div>週六</div>
+                </div>
+
+                <!-- 月曆網格 -->
+                <div id="calendar-grid" class="calendar-grid">
+                    <!-- JS 動態生成 -->
+                </div>
+            </div>
+
+            <!-- 每日詳情 Modal -->
+            <div id="dayDetailModal" class="modal"
+                style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+                <div class="modal-content"
+                    style="background:white; padding:25px; width:90%; max-width:600px; border-radius:12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                        <h4 id="modalDateTitle" style="margin:0; color:var(--primary-color);">日期設定</h4>
+                        <button onclick="closeModal()"
+                            style="border:none; background:none; font-size:1.5rem; cursor:pointer; color:#999;">&times;</button>
+                    </div>
+
+                    <div style="margin-bottom:15px; font-size:0.9rem; color:#666;">
+                        <i class="fas fa-info-circle"></i> 點擊下方時段以切換狀態 (綠色=可預約, 灰色=休息)
+                    </div>
+
+                    <div id="dayHoursGrid"
+                        style="display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; margin-bottom:25px;">
+                        <!-- 24小時格子 JS 生成 -->
+                    </div>
+
+                    <div style="text-align:right; display:flex; justify-content:flex-end; gap:10px;">
+                        <button onclick="closeModal()" class="btn btn-outline-secondary">取消</button>
+                        <button onclick="saveDaySchedule()" class="btn btn-primary"><i class="fas fa-save"></i>
+                            儲存設定</button>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                /* CSS for calendar */
+                .calendar-grid {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    gap: 5px;
+                    background-color: #fff;
+                }
+
+                .calendar-day {
+                    border: 1px solid #eee;
+                    min-height: 100px;
+                    padding: 8px;
+                    cursor: pointer;
+                    position: relative;
+                    background: #fff;
+                    transition: all 0.2s;
+                    border-radius: 6px;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .calendar-day:hover {
+                    border-color: var(--primary-color);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    transform: translateY(-2px);
+                }
+
+                .calendar-day.empty {
+                    background: #f9f9f9;
+                    pointer-events: none;
+                }
+
+                .day-number {
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                    font-size: 1.1rem;
+                }
+
+                .day-summary {
+                    flex: 1;
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 2px;
+                    align-content: flex-start;
+                }
+
+                .small-hour-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background-color: #eee;
+                }
+
+                .small-hour-dot.active {
+                    background-color: #4caf50;
+                }
+
+                /* Modal Styles */
+                .hour-cell {
+                    border: 1px solid #ddd;
+                    padding: 10px 5px;
+                    text-align: center;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    font-size: 0.9rem;
+                    background-color: #f5f5f5;
+                    color: #999;
+                    transition: all 0.2s;
+                }
+
+                .hour-cell.available {
+                    background-color: #e8f5e9;
+                    color: #2e7d32;
+                    border-color: #a5d6a7;
+                    font-weight: bold;
+                }
+
+                .hour-cell:hover {
+                    filter: brightness(0.95);
+                }
+            </style>
+
+            <!-- 詳細資訊區域 -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+
+                <!-- 服務價目表 -->
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務價目表</h3>
+                        <a href="/sitter/profile/settings" style="font-size: 0.9rem; color: #666;">編輯</a>
+                    </div>
+                    <table class="table" style="margin-bottom: 0;">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 0.5rem;">項目</th>
+                                <th style="padding: 0.5rem;">價格</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(services)}">
+                                <td colspan="2" style="text-align: center; color: #999; padding: 1rem;">尚未設定服務</td>
+                            </tr>
+                            <tr th:each="service : ${services}">
+                                <td style="padding: 0.8rem 0.5rem;"
+                                    th:text="${service.serviceItemId == 1 ? '散步' : (service.serviceItemId == 2 ? '餵食' : '洗澡')}">
+                                    散步</td>
+                                <td style="padding: 0.8rem 0.5rem; font-weight: bold; color: #28a745;"
+                                    th:text="${service.defaultPrice} + ' 元'">500 元</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 服務地區列表 -->
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務地區</h3>
+                        <a href="/sitter/profile/settings" style="font-size: 0.9rem; color: #666;">編輯</a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(areas)}" style="text-align: center; color: #999; padding: 1rem;">
+                        尚未設定服務地區
+                    </div>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        <span th:each="area : ${areas}"
+                            style="background: #e3f2fd; color: #1565c0; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 0.8rem; margin-right: 4px;"></i>
+                            <span th:text="${area.area.cityName + area.area.district}">台北市大安區</span>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script src="/js/frontend/main.js"></script>
+
+    <script th:inline="javascript">
+        // 全域變數
+        const sitterId = /*[[${sitter.sitterId}]]*/ 0;
+        const currentServiceTime = /*[[${serviceTime != null ? serviceTime : '000000000000000000000000'}]]*/ '000000000000000000000000';
+
+        let currentDate = new Date();
+        let currentYear = currentDate.getFullYear();
+        let currentMonth = currentDate.getMonth() + 1; // 1-12
+        let scheduleCache = {}; // dateString -> statusString
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            initCalendar();
+
+            // 綁定按鈕事件
+            document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
+            document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+        });
+
+        // 切換月份
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            currentYear = currentDate.getFullYear();
+            currentMonth = currentDate.getMonth() + 1;
+            initCalendar();
+        }
+
+        // 初始化並渲染月曆
+        async function initCalendar() {
+            // 更新標題
+            document.getElementById('currentMonthDisplay').textContent = `${currentYear}年 ${currentMonth}月`;
+
+            // 清空並顯示載入中
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px;">載入中...</div>';
+
+            // 呼叫 API 取得資料
+            try {
+                const response = await fetch(`/sitter/api/schedule?year=${currentYear}&month=${currentMonth}`);
+                const data = await response.json();
+
+                // 建立快取: { "2026-01-01": "01010...", ... }
+                scheduleCache = {};
+                data.forEach(item => {
+                    scheduleCache[item.scheduleDate] = item.bookingStatus;
+                });
+
+                renderGrid(grid);
+
+            } catch (error) {
+                console.error('Error fetching schedule:', error);
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">載入失敗，請重試</div>';
+            }
+        }
+
+        // 渲染格子
+        function renderGrid(gridContainer) {
+            gridContainer.innerHTML = '';
+
+            const firstDay = new Date(currentYear, currentMonth - 1, 1);
+            const lastDay = new Date(currentYear, currentMonth, 0); // 本月最後一天
+            const daysInMonth = lastDay.getDate();
+            const startDayOfWeek = firstDay.getDay(); // 0(Sun) - 6(Sat)
+
+            // 填充前面的空白
+            for (let i = 0; i < startDayOfWeek; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'calendar-day empty';
+                gridContainer.appendChild(emptyCell);
+            }
+
+            // 填充日期
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                // 優先使用 API 資料，若無則使用全 0 (假設 BookingScheduleVO 1=佔用, 0=空)
+                // 若要套用 ServiceTime Template，可以在這裡做 OR 運算
+                // 這裡採用簡單邏輯：顯示資料庫的狀態
+                const status = scheduleCache[dateStr] || "000000000000000000000000";
+
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                cell.onclick = () => openModal(dateStr, status);
+
+                const dateNum = document.createElement('div');
+                dateNum.className = 'day-number';
+                dateNum.textContent = day;
+                cell.appendChild(dateNum);
+
+                // 視覺化摘要 (小圓點)
+                const summary = document.createElement('div');
+                summary.className = 'day-summary';
+                for (let h = 0; h < 24; h++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'small-hour-dot';
+                    // 邏輯: 0=Available(Green), 1=Busy(Grey)
+                    if (status.charAt(h) === '0') {
+                        dot.classList.add('active'); // Green
+                    }
+                    summary.appendChild(dot);
+                }
+                cell.appendChild(summary);
+
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // Modal 相關變數
+        let modalCurrentDate = '';
+        let modalCurrentStatus = [];
+
+        // 開啟詳細設定
+        function openModal(dateStr, statusStr) {
+            modalCurrentDate = dateStr;
+            modalCurrentStatus = statusStr.split('');
+
+            document.getElementById('modalDateTitle').textContent = `${dateStr} 設定`;
+            renderModalGrid();
+
+            document.getElementById('dayDetailModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('dayDetailModal').style.display = 'none';
+        }
+
+        // 渲染 Modal 內的 24 小時格子
+        function renderModalGrid() {
+            const container = document.getElementById('dayHoursGrid');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 24; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'hour-cell';
+                cell.textContent = `${String(i).padStart(2, '0')}:00`;
+
+                // 0=Available, 1=Busy
+                if (modalCurrentStatus[i] === '0') {
+                    cell.classList.add('available');
+                    cell.title = "可預約";
+                } else {
+                    cell.classList.add('busy');
+                    cell.title = "休息/已預約";
+                }
+
+                cell.onclick = () => {
+                    // Toggle '0' <-> '1'
+                    modalCurrentStatus[i] = (modalCurrentStatus[i] === '0') ? '1' : '0';
+                    renderModalGrid(); // Re-render to update style
+                };
+
+                container.appendChild(cell);
+            }
+        }
+
+        // 儲存設定
+        function saveDaySchedule() {
+            const newStatusStr = modalCurrentStatus.join('');
+
+            fetch('/sitter/api/schedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    date: modalCurrentDate,
+                    status: newStatusStr
+                })
+            })
+                .then(res => res.text())
+                .then(result => {
+                    if (result === 'success') {
+                        // 更新快取並重繪月曆
+                        scheduleCache[modalCurrentDate] = newStatusStr;
+                        renderGrid(document.getElementById('calendar-grid'));
+                        closeModal();
+                        // alert('儲存成功');
+                    } else {
+                        alert('儲存失敗: ' + result);
+                    }
+                })
+                .catch(err => {
+                    alert('系統錯誤');
+                    console.error(err);
+                });
+        }
+    </script>
+
+</body>
+
+</html>

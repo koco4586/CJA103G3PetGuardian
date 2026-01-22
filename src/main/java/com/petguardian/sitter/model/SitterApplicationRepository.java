@@ -5,6 +5,12 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+/**
+ * 保姆申請 Repository
+ * 
+ * 提供保姆申請單的資料存取
+ * 包含申請狀態查詢與會員申請紀錄查詢
+ */
 @Repository
 public interface SitterApplicationRepository extends JpaRepository<SitterApplicationVO, Integer> {
 

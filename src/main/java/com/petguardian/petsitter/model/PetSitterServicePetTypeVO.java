@@ -9,7 +9,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Entity // 保姆服務對象table
+/**
+ * 保姆服務對象 Entity
+ * 對應資料表: pet_sitter_service_pet_type
+ * 
+ * 定義保姆的每個服務項目適用於哪些寵物種類與體型
+ * 包含 sitter_id, service_item_id, type_id, size_id 的關聯
+ */
+@Entity
 @Table(name = "pet_sitter_service_pet_type")
 public class PetSitterServicePetTypeVO implements Serializable {
 	private static final long serialVersionUID = 1L;

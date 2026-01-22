@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", function () {
             <ul>
                 <li data-page="index"><a href="index.html"><i class="fa-solid fa-gauge-high"></i> 儀表板</a></li>
                 <li data-page="members"><a href="members.html"><i class="fa-solid fa-users"></i> 會員管理</a></li>
-                <li data-page="sitters"><a href="sitters.html"><i class="fa-solid fa-paw"></i> 保母系統</a></li>
-                <li data-page="bookings"><a href="bookings.html"><i class="fa-regular fa-calendar-check"></i> 預約管理</a></li>
+                <li data-page="sitters"><a href="/admin/sitter/manage"><i class="fa-solid fa-paw"></i> 保母系統</a></li>
+                <li data-page="bookings"><a href="/booking/memberOrders"><i class="fa-regular fa-calendar-check"></i> 預約管理</a></li>
                 <li data-page="chat"><a href="chat.html"><i class="fa-solid fa-comments"></i> 聊天監控</a></li>
                 <li data-page="reviews"><a href="reviews.html"><i class="fa-solid fa-star"></i> 評價管理</a></li>
                 <li data-page="news"><a href="news.html"><i class="fa-solid fa-bullhorn"></i> 活動/文章</a></li>

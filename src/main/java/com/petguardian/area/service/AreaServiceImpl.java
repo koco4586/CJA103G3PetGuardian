@@ -1,6 +1,7 @@
 package com.petguardian.area.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,16 +10,17 @@ import com.petguardian.area.model.AreaRepository;
 import com.petguardian.area.model.AreaVO;
 
 /**
- * 地區業務邏輯實作
+ * 地區業務邏輯 Service 實作
+ * 
  */
-@Service
+@Service("areaService")
 public class AreaServiceImpl implements AreaService {
 
     @Autowired
-    private AreaRepository repository;
+    AreaRepository repository;
 
     @Override
-    public List<AreaVO> getAllAreas() {
+    public List<AreaVO> getAll() {
         return repository.findAll();
     }
 
@@ -33,12 +35,14 @@ public class AreaServiceImpl implements AreaService {
     }
 
     @Override
-    public AreaVO getAreaById(Integer areaId) {
-        return repository.findById(areaId).orElse(null);
+    public AreaVO getOneArea(Integer areaId) {
+        Optional<AreaVO> optional = repository.findById(areaId);
+        return optional.orElse(null); // public T orElse(T other) : 如果值存在就回傳其值，否則回傳null
     }
 
     @Override
     public AreaVO getAreaByCityAndDistrict(String cityName, String district) {
         return repository.findByCityNameAndDistrict(cityName, district);
     }
+
 }
