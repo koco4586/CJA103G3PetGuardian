@@ -47,7 +47,7 @@ public class ForumCommentVO implements Serializable{
 //	@Column(name = "post_id", updatable = false)
 //	private Integer postId;
 	
-	@OneToMany(mappedBy = "forumPostComment")
+	@OneToMany(mappedBy = "forumComment")
 	@OrderBy("reportId asc")
 	private Set<ForumCommentReportVO> forumCommentReports;
 	
