@@ -712,3 +712,21 @@
     margin-bottom: 0.5rem;
     resize: vertical;
 }
+
+/* 按鈕禁用狀態 */
+.btn:disabled,
+.btn[disabled] {
+    background-color: #ccc !important;
+    border-color: #ccc !important;
+    color: #888 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+    pointer-events: auto;
+}
+
+.btn:disabled:hover,
+.btn[disabled]:hover {
+    background-color: #ccc !important;
+    transform: none;
+    box-shadow: none;
+}

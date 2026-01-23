@@ -12,9 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
-import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomEntity;
+import com.petguardian.chat.model.ChatRoomRepository;
+import com.petguardian.chat.service.chatmessage.MessageStrategyService;
+import com.petguardian.chat.service.chatroom.ChatRoomCreationStrategy;
+import com.petguardian.chat.service.chatroom.ChatVerificationService;
+import com.petguardian.chat.service.mapper.ChatMessageMapper;
+import com.petguardian.chat.service.status.ChatReadStatusService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+
+import com.petguardian.chat.service.chatmessage.MessageCreationContext;
+
+import io.hypersistence.tsid.TSID;
 
 /**
  * Service Implementation for Core Chat Functionality.
@@ -48,6 +57,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatReadStatusService readStatusService;
     private final ChatVerificationService verificationService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final TSID.Factory tsidFactory;
 
     public ChatServiceImpl(
             ChatRoomRepository chatroomRepository,
@@ -56,7 +66,8 @@ public class ChatServiceImpl implements ChatService {
             ChatMessageMapper messageMapper,
             ChatReadStatusService readStatusService,
             ChatVerificationService verificationService,
-            SimpMessagingTemplate messagingTemplate) {
+            SimpMessagingTemplate messagingTemplate,
+            TSID.Factory tsidFactory) {
         this.chatroomRepository = chatroomRepository;
         this.messageStrategyService = messageStrategyService;
         this.chatRoomCreationStrategy = chatRoomCreationStrategy;
@@ -64,6 +75,7 @@ public class ChatServiceImpl implements ChatService {
         this.readStatusService = readStatusService;
         this.verificationService = verificationService;
         this.messagingTemplate = messagingTemplate;
+        this.tsidFactory = tsidFactory;
     }
 
     // ============================================================
@@ -84,9 +96,19 @@ public class ChatServiceImpl implements ChatService {
         // Ensure valid chatroom exists before saving message
         ChatRoomEntity chatroom = resolveChatroom(dto.getChatroomId(), senderId, receiverId);
 
+        // Generate distributed-safe ID (TSID)
+        String messageId = tsidFactory.generate().toString();
+
+        // Build MessageCreationContext
+        MessageCreationContext context = new MessageCreationContext(
+                messageId,
+                chatroom.getChatroomId(),
+                senderId,
+                dto.getContent(),
+                dto.getReplyToId());
+
         // Delegate persistence to strategy (supports Sync MySQL or Async Redis)
-        ChatMessageEntity saved = messageStrategyService.save(
-                chatroom.getChatroomId(), senderId, dto.getContent(), dto.getReplyToId());
+        ChatMessageEntity saved = messageStrategyService.save(context);
 
         // Update chatroom metadata (last message, sender's read status)
         updateChatroomAfterMessage(chatroom, senderId, dto.getContent());
