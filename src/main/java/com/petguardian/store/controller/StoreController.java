@@ -13,6 +13,9 @@ import com.petguardian.productfavoritelist.service.ProductFavoriteListService;
 import com.petguardian.orders.service.ReturnOrderService;
 import com.petguardian.sellerreview.model.SellerReviewVO;
 import com.petguardian.sellerreview.service.SellerReviewService;
+import com.petguardian.wallet.model.WalletRepository;
+import com.petguardian.seller.model.ProType;
+import com.petguardian.seller.model.ProTypeRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +64,12 @@ public class StoreController {
 
     @Autowired
     private AuthStrategyService authService;
+
+    @Autowired
+    private WalletRepository walletRepository;
+
+    @Autowired
+    private ProTypeRepository proTypeRepository;
 
     // ==================== 輔助方法 ====================
 
@@ -111,6 +120,11 @@ public class StoreController {
         dto.setProDescription(product.getProDescription());
         dto.setImageBase64(getProductImageBase64(product.getProId()));
         dto.setFavorited(favoriteIds != null && favoriteIds.contains(product.getProId()));
+        // 加入分類資訊
+        if (product.getProType() != null) {
+            dto.setProTypeId(product.getProType().getProTypeId());
+            dto.setProTypeName(product.getProType().getProTypeName());
+        }
         return dto;
     }
 
@@ -175,11 +189,19 @@ public class StoreController {
      * GET /store
      */
     @GetMapping("/store")
-    public String storePage(Model model, HttpSession session, HttpServletRequest request) {
+    public String storePage(@RequestParam(required = false) Integer categoryId,
+            Model model, HttpSession session, HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
 
         // 取得所有上架商品
         List<Product> products = productService.getAllActiveProducts();
+
+        // 如果有指定分類，進行篩選
+        if (categoryId != null) {
+            products = products.stream()
+                    .filter(p -> p.getProType() != null && categoryId.equals(p.getProType().getProTypeId()))
+                    .collect(Collectors.toList());
+        }
 
         // 取得使用者收藏的商品 ID 集合 (若未登入則為空集合)
         Set<Integer> favoriteIds = (memId != null)
@@ -191,8 +213,13 @@ public class StoreController {
                 .map(p -> toProductDisplayDTO(p, favoriteIds))
                 .collect(Collectors.toList());
 
+        // 取得所有商品分類
+        List<ProType> categories = proTypeRepository.findAll();
+
         model.addAttribute("products", productDTOs);
         model.addAttribute("memId", memId);
+        model.addAttribute("categories", categories);
+        model.addAttribute("selectedCategoryId", categoryId);
 
         return "frontend/orders/store";
     }
@@ -325,8 +352,14 @@ public class StoreController {
                 .collect(Collectors.toList());
         checkout.setUpsellProducts(upsellDTOs);
 
+        // 6. 取得會員錢包餘額
+        Integer walletBalance = walletRepository.findByMemId(memId)
+                .map(wallet -> wallet.getBalance())
+                .orElse(0);
+
         model.addAttribute("checkout", checkout);
         model.addAttribute("sellerId", sellerId);
+        model.addAttribute("walletBalance", walletBalance);
 
         return "frontend/orders/checkout";
     }

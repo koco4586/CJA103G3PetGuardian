@@ -184,12 +184,12 @@
 
             <!-- Category Tabs -->
             <div class="category-tabs">
-                <div class="category-pill active">全部商品</div>
-                <div class="category-pill">貓貓用品</div>
-                <div class="category-pill">狗狗用品</div>
-                <div class="category-pill">外出籠/包</div>
-                <div class="category-pill">服飾/配件</div>
-                <div class="category-pill">清潔/護理</div>
+                <a th:href="@{/store}" class="category-pill" th:classappend="${selectedCategoryId == null} ? ' active' : ''">全部商品</a>
+                <a th:each="cat : ${categories}"
+                   th:href="@{/store(categoryId=${cat.proTypeId})}"
+                   th:text="${cat.proTypeName}"
+                   th:classappend="${selectedCategoryId != null && selectedCategoryId == cat.proTypeId} ? ' active' : ''"
+                   class="category-pill">分類名稱</a>
             </div>
         </div>
 
@@ -289,16 +289,6 @@
                     msg.style.opacity = '0';
                     setTimeout(() => msg.remove(), 300);
                 }, 3000);
-            });
-
-            // Category filter (client-side placeholder)
-            const pills = document.querySelectorAll('.category-pill');
-            pills.forEach(pill => {
-                pill.addEventListener('click', function () {
-                    pills.forEach(p => p.classList.remove('active'));
-                    this.classList.add('active');
-                    // TODO: Implement category filtering
-                });
             });
         });
     </script>
