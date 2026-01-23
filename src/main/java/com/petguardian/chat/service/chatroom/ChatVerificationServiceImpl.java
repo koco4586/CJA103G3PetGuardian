@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.chatroom;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
