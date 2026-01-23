@@ -1,4 +1,3 @@
-// 開啟新增商品 Modal
 function openProductModal() {
     document.getElementById('modalTitle').innerText = '新增商品';
     document.getElementById('productForm').reset();
@@ -9,7 +8,7 @@ function openProductModal() {
     document.getElementById('productModal').classList.add('active');
 }
 
-// 開啟編輯商品 Modal（從按鈕的 data 屬性取得資料）
+// 開啟編輯商品 Modal
 function openEditProductModal(button) {
     document.getElementById('modalTitle').innerText = '編輯商品';
 
@@ -43,7 +42,7 @@ function openEditProductModal(button) {
     document.getElementById('productModal').classList.add('active');
 }
 
-// 載入商品現有圖片（AJAX）
+// 載入商品現有圖片
 function loadExistingImages(proId) {
     const container = document.getElementById('existingImages');
     container.innerHTML = '<div style="color: #999; font-size: 0.85rem;"><i class="fas fa-spinner fa-spin"></i> 載入圖片中...</div>';
@@ -60,9 +59,9 @@ function loadExistingImages(proId) {
                     div.innerHTML = `
                             <img src="${img.imageBase64}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
                             <button type="button" onclick="markImageForDelete(${img.productPicId})"
-                                    style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; 
-                                           border-radius: 50%; background: #dc3545; color: white; border: 2px solid white; 
-                                           cursor: pointer; font-size: 12px; line-height: 1; display: flex; 
+                                    style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+                                           border-radius: 50%; background: #dc3545; color: white; border: 2px solid white;
+                                           cursor: pointer; font-size: 12px; display: flex;
                                            align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -73,7 +72,6 @@ function loadExistingImages(proId) {
         })
         .catch(err => {
             container.innerHTML = '<div style="color: #999; font-size: 0.85rem;">無圖片</div>';
-            console.error('載入圖片失敗:', err);
         });
 }
 
@@ -98,7 +96,7 @@ function previewNewImages(input) {
 
     if (input.files) {
         Array.from(input.files).forEach((file, index) => {
-            // 檢查檔案大小（最大 5MB）
+            // 檢查檔案大小
             if (file.size > 5 * 1024 * 1024) {
                 alert('檔案 "' + file.name + '" 超過 5MB 限制');
                 return;
@@ -111,9 +109,9 @@ function previewNewImages(input) {
                 div.innerHTML = `
                         <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
                         <button type="button" onclick="this.parentElement.remove()"
-                                style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; 
-                                       border-radius: 50%; background: #dc3545; color: white; border: 2px solid white; 
-                                       cursor: pointer; font-size: 12px; line-height: 1; display: flex; 
+                                style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+                                       border-radius: 50%; background: #dc3545; color: white; border: 2px solid white;
+                                       cursor: pointer; font-size: 12px; display: flex;
                                        align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                             <i class="fas fa-times"></i>
                         </button>
