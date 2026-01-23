@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.status;
 
 /**
  * Service for managing chat read/unread status.

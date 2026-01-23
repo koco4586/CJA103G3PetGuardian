@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.mapper;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -14,6 +14,7 @@ import com.petguardian.chat.model.ChatMemberRepository;
 import com.petguardian.chat.model.ChatMemberEntity;
 import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
+import com.petguardian.chat.service.chatmessage.MessageStrategyService;
 
 @Service
 public class ChatMessageMapperImpl implements ChatMessageMapper {

@@ -44,9 +44,9 @@ public class ForumPostReportVO implements Serializable{
 	@Column(name = "report_type")
 	private Integer reportType;
 	
-	@Column(name = "report_reason")
+	@Column(name = "report_reason", updatable = false)
 	@NotBlank(message = "檢舉原因請勿空白")
-	@Size(min = 20, max = 800, message = "檢舉原因必需在{min}到{max}字之間")
+	@Size(min = 10, max = 800, message = "檢舉原因必需在{min}到{max}字之間")
 	private String reportReason;
 	
 	@Column(name = "report_status", insertable = false)
@@ -121,7 +121,7 @@ public class ForumPostReportVO implements Serializable{
 	public void setReportReason(String reportReason) {
 		this.reportReason = reportReason;
 	}
-	
+
 	public Integer getReportStatus() {
 		return reportStatus;
 	}
@@ -146,4 +146,11 @@ public class ForumPostReportVO implements Serializable{
 		this.handleTime = handleTime;
 	}
 	
+	public String getHandleResult() {
+		return handleResult;
+	}
+
+	public void setHandleResult(String handleResult) {
+		this.handleResult = handleResult;
+	}
 }

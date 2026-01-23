@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ForumPostReportRepository extends JpaRepository<ForumPostReportVO, Integer> {
 	
@@ -43,7 +44,16 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 	""")
 	public List<RejectedPostDTO> findAllRejectedPosts();
 	
-	
+	@Query("""
+			select new com.petguardian.forum.model.PostReviewDetailDTO(
+				r.reportId, r.reportType, r.reportReason, r.reportTime,
+				r.member.memId, p.postId, p.postTitle, p.postContent, p.member.memId
+			)
+			from ForumPostReportVO r
+			join r.forumPost p
+			where r.reportId = :reportId
+	""")
+	public PostReviewDetailDTO postReviewDetailToHandle(@Param("reportId") Integer reportId);
 	
 	
 	

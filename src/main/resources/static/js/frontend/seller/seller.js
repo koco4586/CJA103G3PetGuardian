@@ -1,133 +1,148 @@
-/**
- * PetGuardian - 賣家管理中心 JavaScript
- */
-
-// ==================== 商品 Modal 相關 ====================
-
+// 開啟新增商品 Modal
 function openProductModal() {
-    document.getElementById('productModal').classList.add('active');
     document.getElementById('modalTitle').innerText = '新增商品';
+    document.getElementById('productForm').reset();
     document.getElementById('proId').value = '';
-    document.getElementById('proName').value = '';
-    document.getElementById('proPrice').value = '';
-    document.getElementById('proDescription').value = '';
-    document.getElementById('stockQuantity').value = '';
-    document.getElementById('proState').value = '1';
+    document.getElementById('existingImages').innerHTML = '';
+    document.getElementById('newImagePreview').innerHTML = '';
+    document.getElementById('deleteImageInputs').innerHTML = '';
+    document.getElementById('productModal').classList.add('active');
 }
 
+// 開啟編輯商品 Modal（從按鈕的 data 屬性取得資料）
+function openEditProductModal(button) {
+    document.getElementById('modalTitle').innerText = '編輯商品';
+
+    // 清空表單和預覽區
+    document.getElementById('productForm').reset();
+    document.getElementById('existingImages').innerHTML = '';
+    document.getElementById('newImagePreview').innerHTML = '';
+    document.getElementById('deleteImageInputs').innerHTML = '';
+
+    // 從按鈕的 data 屬性取得商品資料
+    const proId = button.dataset.proId;
+    const proName = button.dataset.proName || '';
+    const proTypeId = button.dataset.proTypeId || '';
+    const proPrice = button.dataset.proPrice || '';
+    const proDescription = button.dataset.proDescription || '';
+    const stockQuantity = button.dataset.stockQuantity || 0;
+    const proState = button.dataset.proState || 1;
+
+    // 填入表單
+    document.getElementById('proId').value = proId;
+    document.getElementById('proName').value = proName;
+    document.getElementById('proTypeId').value = proTypeId;
+    document.getElementById('proPrice').value = proPrice;
+    document.getElementById('proDescription').value = proDescription;
+    document.getElementById('stockQuantity').value = stockQuantity;
+    document.getElementById('proState').value = proState;
+
+    // 載入現有圖片
+    loadExistingImages(proId);
+
+    document.getElementById('productModal').classList.add('active');
+}
+
+// 載入商品現有圖片（AJAX）
+function loadExistingImages(proId) {
+    const container = document.getElementById('existingImages');
+    container.innerHTML = '<div style="color: #999; font-size: 0.85rem;"><i class="fas fa-spinner fa-spin"></i> 載入圖片中...</div>';
+
+    fetch('/seller/product/' + proId + '/images')
+        .then(response => response.json())
+        .then(images => {
+            container.innerHTML = '';
+            if (images && images.length > 0) {
+                images.forEach(img => {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'position: relative; width: 80px; height: 80px;';
+                    div.id = 'existing-pic-' + img.productPicId;
+                    div.innerHTML = `
+                            <img src="${img.imageBase64}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+                            <button type="button" onclick="markImageForDelete(${img.productPicId})"
+                                    style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; 
+                                           border-radius: 50%; background: #dc3545; color: white; border: 2px solid white; 
+                                           cursor: pointer; font-size: 12px; line-height: 1; display: flex; 
+                                           align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                    container.appendChild(div);
+                });
+            }
+        })
+        .catch(err => {
+            container.innerHTML = '<div style="color: #999; font-size: 0.85rem;">無圖片</div>';
+            console.error('載入圖片失敗:', err);
+        });
+}
+
+// 標記圖片為待刪除
+function markImageForDelete(picId) {
+    // 移除預覽
+    const picDiv = document.getElementById('existing-pic-' + picId);
+    if (picDiv) {
+        picDiv.remove();
+    }
+    // 新增隱藏欄位
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'deleteImageIds';
+    input.value = picId;
+    document.getElementById('deleteImageInputs').appendChild(input);
+}
+
+// 預覽新上傳的圖片
+function previewNewImages(input) {
+    const container = document.getElementById('newImagePreview');
+
+    if (input.files) {
+        Array.from(input.files).forEach((file, index) => {
+            // 檢查檔案大小（最大 5MB）
+            if (file.size > 5 * 1024 * 1024) {
+                alert('檔案 "' + file.name + '" 超過 5MB 限制');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.style.cssText = 'position: relative; width: 80px; height: 80px;';
+                div.innerHTML = `
+                        <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+                        <button type="button" onclick="this.parentElement.remove()"
+                                style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; 
+                                       border-radius: 50%; background: #dc3545; color: white; border: 2px solid white; 
+                                       cursor: pointer; font-size: 12px; line-height: 1; display: flex; 
+                                       align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                container.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+// 關閉商品 Modal
 function closeProductModal() {
     document.getElementById('productModal').classList.remove('active');
 }
 
-function editProduct(btn) {
-    document.getElementById('productModal').classList.add('active');
-    document.getElementById('modalTitle').innerText = '編輯商品';
-    document.getElementById('proId').value = btn.getAttribute('data-id');
-    document.getElementById('proName').value = btn.getAttribute('data-name');
-    document.getElementById('proTypeId').value = btn.getAttribute('data-type');
-    document.getElementById('proPrice').value = btn.getAttribute('data-price');
-    document.getElementById('proDescription').value = btn.getAttribute('data-desc');
-    document.getElementById('stockQuantity').value = btn.getAttribute('data-stock');
-    document.getElementById('proState').value = btn.getAttribute('data-state');
-}
-
-// 點擊 Modal 外部區域關閉
-document.getElementById('productModal')?.addEventListener('click', function(event) {
-    if (event.target === this) {
+// 點擊 Modal 背景關閉
+document.getElementById('productModal').addEventListener('click', function(e) {
+    if (e.target === this) {
         closeProductModal();
     }
 });
 
-// ==================== 評價 Modal 相關 ====================
-
-/**
- * 顯示評價 Modal
- */
-function showReviewModal(orderId) {
-    // 發送 AJAX 請求取得評價資料
-    fetch(`/api/seller/order/${orderId}/review`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('評價不存在');
-            }
-            return response.json();
-        })
-        .then(data => {
-            const content = `
-                <div style="background: #f9f9f9; padding: 1.5rem; border-radius: 8px;">
-                    <div style="margin-bottom: 1rem;">
-                        <strong>評分：</strong>
-                        <span style="color: #ffc107; font-size: 1.2rem;">
-                            ${'★'.repeat(data.rating)}${'☆'.repeat(5 - data.rating)}
-                        </span>
-                        <span style="color: #666; margin-left: 8px;">(${data.rating}/5)</span>
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <strong>評價時間：</strong>
-                        <span style="color: #666;">${data.reviewTime}</span>
-                    </div>
-                    <div>
-                        <strong>評價內容：</strong>
-                        <p style="margin: 0.5rem 0 0 0; color: #333; line-height: 1.6;">
-                            ${data.reviewContent || '(買家未留下文字評價)'}
-                        </p>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('reviewContent').innerHTML = content;
-            document.getElementById('reviewModal').classList.add('active');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('載入評價失敗：' + error.message);
-        });
-}
-
-/**
- * 關閉評價 Modal
- */
-function closeReviewModal() {
-    document.getElementById('reviewModal').classList.remove('active');
-}
-
-// 點擊 Modal 外部區域關閉
-document.getElementById('reviewModal')?.addEventListener('click', function(event) {
-    if (event.target === this) {
-        closeReviewModal();
-    }
-});
-
-// ==================== 評論列表展開/收合 ====================
-
-/**
- * 切換評論列表顯示
- */
+// 展開/收合評價列表
 function toggleReviewsList() {
     const reviewsList = document.getElementById('reviewsList');
-    if (reviewsList) {
-        if (reviewsList.style.display === 'none' || reviewsList.style.display === '') {
-            reviewsList.style.display = 'block';
-            // 平滑滾動到評論列表
-            reviewsList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        } else {
-            reviewsList.style.display = 'none';
-        }
+    if (reviewsList.style.display === 'none') {
+        reviewsList.style.display = 'block';
+    } else {
+        reviewsList.style.display = 'none';
     }
 }
-
-// ==================== 頁面載入完成後執行 ====================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('賣家管理中心 JavaScript 已載入');
-
-    // 如果有成功訊息，3秒後自動隱藏
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.transition = 'opacity 0.5s ease';
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 500);
-        }, 3000);
-    });
-});

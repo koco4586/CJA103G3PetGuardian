@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.chatroom;
 
 import java.util.Optional;
 

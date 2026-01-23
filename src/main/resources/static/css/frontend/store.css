@@ -305,6 +305,7 @@
     cursor: pointer;
     transition: var(--transition);
     border: 1px solid transparent;
+    text-decoration: none;
 }
 
 .category-pill:hover {
