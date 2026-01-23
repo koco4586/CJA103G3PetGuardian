@@ -111,11 +111,13 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
      * @return List<ServiceAreaVO> 該保姆的所有服務地區
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ServiceAreaVO> getServiceAreasBySitter(Integer sitterId) {
         return repository.findBySitter_SitterId(sitterId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ServiceAreaVO> getServiceAreasByMember(Integer memId) {
         SitterVO sitter = sitterRepository.findByMemId(memId);
         if (sitter == null) {
