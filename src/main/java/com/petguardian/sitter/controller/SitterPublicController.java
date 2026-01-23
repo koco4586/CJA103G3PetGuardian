@@ -22,6 +22,27 @@ import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterMemberDTO;
 import com.petguardian.sitter.service.SitterService;
 
+import com.petguardian.petsitter.service.PetSitterService;
+import com.petguardian.service.service.ServiceAreaService;
+import com.petguardian.booking.model.BookingOrderRepository;
+import com.petguardian.petsitter.model.PetSitterServiceVO;
+import com.petguardian.service.model.ServiceAreaVO;
+import com.petguardian.booking.model.BookingOrderVO;
+
+import com.petguardian.petsitter.service.PetSitterService;
+import com.petguardian.service.service.ServiceAreaService;
+import com.petguardian.booking.model.BookingOrderRepository;
+import com.petguardian.petsitter.model.PetSitterServiceVO;
+import com.petguardian.service.model.ServiceAreaVO;
+import com.petguardian.booking.model.BookingOrderVO;
+
+import com.petguardian.petsitter.service.PetSitterService;
+import com.petguardian.service.service.ServiceAreaService;
+import com.petguardian.booking.model.BookingOrderRepository;
+import com.petguardian.petsitter.model.PetSitterServiceVO;
+import com.petguardian.service.model.ServiceAreaVO;
+import com.petguardian.booking.model.BookingOrderVO;
+
 /**
  * 公開的保姆搜尋功能 Controller
  * 提供不需登入即可訪問的保姆搜尋和查看功能
@@ -41,6 +62,15 @@ public class SitterPublicController {
 
     @Autowired
     private com.petguardian.area.model.AreaRepository areaRepository;
+
+    @Autowired
+    private PetSitterService petSitterService;
+
+    @Autowired
+    private ServiceAreaService serviceAreaService;
+
+    @Autowired
+    private BookingOrderRepository bookingOrderRepository;
 
     /**
      * 顯示公開的保姆搜尋頁面
@@ -161,34 +191,44 @@ public class SitterPublicController {
     /**
      * 顯示保姆詳情頁面
      * URL: /public/sitter/detail/{sitterId}
-     * 
-     * @param sitterId Integer 保姆編號 (Path Variable)
-     * @param model    Spring Model 用於傳遞保姆詳細資訊(sitter)與會員資訊
-     * @return String 保姆詳情頁面路徑 "frontend/sitter/sitter-detail"，若保姆不存在則導回搜尋頁
      */
     @GetMapping("/detail/{sitterId}")
     public String showSitterDetail(@PathVariable Integer sitterId, jakarta.servlet.http.HttpServletRequest request,
             Model model) {
         try {
+            // 1. 查詢保姆基本資料 (若無則導回列表)
             SitterVO sitter = sitterService.getSitterById(sitterId);
-
             if (sitter == null) {
                 return "redirect:/public/sitter/search";
             }
 
-            // 撈取會員資料 (如果已登入)
+            // 2. 查詢完整資料 (新增部分)
+            // 服務項目
+            List<PetSitterServiceVO> services = petSitterService.getServicesBySitter(sitterId);
+            // 服務地區
+            List<ServiceAreaVO> serviceAreas = serviceAreaService.getServiceAreasBySitter(sitterId);
+            // 歷史評價 (僅查詢有評分的訂單)
+            List<BookingOrderVO> reviews = bookingOrderRepository
+                    .findBySitterIdAndSitterRatingNotNullOrderByEndTimeDesc(sitterId);
+
+            // 3. 處理會員登入資訊 (保留原有邏輯)
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId != null) {
-                Optional<SitterMemberVO> memberVO = sitterMemberRepository.findById(memId);
+                java.util.Optional<SitterMemberVO> memberVO = sitterMemberRepository.findById(memId);
                 if (memberVO.isPresent()) {
                     SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO.get());
                     model.addAttribute("currentMember", fakeMember);
                 }
             }
 
+            // 4. 將所有資料加入 Model 傳遞給前端
             model.addAttribute("sitter", sitter);
+            model.addAttribute("services", services);
+            model.addAttribute("serviceAreas", serviceAreas);
+            model.addAttribute("reviews", reviews);
 
             return "frontend/sitter/sitter-detail";
+
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/public/sitter/search";
