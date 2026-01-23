@@ -18,6 +18,13 @@ import com.petguardian.booking.model.BookingScheduleRepository;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+import com.petguardian.service.model.ServiceAreaVO;
+import com.petguardian.area.model.AreaVO;
+
 /**
  * 保姆業務邏輯實作
  * 
