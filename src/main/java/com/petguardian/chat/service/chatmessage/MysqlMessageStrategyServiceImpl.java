@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.chatmessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.petguardian.chat.model.ChatMessageRepository;
 import com.petguardian.chat.model.ChatMessageEntity;
 
-import io.hypersistence.tsid.TSID;
+// Context in same package
 
 /**
  * MySQL Strategy Implementation for Message Operations.
@@ -31,12 +31,9 @@ public class MysqlMessageStrategyServiceImpl implements MessageStrategyService {
     // DEPENDENCIES
     // ============================================================
     private final ChatMessageRepository messageRepository;
-    private final TSID.Factory tsidFactory;
 
-    public MysqlMessageStrategyServiceImpl(ChatMessageRepository messageRepository,
-            TSID.Factory tsidFactory) {
+    public MysqlMessageStrategyServiceImpl(ChatMessageRepository messageRepository) {
         this.messageRepository = messageRepository;
-        this.tsidFactory = tsidFactory;
     }
 
     // ============================================================
@@ -48,18 +45,16 @@ public class MysqlMessageStrategyServiceImpl implements MessageStrategyService {
      */
     @Override
     @Transactional
-    public ChatMessageEntity save(Integer chatroomId, Integer senderId, String content, String replyToId) {
-        // Generate distributed-safe ID (TSID)
-        String messageId = tsidFactory.generate().toString();
-
+    public ChatMessageEntity save(MessageCreationContext context) {
+        // Use application-provided ID
         ChatMessageEntity message = new ChatMessageEntity();
-        message.setMessageId(messageId);
-        message.setChatroomId(chatroomId);
-        message.setMemberId(senderId);
-        message.setMessage(content);
+        message.setMessageId(context.messageId());
+        message.setChatroomId(context.chatroomId());
+        message.setMemberId(context.senderId());
+        message.setMessage(context.content());
 
-        if (replyToId != null) {
-            message.setReplyToMessageId(replyToId);
+        if (context.replyToId() != null) {
+            message.setReplyToMessageId(context.replyToId());
         }
 
         ChatMessageEntity savedMessage = messageRepository.save(message);

@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.chatmessage;
 
 import java.util.List;
 import com.petguardian.chat.model.ChatMemberDTO;

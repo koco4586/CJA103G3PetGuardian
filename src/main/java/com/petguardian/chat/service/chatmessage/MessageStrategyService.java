@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.chatmessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 
 import com.petguardian.chat.model.ChatMessageEntity;
+// Context in same package
 
 /**
  * Strategy Interface for Unified Message Operations.
@@ -26,27 +27,12 @@ public interface MessageStrategyService {
     // ============================================================
 
     /**
-     * Persists a message using the active strategy.
+     * Persists a message using the encapsulated context.
      * 
-     * @param chatroomId Target Chatroom ID
-     * @param senderId   Sender's Member ID
-     * @param content    Message Body
+     * @param context Data object containing ID, sender, content, etc.
      * @return Persisted Entity
      */
-    default ChatMessageEntity save(Integer chatroomId, Integer senderId, String content) {
-        return save(chatroomId, senderId, content, null);
-    }
-
-    /**
-     * Persists a message with reply context.
-     * 
-     * @param chatroomId Target Chatroom ID
-     * @param senderId   Sender's Member ID
-     * @param content    Message Body
-     * @param replyToId  Optional ID of parent message
-     * @return Persisted Entity
-     */
-    ChatMessageEntity save(Integer chatroomId, Integer senderId, String content, String replyToId);
+    ChatMessageEntity save(MessageCreationContext context);
 
     /**
      * Triggers manual flush of buffered messages (Async strategies only).
