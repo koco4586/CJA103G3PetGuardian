@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單詳情 | 賣家管理中心</title>
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+<header id="main-header" class="header"></header>
+
+<div class="container" style="margin-top: 2rem; margin-bottom: 3rem;">
+    <!-- 返回按鈕 -->
+    <div style="margin-bottom: 1.5rem;">
+        <a href="/seller/orders" style="color: var(--primary-color); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-arrow-left"></i> 返回訂單管理
+        </a>
+    </div>
+
+    <div class="card" style="padding: 2rem;">
+        <!-- 訂單標題 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;
+                    padding-bottom: 1rem; border-bottom: 2px solid #f0f0f0;">
+            <h2 style="margin: 0;">
+                <i class="fas fa-file-invoice" style="color: var(--primary-color);"></i>
+                訂單詳情 <span style="color: #999;" th:text="'#' + ${order.orderId}">#0</span>
+            </h2>
+            <!-- 訂單狀態 -->
+            <span th:switch="${order.orderStatus}">
+                <span th:case="0" class="badge badge-warning" style="font-size: 1rem; padding: 0.5rem 1rem;">已付款</span>
+                <span th:case="1" class="badge badge-info" style="font-size: 1rem; padding: 0.5rem 1rem;">已出貨</span>
+                <span th:case="2" class="badge badge-success" style="font-size: 1rem; padding: 0.5rem 1rem;">已完成</span>
+                <span th:case="3" class="badge badge-secondary" style="font-size: 1rem; padding: 0.5rem 1rem;">已取消</span>
+                <span th:case="4" class="badge" style="background: #ffc107; color: #333; font-size: 1rem; padding: 0.5rem 1rem;">申請退貨中</span>
+                <span th:case="5" class="badge" style="background: #6c757d; color: white; font-size: 1rem; padding: 0.5rem 1rem;">退貨完成</span>
+                <span th:case="*" class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">未知</span>
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <!-- 左側：訂單資訊 -->
+            <div>
+                <h4 style="margin-bottom: 1rem; color: var(--primary-color);">
+                    <i class="fas fa-info-circle"></i> 訂單資訊
+                </h4>
+                <div style="background: #f9f9f9; border-radius: 12px; padding: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #999;">訂單編號</span>
+                        <span style="font-weight: 600;" th:text="'#' + ${order.orderId}">#0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #999;">下單時間</span>
+                        <span th:text="${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm:ss')}">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #999;">付款方式</span>
+                        <span>錢包付款</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #999;">訂單金額</span>
+                        <span style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);"
+                              th:text="'$' + ${#numbers.formatInteger(order.orderTotal, 0, 'COMMA')}">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：收件人資訊 -->
+            <div>
+                <h4 style="margin-bottom: 1rem; color: var(--primary-color);">
+                    <i class="fas fa-truck"></i> 收件人資訊
+                </h4>
+                <div style="background: #f9f9f9; border-radius: 12px; padding: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #999;">收件人</span>
+                        <span style="font-weight: 600;" th:text="${order.receiverName}">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #999;">聯絡電話</span>
+                        <span th:text="${order.receiverPhone}">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #999;">收件地址</span>
+                        <span style="text-align: right; max-width: 200px;" th:text="${order.receiverAddress}">-</span>
+                    </div>
+                    <div th:if="${order.specialInstructions != null and order.specialInstructions != ''}"
+                         style="display: flex; justify-content: space-between;">
+                        <span style="color: #999;">備註</span>
+                        <span style="text-align: right; max-width: 200px;" th:text="${order.specialInstructions}">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 訂單商品 -->
+        <div style="margin-top: 2rem;">
+            <h4 style="margin-bottom: 1rem; color: var(--primary-color);">
+                <i class="fas fa-shopping-bag"></i> 訂單商品
+            </h4>
+            <div style="border: 1px solid #f0f0f0; border-radius: 12px; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                    <tr style="background: #f9f9f9;">
+                        <th style="padding: 1rem; text-align: left;">商品名稱</th>
+                        <th style="padding: 1rem; text-align: right;">單價</th>
+                        <th style="padding: 1rem; text-align: center;">數量</th>
+                        <th style="padding: 1rem; text-align: right;">小計</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${items}" style="border-top: 1px solid #f0f0f0;">
+                        <td style="padding: 1rem;">
+                            <span th:text="${item.product?.proName != null ? item.product.proName : '商品 #' + item.proId}">商品名稱</span>
+                        </td>
+                        <td style="padding: 1rem; text-align: right;"
+                            th:text="'$' + ${#numbers.formatInteger(item.proPrice, 0, 'COMMA')}">$0</td>
+                        <td style="padding: 1rem; text-align: center;" th:text="${item.quantity}">1</td>
+                        <td style="padding: 1rem; text-align: right; font-weight: 600; color: var(--primary-color);"
+                            th:text="'$' + ${#numbers.formatInteger(item.subtotal, 0, 'COMMA')}">$0</td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr style="border-top: 2px solid #f0f0f0; background: #fafafa;">
+                        <td colspan="3" style="padding: 1rem; text-align: right; font-weight: 600;">訂單總金額</td>
+                        <td style="padding: 1rem; text-align: right; font-size: 1.25rem; font-weight: 700; color: var(--primary-color);"
+                            th:text="'$' + ${#numbers.formatInteger(order.orderTotal, 0, 'COMMA')}">$0</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="/seller/orders" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> 返回列表
+            </a>
+
+            <!-- 已付款狀態：顯示出貨、取消按鈕 -->
+            <th:block th:if="${order.orderStatus == 0}">
+                <form th:action="@{/seller/order/ship}" method="post" style="display: inline;">
+                    <input type="hidden" name="orderId" th:value="${order.orderId}">
+                    <button type="submit" class="btn btn-primary"
+                            onclick="return confirm('確認已安排出貨?')">
+                        <i class="fas fa-shipping-fast"></i> 標記為已出貨
+                    </button>
+                </form>
+
+                <form th:action="@{/seller/order/cancel}" method="post" style="display: inline;">
+                    <input type="hidden" name="orderId" th:value="${order.orderId}">
+                    <button type="submit" class="btn" style="background: #dc3545; color: white;"
+                            onclick="return confirm('確定要取消訂單並退款給買家?')">
+                        <i class="fas fa-times"></i> 取消訂單
+                    </button>
+                </form>
+            </th:block>
+
+            <!-- 聊天按鈕 -->
+            <a th:href="@{/chat(targetUserId=${order.buyerMemId})}" class="btn" style="background: #17a2b8; color: white;">
+                <i class="fas fa-comments"></i> 聯繫買家
+            </a>
+        </div>
+    </div>
+</div>
+
+<footer id="main-footer" class="footer"></footer>
+<script th:src="@{/js/frontend/main.js}"></script>
+</body>
+</html>

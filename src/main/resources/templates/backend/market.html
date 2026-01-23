@@ -20,7 +20,7 @@
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
         <div>
             <h1>二手商城管理</h1>
-            <div class="sub">處理訂單撥款與退款爭議</div>
+            <div class="sub">處理訂單撥款與退貨審核</div>
         </div>
     </header>
 
@@ -45,7 +45,7 @@
             </button>
             <button class="tab-btn" onclick="switchMainTab('refunds')">
                 <i class="fa-solid fa-rotate-left"></i>
-                退款申請審核
+                退貨申請審核
                 <span class="badge" th:text="${refundPendingCount}" th:if="${refundPendingCount > 0}">0</span>
             </button>
         </div>
@@ -227,11 +227,11 @@
             </div>
         </div>
 
-        <!-- ========== 退款申請審核區塊 ========== -->
+        <!-- ========== 退貨申請審核區塊 ========== -->
         <div id="panel-refunds" class="panel">
             <div class="card">
-                <h3>退款爭議審核</h3>
-                <div class="sub">買家發起退款申請，需人工介入審核是否符合退貨標準。</div>
+                <h3>退貨爭議審核</h3>
+                <div class="sub">買家發起退貨申請，需管理員介入審核是否符合退貨標準。</div>
 
                 <table>
                     <thead>
@@ -301,7 +301,7 @@
                     <tr th:if="${#lists.isEmpty(returnsWithDetails)}">
                         <td colspan="6" class="empty-state">
                             <i class="fas fa-inbox"></i>
-                            <p>目前沒有退款申請</p>
+                            <p>目前沒有退貨申請</p>
                         </td>
                     </tr>
                     </tbody>
@@ -334,10 +334,6 @@
             <div class="detail-row">
                 <span class="detail-label">賣家</span>
                 <span class="detail-value" id="modal-sellerName">-</span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">訂單金額</span>
-                <span class="detail-value" id="modal-orderTotal">-</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">退款金額</span>
