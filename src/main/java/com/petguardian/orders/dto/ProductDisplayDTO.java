@@ -21,4 +21,6 @@ public class ProductDisplayDTO {
     private String proDescription;
     private String imageBase64;
     private boolean favorited;
+    private Integer proTypeId;
+    private String proTypeName;
 }
