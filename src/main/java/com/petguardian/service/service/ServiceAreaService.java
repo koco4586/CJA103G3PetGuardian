@@ -24,6 +24,15 @@ public interface ServiceAreaService {
     ServiceAreaVO addServiceArea(Integer sitterId, Integer areaId);
 
     /**
+     * 保姆新增服務地區 (透過會員 ID)
+     * 
+     * @param memId  會員編號
+     * @param areaId 地區編號
+     * @return ServiceAreaVO 新增的服務地區
+     */
+    ServiceAreaVO addServiceAreaForMember(Integer memId, Integer areaId);
+
+    /**
      * 保姆刪除服務地區
      * 
      * @param sitterId 保姆編號
@@ -33,12 +42,28 @@ public interface ServiceAreaService {
     void deleteServiceArea(Integer sitterId, Integer areaId);
 
     /**
+     * 保姆刪除服務地區 (透過會員 ID)
+     * 
+     * @param memId  會員編號
+     * @param areaId 地區編號
+     */
+    void deleteServiceAreaForMember(Integer memId, Integer areaId);
+
+    /**
      * 查詢保姆的所有服務地區
      * 
      * @param sitterId 保姆編號
      * @return List<ServiceAreaVO> 該保姆的所有服務地區
      */
     List<ServiceAreaVO> getServiceAreasBySitter(Integer sitterId);
+
+    /**
+     * 查詢保姆的所有服務地區 (透過會員 ID)
+     * 
+     * @param memId 會員編號
+     * @return List<ServiceAreaVO> 該保姆的所有服務地區
+     */
+    List<ServiceAreaVO> getServiceAreasByMember(Integer memId);
 
     /**
      * 查詢某地區的所有保姆

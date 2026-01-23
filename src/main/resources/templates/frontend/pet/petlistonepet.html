@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>寵物資料 - listOnePet</title>
+
+<style>
+  body {
+    background-image: url("/images/pet/full.jpg"); /* ✅ 底圖保留 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin: 0;
+    padding: 0;
+  }
+
+  table#table-1 {
+    background-color: #CCCCFF;
+    border: 2px solid black;
+    text-align: center;
+    width: 600px;
+    margin: 20px auto;
+  }
+
+  table {
+    width: 800px;
+    background-color: white;
+    margin: 10px auto;
+    border-collapse: collapse;
+  }
+
+  table, th, td {
+    border: 1px solid #CCCCFF;
+    padding: 8px;
+    text-align: center;
+  }
+
+  th { background-color: #F2F2F2; }
+
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .nav-group {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  img.pet-img {
+    max-width: 200px;
+    border-radius: 5px;
+  }
+</style>
+</head>
+
+<body>
+
+<table id="table-1">
+  <tr>
+    <td>
+      <h3>寵物資料詳情</h3>
+      <h4><a th:href="@{/pet/dashboard}">回首頁</a></h4>
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th>編號</th>
+    <th>姓名</th>
+    <th>種類</th>
+    <th>體型</th>
+    <th>年齡</th>
+    <th>圖片</th>
+    <th>性別</th>
+    <th>備註</th>
+    <th>功能</th>
+  </tr>
+
+  <tr>
+    <td th:text="${pet.petId}"></td>
+    <td th:text="${pet.petName}"></td>
+    <td th:text="${pet.typeName}"></td>
+    <td th:text="${pet.sizeName}"></td>
+    <td th:text="${pet.petAge != null ? pet.petAge : '未填寫'}"></td>
+
+    <td>
+      <img class="pet-img"
+       th:if="${pet.petId != null}"
+       th:src="@{/pet/img/{id}(id=${pet.petId})}">
+  
+  <span th:if="${pet.petId == null}" style="color:#ccc;">(無圖片)</span>
+    </td>
+
+    <td th:text="${pet.petGender == 0 ? '母' : '公'}"></td>
+    <td th:text="${pet.petGenderText}"></td>
+    <td th:text="${pet.petDescription}"></td>
+  </tr>
+</table>
+
+<div class="btn-group">
+  <form th:action="@{/pet/getOne_For_Update}" method="post">
+    <input type="hidden" name="petId" th:value="${pet.petId}">
+    <input type="hidden" name="action" value="getOne_For_Update">
+    <button type="submit" name="action" value="update">修改</button>
+  </form>
+
+  <form th:action="@{/pet/delete}" method="post"
+        onsubmit="return confirm('確定要刪除嗎？');">
+    <input type="hidden" name="petId" th:value="${pet.petId}">
+    <input type="hidden" name="action" value="delete">
+    <button type="submit" name="action" value="delete">刪除</button>
+  </form>
+</div>
+
+<div class="nav-group">
+  <a th:if="${prevId != null}"
+     th:href="@{/pet/one(petId=${prevId})}">
+    ◀ 上一筆
+  </a>
+
+  &nbsp;[ 第 <span th:text="${currentIndex + 1}"></span> /
+  <span th:text="${total}"></span> 筆 ]&nbsp;
+
+  <a th:if="${nextId != null}"
+     th:href="@{/pet/one(petId=${nextId})}">
+    下一筆 ▶
+  </a>
+</div>
+
+</body>
+</html>

@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>成為保母 | PetGuardian</title>
-    <link rel="stylesheet" href="../../static/css/frontend/style.css">
-    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../static/css/frontend/dashboard.css">
+    <link rel="stylesheet" href="/css/frontend/dashboard.css">
 </head>
 
 <body>
@@ -59,52 +59,45 @@
                 <p style="color: #666; margin-bottom: 2rem;">加入我們的專業保母團隊，開始您的寵物照顧事業！</p>
 
                 <div class="card">
-                    <form onsubmit="submitRegistration(event)">
-                        <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">基本資料</h3>
-                        <div class="profile-form-grid"
-                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div class="form-group mb-3">
-                                <label class="form-label">真實姓名</label>
-                                <input type="text" class="form-control" placeholder="請輸入真實姓名" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label class="form-label">聯絡電話</label>
-                                <input type="tel" class="form-control" placeholder="09xx-xxx-xxx" required>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label">服務地區</label>
-                            <div class="d-flex gap-sm">
-                                <select class="form-control" style="flex: 1;">
-                                    <option>台北市</option>
-                                    <option>新北市</option>
-                                </select>
-                                <select class="form-control" style="flex: 1;">
-                                    <option>大安區</option>
-                                    <option>信義區</option>
-                                </select>
+                    <form th:action="@{/sitter/apply}" method="post" th:object="${sitterApplication}">
+                        <!-- 申請人資料（唯讀顯示） -->
+                        <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">申請人資料</h3>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <p style="margin: 0.5rem 0;">
+                                    <strong>姓名：</strong>
+                                    <span th:text="${memName}">測試會員</span>
+                                </p>
+                                <p style="margin: 0.5rem 0;">
+                                    <strong>電話：</strong>
+                                    <span th:text="${memPhone}">0912345678</span>
+                                </p>
                             </div>
                         </div>
 
+                        <!-- 申請資料（需填寫） -->
+                        <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">申請資料</h3>
+
                         <div class="form-group mb-3">
-                            <label class="form-label">服務類型 (可複選)</label>
-                            <div class="d-flex gap-md" style="flex-wrap: wrap;">
-                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                    <input type="checkbox"> 到府照顧
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                    <input type="checkbox"> 陪伴散步
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                    <input type="checkbox"> 寵物安親
-                                </label>
+                            <label class="form-label">個人簡介 <span style="color: red;">*</span></label>
+                            <textarea th:field="*{appIntro}" class="form-control" rows="4"
+                                placeholder="請簡單介紹您自己，例如：您的背景、為什麼想成為寵物保姆等（10-500字）" required></textarea>
+                            <small style="color: #666;">請輸入 10-500 字</small>
+                            <div th:if="${#fields.hasErrors('appIntro')}"
+                                style="color: red; font-size: 0.9rem; margin-top: 0.25rem;">
+                                <span th:errors="*{appIntro}"></span>
                             </div>
                         </div>
 
                         <div class="form-group mb-4">
-                            <label class="form-label">自我介紹 / 經驗說明</label>
-                            <textarea class="form-control" rows="4" placeholder="請向飼主介紹您的經驗或是對寵物的熱愛..."></textarea>
+                            <label class="form-label">相關經驗說明 <span style="color: red;">*</span></label>
+                            <textarea th:field="*{appExperience}" class="form-control" rows="4"
+                                placeholder="請描述您照顧寵物的相關經驗，例如：曾經照顧過的寵物類型、時間長度、特殊技能等（10-500字）" required></textarea>
+                            <small style="color: #666;">請輸入 10-500 字</small>
+                            <div th:if="${#fields.hasErrors('appExperience')}"
+                                style="color: red; font-size: 0.9rem; margin-top: 0.25rem;">
+                                <span th:errors="*{appExperience}"></span>
+                            </div>
                         </div>
 
                         <div class="text-center">
@@ -118,16 +111,7 @@
 
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
-    <script src="../../static/js/frontend/main.js"></script>
-    <script>
-        function submitRegistration(e) {
-            e.preventDefault();
-            window.showToast('申請已提交！我們將在 1-3 個工作天內完成審核。');
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 2000);
-        }
-    </script>
+    <script src="/js/frontend/main.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Full Image Page</title>
+
+<style>
+/* 重點就在這裡 */
+html, body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	background-image: url("/images/pet/dc.jpg");
+	background-size: cover; /* 填滿 */
+	background-position: center; /* 置中 */
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+}
+
+/* 功能層（之後用） */
+.content {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-size: 2rem;
+	text-shadow: 0 2px 10px black;
+}
+
+.info {
+	position: relative;
+	z-index: 10;
+	background-color: rgba(255, 255, 255, 0.9); /* 白色半透明 */
+	margin: 50px auto;
+	padding: 20px;
+	border-radius: 10px;
+	max-width: 800px; /* 限制寬度，不要讓它跟背景一樣大 */
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 確保預覽圖區域有明顯的外框 */
+.drop_zone {
+    min-width: 200px;
+    min-height: 200px;
+    width: fit-content;    /* 關鍵：寬度隨內容撐開 */
+    height: fit-content;   /* 關鍵：高度隨內容撐開 */
+    border: 2px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    padding: 10px;         /* 留一點邊距比較美觀 */
+}
+
+/* 讓圖片顯示原始比例，不強迫填滿 */
+.preview_img {
+    display: block;
+    max-width: 400px;      /* 建議設定一個最大寬度，避免原圖太大使頁面變形 */
+    height: auto;
+}
+#p_file { display: none; }
+
+#btn_home {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    margin-right: 10px;
+    background-color: #007bff; /* 藍色 */
+    color: white;
+    transition: 0.3s;
+}
+
+#btn_home:hover {
+    background-color: #0056b3; /* 滑鼠移上去變深藍 */
+}
+</style>
+</head>
+<body>
+
+
+
+	<article class="info">
+		<form action="#" method="#" id="the_form">
+			<div class="content_block">
+
+				<div class="left_block">
+				<button type="button" class="select-btn">選擇圖片</button>
+					<input type="file" id="p_file">
+					<div id="preview" class="drop_zone">
+					
+						<!-- 上面直接在one後面加上on也可以 -->
+						<span class="text">預覽圖</span>
+					</div>
+				</div>
+
+				<div class="right_block">
+
+					<div class="block">
+						<label>寵物名稱：</label> <input type="text" id="p_name"
+							autocomplete="off">
+					</div>
+
+					<div class="block">
+						<label>寵物種類：</label> <input type="text" id="p_type"
+							placeholder="貓 或 狗">
+					</div>
+
+					<div class="block">
+						<label>寵物性別：</label> <input type="text" id="p_Gender"
+							autocomplete="off">
+					</div>
+
+					<div class="block">
+						<label>寵物年齡：</label> <input type="text" id="p_age"
+							autocomplete="off">
+					</div>
+
+					<div class="block">
+						<label>寵物尺寸：</label> <select id="p_size">
+							<option value="1">小型</option>
+							<option value="2">中型</option>
+							<option value="3">大型</option>
+						</select>
+					</div>
+
+					<div class="block">
+						<label>寵物備註：</label><br>
+						<textarea id="p_desc" rows="3"></textarea>
+					</div>
+
+					<div class="block">
+						<label>經度：</label><input type="text" id="lng" readonly> <label>緯度：</label><input
+							type="text" id="lat" readonly>
+					</div>
+
+				</div>
+
+			</div>
+
+			<footer class="footer">
+				<div class="action_block">
+					<div class="left_block">
+						<button type="button" id="btn_fullscreen">進入全螢幕模式</button>
+					</div>
+
+					<div class="right_block">
+						<button type="reset">清空資料</button>
+						<button type="submit" id="btn_submit">送出資料</button>
+						<button type="button" id="btn_home" style="background-color: #6c757d; color: white;">回到首頁</button>
+					</div>
+				</div>
+				<p>
+					是否有支援全螢幕模式：<span id="fullscreen_enable"></span>
+				</p>
+				<p>
+					是否有支援地理資訊定位：<span id="geolocation_enable"></span>
+				</p>
+			</footer>
+		</form>
+	</article>
+
+	<script>
+
+  // --- 宣告 DOM 元素 ---
+  var the_html = document.documentElement;
+  var the_form_el = document.getElementById("the_form");
+  var p_name_el = document.getElementById("p_name");
+  var p_type_el = document.getElementById("p_type"); // 新增
+  var p_Gender_el = document.getElementById("p_Gender");
+  var p_age_el = document.getElementById("p_age");
+  var p_size_el = document.getElementById("p_size"); // 新增
+  var p_desc_el = document.getElementById("p_desc"); // 新增
+  var lng_el = document.getElementById("lng");
+  var lat_el = document.getElementById("lat");
+  var btn_fullscreen_el = document.getElementById("btn_fullscreen");
+  var fullscreen_enable_el = document.getElementById("fullscreen_enable");
+  var geolocation_enable_el = document.getElementById("geolocation_enable");
+  var preview_el = document.getElementById("preview");
+  var p_file_el = document.getElementById("p_file");
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+
+
+
+// --- 初始化預覽圖區域的 HTML ---
+    var preview_default_html = '<span class="text">預覽圖</span>';
+   
+
+    // 處理讀取檔案並顯示預覽圖的函式
+    var handleFiles = function(files) {
+      if (files && files.length > 0) {
+        var file = files[0];
+        if (file.type.indexOf("image") !== -1) {
+          var reader = new FileReader();
+          reader.addEventListener("load", function(e) {
+            // 需求 1 & 3：呈現預覽圖並加上 preview_img class
+            preview_el.innerHTML = '<img src="' + e.target.result + '" class="preview_img">';
+          });
+          reader.readAsDataURL(file);
+        }
+      } else {
+        // 需求 2：如果按取消（files長度為0），回到原介面
+        preview_el.innerHTML = preview_default_html;
+      }
+    };
+
+    
+    
+    //reset 按鈕按下去的時候觸發
+    //form
+
+    the_form_el.addEventListener("reset", function(){
+
+  preview_el.innerHTML = preview_default_html;
+      // 清空資料時，將預覽圖回到原介面
+      sessionStorage.removeItem("form_data");
+      setTimeout(function(){
+        check_geolocation_enabled_el();
+      }, 0);
+});
+
+    
+
+    var btn_home_el = document.getElementById("btn_home");
+
+ // 2. 綁定點擊事件
+ btn_home_el.addEventListener("click", function() {
+     // 詢問使用者，避免誤點導致資料消失
+     if (confirm("確定要離開並回到首頁嗎？未儲存的資料將會消失。")) {
+         // 清除這一次的暫存資料（選選：如果你希望回首頁後下次進來是乾淨的）
+         // sessionStorage.removeItem("pending_data"); 
+         
+         window.location.href = "/pet/dashboard"; // 這裡填入你首頁的網址，例如 "/" 或 "/index"
+     }
+ });
+
+
+    
+      
+    // 再次抓取經緯度放回欄位
+      
+      /* // 【功能：清空後不要重新抓取，讓欄位保持清空】 (若想換成這功能，請取消註解下面，並註解掉上面的 setTimeout)
+  // lng_el.value = "";
+  // lat_el.value = "";
+  */
+
+  document.addEventListener("DOMContentLoaded", function() {
+	    var select_btn_el = document.querySelector(".select-btn");
+	    var p_file_el = document.getElementById("p_file");
+
+	    if (select_btn_el && p_file_el) {
+	        select_btn_el.addEventListener("click", function() {
+	            p_file_el.click(); // 手動點擊隱藏的 input file
+	        });
+	    }
+	});
+  
+  // 點擊 「預覽圖」 區域，跳出選圖的彈窗
+preview_el.addEventListener("click", function(){
+    p_file_el.click(); // 觸發隱藏的 input file
+});
+
+      // 檔案選取變更時
+      
+    p_file_el.addEventListener("change", function(){
+      handleFiles(this.files);
+    });
+
+
+    // 以下三步在步驟一不需要
+    // check_geolocation_enabled();
+    //preview_el.innerHTML = '<span class="text">預覽圖</span>';
+
+
+    //============================fullscreen
+    //判斷有無支援全螢幕
+    var check_fullscreen_enabled = function(){
+      //console.log(document.fullscreenEnabled);
+      if(document.fullscreenEnabled) {
+        fullscreen_enable_el.innerHTML = "是";
+      } else{
+        fullscreen_enable_el.innerHTML = "否";
+      }
+    };
+
+    //fullscreen
+    btn_fullscreen_el.addEventListener("click", function () {
+      //console.log(document.fullscreenElement );
+      if(document.fullscreenElement) {//退出全螢幕
+        document.exitFullscreen();
+        this.innerHTML = "進入全螢幕模式";
+
+      } else{
+        the_html.requestFullscreen();
+        this.innerHTML = "退出全螢幕模式";
+      }
+    });
+
+    document.addEventListener("fullscreenchange", function(e) {
+    //console.log(document.fullscreenElement)
+    if(! document.fullscreenElement){
+    btn_fullscreen_el.innerHTML ="進入全螢幕模式";
+    }
+    });
+
+    // ======================== geolocation =========================
+
+    // 判斷有無地理資訊定位
+    var check_geolocation_enabled_el = function () {
+    if (navigator.geolocation) {
+        geolocation_enable_el.innerHTML = "是";
+
+        // 取得 geolocation
+        navigator.geolocation.getCurrentPosition(function (position) {
+            // console.log(position);
+            // console.log("抓到新座標了！", position.coords.longitude);
+            lng_el.value = position.coords.longitude;
+            lat_el.value = position.coords.latitude;
+
+            // lng_el.disabled = false;
+            // lat_el.disabled = false;
+        }, function (error) {
+            lng_el.disabled = true;
+            lat_el.disabled = true;
+            console.warn("定位失敗原因代碼: " + error.code + " 訊息: " + error.message);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 10000
+        });
+    } else {
+        geolocation_enable_el.innerHTML = "否";
+    }
+};
+
+
+
+// ========================== Drag and Drop ==========================
+
+// 當檔案拖曳進入區域
+    preview_el.addEventListener("dragenter", function (e) {
+    e.preventDefault();
+    // 需求 1：加上 -on class
+    this.classList.add("-on");
+});
+
+// 當檔案在區域上方移動
+    preview_el.addEventListener("dragover", function (e) {
+    e.preventDefault(); // 必須呼叫，才能觸發 drop 事件
+});
+
+// 當檔案離開區域
+    preview_el.addEventListener("dragleave", function (e) {
+    e.preventDefault();
+    // 需求 1：移除 -on class
+    this.classList.remove("-on");
+});
+
+// 當檔案放下時
+    preview_el.addEventListener("drop", function (e) {
+    e.preventDefault(); // 需求：允許取得檔案
+    // 移除 -on class
+    this.classList.remove("-on");
+//必須加上e.那段，才不會直接開啟圖檔
+    // 取得 FileList 物件並印出
+    var files = e.dataTransfer.files;
+    // console.log(files);
+    handleFiles(files);
+  });
+
+  the_form_el.addEventListener("submit", function (e) {
+    e.preventDefault(); // 攔截跳轉
+    
+ // --- 🔴 新增：寵物名稱非空驗證 ---
+    if (p_name_el.value.trim() === "") {
+        alert("寵物名稱請勿空白！");
+        p_name_el.focus();
+        return;
+    }
+
+    // 取得圖片 Base64 (從預覽圖的 src 拿)
+    var img_el = preview_el.querySelector(".preview_img"); if (!img_el) { alert("請先上傳照片！"); return; }
+    canvas.width = img_el.naturalWidth;
+    canvas.height = img_el.naturalHeight;
+    ctx.drawImage(img_el, 0, 0);
+
+    // 3. 設定文字樣式
+    const fontSize = Math.floor(canvas.width / 15); // 根據圖寬動態調整字體大小
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.fillStyle = "red";       // 文字顏色
+    ctx.strokeStyle = "white";   // 文字邊框顏色（增加辨識度）
+    ctx.lineWidth = fontSize / 8;
+    ctx.textBaseline = "top";    // 重要：設定基準線在頂部，方便依序計算 Y 軸
+
+    // 4. 🔴 準備要顯示的資料陣列 (順序決定顯示順序)
+    // 請確保這些 ID 在你的 HTML 中都存在
+    const petInfo = [
+        { label: "名稱", value: p_name_el.value },
+        { label: "種類", value: document.getElementById("p_type").value },
+        { label: "性別", value: p_Gender_el.value },
+        { label: "年齡", value: p_age_el.value },
+        { label: "尺寸", value: document.getElementById("p_size").options[document.getElementById("p_size").selectedIndex].text },
+        { label: "備註", value: document.getElementById("p_desc").value }
+    ];
+
+    // 5. 🔴 依序繪製文字
+    const startX = 20;           // 左邊距
+    let currentY = 20;           // 起始高度
+    const lineHeight = fontSize * 1.3; // 設定行距 (字體大小的 1.3 倍)
+
+    petInfo.forEach((item) => {
+        const text = `${item.label}：${item.value}`;
+        
+        // 畫邊框 (避免背景太亂看不清)
+        ctx.strokeText(text, startX, currentY);
+        // 畫文字
+        ctx.fillText(text, startX, currentY);
+        
+        // 🔴 關鍵：畫完一行後，將 Y 座標往下移動一行的高度
+        currentY += lineHeight; 
+    });
+
+    // 6. 轉存 Base64 並跳轉
+    const final_img_base64 = canvas.toDataURL("image/jpeg", 0.7);
+    const form_data = {
+            img_base64: final_img_base64,
+            petName: p_name_el.value,          // ← 改名
+            petType: p_type_el.value,          // ← 新增
+            petGender: p_Gender_el.value,            // ← 改名
+            petAge: p_age_el.value,            // ← 改名
+            petSize: p_size_el.value,          // ← 新增
+            petDesc: p_desc_el.value,          // ← 新增
+            lng: lng_el.value,                 // ← 改用這樣比較清楚
+            lat: lat_el.value
+        };
+
+    sessionStorage.setItem("pending_data", JSON.stringify(form_data));
+    location.href = "/pet/confirm";
+});
+  lng_el.disabled = false;
+      lat_el.disabled = false;
+
+// =================== session 裡的資料回寫到表單中 ===================
+    var recovery_data = function () {
+    // 1. 改讀取 pending_data (與送出時的 Key 一致)
+    var savedData = sessionStorage.getItem("pending_data");
+    
+    // 檢查是否有資料，如果沒有就直接結束
+    if (savedData === null || savedData === "null") {
+        return; 
+    }
+
+    var data = JSON.parse(savedData);
+
+    // 2. 回填文字欄位 (使用 data 物件中的屬性名稱)
+    if(p_name_el) p_name_el.value = data.petName || "";
+    if(p_type_el) p_type_el.value = data.petType || "";
+    if(p_Gender_el)  p_Gender_el.value  = data.petSex || "";
+    if(p_age_el)  p_age_el.value  = data.petAge || "";
+    if(p_size_el) p_size_el.value = data.petSize || "1";
+    if(p_desc_el) p_desc_el.value = data.petDesc || "";
+    if(lng_el)    lng_el.value    = data.lng || "";
+    if(lat_el)    lat_el.value    = data.lat || "";
+
+    // 3. 圖片部分：依你的要求「保留資料，圖片不要」，所以強制回到預覽圖狀態
+   if (data.img_base64 && data.img_base64.length > 100) { 
+        // 判斷長度是因為 Base64 很長，如果只是空字串或太短就不要顯示
+        preview_el.innerHTML = '<img src="' + data.img_base64 + '" class="preview_img">';
+    } else {
+        // 如果沒有圖片資料，強制還原成預設文字
+        preview_el.innerHTML = preview_default_html;
+    }
+};
+
+
+
+
+// ========================== 函式觸發 ==========================
+    // reset_p_count_value();
+    check_fullscreen_enabled();
+    check_geolocation_enabled_el();
+    recovery_data();
+
+
+
+
+    
+  </script>
+
+
+
+
+
+</body>
+</html>

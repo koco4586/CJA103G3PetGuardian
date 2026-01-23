@@ -13,7 +13,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-@Entity//保姆服務地區table
+/**
+ * 保姆服務地區 Entity
+ * 對應資料表: service_area
+ * 
+ * 定義保姆服務的行政區範圍
+ * 複合主鍵: SitterVO (sitter_id) + AreaVO (area_id)
+ */
+@Entity
 @Table(name = "service_area")
 @IdClass(ServiceAreaId.class)
 public class ServiceAreaVO implements Serializable {

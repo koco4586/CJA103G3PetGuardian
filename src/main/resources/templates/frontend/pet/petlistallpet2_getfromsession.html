@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>寵物資料詳情</title>
+
+    <style>
+      /* 1. 設定背景底圖 */
+  body {
+    background-image: url("/images/pet/dog_and_cat_by_fukidesign.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: Arial, sans-serif;
+  }
+
+  /* 2. 讓表格與標題全部置中 */
+  table {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9); /* 加上半透明白色背景，確保文字清晰 */
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+  }
+
+  th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+  }
+
+  th {
+    background-color: #f8f9fa;
+  }
+  </style>
+</head>
+
+<body>
+
+<table id="table-1">
+    <tr>
+        <td>
+            <h3>寵物資料詳情</h3>
+            <h4><a th:href="@{/pet/dashboard}">回首頁</a></h4>
+        </td>
+    </tr>
+</table>
+
+<table>
+<thead>
+    <tr>
+        <th>寵物編號</th>
+        <th>寵物姓名</th>
+        <th>寵物種類</th>
+        <th>寵物體型</th> 
+        <th>寵物年齡</th> 
+        <th>寵物圖片</th> 
+        <th>性別</th>   
+         <th>備註</th>  
+         <th>功能</th>        </tr>
+</thead>
+
+<tbody>
+    <tr th:each="pet : ${petlist}">
+        <td th:text="${pet.petId}"></td>
+        <td th:text="${pet.petName}"></td>
+        <td th:text="${pet.typeName}"></td>
+        <td th:text="${pet.sizeName}"></td> 
+        <td th:text="${pet.petAge}"></td>
+        
+
+        <td>
+            <img th:src="@{/pet/img/{id}(id=${pet.petId})}" 
+                 style="max-width: 100px; min-height: 50px; background-color: #eee;" 
+         alt="無圖片"
+         onerror="this.style.display='none'; this.parentElement.innerHTML='暫無圖片';">>
+        </td>
+
+        <td th:text="${pet.petGenderText}"></td>
+        <td th:text="${pet.petDescription}"></td>
+        
+        <td>
+            <a th:href="@{/pet/one(petId=${pet.petId})}" style="color: blue;">查看</a> | 
+            <a th:href="@{/pet/getOne_For_Update(petId=${pet.petId})}">修改</a> | 
+            <form th:action="@{/pet/delete}" method="post" style="display:inline;" onsubmit="return confirm('確定刪除？');">
+                <input type="hidden" name="petId" th:value="${pet.petId}">
+                <button type="submit" style="color:red; background:none; border:none; cursor:pointer; padding:0;">刪除</button>
+            </form>
+        </td>
+        
+<!--         <td> -->
+<!--             <a th:href="@{/pet/one(petId=${pet.petId})}" style="color: blue;">查看詳情</a> -->
+
+<!--             <span th:if="${#session.memId != null and session.memId == pet.memId}"> -->
+<!--                 |  -->
+<!--                 <a th:href="@{/pet/edit(petId=${pet.petId})}">修改</a> | -->
+<!--                 <form th:action="@{/pet/delete}" method="post" style="display:inline;" onsubmit="return confirm('確定刪除？');"> -->
+<!--                     <input type="hidden" name="petId" th:value="${pet.petId}"> -->
+<!--                     <button type="submit" style="color:red; background:none; border:none; cursor:pointer; padding:0;">刪除</button> -->
+<!--                 </form> -->
+<!--             </span> -->
+
+<!--             <span th:if="${#session.memId == null or session.memId != pet.memId}" style="color: #999; font-style: italic;"> -->
+<!--                 (唯讀) -->
+<!--             </span> -->
+<!--         </td> -->
+
+</tr>
+    </tbody>
+    
+    
+</table>
+
+
+<div class="pagination-links" th:if="${pageNumber > 1}">
+    <span th:if="${whichPage > 1}">
+        <a th:href="@{/pet/all(whichPage=1)}">至第一頁</a>&nbsp;
+        <a th:href="@{/pet/all(whichPage=${whichPage - 1})}">上一頁</a>&nbsp;
+    </span>
+
+    第 <span th:text="${whichPage}"></span> / <span th:text="${pageNumber}"></span> 頁
+
+    <span th:if="${whichPage < pageNumber}">
+        <a th:href="@{/pet/all(whichPage=${whichPage + 1})}">下一頁</a>&nbsp;
+        <a th:href="@{/pet/all(whichPage=${pageNumber})}">至最後一頁</a>&nbsp;
+    </span>
+</div>
+
+
+
+</body>
+</html>

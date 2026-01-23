@@ -1,0 +1,59 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>建立預約 - Pet Guardian</title>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" th:href="@{/css/backend/style.css}">
+<link rel="stylesheet" th:href="@{/css/backend/bookings.css}">
+
+</head>
+<body>
+	<div class="main-content">
+		<button class="toggle-btn" onclick="toggleSidebar()">
+			<i class="fa-solid fa-bars"></i>
+		</button>
+		<header>
+			<h1>預約服務</h1>
+		</header>
+
+		<div th:if="${errorMessage != null}"
+			style="background-color: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #fecaca; text-align: center;">
+			<strong><i class="fa-solid fa-circle-exclamation"></i> 提示：</strong> <span
+				th:text="${errorMessage}">錯誤訊息</span>
+		</div>
+
+		<section class="card">
+			<form th:action="@{/booking/submit}" th:object="${order}"
+				method="post">
+				<input type="hidden" th:field="*{sitterId}" /> <input type="hidden"
+					th:field="*{memId}" /> <input type="hidden" th:field="*{petId}" />
+				<input type="hidden" th:field="*{serviceItemId}" />
+
+				<div class="info-group">
+					<p>
+						飼主：<span th:text="${memberName}"></span>
+					</p>
+					<p>
+						寵物：<span th:text="${petName}"></span>
+					</p>
+				</div>
+
+				<div class="form-group">
+					<label>預約開始時間</label> <input type="datetime-local"
+						th:field="*{startTime}" class="input-field" required />
+				</div>
+
+				<div class="form-group">
+					<label>預約結束時間</label> <input type="datetime-local"
+						th:field="*{endTime}" class="input-field" required />
+				</div>
+
+				<button type="submit" class="btn">確認預約</button>
+			</form>
+		</section>
+	</div>
+	<script th:src="@{/js/backend/sidebar.js}"></script>
+
+</body>
+</html>

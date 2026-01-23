@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Pet Guardian - 保母管理系統</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../static/css/backend/style.css">
-    <link rel="stylesheet" href="../../static/css/backend/sitters.css">
+    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/sitters.css">
 </head>
 
 <body>
-    <script src="../../static/js/backend/sidebar.js"></script>
+    <script src="/js/backend/sidebar.js"></script>
 
     <div class="main-content">
         <header>
@@ -43,43 +43,59 @@
                 <div class="card">
                     <h3>待審核申請列表</h3>
                     <div class="sub" style="margin-bottom:15px; color:#666;">
-                        審核通過後，系統將自動發送 Email 通知申請人。
+                        審核通過後，系統將自動建立保母帳號並發送 Email 通知申請人。
                     </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>申請 ID</th>
-                                <th>申請人</th>
-                                <th>提交文件</th>
+                                <th>申請編號</th>
+                                <th>會員ID</th>
+                                <th>個人簡介</th>
+                                <th>相關經驗</th>
                                 <th>申請時間</th>
                                 <th>狀態</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>REQ-101</td>
-                                <td>Linda Liu</td>
-                                <td>
-                                    <a href="#" style="color:var(--orange); display:block;">良民證.jpg</a>
-                                    <a href="#" style="color:var(--orange); display:block;">身分證正反面.pdf</a>
+                            <tr th:each="app : ${applications}">
+                                <td th:text="${app.appId}">1</td>
+                                <td th:text="${app.memId}">101</td>
+                                <td th:text="${#strings.abbreviate(app.appIntro, 50)}"
+                                    style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    我熱愛寵物，從小就和狗狗貓咪一起長大...
                                 </td>
-                                <td>2026-01-07</td>
-                                <td><span style="color:orange; font-weight:bold;">待審核</span></td>
-                                <td>
-                                    <button class="btn" onclick="alert('已發送審核通過通知！')">通過並通知</button>
-                                    <button class="btn ghost" style="color:red; border-color:red;"
-                                        onclick="alert('已發送駁回通知')">駁回</button>
+                                <td th:text="${#strings.abbreviate(app.appExperience, 50)}"
+                                    style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    曾照顧過3隻黃金獵犬和2隻波斯貓...
                                 </td>
-                            </tr>
-                            <tr>
-                                <td>REQ-102</td>
-                                <td>Mark Wang</td>
-                                <td><a href="#" style="color:var(--orange)">專業訓練證書.png</a></td>
-                                <td>2026-01-06</td>
-                                <td><span style="color:red;">資料不全</span></td>
+                                <td th:text="${#temporals.format(app.appCreatedAt, 'yyyy-MM-dd')}">2026-01-20</td>
                                 <td>
-                                    <button class="btn ghost">通知補件</button>
+                                    <span th:if="${app.appStatus == 0}"
+                                        style="color:orange; font-weight:bold;">待審核</span>
+                                    <span th:if="${app.appStatus == 1}"
+                                        style="color:green; font-weight:bold;">已通過</span>
+                                    <span th:if="${app.appStatus == 2}" style="color:red; font-weight:bold;">未通過</span>
+                                </td>
+                                <td>
+                                    <!-- 只有待審核的申請才顯示審核按鈕 -->
+                                    <div th:if="${app.appStatus == 0}">
+                                        <form th:action="@{/admin/sitter/approve/{id}(id=${app.appId})}" method="post"
+                                            style="display:inline;">
+                                            <button type="submit" class="btn">通過並通知</button>
+                                        </form>
+                                        <form th:action="@{/admin/sitter/reject/{id}(id=${app.appId})}" method="post"
+                                            style="display:inline;">
+                                            <input type="text" name="reviewNote" placeholder="駁回原因" required
+                                                style="width:120px; padding:0.3rem; margin-right:0.3rem;">
+                                            <button type="submit" class="btn ghost"
+                                                style="color:red; border-color:red;">駁回</button>
+                                        </form>
+                                    </div>
+                                    <!-- 已審核的申請顯示狀態 -->
+                                    <div th:if="${app.appStatus != 0}">
+                                        <button class="btn ghost" disabled>已審核</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -114,8 +130,6 @@
                         <div class="tag-container">
                             <span class="tag">狗狗 (Dog) <i class="fa-solid fa-xmark remove"></i></span>
                             <span class="tag">貓咪 (Cat) <i class="fa-solid fa-xmark remove"></i></span>
-                            <span class="tag">兔子 (Rabbit) <i class="fa-solid fa-xmark remove"></i></span>
-                            <span class="tag">鳥類 (Bird) <i class="fa-solid fa-xmark remove"></i></span>
                         </div>
 
                         <div style="margin-top:16px; display:flex; gap:8px;">
@@ -135,35 +149,51 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>保母編號</th>
+                                <th>會員ID</th>
                                 <th>保母姓名</th>
-                                <th>服務評價</th>
+                                <th>服務地址</th>
+                                <th>評價（平均星數）</th>
                                 <th>目前狀態</th>
-                                <th>上次登入</th>
+                                <th>註冊時間</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>S-008</td>
-                                <td>Jason Chen</td>
-                                <td><i class="fa-solid fa-star" style="color:gold"></i> 4.9 (102則)</td>
-                                <td><span style="color:green">正常接案</span></td>
-                                <td>10分鐘前</td>
+                            <tr th:each="sitter : ${sitters}">
+                                <td th:text="${sitter.sitterId}">1</td>
+                                <td th:text="${sitter.memId}">101</td>
+                                <td th:text="${sitter.sitterName}">保母姓名</td>
+                                <td th:text="${sitter.sitterAdd}">服務地址</td>
                                 <td>
-                                    <button class="btn ghost" style="color:red; border-color:red;"
-                                        onclick="alert('帳號已停權')">停權</button>
+                                    <i class="fa-solid fa-star" style="color:gold"></i>
+                                    <span
+                                        th:text="${sitter.sitterRatingCount > 0 ? 
+                                        T(java.lang.String).format('%.1f', sitter.sitterStarCount * 1.0 / sitter.sitterRatingCount) : '0.0'}">0.0</span>
+                                    <span style="color:#666;">(<span
+                                            th:text="${sitter.sitterRatingCount}">0</span>則)</span>
                                 </td>
-                            </tr>
-                            <tr>
-                                <td>S-015</td>
-                                <td>Sarah Lee</td>
-                                <td><i class="fa-solid fa-star" style="color:gold"></i> 2.1 (5則)</td>
-                                <td><span style="color:red; font-weight:bold;">已停權</span></td>
-                                <td>30天前</td>
                                 <td>
-                                    <button class="btn" style="background:#4CAF50;"
-                                        onclick="alert('帳號已恢復')">恢復權限</button>
+                                    <span th:if="${sitter.sitterStatus == 0}"
+                                        style="color:green; font-weight:bold;">正常接案</span>
+                                    <span th:if="${sitter.sitterStatus == 1}"
+                                        style="color:red; font-weight:bold;">已停權</span>
+                                </td>
+                                <td th:text="${#temporals.format(sitter.sitterCreatedAt, 'yyyy-MM-dd')}">2026-01-20</td>
+                                <td>
+                                    <!-- 如果保母狀態是啟用(0)，顯示停權按鈕 -->
+                                    <form th:if="${sitter.sitterStatus == 0}"
+                                        th:action="@{/admin/sitter/suspend/{id}(id=${sitter.sitterId})}" method="post"
+                                        style="display:inline;">
+                                        <button type="submit" class="btn ghost"
+                                            style="color:red; border-color:red;">停權</button>
+                                    </form>
+                                    <!-- 如果保母狀態是停權(1)，顯示恢復按鈕 -->
+                                    <form th:if="${sitter.sitterStatus == 1}"
+                                        th:action="@{/admin/sitter/restore/{id}(id=${sitter.sitterId})}" method="post"
+                                        style="display:inline;">
+                                        <button type="submit" class="btn" style="background:#4CAF50;">恢復權限</button>
+                                    </form>
                                 </td>
                             </tr>
                         </tbody>
