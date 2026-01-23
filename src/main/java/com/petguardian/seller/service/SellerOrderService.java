@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface SellerOrderService {
@@ -16,6 +17,8 @@ public interface SellerOrderService {
     Optional<OrdersVO> getOrderById(Integer orderId);
     OrdersVO updateOrderStatus(Integer orderId, Integer newStatus);
     List<OrderItemVO> getOrderItems(Integer orderId);
+
+    Map<String, Object> getOrderDetail(Integer sellerId, Integer orderId);
 
     @Service
     @Transactional

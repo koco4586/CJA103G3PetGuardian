@@ -22,6 +22,8 @@ public interface ProductService {
 
     List<ProType> getAllProTypes();
 
+    Product getProduct(Integer proId);
+
     interface WalletService {
 
         // 根據會員 ID 查詢錢包

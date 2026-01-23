@@ -2,23 +2,25 @@ package com.petguardian.seller.controller;
 
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.seller.model.*;
+import com.petguardian.seller.service.SellerDashboardService;
 import com.petguardian.orders.model.*;
 import com.petguardian.seller.service.*;
 import com.petguardian.sellerreview.service.SellerReviewService;
-import com.petguardian.sellerreview.model.SellerReviewVO;
 import com.petguardian.wallet.model.Wallet;
 import com.petguardian.wallet.model.WalletRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 賣家管理中心控制器
@@ -34,13 +36,19 @@ public class SellerController {
     private SellerOrderService sellerOrderService;
 
     @Autowired
-    private AuthStrategyService authService; // 使用科宏
+    private AuthStrategyService authService;
 
     @Autowired
     private WalletRepository walletRepository;
 
     @Autowired
     private SellerReviewService sellerReviewService;
+
+    @Autowired
+    private StoreMemberRepository memberRepository;
+
+    @Autowired
+    private SellerDashboardService sellerDashboardService;
 
     /**
      * 取得當前登入會員 ID（使用 AuthStrategyService）
@@ -49,6 +57,8 @@ public class SellerController {
     private Integer getCurrentMemId(HttpServletRequest request) {
         return authService.getCurrentUserId(request);
     }
+
+// ==================== 頁面導向 ====================
 
     /**
      * 賣家管理中心 - 首頁（營運概況）
@@ -59,8 +69,12 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store"; // 未登入導向登入頁
+            return "redirect:/store";
         }
+
+        // 取得賣家基本資訊（memId, memName, memImage）
+        Map<String, Object> sellerInfo = sellerDashboardService.getSellerBasicInfo(sellerId);
+        model.addAttribute("sellerInfo", sellerInfo);
 
         // 查詢賣家的所有商品
         List<Product> allProducts = productService.getSellerProducts(sellerId);
@@ -74,50 +88,38 @@ public class SellerController {
                 .filter(p -> p.getProState() == 1)
                 .count();
         long totalOrders = allOrders.size();
-        long pendingOrders = allOrders.stream()
-                .filter(o -> o.getOrderStatus() == 0)
+
+        // 待出貨 = 訂單狀態為「已付款(0)」的數量
+        long pendingShipment = allOrders.stream()
+                .filter(o -> o.getOrderStatus() != null && o.getOrderStatus() == 0)
                 .count();
 
-        // 評分統計
-        Map<String, Object> ratingStats = sellerReviewService.getSellerRatingStats(sellerId);
+        // 評價統計（平均分/5.0、總評價數量）
+        Map<String, Object> ratingStats = sellerDashboardService.getSellerRatingStats(sellerId);
         Double averageRating = (Double) ratingStats.get("averageRating");
-        Long totalReviews = (Long) ratingStats.get("reviewCount");
-        Integer totalRatingScore = (int) (averageRating * totalReviews);
+        Integer totalRatingCount = (Integer) ratingStats.get("totalRatingCount");
+        Integer totalRatingScore = (Integer) ratingStats.get("totalRatingScore");
 
-        @SuppressWarnings("unchecked")
-        List<SellerReviewVO> allReviews = (List<SellerReviewVO>) ratingStats.get("reviews");
+        // 總營收（已完成訂單累計）
+        int totalRevenue = allOrders.stream()
+                .filter(o -> o.getOrderStatus() != null && o.getOrderStatus() == 2)
+                .mapToInt(o -> o.getOrderTotal() != null ? o.getOrderTotal() : 0)
+                .sum();
 
-        // 為每個評論加入訂單資訊
-        List<Map<String, Object>> reviewsWithOrderInfo = allReviews.stream()
-                .map(review -> {
-                    Map<String, Object> reviewMap = new HashMap<>();
-                    reviewMap.put("review", review);
+        // 取得評價列表
+        List<Map<String, Object>> allReviews = sellerDashboardService.getSellerReviews(sellerId);
 
-                    sellerOrderService.getOrderById(review.getOrderId())
-                            .ifPresent(order -> {
-                                reviewMap.put("buyerName", order.getReceiverName());
-                            });
-
-                    return reviewMap;
-                })
-                .toList();
-
-        // ✨ 錢包餘額
-        Integer walletBalance = walletRepository.findByMemId(sellerId)
-                .map(Wallet::getBalance)
-                .orElse(0);
-
+        // 傳遞到 Model
         model.addAttribute("totalProducts", totalProducts);
         model.addAttribute("activeProducts", activeProducts);
         model.addAttribute("totalOrders", totalOrders);
-        model.addAttribute("pendingOrders", pendingOrders);
+        model.addAttribute("pendingShipment", pendingShipment);  // ✨ 改名：待出貨
+        model.addAttribute("averageRating", averageRating);
+        model.addAttribute("totalRatingCount", totalRatingCount);  // ✨ 改名：總評價數量
         model.addAttribute("totalRatingScore", totalRatingScore);
-        model.addAttribute("totalReviews", totalReviews);
-        model.addAttribute("averageRating", String.format("%.1f", averageRating));
-        model.addAttribute("walletBalance", walletBalance);
-        model.addAttribute("allReviews", reviewsWithOrderInfo);
+        model.addAttribute("totalRevenue", totalRevenue);
+        model.addAttribute("allReviews", allReviews);
         model.addAttribute("currentView", "overview");
-        model.addAttribute("sellerName", "賣家 #" + sellerId);
 
         return "frontend/store-seller";
     }
@@ -134,10 +136,24 @@ public class SellerController {
             return "redirect:/store";
         }
 
+        // 取得賣家基本資訊
+        Map<String, Object> sellerInfo = sellerDashboardService.getSellerBasicInfo(sellerId);
+        model.addAttribute("sellerInfo", sellerInfo);
+
         List<Product> products = productService.getSellerProducts(sellerId);
         List<ProType> proTypes = productService.getAllProTypes();
 
+        // 為每個商品加上主圖 Base64
+        List<Map<String, Object>> productsWithImages = new ArrayList<>();
+        for (Product p : products) {
+            Map<String, Object> productData = new HashMap<>();
+            productData.put("product", p);
+            productData.put("mainImage", sellerDashboardService.getProductMainImage(p.getProId()));
+            productsWithImages.add(productData);
+        }
+
         model.addAttribute("products", products);
+        model.addAttribute("productsWithImages", productsWithImages);
         model.addAttribute("proTypes", proTypes);
         model.addAttribute("currentView", "products");
 
@@ -156,12 +172,66 @@ public class SellerController {
             return "redirect:/store";
         }
 
+        // 取得賣家基本資訊
+        Map<String, Object> sellerInfo = sellerDashboardService.getSellerBasicInfo(sellerId);
+        model.addAttribute("sellerInfo", sellerInfo);
+
         List<OrdersVO> orders = sellerOrderService.getSellerOrders(sellerId);
 
+        // 為每筆訂單加上買家名稱和是否可出貨
+        List<Map<String, Object>> ordersWithDetails = new ArrayList<>();
+        for (OrdersVO order : orders) {
+            Map<String, Object> orderData = new HashMap<>();
+            orderData.put("order", order);
+
+            // 取得買家名稱
+            Optional<StoreMemberVO> buyerOpt = memberRepository.findById(order.getBuyerMemId());
+            if (buyerOpt.isPresent()) {
+                orderData.put("buyerName", buyerOpt.get().getMemName());
+            } else {
+                orderData.put("buyerName", "買家 #" + order.getBuyerMemId());
+            }
+
+            // 判斷是否可出貨（只有已付款狀態才能出貨）
+            boolean canShip = (order.getOrderStatus() != null && order.getOrderStatus() == 0);
+            orderData.put("canShip", canShip);
+
+            ordersWithDetails.add(orderData);
+        }
+
         model.addAttribute("orders", orders);
+        model.addAttribute("ordersWithDetails", ordersWithDetails);
         model.addAttribute("currentView", "orders");
 
         return "frontend/store-seller";
+    }
+
+    /**
+     * 查看訂單詳情
+     * URL: GET /seller/order/{orderId}
+     */
+    @GetMapping("/order/{orderId}")
+    public String showOrderDetail(@PathVariable Integer orderId,
+                                  HttpServletRequest request, Model model) {
+
+        Integer sellerId = getCurrentMemId(request);
+        if (sellerId == null) {
+            return "redirect:/store";
+        }
+
+        // 取得訂單詳情
+        Map<String, Object> orderDetail = sellerOrderService.getOrderDetail(sellerId, orderId);
+        if (orderDetail == null) {
+            return "redirect:/seller/orders";
+        }
+
+        // 取得賣家基本資訊
+        Map<String, Object> sellerInfo = sellerDashboardService.getSellerBasicInfo(sellerId);
+        model.addAttribute("sellerInfo", sellerInfo);
+
+        model.addAttribute("orderDetail", orderDetail);
+
+        return "frontend/seller/order-detail";
     }
 
     /**
@@ -174,9 +244,11 @@ public class SellerController {
             @RequestParam String proName,
             @RequestParam Integer proTypeId,
             @RequestParam Integer proPrice,
-            @RequestParam String proDescription,
-            @RequestParam Integer stockQuantity,
-            @RequestParam Integer proState,
+            @RequestParam(required = false) String proDescription,
+            @RequestParam(defaultValue = "0") Integer stockQuantity,
+            @RequestParam(defaultValue = "1") Integer proState,
+            @RequestParam(required = false) List<MultipartFile> productImages,
+            @RequestParam(required = false) List<Integer> deleteImageIds,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
@@ -185,39 +257,60 @@ public class SellerController {
             return "redirect:/store";
         }
 
-        Product product;
-        if (proId != null && proId > 0) {
-            // 編輯現有商品
-            product = productService.getProductById(proId)
-                    .orElseThrow(() -> new RuntimeException("商品不存在"));
+        try {
+            Product product;
 
-            // 驗證商品是否屬於當前賣家
-            if (!product.getMemId().equals(sellerId)) {
-                redirectAttributes.addFlashAttribute("error", "無權限編輯此商品");
-                return "redirect:/seller/products";
+            if (proId != null && proId > 0) {
+                // 編輯
+                product = productService.getProduct(proId);
+                if (product == null || !product.getMemId().equals(sellerId)) {
+                    redirectAttributes.addFlashAttribute("error", "無權限編輯此商品");
+                    return "redirect:/seller/products";
+                }
+            } else {
+                // 新增
+                product = new Product();
+                product.setMemId(sellerId);
             }
-        } else {
-            // 新增商品
-            product = new Product();
-            product.setMemId(sellerId);
+
+            product.setProName(proName);
+            product.setProTypeId(proTypeId);
+            product.setProPrice(proPrice);
+            product.setProDescription(proDescription);
+            product.setStockQuantity(stockQuantity);
+            product.setProState(proState);
+
+            // 儲存商品
+            Product savedProduct = productService.saveProduct(product);
+
+            // 刪除指定的圖片
+            if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
+                for (Integer picId : deleteImageIds) {
+                    sellerDashboardService.deleteProductImage(picId);
+                }
+            }
+
+            // \儲存新上傳的圖片
+            if (productImages != null && !productImages.isEmpty()) {
+                // 過濾空檔案
+                List<MultipartFile> validImages = new ArrayList<>();
+                for (MultipartFile img : productImages) {
+                    if (img != null && !img.isEmpty()) {
+                        validImages.add(img);
+                    }
+                }
+                if (!validImages.isEmpty()) {
+                    sellerDashboardService.saveProductImages(savedProduct.getProId(), validImages);
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("successMessage",
+                    proId != null ? "商品更新成功" : "商品上架成功");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "儲存失敗：" + e.getMessage());
         }
 
-        // 設定商品類別
-        ProType proType = productService.getAllProTypes().stream()
-                .filter(t -> t.getProTypeId().equals(proTypeId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("商品類別不存在"));
-
-        product.setProType(proType);
-        product.setProName(proName);
-        product.setProPrice(proPrice);
-        product.setProDescription(proDescription);
-        product.setStockQuantity(stockQuantity);
-        product.setProState(proState);
-
-        productService.saveProduct(product);
-
-        redirectAttributes.addFlashAttribute("successMessage", "商品儲存成功!");
         return "redirect:/seller/products";
     }
 
@@ -226,143 +319,92 @@ public class SellerController {
      * URL: POST /seller/product/delete
      */
     @PostMapping("/product/delete")
-    public String deleteProduct(
-            @RequestParam Integer proId,
-            HttpServletRequest request,
-            RedirectAttributes redirectAttributes) {
+    public String deleteProduct(@RequestParam Integer proId,
+                                HttpServletRequest request,
+                                RedirectAttributes redirectAttributes) {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
             return "redirect:/store";
         }
 
-        // 驗證商品是否屬於當前賣家
-        Product product = productService.getProductById(proId)
-                .orElseThrow(() -> new RuntimeException("商品不存在"));
+        try {
+            Product product = productService.getProduct(proId);
+            if (product == null || !product.getMemId().equals(sellerId)) {
+                redirectAttributes.addFlashAttribute("error", "無權限刪除此商品");
+                return "redirect:/seller/products";
+            }
 
-        if (!product.getMemId().equals(sellerId)) {
-            redirectAttributes.addFlashAttribute("error", "無權限刪除此商品");
-            return "redirect:/seller/products";
+            productService.deleteProduct(proId);
+            redirectAttributes.addFlashAttribute("successMessage", "商品已刪除");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "刪除失敗：" + e.getMessage());
         }
 
-        productService.deleteProduct(proId);
-
-        redirectAttributes.addFlashAttribute("successMessage", "商品已刪除!");
         return "redirect:/seller/products";
     }
 
     /**
-     * 更新訂單狀態（出貨）
+     * 賣家出貨
      * URL: POST /seller/order/ship
      */
     @PostMapping("/order/ship")
-    public String shipOrder(
-            @RequestParam Integer orderId,
-            HttpServletRequest request,
-            RedirectAttributes redirectAttributes) {
+    public String shipOrder(@RequestParam Integer orderId,
+                            HttpServletRequest request,
+                            RedirectAttributes redirectAttributes) {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
             return "redirect:/store";
         }
 
-        // 驗證訂單是否屬於當前賣家
-        OrdersVO order = sellerOrderService.getOrderById(orderId)
-                .orElseThrow(() -> new RuntimeException("訂單不存在"));
+        // 呼叫 Service 處理出貨
+        boolean success = sellerDashboardService.shipOrder(sellerId, orderId);
 
-        if (!order.getSellerMemId().equals(sellerId)) {
-            redirectAttributes.addFlashAttribute("error", "無權限操作此訂單");
-            return "redirect:/seller/orders";
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "訂單已出貨");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "出貨失敗，請確認訂單狀態");
         }
 
-        sellerOrderService.updateOrderStatus(orderId, 1); // 1=已出貨
-
-        redirectAttributes.addFlashAttribute("successMessage", "訂單已標記為已出貨!");
         return "redirect:/seller/orders";
     }
 
     /**
-     * 取消訂單（含退款）
+     * 賣家取消訂單
      * URL: POST /seller/order/cancel
      */
     @PostMapping("/order/cancel")
-    public String cancelOrder(
-            @RequestParam Integer orderId,
-            HttpServletRequest request,
-            RedirectAttributes redirectAttributes) {
+    public String cancelOrder(@RequestParam Integer orderId,
+                              HttpServletRequest request,
+                              RedirectAttributes redirectAttributes) {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
             return "redirect:/store";
         }
 
-        // 驗證訂單是否屬於當前賣家
-        OrdersVO order = sellerOrderService.getOrderById(orderId)
-                .orElseThrow(() -> new RuntimeException("訂單不存在"));
+        // 呼叫 Service 處理取消並退款
+        Integer refundAmount = sellerDashboardService.cancelOrderWithRefund(sellerId, orderId);
 
-        if (!order.getSellerMemId().equals(sellerId)) {
-            redirectAttributes.addFlashAttribute("error", "無權限操作此訂單");
-            return "redirect:/seller/orders";
-        }
-
-        // 只有已付款狀態才能取消
-        if (order.getOrderStatus() != 0) {
-            redirectAttributes.addFlashAttribute("error", "只有已付款狀態的訂單可以取消");
-            return "redirect:/seller/orders";
-        }
-
-        try {
-            // 更新訂單狀態為已取消
-            sellerOrderService.updateOrderStatus(orderId, 3); // 3=已取消
-
-            // ✨ 退款給買家（錢包）
-            Integer refundAmount = order.getOrderTotal();
-            Wallet buyerWallet = walletRepository.findByMemId(order.getBuyerMemId())
-                    .orElseThrow(() -> new RuntimeException("買家錢包不存在"));
-
-            buyerWallet.setBalance(buyerWallet.getBalance() + refundAmount);
-            walletRepository.save(buyerWallet);
-
+        if (refundAmount != null) {
             redirectAttributes.addFlashAttribute("successMessage",
-                    "訂單已取消，已退款 $" + refundAmount + " 至買家錢包");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "取消訂單失敗：" + e.getMessage());
+                    "訂單已取消，已退款 $" + refundAmount + " 給買家");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "取消失敗，請確認訂單狀態");
         }
 
         return "redirect:/seller/orders";
     }
 
     /**
-     * 查看訂單詳情
-     * URL: GET /seller/order/{orderId}
+     * 取得商品圖片（AJAX 用）
+     * URL: GET /seller/product/{proId}/images
      */
-    @GetMapping("/order/{orderId}")
-    public String viewOrderDetail(
-            @PathVariable Integer orderId,
-            HttpServletRequest request,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-
-        Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/store";
-        }
-
-        // 驗證訂單是否屬於當前賣家
-        OrdersVO order = sellerOrderService.getOrderById(orderId)
-                .orElseThrow(() -> new RuntimeException("訂單不存在"));
-
-        if (!order.getSellerMemId().equals(sellerId)) {
-            redirectAttributes.addFlashAttribute("error", "無權限查看此訂單");
-            return "redirect:/seller/orders";
-        }
-
-        // 取得訂單項目
-        List<OrderItemVO> items = sellerOrderService.getOrderItems(orderId);
-
-        model.addAttribute("order", order);
-        model.addAttribute("items", items);
-
-        return "frontend/seller/order-detail";
+    @GetMapping("/product/{proId}/images")
+    @ResponseBody
+    public List<Map<String, Object>> getProductImages(@PathVariable Integer proId) {
+        return sellerDashboardService.getProductImages(proId);
     }
 }
