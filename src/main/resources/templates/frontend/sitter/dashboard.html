@@ -369,55 +369,97 @@
             }
         }
 
-        // 渲染格子
+        /**
+         * 渲染月曆格子 (只顯示當月日期)
+         * 
+         * 功能說明:
+         * - 只顯示當月的日期 (例如: 2026年1月只顯示 1-31 號)
+         * - 不顯示上個月的日期
+         * - 不顯示下個月的日期
+         * - 前面的空白格子用淺灰色顯示,不可點擊
+         * 
+         * @param gridContainer 月曆容器的 DOM 元素
+         */
         function renderGrid(gridContainer) {
+            // 步驟 1: 清空月曆容器
             gridContainer.innerHTML = '';
 
+            // 步驟 2: 計算當月的相關資訊
+            // firstDay: 當月第一天的 Date 物件 (例如: 2026-01-01)
             const firstDay = new Date(currentYear, currentMonth - 1, 1);
-            const lastDay = new Date(currentYear, currentMonth, 0); // 本月最後一天
-            const daysInMonth = lastDay.getDate();
-            const startDayOfWeek = firstDay.getDay(); // 0(Sun) - 6(Sat)
 
-            // 填充前面的空白
+            // lastDay: 當月最後一天的 Date 物件 (例如: 2026-01-31)
+            const lastDay = new Date(currentYear, currentMonth, 0);
+
+            // daysInMonth: 當月有幾天 (例如: 1月有31天, 2月有28或29天)
+            const daysInMonth = lastDay.getDate();
+
+            // startDayOfWeek: 當月第一天是星期幾
+            // 0=星期日, 1=星期一, ..., 6=星期六
+            // 例如: 2026-01-01 是星期四, startDayOfWeek = 4
+            const startDayOfWeek = firstDay.getDay();
+
+            // 步驟 3: 填充前面的空白格子
+            // 目的: 讓日期對齊到正確的星期幾
+            // 例如: 如果當月第一天是星期四, 前面要空出 4 格 (日一二三)
             for (let i = 0; i < startDayOfWeek; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = 'calendar-day empty';
+                emptyCell.className = 'calendar-day empty';  // 使用 empty 樣式 (淺灰色, 不可點擊)
+                // 不設定任何內容, 保持空白
                 gridContainer.appendChild(emptyCell);
             }
 
-            // 填充日期
+            // 步驟 4: 填充當月的日期 (從 1 號到最後一天)
             for (let day = 1; day <= daysInMonth; day++) {
+                // 建立日期字串 (格式: YYYY-MM-DD)
+                // 例如: 2026-01-05
                 const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                // 優先使用 API 資料，若無則使用全 0 (假設 BookingScheduleVO 1=佔用, 0=空)
-                // 若要套用 ServiceTime Template，可以在這裡做 OR 運算
-                // 這裡採用簡單邏輯：顯示資料庫的狀態
+
+                // 從快取中取得該日期的排程狀態
+                // scheduleCache 是從 API 取得的資料
+                // 格式: { "2026-01-05": "000000001111111100000000", ... }
+                // 如果該日期沒有資料, 預設為全 0 (表示全天可預約)
                 const status = scheduleCache[dateStr] || "000000000000000000000000";
 
+                // 建立日期格子的 DOM 元素
                 const cell = document.createElement('div');
-                cell.className = 'calendar-day';
-                cell.onclick = () => openModal(dateStr, status);
+                cell.className = 'calendar-day';  // 使用 calendar-day 樣式
+                cell.onclick = () => openModal(dateStr, status);  // 點擊時開啟詳細設定視窗
 
+                // 建立日期數字 (例如: 1, 2, 3, ...)
                 const dateNum = document.createElement('div');
                 dateNum.className = 'day-number';
-                dateNum.textContent = day;
+                dateNum.textContent = day;  // 只顯示日期數字, 不顯示月份
                 cell.appendChild(dateNum);
 
-                // 視覺化摘要 (小圓點)
+                // 建立視覺化摘要 (24 個小圓點, 代表 24 小時)
                 const summary = document.createElement('div');
                 summary.className = 'day-summary';
+
+                // 為每個小時建立一個小圓點
                 for (let h = 0; h < 24; h++) {
                     const dot = document.createElement('div');
                     dot.className = 'small-hour-dot';
-                    // 邏輯: 0=Available(Green), 1=Busy(Grey)
+
+                    // 根據排程狀態設定圓點顏色
+                    // status.charAt(h): 取得第 h 個字元
+                    // '0' = 可預約 → 綠色 (加上 active class)
+                    // '1' = 已預約 → 灰色 (不加 active class)
                     if (status.charAt(h) === '0') {
-                        dot.classList.add('active'); // Green
+                        dot.classList.add('active');  // 綠色
                     }
                     summary.appendChild(dot);
                 }
                 cell.appendChild(summary);
 
+                // 將日期格子加入月曆容器
                 gridContainer.appendChild(cell);
             }
+
+            // 步驟 5: 不填充後面的空白格子
+            // 這樣月曆就只會顯示當月的日期
+            // 不會顯示下個月的日期
+            // 月曆的高度會根據當月的天數自動調整
         }
 
         // Modal 相關變數
