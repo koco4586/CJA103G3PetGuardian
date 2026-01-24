@@ -209,6 +209,8 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- [OLD] 靜態假資料 (註解保留) -->
+                            <!--
                             <tr>
                                 <td>S-008</td>
                                 <td>Jason Chen</td>
@@ -231,6 +233,46 @@
                                         onclick="alert('帳號已恢復')">恢復權限</button>
                                 </td>
                             </tr>
+                            -->
+
+                            <!-- [NEW] 動態資料 (Thymeleaf) -->
+                            <tr th:each="sitter : ${sitters}">
+                                <td th:text="${sitter.sitterId}">S-001</td>
+                                <td th:text="${sitter.sitterName}">保母姓名</td>
+                                <td>
+                                    <!-- 評價暫時顯示預設值或從 VO 取得 (若有) -->
+                                    <i class="fa-solid fa-star" style="color:gold"></i>
+                                    <span th:text="${sitter.totalStars != null ? sitter.totalStars : '0'}">0</span>
+                                    <span>(<span
+                                            th:text="${sitter.reviewCount != null ? sitter.reviewCount : '0'}">0</span>則)</span>
+                                </td>
+                                <td>
+                                    <!-- 0:正常, 1:停權 -->
+                                    <span th:if="${sitter.sitterStatus == 0}" style="color:green">正常接案</span>
+                                    <span th:if="${sitter.sitterStatus == 1}"
+                                        style="color:red; font-weight:bold;">已停權</span>
+                                </td>
+                                <td>
+                                    <!-- 上次登入暫無資料，顯示固定文字或從 member 關聯取得 -->
+                                    <span style="color:#999;">-</span>
+                                </td>
+                                <td>
+                                    <!-- 狀態為 0 (正常) -> 顯示停權按鈕 -->
+                                    <form th:if="${sitter.sitterStatus == 0}"
+                                        th:action="@{/admin/sitter/suspend/{id}(id=${sitter.sitterId})}" method="post">
+                                        <button class="btn ghost" style="color:red; border-color:red;"
+                                            onclick="return confirm('確定要停權此保母嗎？')">停權</button>
+                                    </form>
+
+                                    <!-- 狀態為 1 (停權) -> 顯示恢復按鈕 -->
+                                    <form th:if="${sitter.sitterStatus == 1}"
+                                        th:action="@{/admin/sitter/restore/{id}(id=${sitter.sitterId})}" method="post">
+                                        <button class="btn" style="background:#4CAF50;"
+                                            onclick="return confirm('確定要恢復此保母權限嗎？')">恢復權限</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
                         </tbody>
                     </table>
                 </div>
