@@ -9,6 +9,7 @@ import com.petguardian.seller.model.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -18,11 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * 商品管理 Service 實作
- */
 @Service
-@Transactional
 public class ProductServiceImpl implements ProductService {
 
     @Autowired
@@ -34,10 +31,7 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductPicRepository productPicRepository;
 
-    // 預設圖片（1x1 灰色像素）
     private static final String DEFAULT_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-
-    // ==================== 基本查詢 ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -63,21 +57,19 @@ public class ProductServiceImpl implements ProductService {
         return proTypeRepository.findAll();
     }
 
-    // ==================== 商品 CRUD ====================
-
     @Override
+    @Transactional
     public Product saveProduct(Product product) {
         return productRepository.save(product);
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Integer proId) {
         if (proId != null) {
             productRepository.deleteById(proId);
         }
     }
-
-    // ==================== 圖片管理 ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -90,18 +82,12 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductPic> pics = productPicRepository.findByProduct_ProId(proId);
         for (ProductPic pic : pics) {
-            Map<String, Object> picData = new HashMap<>();
-            picData.put("productPicId", pic.getProductPicId());
-
-            // 轉成 Base64
-            if (pic.getProPic() != null) {
-                String base64 = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(pic.getProPic());
-                picData.put("imageBase64", base64);
-            } else {
-                picData.put("imageBase64", DEFAULT_IMAGE);
+            if (pic.getProPic() != null && pic.getProPic().length > 0) {
+                Map<String, Object> picData = new HashMap<>();
+                picData.put("productPicId", pic.getProductPicId());
+                picData.put("imageBase64", "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(pic.getProPic()));
+                result.add(picData);
             }
-
-            result.add(picData);
         }
 
         return result;
@@ -118,7 +104,7 @@ public class ProductServiceImpl implements ProductService {
 
         if (pics != null && !pics.isEmpty()) {
             ProductPic firstPic = pics.get(0);
-            if (firstPic.getProPic() != null) {
+            if (firstPic.getProPic() != null && firstPic.getProPic().length > 0) {
                 return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(firstPic.getProPic());
             }
         }
@@ -127,19 +113,18 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public void saveProductImages(Integer proId, List<MultipartFile> images) {
         if (images == null || images.isEmpty() || proId == null) {
             return;
         }
 
-        // 取得商品
         Optional<Product> productOpt = productRepository.findById(proId);
         if (!productOpt.isPresent()) {
-            return;
+            throw new RuntimeException("商品不存在: " + proId);
         }
         Product product = productOpt.get();
 
-        // 儲存每張圖片
         for (MultipartFile image : images) {
             try {
                 if (image != null && !image.isEmpty()) {
@@ -150,24 +135,28 @@ public class ProductServiceImpl implements ProductService {
                 }
             } catch (Exception e) {
                 System.err.println("儲存圖片失敗: " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException("儲存圖片失敗: " + e.getMessage(), e);
             }
         }
     }
 
     @Override
+    @Transactional
     public void deleteProductImage(Integer productPicId) {
         if (productPicId != null) {
-            productPicRepository.deleteById(productPicId);
+            try {
+                productPicRepository.deleteById(productPicId);
+            } catch (Exception e) {
+                System.err.println("刪除圖片失敗 ID: " + productPicId + ", 錯誤: " + e.getMessage());
+            }
         }
     }
-
-    // ==================== 整合查詢 ====================
 
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getSellerProductsWithImages(Integer sellerId) {
         List<Map<String, Object>> result = new ArrayList<>();
-
         List<Product> products = getSellerProducts(sellerId);
 
         for (Product product : products) {
@@ -181,70 +170,106 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public Product saveProductWithImages(Integer sellerId, Integer proId, String proName,
                                          Integer proTypeId, Integer proPrice, String proDescription,
                                          Integer stockQuantity, Integer proState,
                                          List<MultipartFile> newImages, List<Integer> deleteImageIds) {
 
-        Product product;
+        Product product = null;
 
-        if (proId != null && proId > 0) {
-            // 編輯現有商品
-            product = productRepository.findById(proId)
-                    .orElseThrow(() -> new RuntimeException("商品不存在"));
+        try {
+            if (proId != null && proId > 0) {
+                product = productRepository.findById(proId)
+                        .orElseThrow(() -> new RuntimeException("商品不存在"));
 
-            // 驗證商品是否屬於當前賣家
-            if (!product.getMemId().equals(sellerId)) {
-                throw new RuntimeException("無權限編輯此商品");
+                if (!product.getMemId().equals(sellerId)) {
+                    throw new RuntimeException("無權限編輯此商品");
+                }
+            } else {
+                product = new Product();
+                product.setMemId(sellerId);
             }
-        } else {
-            // 新增商品
-            product = new Product();
-            product.setMemId(sellerId);
-        }
 
-        // 設定商品類別
-        ProType proType = proTypeRepository.findById(proTypeId)
-                .orElseThrow(() -> new RuntimeException("商品類別不存在"));
+            ProType proType = proTypeRepository.findById(proTypeId)
+                    .orElseThrow(() -> new RuntimeException("商品類別不存在"));
 
-        product.setProType(proType);
-        product.setProTypeId(proTypeId);
-        product.setProName(proName);
-        product.setProPrice(proPrice);
-        product.setProDescription(proDescription);
-        product.setStockQuantity(stockQuantity);
-        product.setProState(proState);
+            product.setProType(proType);
+            product.setProName(proName);
+            product.setProPrice(proPrice);
+            product.setProDescription(proDescription);
+            product.setStockQuantity(stockQuantity);
+            product.setProState(proState);
 
-        // 儲存商品
-        Product savedProduct = productRepository.save(product);
+            Product savedProduct = productRepository.saveAndFlush(product);
+            System.out.println("商品已儲存，ID: " + savedProduct.getProId());
 
-        // 刪除指定的圖片
-        if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
-            for (Integer picId : deleteImageIds) {
-                deleteProductImage(picId);
+            if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
+                System.out.println("準備刪除 " + deleteImageIds.size() + " 張圖片");
+                for (Integer picId : deleteImageIds) {
+                    try {
+                        productPicRepository.deleteById(picId);
+                        System.out.println("已刪除圖片 ID: " + picId);
+                    } catch (Exception e) {
+                        System.err.println("刪除圖片失敗 ID: " + picId + ", 錯誤: " + e.getMessage());
+                    }
+                }
+                productPicRepository.flush();
             }
-        }
 
-        // 儲存新圖片
-        if (newImages != null && !newImages.isEmpty()) {
-            // 過濾空檔案
-            List<MultipartFile> validImages = new ArrayList<>();
-            for (MultipartFile img : newImages) {
-                if (img != null && !img.isEmpty()) {
-                    validImages.add(img);
+            if (newImages != null && !newImages.isEmpty()) {
+                List<MultipartFile> validImages = new ArrayList<>();
+                for (MultipartFile img : newImages) {
+                    if (img != null && !img.isEmpty()) {
+                        validImages.add(img);
+                    }
+                }
+
+                if (!validImages.isEmpty()) {
+                    System.out.println("準備儲存 " + validImages.size() + " 張新圖片");
+
+                    for (int i = 0; i < validImages.size(); i++) {
+                        MultipartFile image = validImages.get(i);
+                        try {
+                            byte[] imageBytes = image.getBytes();
+                            System.out.println("圖片 " + (i+1) + " 大小: " + imageBytes.length + " bytes");
+
+                            if (imageBytes.length > 10 * 1024 * 1024) {
+                                throw new RuntimeException("圖片太大，請選擇小於10MB的圖片");
+                            }
+
+                            ProductPic pic = new ProductPic();
+                            pic.setProduct(savedProduct);
+                            pic.setProPic(imageBytes);
+
+                            ProductPic savedPic = productPicRepository.save(pic);
+                            System.out.println("圖片 " + (i+1) + " 已儲存，ID: " + savedPic.getProductPicId());
+
+                        } catch (Exception e) {
+                            System.err.println("儲存圖片 " + (i+1) + " 失敗: " + e.getMessage());
+                            e.printStackTrace();
+                            throw new RuntimeException("儲存圖片失敗: " + e.getMessage(), e);
+                        }
+                    }
+
+                    productPicRepository.flush();
+                    System.out.println("所有圖片已儲存完成");
                 }
             }
-            if (!validImages.isEmpty()) {
-                saveProductImages(savedProduct.getProId(), validImages);
-            }
-        }
 
-        return savedProduct;
+            return savedProduct;
+
+        } catch (Exception e) {
+            System.err.println("=== 儲存商品過程發生錯誤 ===");
+            System.err.println("錯誤訊息: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("儲存商品失敗: " + e.getMessage(), e);
+        }
     }
 
     @Override
+    @Transactional
     public boolean deleteProductBySeller(Integer sellerId, Integer proId) {
-        // 驗證商品是否屬於當前賣家
         Optional<Product> productOpt = productRepository.findById(proId);
         if (!productOpt.isPresent()) {
             return false;
@@ -255,12 +280,9 @@ public class ProductServiceImpl implements ProductService {
             return false;
         }
 
-        // 刪除商品（圖片會因為級聯刪除而一併刪除，或需手動處理）
         productRepository.deleteById(proId);
         return true;
     }
-
-    // ==================== 統計 ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -277,8 +299,6 @@ public class ProductServiceImpl implements ProductService {
                 .filter(p -> p.getProState() != null && p.getProState() == 1)
                 .count();
     }
-
-    // ==================== 保留 ====================
 
     @Override
     @Deprecated
