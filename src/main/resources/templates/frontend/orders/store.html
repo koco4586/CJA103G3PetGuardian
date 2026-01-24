@@ -217,8 +217,11 @@
                 th:classappend="${product.stockQuantity <= 0} ? ' sold-out' : ''">
 
                 <div class="product-image-wrapper">
-                    <!-- Product Image (Base64) -->
-                    <img th:src="${product.imageBase64}" th:alt="${product.proName}" class="store-product-img">
+                    <!-- Product Image (使用 API 端點 + 懶加載) -->
+                    <img th:src="@{'/api/product/' + ${product.proId} + '/image'}"
+                         th:alt="${product.proName}"
+                         class="store-product-img"
+                         loading="lazy">
 
                     <!-- Sold Out Badge -->
                     <div th:if="${product.stockQuantity <= 0}" class="sold-out-badge">已售完</div>

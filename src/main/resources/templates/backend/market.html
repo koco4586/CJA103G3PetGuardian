@@ -2,10 +2,10 @@
 <html lang="zh-Hant">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Pet Guardian - 二手商城管理</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" th:href="@{/css/backend/style.css}">
     <link rel="stylesheet" th:href="@{/css/backend/market.css}">
 
@@ -13,8 +13,6 @@
 
 <body>
 <script th:src="@{/js/backend/sidebar.js}"></script>
-<script th:src="@{/js/backend/market/market.js}"></script>
-
 <div class="main-content">
     <header>
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
@@ -345,7 +343,8 @@
             </div>
             <div class="detail-row" style="flex-direction: column;">
                 <span class="detail-label" style="margin-bottom: 8px;">退款原因</span>
-                <div id="modal-returnReason" style="background: #f9f9f9; padding: 12px; border-radius: 8px; color: #333;">
+                <div id="modal-returnReason"
+                     style="background: #f9f9f9; padding: 12px; border-radius: 8px; color: #333;">
                     -
                 </div>
             </div>
@@ -358,6 +357,7 @@
         </div>
     </div>
 </div>
+<script th:src="@{/js/backend/market/market.js}"></script>
 
 </body>
 

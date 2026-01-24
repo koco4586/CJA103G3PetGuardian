@@ -38,4 +38,7 @@ public interface SellerReviewRepository extends JpaRepository<SellerReviewVO, In
     // 統計賣家的評價數量
     @Query("SELECT COUNT(sr) FROM SellerReviewVO sr JOIN OrdersVO o ON sr.orderId = o.orderId WHERE o.sellerMemId = :sellerMemId AND sr.showStatus = 0")
     Long countBySellerMemIdAndShowStatus(@Param("sellerMemId") Integer sellerMemId);
+
+    // 根據訂單ID列表查詢評價
+    List<SellerReviewVO> findByOrderIdIn(List<Integer> orderIds);
 }
