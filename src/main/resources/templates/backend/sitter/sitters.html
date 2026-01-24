@@ -92,17 +92,22 @@
                                 <td th:text="${app.appId}">REQ-101</td>
                                 <td th:text="'會員 ' + ${app.memId}">Linda Liu</td>
 
-                                <!-- 個人簡介: 限制字數 + Tooltip -->
+                                <!-- 個人簡介: 捲軸模式 -->
                                 <td>
-                                    <span th:text="${#strings.abbreviate(app.appIntro, 10)}" th:title="${app.appIntro}"
-                                        style="cursor: help; border-bottom: 1px dotted #999;">自我介紹...</span>
+                                    <div
+                                        style="max-height: 80px; overflow-y: auto; width: 200px; padding: 5px; border: 1px solid #eee; background: #fff; border-radius: 4px;">
+                                        <span th:text="${app.appIntro}"
+                                            style="font-size: 0.9em; line-height: 1.4;">自我介紹...</span>
+                                    </div>
                                 </td>
 
-                                <!-- 相關經驗: 限制字數 + Tooltip -->
+                                <!-- 相關經驗: 捲軸模式 -->
                                 <td>
-                                    <span th:text="${#strings.abbreviate(app.appExperience, 10)}"
-                                        th:title="${app.appExperience}"
-                                        style="cursor: help; border-bottom: 1px dotted #999;">經驗說明...</span>
+                                    <div
+                                        style="max-height: 80px; overflow-y: auto; width: 200px; padding: 5px; border: 1px solid #eee; background: #fff; border-radius: 4px;">
+                                        <span th:text="${app.appExperience}"
+                                            style="font-size: 0.9em; line-height: 1.4;">經驗說明...</span>
+                                    </div>
                                 </td>
 
                                 <!-- 申請時間: 顯示日期 + Tooltip 完整時間 -->
