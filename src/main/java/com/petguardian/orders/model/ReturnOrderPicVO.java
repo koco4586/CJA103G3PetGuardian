@@ -26,6 +26,6 @@ public class ReturnOrderPicVO {
      * @Lob 代表這是大型物件 (Large Object)
      */
     @Lob
-    @Column(name = "pic_data", columnDefinition = "BLOB")
+    @Column(name = "pic_data", columnDefinition = "MEDIUMBLOB")
     private byte[] picData;
 }

@@ -20,6 +20,6 @@ public class ProductPic {
     private Product product;
 
     @Lob
-    @Column(name = "pro_pic", columnDefinition = "BLOB")
+    @Column(name = "pro_pic", columnDefinition = "MEDIUMBLOB")
     private byte[] proPic;
 }

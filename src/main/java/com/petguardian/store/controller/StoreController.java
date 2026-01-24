@@ -16,6 +16,7 @@ import com.petguardian.sellerreview.service.SellerReviewService;
 import com.petguardian.wallet.model.WalletRepository;
 import com.petguardian.seller.model.ProType;
 import com.petguardian.seller.model.ProTypeRepository;
+import com.petguardian.store.service.ImageCacheService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +72,9 @@ public class StoreController {
     @Autowired
     private ProTypeRepository proTypeRepository;
 
+    @Autowired
+    private ImageCacheService imageCacheService;
+
     // ==================== 輔助方法 ====================
 
     /**
@@ -93,18 +97,10 @@ public class StoreController {
     }
 
     /**
-     * 將商品圖片轉換為 Base64 字串
+     * 將商品圖片轉換為 Base64 字串（使用快取服務）
      */
     private String getProductImageBase64(Integer proId) {
-        List<ProductPic> pics = productPicDAO.findByProduct_ProId(proId);
-
-        if (!pics.isEmpty() && pics.get(0).getProPic() != null) {
-            byte[] imageBytes = pics.get(0).getProPic();
-            return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
-        }
-
-        // 預設佔位圖（1x1 灰色像素）
-        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+        return imageCacheService.getProductImageBase64(proId);
     }
 
     /**
@@ -250,7 +246,7 @@ public class StoreController {
 
         // 驗證庫存
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
-            redirectAttr.addFlashAttribute("error", "商品庫存不足");
+            redirectAttr.addFlashAttribute("error", "「" + product.getProName() + "」庫存不足");
             return "redirect:/store";
         }
 
@@ -472,7 +468,7 @@ public class StoreController {
 
         // 驗證庫存
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
-            redirectAttr.addFlashAttribute("error", "商品庫存不足");
+            redirectAttr.addFlashAttribute("error", "「" + product.getProName() + "」庫存不足");
             return "redirect:/store/checkout";
         }
 
