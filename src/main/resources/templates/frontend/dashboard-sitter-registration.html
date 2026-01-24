@@ -59,7 +59,8 @@
                 <p style="color: #666; margin-bottom: 2rem;">加入我們的專業保母團隊，開始您的寵物照顧事業！</p>
 
                 <div class="card">
-                    <form th:action="@{/sitter/apply}" method="post" th:object="${sitterApplication}">
+                    <form th:action="@{/sitter/apply}" method="post" th:object="${sitterApplication}"
+                        onsubmit="return confirmSubmit()">
                         <!-- 申請人資料（唯讀顯示） -->
                         <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">申請人資料</h3>
                         <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
@@ -112,6 +113,20 @@
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
     <script src="/js/frontend/main.js"></script>
+
+    <script>
+        function confirmSubmit() {
+            // 1. 跳出詢問視窗
+            if (confirm('確定要提交申請成為保母嗎？')) {
+                // 2. 使用者按確定 -> 跳出感謝視窗
+                alert('感謝您的申請，請耐心等候審核結果！');
+                // 3. 回傳 true -> 表單送出
+                return true;
+            }
+            // 使用者按取消 -> 回傳 false -> 停留在原頁面，資料保留
+            return false;
+        }
+    </script>
 </body>
 
 </html>

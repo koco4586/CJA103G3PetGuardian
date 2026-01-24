@@ -57,6 +57,8 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- [OLD] 靜態假資料 (註解保留) -->
+                            <!--
                             <tr>
                                 <td>REQ-101</td>
                                 <td>Linda Liu</td>
@@ -80,6 +82,49 @@
                                 <td><span style="color:red;">資料不全</span></td>
                                 <td>
                                     <button class="btn ghost">通知補件</button>
+                                </td>
+                            </tr>
+                            -->
+
+                            <!-- [NEW] 動態資料 (Thymeleaf) -->
+                            <tr th:each="app : ${applications}">
+                                <td th:text="${app.appId}">REQ-101</td>
+                                <td th:text="'會員 ' + ${app.memId}">Linda Liu</td>
+                                <td>
+                                    <!-- 顯示部分簡介，取代死板的文件連結 -->
+                                    <span th:text="${#strings.abbreviate(app.appIntro, 20)}">自我介紹...</span>
+                                </td>
+                                <td th:text="${#temporals.format(app.appCreatedAt, 'yyyy-MM-dd')}">2026-01-07</td>
+                                <td>
+                                    <!-- 狀態顯示 -->
+                                    <span th:if="${app.appStatus == 0}"
+                                        style="color:orange; font-weight:bold;">待審核</span>
+                                    <span th:if="${app.appStatus == 1}"
+                                        style="color:green; font-weight:bold;">已通過</span>
+                                    <span th:if="${app.appStatus == 2}" style="color:red; font-weight:bold;">已駁回</span>
+                                    <span th:if="${app.appStatus == 3}" style="color:gray;">已撤回</span>
+                                </td>
+                                <td>
+                                    <!-- 只有待審核狀態才顯示操作按鈕 -->
+                                    <div th:if="${app.appStatus == 0}" style="display:flex; gap:5px;">
+                                        <form th:action="@{/admin/sitter/approve/{id}(id=${app.appId})}" method="post"
+                                            style="display:inline;">
+                                            <button class="btn" onclick="return confirm('確定審核通過？')">通過</button>
+                                        </form>
+                                        <form th:action="@{/admin/sitter/reject/{id}(id=${app.appId})}" method="post"
+                                            style="display:inline;">
+                                            <input type="hidden" name="reviewNote" value="資料審核不符">
+                                            <button class="btn ghost" style="color:red; border-color:red;"
+                                                onclick="return confirm('確定駁回？')">駁回</button>
+                                        </form>
+                                    </div>
+                                    <!-- 已審核狀態顯示結果 -->
+                                    <span th:if="${app.appStatus != 0}">
+                                        <i class="fa-solid fa-check" th:if="${app.appStatus == 1}"
+                                            style="color:green"></i>
+                                        <i class="fa-solid fa-xmark" th:if="${app.appStatus == 2}"
+                                            style="color:red"></i>
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>
