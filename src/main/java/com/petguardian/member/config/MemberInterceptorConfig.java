@@ -30,3 +30,5 @@ public class MemberInterceptorConfig implements WebMvcConfigurer{
                 );
     }
 }
+
+

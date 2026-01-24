@@ -5,62 +5,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>會員登入｜Petguardian</title>
+
+    <link rel="stylesheet" href="/static/css/frontend/style.css">
+    <link rel="stylesheet" href="/static/css/frontend/components.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .auth-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f0f0f0;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 700;
+            color: #999;
+            transition: var(--transition);
+        }
+
+        .auth-tab.active {
+            background: var(--white);
+            color: var(--primary-color);
+        }
+
+        .auth-body {
+            padding: 2rem;
+        }
+
+        /* 載入中效果 */
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .btn-primary.loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: 8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spinner 0.6s linear infinite;
+        }
+
+        @keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 輸入框焦點效果 */
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+    </style>
+
 </head>
 
 <body>
-    <h3>PetGuardian</h3>
-    <h1>會員登入</h1>
-    <form>
-        <span>使用者帳號</span><br><br>
-        <input type="text" placeholder="請輸入使用者帳號" class="loginacc" required><br><br>
-        <span>使用者密碼</span><br><br>
-        <input type="password" placeholder="請輸入使用者密碼" class="loginpw" required><br><br>
-        <button class="submit">立即登入</button>
-        <button type="reset">清除重填</button>
 
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <header id="main-header" class="header"></header>
 
-        <script>
+    <div class="auth-container">
+        <div class="auth-card fade-in" id="authCard">
+            <div class="auth-tabs">
+                <div class="auth-tab active">PetGuardian寵護家</div>
+            </div>
 
-            function init() {
+            <!-- 登入表單區域 -->
+            <div class="login-form-container" id="loginFormContainer">
+                <div id="login-form" class="auth-body">
+                    <h2 class="text-center mb-2">會員登入</h2>
 
-                function login(e) {
+                    <form id="loginForm">
 
-                    e.preventDefault();
+                        <div class="form-group">
+                            <span class="form-label">使用者帳號</span><br>
+                            <input type="text" id="loginAcc" placeholder="請輸入使用者帳號" class="loginacc form-control"
+                                autocomplete="username" required><br><br>
+                        </div>
 
-                    let loginaccount = $(".loginacc").val();
-                    let loginpassword = $(".loginpw").val();
+                        <div class="form-group">
+                            <span class="form-label">使用者密碼</span><br>
+                            <input type="password" id="loginPw" placeholder="請輸入使用者密碼" class="loginpw form-control"
+                                autocomplete="current-password" required><br><br>
+                            <button type="button" class="submit">立即登入</button>
+                            <button type="reset">清除重填</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    let loginobject = {
-                        "memAcc": loginaccount,
-                        "memPw": loginpassword
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+
+        function init() {
+
+            function login(e) {
+
+                e.preventDefault();
+
+                let loginaccount = $(".loginacc").val();
+                let loginpassword = $(".loginpw").val();
+
+                let loginobject = {
+                    "memAcc": loginaccount,
+                    "memPw": loginpassword
+                }
+
+
+                let fetch_url = "http://localhost:8080/login";
+
+                fetch(fetch_url, {
+                    method: "POST",
+                    body: JSON.stringify(loginobject),
+                    headers: {
+                        "Content-Type": "application/json"
                     }
-
-
-                    let fetch_url = "http://localhost:8080/login";
-
-                    fetch(fetch_url, {
-                        method: "POST",
-                        body: JSON.stringify(loginobject),
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }).then(res => res.json()).then(data => {
-                        console.log(data);
-                        if (data.result === "登入成功") {  // 後端返回 {result: true}
-                            // window.location.href = "#";
-                        }
-                    });
-
-                };
-
-                $(".submit").on("click", login)
+                }).then(res => res.json()).then(data => {
+                    console.log(data);
+                    if (data.result === "登入成功") {  // 後端返回 {result: true}
+                        // window.location.href = "/frontend/index.html";//要小心，配置 Spring Boot 的靜態資源路徑,在 application.properties中添加，此行設定告訴 Spring Boot：「請把這些目錄當作靜態資源目錄」
+                    }
+                });
 
             };
 
-            $(window).on("load", init);
+            $(".submit").on("click", login)
 
-        </script>
+        };
+
+        $(window).on("load", init);
+
+    </script>
 
 </body>
 
