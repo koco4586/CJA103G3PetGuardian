@@ -57,4 +57,9 @@ public class ProductServiceImpl implements ProductService {
     public List<ProType> getAllProTypes() {
         return proTypeRepository.findAll();
     }
+
+    @Override
+    public Product getProduct(Integer proId) {
+        return null;
+    }
 }

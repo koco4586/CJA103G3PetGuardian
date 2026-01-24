@@ -27,4 +27,16 @@ public class StoreMemberVO implements Serializable {
 
     @Column(name = "mem_name")
     private String memName;
+
+    // 會員頭像（URL 或路徑） seller/dashboard 用
+    @Column(name = "mem_image")
+    private String memImage;
+
+    // 商城評價總星星數 seller/dashboard 用
+    @Column(name = "mem_shop_rating_score")
+    private Integer memShopRatingScore;
+
+    // 商城評價總數量 seller/dashboard 用
+    @Column(name = "mem_shop_rating_count")
+    private Integer memShopRatingCount;
 }
