@@ -160,13 +160,16 @@ public class SitterApplicationController {
             return "redirect:/sitter/apply";
 
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // 業務邏輯錯誤 (如:重複申請)
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/sitter/apply";
+            // 業務邏輯錯誤 (如:重複申請) -> 保留資料並顯示錯誤
+            model.addAttribute("errorMessage", e.getMessage());
+            prepareModelAttributes(request, session, model);
+            return "frontend/dashboard-sitter-registration";
+
         } catch (Exception e) {
-            // 其他未預期錯誤
-            redirectAttributes.addFlashAttribute("errorMessage", "系統錯誤，請稍後再試");
-            return "redirect:/sitter/apply";
+            // 其他未預期錯誤 -> 保留資料並顯示錯誤
+            model.addAttribute("errorMessage", "系統錯誤，請稍後再試： " + e.getMessage());
+            prepareModelAttributes(request, session, model);
+            return "frontend/dashboard-sitter-registration";
         }
     }
 
