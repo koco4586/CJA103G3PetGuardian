@@ -50,7 +50,8 @@
                             <tr>
                                 <th>申請 ID</th>
                                 <th>申請人</th>
-                                <th>提交文件</th>
+                                <th>個人簡介</th>
+                                <th>相關經驗</th>
                                 <th>申請時間</th>
                                 <th>狀態</th>
                                 <th>操作</th>
@@ -90,11 +91,25 @@
                             <tr th:each="app : ${applications}">
                                 <td th:text="${app.appId}">REQ-101</td>
                                 <td th:text="'會員 ' + ${app.memId}">Linda Liu</td>
+
+                                <!-- 個人簡介: 限制字數 + Tooltip -->
                                 <td>
-                                    <!-- 顯示部分簡介，取代死板的文件連結 -->
-                                    <span th:text="${#strings.abbreviate(app.appIntro, 20)}">自我介紹...</span>
+                                    <span th:text="${#strings.abbreviate(app.appIntro, 10)}" th:title="${app.appIntro}"
+                                        style="cursor: help; border-bottom: 1px dotted #999;">自我介紹...</span>
                                 </td>
-                                <td th:text="${#temporals.format(app.appCreatedAt, 'yyyy-MM-dd')}">2026-01-07</td>
+
+                                <!-- 相關經驗: 限制字數 + Tooltip -->
+                                <td>
+                                    <span th:text="${#strings.abbreviate(app.appExperience, 10)}"
+                                        th:title="${app.appExperience}"
+                                        style="cursor: help; border-bottom: 1px dotted #999;">經驗說明...</span>
+                                </td>
+
+                                <!-- 申請時間: 顯示日期 + Tooltip 完整時間 -->
+                                <td th:text="${#temporals.format(app.appCreatedAt, 'yyyy-MM-dd')}"
+                                    th:title="${#temporals.format(app.appCreatedAt, 'yyyy-MM-dd HH:mm:ss')}"
+                                    style="cursor: help;">2026-01-07</td>
+
                                 <td>
                                     <!-- 狀態顯示 -->
                                     <span th:if="${app.appStatus == 0}"
