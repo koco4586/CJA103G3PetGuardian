@@ -216,7 +216,7 @@
     <!-- 載入統一的 JavaScript -->
     <script src="/js/frontend/main.js"></script>
 
-    <script>
+    <script th:inline="javascript">
         // 頁面載入時執行
         document.addEventListener('DOMContentLoaded', function () {
             loadCities();      // 載入縣市選項
@@ -331,12 +331,20 @@
                 });
         }
 
+        // [NEW] 取得當前保母ID
+        const currentSitterId = /*[[${currentSitterId}]]*/ null;
+
         // 顯示保姆列表
         function displaySitters(sitters) {
             const container = document.getElementById('resultsContainer');
             container.innerHTML = '';
 
             sitters.forEach(sitter => {
+                // [NEW] 如果是自己，就跳過不顯示
+                if (currentSitterId && sitter.sitterId === currentSitterId) {
+                    return;
+                }
+
                 const card = createSitterCard(sitter);
                 container.appendChild(card);
             });
