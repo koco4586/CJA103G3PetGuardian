@@ -127,6 +127,8 @@ public class SitterSearchCriteria {
                 (serviceItemIds != null && !serviceItemIds.isEmpty()) ||
                 (petTypeIds != null && !petTypeIds.isEmpty()) ||
                 minPrice != null ||
-                maxPrice != null;
+                maxPrice != null ||
+                (cityName != null && !cityName.trim().isEmpty()) ||
+                (district != null && !district.trim().isEmpty());
     }
 }

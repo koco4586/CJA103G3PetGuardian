@@ -15,6 +15,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.petguardian.sitter.model.SitterApplicationDTO;
 import com.petguardian.sitter.model.SitterApplicationVO;
 import com.petguardian.sitter.service.SitterApplicationService;
+// [NEW] Import SitterMemberVO/Repository
+import com.petguardian.sitter.model.SitterMemberVO;
+import com.petguardian.sitter.model.SitterMemberRepository;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -35,6 +38,10 @@ public class SitterApplicationController {
     @Autowired
     private SitterApplicationService service;
 
+    // [NEW] 注入 SitterMemberRepository 用於查詢會員資料
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
+
     /**
      * 導向申請表格頁面
      * URL: GET /sitter/apply
@@ -54,6 +61,20 @@ public class SitterApplicationController {
             return "redirect:/member/login";
         }
 
+        // [NEW] 預先檢查：是否已有申請中或已通過的紀錄
+        // 只有當沒有成功訊息時（非剛提交完），才顯示警告
+        if (!model.containsAttribute("successMessage")) {
+            List<SitterApplicationVO> existingApps = service.getApplicationsByMember(memId);
+            for (SitterApplicationVO app : existingApps) {
+                if (app.getAppStatus() == 0) {
+                    model.addAttribute("errorMessage", "您已有待審核的申請，請耐心等候結果");
+                    // 可以考慮在此處 return 轉導或讓前端隱藏按鈕
+                } else if (app.getAppStatus() == 1) {
+                    model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
+                }
+            }
+        }
+
         // ✅ 準備 Model 屬性
         // 1. 建立空的 DTO 供表單綁定
         SitterApplicationDTO dto = new SitterApplicationDTO();
@@ -61,9 +82,28 @@ public class SitterApplicationController {
         model.addAttribute("sitterApplication", dto);
 
         // 2. 從 AuthStrategy/Session 取得會員資訊
-        String memName = authStrategyService.getCurrentUserName(request);
-        String memPhone = (String) session.getAttribute("memPhone");
-        String avatarUrl = (String) session.getAttribute("avatarUrl");
+
+        // ========== [OLD] 舊版邏輯 (註解保留) ==========
+        /*
+         * String memName = authStrategyService.getCurrentUserName(request);
+         * String memPhone = (String) session.getAttribute("memPhone");
+         * String avatarUrl = (String) session.getAttribute("avatarUrl");
+         */
+        // ==============================================
+
+        // ========== [NEW] 新版邏輯 (查詢資料庫) ==========
+        String memName = "會員姓名";
+        String memPhone = "未設定";
+        String avatarUrl = (String) session.getAttribute("avatarUrl"); // 頭像暫時仍從 Session 拿，或依需求調整
+
+        if (memId != null) {
+            SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
+            if (member != null) {
+                memName = member.getMemName();
+                memPhone = member.getMemTel(); // 從 DB 取得真實電話
+            }
+        }
+        // ===============================================
 
         model.addAttribute("memName", memName != null ? memName : "會員姓名");
         model.addAttribute("memPhone", memPhone != null ? memPhone : "未設定");
@@ -123,13 +163,16 @@ public class SitterApplicationController {
             return "redirect:/sitter/apply";
 
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // 業務邏輯錯誤 (如:重複申請)
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/sitter/apply";
+            // 業務邏輯錯誤 (如:重複申請) -> 保留資料並顯示錯誤
+            model.addAttribute("errorMessage", e.getMessage());
+            prepareModelAttributes(request, session, model);
+            return "frontend/dashboard-sitter-registration";
+
         } catch (Exception e) {
-            // 其他未預期錯誤
-            redirectAttributes.addFlashAttribute("errorMessage", "系統錯誤，請稍後再試");
-            return "redirect:/sitter/apply";
+            // 其他未預期錯誤 -> 保留資料並顯示錯誤
+            model.addAttribute("errorMessage", "系統錯誤，請稍後再試： " + e.getMessage());
+            prepareModelAttributes(request, session, model);
+            return "frontend/dashboard-sitter-registration";
         }
     }
 
@@ -179,5 +222,42 @@ public class SitterApplicationController {
         model.addAttribute("memberRole", "一般會員");
         model.addAttribute("defaultCity", "台北市");
         model.addAttribute("defaultDistrict", "大安區");
+    }
+
+    /**
+     * [NEW] 保姆專區入口 (前端 Header 連結至此)
+     * URL: GET /sitter/hub
+     * 
+     * 邏輯：
+     * 1. 檢查使用者是否登入 -> 未登入轉 login
+     * 2. 檢查使用者是否有「已通過 (Status=1)」的申請紀錄
+     *    - 是 -> 導向到保姆主頁 (sitter-dashboard.html)
+     *    - 否 -> 導向到申請頁面 (sitter/apply)
+     */
+    @GetMapping("/hub")
+    public String checkSitterStatus(jakarta.servlet.http.HttpServletRequest request) {
+        // 1. 取得當前會員 ID
+        Integer memId = authStrategyService.getCurrentUserId(request);
+        if (memId == null) {
+            return "redirect:/member/login";
+        }
+
+        // 2. 查詢該會員是否有「已通過」的保姆資格
+        List<SitterApplicationVO> apps = service.getApplicationsByMember(memId);
+        boolean isSitter = false;
+        
+        for (SitterApplicationVO app : apps) {
+            if (app.getAppStatus() == 1) { // 1 = 已通過
+                isSitter = true;
+                break;
+            }
+        }
+
+        // 3. 根據身分進行分流
+        if (isSitter) {
+            return "redirect:/sitter/dashboard"; // 前往保姆主頁
+        } else {
+            return "redirect:/sitter/apply";     // 前往申請頁面
+        }
     }
 }

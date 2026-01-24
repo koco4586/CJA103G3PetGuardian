@@ -18,6 +18,13 @@ import com.petguardian.booking.model.BookingScheduleRepository;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+import com.petguardian.service.model.ServiceAreaVO;
+import com.petguardian.area.model.AreaVO;
+
 /**
  * 保姆業務邏輯實作
  * 
@@ -191,6 +198,7 @@ public class SitterServiceImpl implements SitterService {
     // ========== 排程相關功能 (透過會員 ID) ==========
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingScheduleVO> getScheduleByMember(Integer memId, int year, int month) {
         SitterVO sitter = repository.findByMemId(memId);
         if (sitter == null) {
