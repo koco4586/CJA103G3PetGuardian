@@ -21,10 +21,6 @@ public class ReturnOrderPicVO {
     @JoinColumn(name = "return_id", nullable = false)
     private ReturnOrderVO returnOrder;
 
-    /**
-     * 圖片二進位資料
-     * @Lob 代表這是大型物件 (Large Object)
-     */
     @Lob
     @Column(name = "pic_data", columnDefinition = "MEDIUMBLOB")
     private byte[] picData;
