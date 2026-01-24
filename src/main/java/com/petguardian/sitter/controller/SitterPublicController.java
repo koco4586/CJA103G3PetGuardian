@@ -43,6 +43,8 @@ import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.service.model.ServiceAreaVO;
 import com.petguardian.booking.model.BookingOrderVO;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * 公開的保姆搜尋功能 Controller
  * 提供不需登入即可訪問的保姆搜尋和查看功能
@@ -80,7 +82,7 @@ public class SitterPublicController {
      * @return String 保姆搜尋頁面路徑 "frontend/sitter/public-search"
      */
     @GetMapping("/search")
-    public String showSearchPage(jakarta.servlet.http.HttpServletRequest request, Model model) {
+    public String showSearchPage(HttpServletRequest request, Model model) {
         // 從資料庫撈取會員資料 (如果已登入)
         Integer memId = authStrategyService.getCurrentUserId(request);
 
@@ -91,6 +93,12 @@ public class SitterPublicController {
                 model.addAttribute("currentMember", fakeMember);
             }
             model.addAttribute("currentMemberId", memId);
+
+            // [NEW] 查詢是否為保姆，並傳遞 sitterId 供前端隱藏自己卡片
+            SitterVO mySitter = sitterService.getSitterByMemId(memId);
+            if (mySitter != null) {
+                model.addAttribute("currentSitterId", mySitter.getSitterId());
+            }
         }
 
         return "frontend/sitter/public-search";
@@ -193,7 +201,7 @@ public class SitterPublicController {
      * URL: /public/sitter/detail/{sitterId}
      */
     @GetMapping("/detail/{sitterId}")
-    public String showSitterDetail(@PathVariable Integer sitterId, jakarta.servlet.http.HttpServletRequest request,
+    public String showSitterDetail(@PathVariable Integer sitterId, HttpServletRequest request,
             Model model) {
         try {
             // 1. 查詢保姆基本資料 (若無則導回列表)
