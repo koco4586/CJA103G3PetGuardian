@@ -144,5 +144,13 @@ public class ForumCommentReportVO implements Serializable{
 	public void setHandleTime(Timestamp handleTime) {
 		this.handleTime = handleTime;
 	}
+
+	public String getHandleResult() {
+		return handleResult;
+	}
+
+	public void setHandleResult(String handleResult) {
+		this.handleResult = handleResult;
+	}
 	
 }
