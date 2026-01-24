@@ -1,11 +1,14 @@
 package com.petguardian.member.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import com.petguardian.forum.model.ForumCommentReportVO;
 import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostReportVO;
 import com.petguardian.forum.model.ForumPostVO;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,6 +16,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "member")
+@DynamicInsert
+@DynamicUpdate
 public class Member {
 
     @Id
@@ -73,18 +78,22 @@ public class Member {
     
     // 羽澈
     @OneToMany(mappedBy = "member")
+    @JsonIgnore
     private Set<ForumPostVO> forumPosts;
     
     // 羽澈
     @OneToMany(mappedBy = "member")
+    @JsonIgnore
     private Set<ForumPostReportVO> forumPostReports;
     
     // 羽澈
     @OneToMany(mappedBy = "member")
+    @JsonIgnore
     private Set<ForumCommentVO> forumComments;
     
     // 羽澈
     @OneToMany(mappedBy = "member")
+    @JsonIgnore
     private Set<ForumCommentReportVO> forumCommentReports;
     
     // 羽澈
