@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="dropdown-menu">
                         <a href="login.html" class="dropdown-item">登入 / 註冊</a>
                         <a href="dashboard.html" class="dropdown-item">會員中心</a>
-                        <a href="sitter-dashboard.html" class="dropdown-item">保母專區</a>
+                        <a href="/sitter/hub" class="dropdown-item">保母專區</a>
                         <hr style="border:0; border-top:1px solid #eee; margin: 0.5rem 0;">
                         <a href="#" class="dropdown-item">登出</a>
                     </div>

@@ -223,4 +223,41 @@ public class SitterApplicationController {
         model.addAttribute("defaultCity", "台北市");
         model.addAttribute("defaultDistrict", "大安區");
     }
+
+    /**
+     * [NEW] 保姆專區入口 (前端 Header 連結至此)
+     * URL: GET /sitter/hub
+     * 
+     * 邏輯：
+     * 1. 檢查使用者是否登入 -> 未登入轉 login
+     * 2. 檢查使用者是否有「已通過 (Status=1)」的申請紀錄
+     *    - 是 -> 導向到保姆主頁 (sitter-dashboard.html)
+     *    - 否 -> 導向到申請頁面 (sitter/apply)
+     */
+    @GetMapping("/hub")
+    public String checkSitterStatus(jakarta.servlet.http.HttpServletRequest request) {
+        // 1. 取得當前會員 ID
+        Integer memId = authStrategyService.getCurrentUserId(request);
+        if (memId == null) {
+            return "redirect:/member/login";
+        }
+
+        // 2. 查詢該會員是否有「已通過」的保姆資格
+        List<SitterApplicationVO> apps = service.getApplicationsByMember(memId);
+        boolean isSitter = false;
+        
+        for (SitterApplicationVO app : apps) {
+            if (app.getAppStatus() == 1) { // 1 = 已通過
+                isSitter = true;
+                break;
+            }
+        }
+
+        // 3. 根據身分進行分流
+        if (isSitter) {
+            return "redirect:/sitter/dashboard"; // 前往保姆主頁
+        } else {
+            return "redirect:/sitter/apply";     // 前往申請頁面
+        }
+    }
 }
