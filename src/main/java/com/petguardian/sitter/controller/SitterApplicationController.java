@@ -61,6 +61,17 @@ public class SitterApplicationController {
             return "redirect:/member/login";
         }
 
+        // [NEW] 預先檢查：是否已有申請中或已通過的紀錄
+        List<SitterApplicationVO> existingApps = service.getApplicationsByMember(memId);
+        for (SitterApplicationVO app : existingApps) {
+            if (app.getAppStatus() == 0) {
+                model.addAttribute("errorMessage", "您已有待審核的申請，請耐心等候結果");
+                // 可以考慮在此處 return 轉導或讓前端隱藏按鈕
+            } else if (app.getAppStatus() == 1) {
+                model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
+            }
+        }
+
         // ✅ 準備 Model 屬性
         // 1. 建立空的 DTO 供表單綁定
         SitterApplicationDTO dto = new SitterApplicationDTO();
