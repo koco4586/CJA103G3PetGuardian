@@ -45,7 +45,7 @@ public class SitterController {
         model.addAttribute("applications", applications);
         model.addAttribute("sitters", sitters);
 
-        return "backend/sitters";
+        return "backend/sitter/sitters";
     }
 
     /**
