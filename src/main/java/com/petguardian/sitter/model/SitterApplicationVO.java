@@ -48,6 +48,15 @@ public class SitterApplicationVO implements Serializable {//
     private Integer memId;
 
     /**
+     * 保姆編號
+     * - 審核通過後，對應到的保姆資料表 ID
+     * - 若未通過或待審核，此欄位可能為 null
+     * - 對應 sitter_application.sitter_id
+     */
+    @Column(name = "sitter_id")
+    private Integer sitterId;
+
+    /**
      * 個人簡介
      * - 會員自我介紹（textarea）
      * - 用於管理員審核與前台顯示
@@ -126,6 +135,14 @@ public class SitterApplicationVO implements Serializable {//
 
     public void setMemId(Integer memId) {
         this.memId = memId;
+    }
+
+    public Integer getSitterId() {
+        return sitterId;
+    }
+
+    public void setSitterId(Integer sitterId) {
+        this.sitterId = sitterId;
     }
 
     public String getAppIntro() {

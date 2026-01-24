@@ -114,7 +114,10 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
                 }
 
                 // 3.3 建立保姆資料
-                sitterService.createSitter(memId, sitterName, sitterAdd);
+                SitterVO newSitter = sitterService.createSitter(memId, sitterName, sitterAdd);
+                vo.setSitterId(newSitter.getSitterId());
+            } else {
+                vo.setSitterId(existingSitter.getSitterId());
             }
 
             // TODO: 會員功能完成後,取消以下註解以啟用會員保姆狀態更新
