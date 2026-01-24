@@ -15,6 +15,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.petguardian.sitter.model.SitterApplicationDTO;
 import com.petguardian.sitter.model.SitterApplicationVO;
 import com.petguardian.sitter.service.SitterApplicationService;
+// [NEW] Import SitterMemberVO/Repository
+import com.petguardian.sitter.model.SitterMemberVO;
+import com.petguardian.sitter.model.SitterMemberRepository;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -34,6 +37,10 @@ public class SitterApplicationController {
 
     @Autowired
     private SitterApplicationService service;
+
+    // [NEW] 注入 SitterMemberRepository 用於查詢會員資料
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
 
     /**
      * 導向申請表格頁面
@@ -61,9 +68,28 @@ public class SitterApplicationController {
         model.addAttribute("sitterApplication", dto);
 
         // 2. 從 AuthStrategy/Session 取得會員資訊
-        String memName = authStrategyService.getCurrentUserName(request);
-        String memPhone = (String) session.getAttribute("memPhone");
-        String avatarUrl = (String) session.getAttribute("avatarUrl");
+
+        // ========== [OLD] 舊版邏輯 (註解保留) ==========
+        /*
+         * String memName = authStrategyService.getCurrentUserName(request);
+         * String memPhone = (String) session.getAttribute("memPhone");
+         * String avatarUrl = (String) session.getAttribute("avatarUrl");
+         */
+        // ==============================================
+
+        // ========== [NEW] 新版邏輯 (查詢資料庫) ==========
+        String memName = "會員姓名";
+        String memPhone = "未設定";
+        String avatarUrl = (String) session.getAttribute("avatarUrl"); // 頭像暫時仍從 Session 拿，或依需求調整
+
+        if (memId != null) {
+            SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
+            if (member != null) {
+                memName = member.getMemName();
+                memPhone = member.getMemTel(); // 從 DB 取得真實電話
+            }
+        }
+        // ===============================================
 
         model.addAttribute("memName", memName != null ? memName : "會員姓名");
         model.addAttribute("memPhone", memPhone != null ? memPhone : "未設定");
