@@ -1,22 +1,18 @@
 // 主要分頁切換
 function switchMainTab(tabName) {
-    // 切換按鈕樣式
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.closest('.tab-btn').classList.add('active');
-
-    // 切換面板
     document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+
+    event.target.classList.add('active');
     document.getElementById('panel-' + tabName).classList.add('active');
 }
 
 // 訂單子分頁切換
 function switchOrderTab(tabName) {
-    // 切換按鈕樣式
     document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.closest('.sub-tab-btn').classList.add('active');
-
-    // 切換子面板
     document.querySelectorAll('.sub-panel').forEach(panel => panel.classList.remove('active'));
+
+    event.target.classList.add('active');
     document.getElementById('order-' + tabName).classList.add('active');
 }
 
@@ -26,19 +22,37 @@ function showReturnDetail(returnId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('modal-returnId').textContent = '#REF-' + data.returnId;
+                document.getElementById('modal-returnId').textContent = '#' + data.returnId;
                 document.getElementById('modal-orderId').textContent = '#' + data.orderId;
                 document.getElementById('modal-buyerName').textContent = data.buyerName || '-';
                 document.getElementById('modal-sellerName').textContent = data.sellerName || '-';
-                document.getElementById('modal-orderTotal').textContent = '$' + (data.orderTotal || 0).toLocaleString();
-                document.getElementById('modal-refundAmount').textContent = '$' + (data.refundAmount || 0).toLocaleString();
+                document.getElementById('modal-refundAmount').textContent = '$' + (data.refundAmount || 0);
                 document.getElementById('modal-applyTime').textContent = data.applyTime || '-';
-                document.getElementById('modal-returnReason').textContent = data.returnReason || '無';
+                document.getElementById('modal-returnReason').textContent = data.returnReason || '-';
 
-                // 顯示 Modal
+                const imagesContainer = document.getElementById('modal-images-container');
+                const imagesDiv = document.getElementById('modal-images');
+
+                if (data.hasImages && data.returnImages && data.returnImages.length > 0) {
+                    imagesDiv.innerHTML = '';
+                    data.returnImages.forEach((imageBase64, index) => {
+                        const img = document.createElement('img');
+                        img.src = imageBase64;
+                        img.alt = '退貨圖片 ' + (index + 1);
+                        img.style.cssText = 'width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;';
+                        img.onclick = function() {
+                            window.open(imageBase64, '_blank');
+                        };
+                        imagesDiv.appendChild(img);
+                    });
+                    imagesContainer.style.display = 'block';
+                } else {
+                    imagesContainer.style.display = 'none';
+                }
+
                 document.getElementById('returnDetailModal').classList.add('active');
             } else {
-                alert('載入退貨詳情失敗：' + (data.error || '未知錯誤'));
+                alert('載入退貨詳情失敗: ' + (data.error || '未知錯誤'));
             }
         })
         .catch(error => {
@@ -52,25 +66,13 @@ function closeModal() {
     document.getElementById('returnDetailModal').classList.remove('active');
 }
 
-// 點擊 Modal 外部關閉
-document.getElementById('returnDetailModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
-
-// 根據 URL 參數設定預設分頁
+// 頁面載入完成後執行
 document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderTab = urlParams.get('orderTab');
-
-    if (orderTab) {
-        // 模擬點擊對應的子分頁按鈕
-        const buttons = document.querySelectorAll('.sub-tab-btn');
-        buttons.forEach(btn => {
-            if (btn.textContent.includes(orderTab === 'pending' ? '待完成' :
-                orderTab === 'closed' ? '結案訂單' : '退貨')) {
-                btn.click();
+    const modal = document.getElementById('returnDetailModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
             }
         });
     }

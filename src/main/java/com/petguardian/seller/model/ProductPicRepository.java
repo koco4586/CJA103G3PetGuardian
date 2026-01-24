@@ -8,4 +8,5 @@ import java.util.List;
 public interface ProductPicRepository extends JpaRepository<ProductPic, Integer> {
 
     List<ProductPic> findByProduct_ProId(Integer proId);
+
 }
