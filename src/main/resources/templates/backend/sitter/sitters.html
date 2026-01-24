@@ -242,9 +242,10 @@
                                 <td>
                                     <!-- 評價暫時顯示預設值或從 VO 取得 (若有) -->
                                     <i class="fa-solid fa-star" style="color:gold"></i>
-                                    <span th:text="${sitter.totalStars != null ? sitter.totalStars : '0'}">0</span>
+                                    <span
+                                        th:text="${sitter.sitterStarCount != null ? sitter.sitterStarCount : '0'}">0</span>
                                     <span>(<span
-                                            th:text="${sitter.reviewCount != null ? sitter.reviewCount : '0'}">0</span>則)</span>
+                                            th:text="${sitter.sitterRatingCount != null ? sitter.sitterRatingCount : '0'}">0</span>則)</span>
                                 </td>
                                 <td>
                                     <!-- 0:正常, 1:停權 -->
