@@ -159,8 +159,11 @@
                         th:classappend="${fav.stockQuantity <= 0} ? ' sold-out' : ''" style="cursor: pointer;">
 
                         <div class="product-image-wrapper">
-                            <!-- Product Image -->
-                            <img th:src="${fav.productImg}" th:alt="${fav.productTitle}" class="store-product-img">
+                            <!-- Product Image (使用 API 端點 + 懶加載) -->
+                            <img th:src="@{'/api/product/' + ${fav.proId} + '/image'}"
+                                 th:alt="${fav.productTitle}"
+                                 class="store-product-img"
+                                 loading="lazy">
 
                             <!-- Remove Button (Active Like Button) -->
                             <form th:action="@{/favorites/remove}" method="post" onclick="event.stopPropagation();"

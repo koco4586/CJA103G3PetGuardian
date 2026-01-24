@@ -488,7 +488,9 @@
                     <!-- Order Items -->
                     <div class="order-items">
                         <div th:each="item : ${items}" class="order-item">
-                            <img th:src="${item.productImg}" th:alt="${item.productTitle}">
+                            <img th:src="@{'/api/product/' + ${item.proId} + '/image'}"
+                                 th:alt="${item.productTitle}"
+                                 loading="lazy">
                             <div style="flex: 1;">
                                 <div style="font-weight: 600;" th:text="${item.productTitle}">商品名稱</div>
                                 <small style="color: #999;">

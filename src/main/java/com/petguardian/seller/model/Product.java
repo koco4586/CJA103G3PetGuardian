@@ -65,4 +65,8 @@ public class Product {
     public String getSellerName() {
         return seller != null ? seller.getMemName() : "未知賣家";
     }
+
+    public void setProTypeId(Integer proTypeId) {
+
+    }
 }
