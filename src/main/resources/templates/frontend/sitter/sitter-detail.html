@@ -147,10 +147,19 @@
                     <div th:if="${services != null and !services.isEmpty()}">
                         <div class="service-item" th:each="srv : ${services}">
                             <div>
-                                <strong th:text="${srv.serviceName}">到府照顧</strong>
-                                <p class="text-muted mb-0 small" th:text="${srv.serviceDesc}">服務說明...</p>
+                                <!-- [FIX] VO 無 serviceName，暫時顯示 ID 或 switch 映射 -->
+                                <strong th:switch="${srv.serviceItemId}">
+                                    <span th:case="1">到府照顧</span>
+                                    <span th:case="2">遛狗服務</span>
+                                    <span th:case="3">家庭寄宿</span>
+                                    <span th:case="4">洗澡美容</span>
+                                    <span th:case="*">其他服務 (ID:[[${srv.serviceItemId}]])</span>
+                                </strong>
+                                <!-- [FIX] VO 無 serviceDesc，顯示固定文字 -->
+                                <p class="text-muted mb-0 small">專業貼心服務</p>
                             </div>
-                            <span class="price-text" th:text="'$' + ${srv.price}">$500</span>
+                            <!-- [FIX] 屬性名稱是 defaultPrice -->
+                            <span class="price-text" th:text="'$' + ${srv.defaultPrice}">$500</span>
                         </div>
                     </div>
                     <div th:if="${services == null or services.isEmpty()}" class="text-center text-muted">
@@ -164,7 +173,7 @@
                     <div th:if="${serviceAreas != null and !serviceAreas.isEmpty()}">
                         <span th:each="area : ${serviceAreas}" class="area-tag">
                             <i class="fas fa-location-arrow"></i>
-                            <span th:text="${area.cityName + ' ' + area.district}">台北市 大安區</span>
+                            <span th:text="${area.area.cityName + ' ' + area.area.district}">台北市 大安區</span>
                         </span>
                     </div>
                     <div th:if="${serviceAreas == null or serviceAreas.isEmpty()}" class="text-center text-muted">
@@ -181,12 +190,13 @@
                             <div class="review-header">
                                 <!-- 假設 bookingOrder 中有 member 關聯，這裡簡化顯示 -->
                                 <strong>會員 <span th:text="${review.memId}">ID</span></strong>
-                                <div class="text-warning">
+                                <div class="text-warning" th:if="${review.sitterRating != null}">
                                     <i class="fas fa-star"
                                         th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
                                 </div>
                             </div>
-                            <p class="mb-0 text-muted" th:text="${review.sitterComment}">很棒的保母！</p>
+                            <!-- [FIX] 屬性名稱是 sitterReview -->
+                            <p class="mb-0 text-muted" th:text="${review.sitterReview}">很棒的保母！</p>
                             <small class="text-muted"
                                 th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
                         </div>
