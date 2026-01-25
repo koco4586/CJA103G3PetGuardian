@@ -114,7 +114,7 @@ public class SitterApplicationController {
         model.addAttribute("defaultCity", "台北市");
         model.addAttribute("defaultDistrict", "大安區");
 
-        return "frontend/dashboard-sitter-registration";
+        return "frontend/sitter/dashboard-sitter-registration";
     }
 
     /**
@@ -149,7 +149,7 @@ public class SitterApplicationController {
             if (bindingResult.hasErrors()) {
                 // 重新準備 Model 屬性（因為表單驗證失敗要重新顯示）
                 prepareModelAttributes(request, session, model);
-                return "frontend/dashboard-sitter-registration";
+                return "frontend/sitter/dashboard-sitter-registration";
             }
 
             // 確保 memId 正確
@@ -172,7 +172,7 @@ public class SitterApplicationController {
             // 其他未預期錯誤 -> 保留資料並顯示錯誤
             model.addAttribute("errorMessage", "系統錯誤，請稍後再試： " + e.getMessage());
             prepareModelAttributes(request, session, model);
-            return "frontend/dashboard-sitter-registration";
+            return "frontend/sitter/dashboard-sitter-registration";
         }
     }
 
@@ -231,8 +231,8 @@ public class SitterApplicationController {
      * 邏輯：
      * 1. 檢查使用者是否登入 -> 未登入轉 login
      * 2. 檢查使用者是否有「已通過 (Status=1)」的申請紀錄
-     *    - 是 -> 導向到保姆主頁 (sitter-dashboard.html)
-     *    - 否 -> 導向到申請頁面 (sitter/apply)
+     * - 是 -> 導向到保姆主頁 (sitter-dashboard.html)
+     * - 否 -> 導向到申請頁面 (sitter/apply)
      */
     @GetMapping("/hub")
     public String checkSitterStatus(jakarta.servlet.http.HttpServletRequest request) {
@@ -245,7 +245,7 @@ public class SitterApplicationController {
         // 2. 查詢該會員是否有「已通過」的保姆資格
         List<SitterApplicationVO> apps = service.getApplicationsByMember(memId);
         boolean isSitter = false;
-        
+
         for (SitterApplicationVO app : apps) {
             if (app.getAppStatus() == 1) { // 1 = 已通過
                 isSitter = true;
@@ -257,7 +257,7 @@ public class SitterApplicationController {
         if (isSitter) {
             return "redirect:/sitter/dashboard"; // 前往保姆主頁
         } else {
-            return "redirect:/sitter/apply";     // 前往申請頁面
+            return "redirect:/sitter/apply"; // 前往申請頁面
         }
     }
 }
