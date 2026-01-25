@@ -29,15 +29,20 @@ import com.petguardian.forum.model.PendingPostDTO;
 import com.petguardian.forum.model.RejectedCommentDTO;
 import com.petguardian.forum.model.RejectedPostDTO;
 
+import com.petguardian.common.service.AuthStrategyService;
+
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin/forum")
 public class AdminForumController {
-	
+
+	@Autowired
+	AuthStrategyService authStrategyService;
+
 	@Autowired
 	ForumService forumService;
-	
+
 	@Autowired
 	ForumPostService forumPostService;
 	
@@ -46,124 +51,124 @@ public class AdminForumController {
 	
 	@Autowired
 	ForumPostReportService forumPostReportService;
-	
+
 	@Autowired
 	ForumCommentReportService forumCommentReportService;
-	
+
 	@GetMapping("list-all-forum")
 	public String listAllForum(Model model) {
 		List<ForumVO> forumList = forumService.getAll();
 		model.addAttribute("forumList", forumList);
 		return "backend/forum/list-all-forum";
 	}
-	
+
 	@GetMapping("add-forum")
 	public String addForum(ModelMap model) {
 		ForumVO forumVO = new ForumVO();
 		model.addAttribute("forumVO", forumVO);
 		return "backend/forum/add-forum";
 	}
-		
+
 	@PostMapping("get-forum-id-for-update-status")
 	public String getForumIdForUpdateStatus(@RequestParam("forumStatus") Integer forumStatus,
-											@RequestParam("forumId") Integer forumId, ModelMap model) {
+			@RequestParam("forumId") Integer forumId, ModelMap model) {
 		// 開始更新資料
 		forumService.updateForumStatus(forumStatus, forumId);
-		
+
 		// 更新完成重導到listAllForum
 		return "redirect:/admin/forum/list-all-forum";
-		        
+
 	}
-	
+
 	@PostMapping("get-one-for-update")
 	public String getOneForUpdate(@RequestParam("forumId") Integer forumId, ModelMap model) {
-		
+
 		// 開始查詢資料
 		ForumVO forumVO = forumService.getOneForum(forumId);
-		
+
 		// 查詢完成，交給負責更新的html
 		model.addAttribute("forumVO", forumVO);
 		return "backend/forum/update-forum";
-	
+
 	}
-	
+
 	@PostMapping("update-forum")
 	public String updateForum(@Valid ForumVO forumVO, BindingResult result, ModelMap model) throws IOException {
-		
+
 		// Java Bean Validation 錯誤處理
-		if(result.hasErrors()) {
-			
+		if (result.hasErrors()) {
+
 			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
-			if(result.hasGlobalErrors()) {
+			if (result.hasGlobalErrors()) {
 				result.getGlobalErrors().forEach(error -> {
 					result.rejectValue("upFile", null, error.getDefaultMessage());
 				});
 			}
 			return "backend/forum/update-forum";
 		}
-		
+
 		// MultipartFile convert byte[]
 		MultipartFile upFile = forumVO.getUpFile();
-		if(upFile != null && !upFile.isEmpty()) {
+		if (upFile != null && !upFile.isEmpty()) {
 			byte[] forumPic = upFile.getBytes();
 			forumVO.setForumPic(forumPic);
 		} else {
 			byte[] forumPic = forumService.getForumPic(forumVO.getForumId());
 			forumVO.setForumPic(forumPic);
 		}
-		
+
 		// 開始更新資料
 		forumService.updateForum(forumVO);
-		
+
 		// 更新完成重導到listAllForum
 		return "redirect:/admin/forum/list-all-forum";
-	
+
 	}
-	
+
 	@PostMapping("insert-forum")
 	public String insertForum(@Valid ForumVO forumVO, BindingResult result, ModelMap model) throws IOException {
-		
+
 		// Java Bean Validation 錯誤處理
-		if(result.hasErrors()) {
-					
+		if (result.hasErrors()) {
+
 			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
-			if(result.hasGlobalErrors()) {
+			if (result.hasGlobalErrors()) {
 				result.getGlobalErrors().forEach(error -> {
 					result.rejectValue("upFile", null, error.getDefaultMessage());
 				});
 			}
 			return "backend/forum/add-forum";
 		}
-				
+
 		// MultipartFile convert byte[]
 		MultipartFile upFile = forumVO.getUpFile();
-		if(upFile != null && !upFile.isEmpty()) {
+		if (upFile != null && !upFile.isEmpty()) {
 			byte[] forumPic = upFile.getBytes();
 			forumVO.setForumPic(forumPic);
-//		} else {
-//			byte[] forumPic = forumService.getForumPic(forumVO.getForumId());
-//			forumVO.setForumPic(forumPic);
+			// } else {
+			// byte[] forumPic = forumService.getForumPic(forumVO.getForumId());
+			// forumVO.setForumPic(forumPic);
 		}
-		
+
 		// 開始新增資料
 		forumService.addForum(forumVO);
-		
+
 		// 新增完成重導到listAllForum
-		return "redirect:/admin/forum/list-all-forum";	
-	
+		return "redirect:/admin/forum/list-all-forum";
+
 	}
-	
+
 	@GetMapping("get-all-handled-posts")
 	public String getAllHandledPosts(ModelMap model) {
-		
+
 		// 開始查詢資料
 		List<HandledPostDTO> postList = forumPostReportService.getAllHandledPosts();
-		
+
 		// 查詢完成forward到顯示頁面
 		model.addAttribute("postList", postList);
-		
+
 		return "backend/forum/forum-post";
-		
+
 	}
 	
 	@GetMapping("get-all-pending-posts")
@@ -207,15 +212,15 @@ public class AdminForumController {
 	
 	@GetMapping("get-all-handled-comments")
 	public String getAllHandledComments(ModelMap model) {
-		
+
 		// 開始查詢資料
 		List<HandledCommentDTO> commentList = forumCommentReportService.getAllHandledComments();
-		
+
 		// 查詢完成forward到顯示頁面
 		model.addAttribute("commentList", commentList);
-		
+
 		return "backend/forum/forum-comment";
-		
+
 	}
 	
 	@GetMapping("get-all-pending-comments")

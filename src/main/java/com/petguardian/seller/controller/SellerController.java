@@ -1,6 +1,6 @@
 package com.petguardian.seller.controller;
 
-import com.petguardian.chat.service.AuthStrategyService;
+import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.seller.model.*;
 import com.petguardian.orders.model.*;
 import com.petguardian.seller.service.*;
@@ -34,7 +34,7 @@ public class SellerController {
     private SellerOrderService sellerOrderService;
 
     @Autowired
-    private AuthStrategyService authService; //  使用科宏
+    private AuthStrategyService authService; // 使用科宏
 
     @Autowired
     private WalletRepository walletRepository;
@@ -87,7 +87,7 @@ public class SellerController {
         @SuppressWarnings("unchecked")
         List<SellerReviewVO> allReviews = (List<SellerReviewVO>) ratingStats.get("reviews");
 
-        //  為每個評論加入訂單資訊
+        // 為每個評論加入訂單資訊
         List<Map<String, Object>> reviewsWithOrderInfo = allReviews.stream()
                 .map(review -> {
                     Map<String, Object> reviewMap = new HashMap<>();

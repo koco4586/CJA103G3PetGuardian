@@ -23,12 +23,30 @@ public interface PetSitterService {
     PetSitterServiceVO setServicePrice(Integer sitterId, Integer serviceItemId, Integer price);
 
     /**
+     * 保姆設定服務項目價格 (透過會員 ID)
+     * 
+     * @param memId         會員編號
+     * @param serviceItemId 服務項目編號 (1:散步, 2:餵食, 3:洗澡)
+     * @param price         價格 (400-1000)
+     * @return PetSitterServiceVO 設定後的服務資訊
+     */
+    PetSitterServiceVO setServicePriceForMember(Integer memId, Integer serviceItemId, Integer price);
+
+    /**
      * 查詢保姆的所有服務項目
      * 
      * @param sitterId 保姆編號
      * @return List<PetSitterServiceVO> 該保姆的所有服務項目
      */
     List<PetSitterServiceVO> getServicesBySitter(Integer sitterId);
+
+    /**
+     * 查詢保姆的所有服務項目 (透過會員 ID)
+     * 
+     * @param memId 會員編號
+     * @return List<PetSitterServiceVO> 該保姆的所有服務項目
+     */
+    List<PetSitterServiceVO> getServicesByMember(Integer memId);
 
     /**
      * 查詢單筆服務資訊
@@ -47,6 +65,14 @@ public interface PetSitterService {
      * @throws IllegalArgumentException 若服務不存在
      */
     void deleteService(Integer sitterId, Integer serviceItemId);
+
+    /**
+     * 刪除保姆的服務項目 (透過會員 ID)
+     * 
+     * @param memId         會員編號
+     * @param serviceItemId 服務項目編號
+     */
+    void deleteServiceForMember(Integer memId, Integer serviceItemId);
 
     /**
      * 查詢提供某服務的所有保姆

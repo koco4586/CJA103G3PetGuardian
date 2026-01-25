@@ -1,8 +1,9 @@
 package com.petguardian.sellerreview.controller;
 
-import com.petguardian.common.service.AuthService;
+import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.sellerreview.service.SellerReviewReportService;
 import com.petguardian.sellerreview.service.SellerReviewService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,8 +18,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/reviews")
 public class SellerReviewController {
 
-//    private static final Integer TEST_MEM_ID = 1001;
-
     @Autowired
     private SellerReviewService reviewService;
 
@@ -26,29 +25,26 @@ public class SellerReviewController {
     private SellerReviewReportService reportService;
 
     @Autowired
-    private AuthService authService;
+    private AuthStrategyService authService;
     /**
      * 取得當前會員 ID（含模擬登入邏輯）
      */
-//    private Integer getCurrentMemId(HttpSession session) {
-//        Integer memId = (Integer) session.getAttribute("memId");
-//        if (memId == null) {
-//            memId = TEST_MEM_ID;
-//            session.setAttribute("memId", memId);
-//        }
-//        return memId;
-//    }
+    // private Integer getCurrentMemId(HttpSession session) {
 
     /**
      * 提交評價
      */
     @PostMapping("/submit")
     public String submitReview(@RequestParam Integer orderId,
-                               @RequestParam Integer rating,
-                               @RequestParam(required = false) String reviewContent,
-                               HttpSession session,
-                               RedirectAttributes redirectAttr) {
-        authService.getCurrentMemId(session);
+            @RequestParam Integer rating,
+            @RequestParam(required = false) String reviewContent,
+            HttpSession session,
+            RedirectAttributes redirectAttr,
+            HttpServletRequest request) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
+            return "redirect:/store";
+        }
 
         try {
             reviewService.createReview(orderId, rating, reviewContent);
@@ -65,11 +61,15 @@ public class SellerReviewController {
      */
     @PostMapping("/report")
     public String submitReport(@RequestParam Integer reviewId,
-                               @RequestParam String reportReason,
-                               @RequestParam(required = false, defaultValue = "/store/checkout") String redirectUrl,
-                               HttpSession session,
-                               RedirectAttributes redirectAttr) {
-        Integer memId = authService.getCurrentMemId(session);
+            @RequestParam String reportReason,
+            @RequestParam(required = false, defaultValue = "/store/checkout") String redirectUrl,
+            HttpSession session,
+            RedirectAttributes redirectAttr,
+            HttpServletRequest request) {
+        Integer memId = authService.getCurrentUserId(request);
+        if (memId == null) {
+            return "redirect:/store";
+        }
 
         try {
             reportService.createReport(reviewId, memId, reportReason);
