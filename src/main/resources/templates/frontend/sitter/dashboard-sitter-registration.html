@@ -113,7 +113,8 @@
                         </div>
 
                         <div class="text-center">
-                            <button type="submit" class="btn btn-primary" style="padding: 0.8rem 3rem;">提交申請</button>
+                            <button type="submit" class="btn btn-primary" style="padding: 0.8rem 3rem;"
+                                th:disabled="${isDisableSubmit}">提交申請</button>
                         </div>
                     </form>
                 </div>

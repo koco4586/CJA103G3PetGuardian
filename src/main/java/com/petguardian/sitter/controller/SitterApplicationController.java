@@ -19,6 +19,7 @@ import com.petguardian.sitter.service.SitterApplicationService;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterMemberRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
@@ -52,7 +53,7 @@ public class SitterApplicationController {
      * @return 申請頁面路徑或重導向路徑
      */
     @GetMapping("/apply")
-    public String showApplyForm(jakarta.servlet.http.HttpServletRequest request, HttpSession session, Model model,
+    public String showApplyForm(HttpServletRequest request, HttpSession session, Model model,
             RedirectAttributes redirectAttributes) {
 
         Integer memId = authStrategyService.getCurrentUserId(request);
@@ -68,9 +69,14 @@ public class SitterApplicationController {
             for (SitterApplicationVO app : existingApps) {
                 if (app.getAppStatus() == 0) {
                     model.addAttribute("errorMessage", "您已有待審核的申請，請耐心等候結果");
+
+                    model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
+
                     // 可以考慮在此處 return 轉導或讓前端隱藏按鈕
                 } else if (app.getAppStatus() == 1) {
                     model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
+
+                    model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
                 }
             }
         }
@@ -132,7 +138,7 @@ public class SitterApplicationController {
     public String submitApplication(
             @Valid @ModelAttribute("sitterApplication") SitterApplicationDTO dto,
             BindingResult bindingResult,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
@@ -166,7 +172,7 @@ public class SitterApplicationController {
             // 業務邏輯錯誤 (如:重複申請) -> 保留資料並顯示錯誤
             model.addAttribute("errorMessage", e.getMessage());
             prepareModelAttributes(request, session, model);
-            return "frontend/dashboard-sitter-registration";
+            return "frontend/sitter/dashboard-sitter-registration";
 
         } catch (Exception e) {
             // 其他未預期錯誤 -> 保留資料並顯示錯誤
@@ -186,7 +192,7 @@ public class SitterApplicationController {
      * @return 申請列表頁面路徑
      */
     @GetMapping("/applications")
-    public String listApplications(jakarta.servlet.http.HttpServletRequest request, HttpSession session, Model model,
+    public String listApplications(HttpServletRequest request, HttpSession session, Model model,
             RedirectAttributes redirectAttributes) {
         // 從 Session 取得當前登入會員 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
@@ -210,7 +216,7 @@ public class SitterApplicationController {
      * @param session HttpSession
      * @param model   Spring Model
      */
-    private void prepareModelAttributes(jakarta.servlet.http.HttpServletRequest request, HttpSession session,
+    private void prepareModelAttributes(HttpServletRequest request, HttpSession session,
             Model model) {
         String memName = authStrategyService.getCurrentUserName(request);
         String memPhone = (String) session.getAttribute("memPhone");
@@ -235,7 +241,7 @@ public class SitterApplicationController {
      * - 否 -> 導向到申請頁面 (sitter/apply)
      */
     @GetMapping("/hub")
-    public String checkSitterStatus(jakarta.servlet.http.HttpServletRequest request) {
+    public String checkSitterStatus(HttpServletRequest request) {
         // 1. 取得當前會員 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
