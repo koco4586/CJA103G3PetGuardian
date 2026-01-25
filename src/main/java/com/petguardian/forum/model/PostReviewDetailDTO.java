@@ -17,7 +17,12 @@ public class PostReviewDetailDTO {
     private String postContent;   // 完整內容 (Text)
     private Integer authorId;	  // 被檢舉人 ID
 	
-    public PostReviewDetailDTO(Integer reportId, Integer reportType, String reportReason, Timestamp reportTime,
+    public PostReviewDetailDTO() {
+		super();
+
+	}
+
+	public PostReviewDetailDTO(Integer reportId, Integer reportType, String reportReason, Timestamp reportTime,
 			Integer memId, Integer postId, String postTitle, String postContent, Integer authorId) {
 		super();
 		this.reportId = reportId;

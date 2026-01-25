@@ -10,9 +10,14 @@ public class RejectedPostDTO {
 	private String forumName;
 	private Integer reportType;
 	private Timestamp handleTime;
+	private Integer reportId;
 	
+	public RejectedPostDTO() {
+		super();
+	}
+
 	public RejectedPostDTO(Integer postId, String postTitle, Integer memId, String forumName, Integer reportType,
-			Timestamp handleTime) {
+			Timestamp handleTime, Integer reportId) {
 		super();
 		this.postId = postId;
 		this.postTitle = postTitle;
@@ -20,6 +25,7 @@ public class RejectedPostDTO {
 		this.forumName = forumName;
 		this.reportType = reportType;
 		this.handleTime = handleTime;
+		this.reportId = reportId;
 	}
 
 	public Integer getPostId() {
@@ -68,6 +74,14 @@ public class RejectedPostDTO {
 
 	public void setHandleTime(Timestamp handleTime) {
 		this.handleTime = handleTime;
+	}
+
+	public Integer getReportId() {
+		return reportId;
+	}
+
+	public void setReportId(Integer reportId) {
+		this.reportId = reportId;
 	}
 	
 }

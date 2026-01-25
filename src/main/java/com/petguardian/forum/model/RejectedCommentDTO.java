@@ -11,6 +11,10 @@ public class RejectedCommentDTO {
 	private Integer reportType;
 	private Timestamp handleTime;
 	
+	public RejectedCommentDTO() {
+		super();
+	}
+
 	public RejectedCommentDTO(Integer commentId, String commentContent, Integer memId, Integer postId,
 			Integer reportType, Timestamp handleTime) {
 		super();

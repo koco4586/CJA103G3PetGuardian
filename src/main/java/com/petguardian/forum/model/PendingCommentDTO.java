@@ -11,6 +11,10 @@ public class PendingCommentDTO {
 	private Integer reportType;
 	private Timestamp reportTime;
 	
+	public PendingCommentDTO() {
+		super();
+	}
+
 	public PendingCommentDTO(Integer reportId, Integer memId, Integer commentId, Integer authorId,
 			Integer reportType, Timestamp reportTime) {
 		super();

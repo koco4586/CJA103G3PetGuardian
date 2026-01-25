@@ -11,6 +11,10 @@ public class HandledCommentDTO {
 	private Integer reportType;
 	private Timestamp handleTime;
 	
+	public HandledCommentDTO() {
+		super();
+	}
+
 	public HandledCommentDTO(Integer commentId, String commentContent, Integer memId, Integer postId,
 			Integer reportType, Timestamp handleTime) {
 		super();

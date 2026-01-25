@@ -10,7 +10,7 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 	
 	@Query("""
 			select new com.petguardian.forum.model.HandledPostDTO(
-				p.postId, p.postTitle, f.forumName, p.member.memId, r.reportType, r.handleTime
+				p.postId, p.postTitle, f.forumName, p.member.memId, r.reportType, r.handleTime, r.reportId
 			)
 			from ForumPostReportVO r
 			join r.forumPost p
@@ -34,7 +34,7 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 	
 	@Query("""
 			select new com.petguardian.forum.model.RejectedPostDTO(
-				p.postId, p.postTitle, p.member.memId, f.forumName, r.reportType, r.handleTime
+				p.postId, p.postTitle, p.member.memId, f.forumName, r.reportType, r.handleTime, r.reportId
 			)
 			from ForumPostReportVO r
 			join r.forumPost p
@@ -55,7 +55,14 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 	""")
 	public PostReviewDetailDTO postReviewDetailToHandle(@Param("reportId") Integer reportId);
 	
-	
+	@Query("""
+			select new com.petguardian.forum.model.PostHandledResultDetailDTO(
+				r.reportId, r.handleTime, r.reportStatus, r.handleResult
+			)
+			from ForumPostReportVO r
+			where r.reportId = :reportId
+	""")
+	public PostHandledResultDetailDTO postHandledResultDetailToDisplay(@Param("reportId") Integer reportId);
 	
 	
 	
