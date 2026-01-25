@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/petguardian")
+@RequestMapping("/front")
 public class MemberManagementDeactivateRedirectController {
 
-    @GetMapping("/deactivate")
+    @GetMapping("/deactivatepage")
     public String deactivate(){
         return "redirect:/html/member/management/member_management_deactivate.html";
     }

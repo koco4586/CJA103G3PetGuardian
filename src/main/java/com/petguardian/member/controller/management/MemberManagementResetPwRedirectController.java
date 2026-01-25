@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/petguardian")
+@RequestMapping("/front")
 public class MemberManagementResetPwRedirectController {
 
-    @GetMapping("/resetpw")
+    @GetMapping("/resetpwpage")
     public String resetpw(){
         return "redirect:/html/member/management/member_management_resetpw.html";
     }

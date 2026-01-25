@@ -131,7 +131,7 @@
                 formData.append("memAdd", memAdd)
                 formData.append("memAccountNumber", memAccountNumber)
 
-                fetch("http://localhost:8080/management", {
+                fetch("http://localhost:8080/front/management", {
                     method: "PUT",
                     credentials: "include",
                     body: formData         //FormData 是瀏覽器提供的「表單資料物件」,瀏覽器會自動Content-Type: multipart/form-data

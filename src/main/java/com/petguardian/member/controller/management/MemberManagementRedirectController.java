@@ -5,13 +5,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/petguardian")
+@RequestMapping("/front")
 public class MemberManagementRedirectController {
 
-    @GetMapping("/management")
+    @GetMapping("/managementpage")
     public String management(){
 
-        return "redirect:/html/member/management/member_management.html";
+        return "redirect:/html/frontend/member/management/member_management.html";
 
 }
 

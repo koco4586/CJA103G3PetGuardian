@@ -16,13 +16,13 @@ public class MemberInterceptorConfig implements WebMvcConfigurer{
     public void addInterceptors(InterceptorRegistry registry) {
 
         registry.addInterceptor(memberInterceptor)
-                .addPathPatterns("/**")
+                .addPathPatterns("/front/**")
                 .excludePathPatterns(
-                        "/petguardian/login",
-                        "/login",
-                        "/html/member/register/registersuccess.html",
-						"/petguardian/register",
-                        "/register",
+                        "/front/loginpage",
+                        "/front/login",
+                        "/html/frontend/member/register/registersuccess.html",
+						"/front/registerpage",
+                        "/front/register",
 						"/css/**",
 						"/js/**",
 						"/images/**",

@@ -8,7 +8,6 @@ import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostReportVO;
 import com.petguardian.forum.model.ForumPostVO;
 import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,7 +16,6 @@ import java.util.Set;
 @Entity
 @Table(name = "member")
 @DynamicInsert
-@DynamicUpdate
 public class Member {
 
     @Id
