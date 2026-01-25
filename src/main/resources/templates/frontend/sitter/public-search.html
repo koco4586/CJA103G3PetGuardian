@@ -117,7 +117,7 @@
         <!-- 測試會員提示 -->
         <div class="test-member-badge" th:if="${currentMember}">
             <i class="fas fa-user"></i>
-            目前登入：<span th:text="${currentMember.memName}">測試會員</span>（測試用）
+            目前登入：<span th:text="${currentMember.memName}">測試會員</span>
         </div>
 
         <h1 class="mb-2">🐾 搜尋保姆</h1>
@@ -145,15 +145,7 @@
                     </select>
                 </div>
 
-                <!-- 寵物類型篩選 -->
-                <div class="col-md-4 filter-section">
-                    <label class="filter-label">寵物類型</label>
-                    <select id="petTypeFilter" class="form-control">
-                        <option value="">全部類型</option>
-                        <option value="1">狗</option>
-                        <option value="2">貓</option>
-                    </select>
-                </div>
+
 
                 <!-- 價格範圍 -->
                 <div class="col-md-4 filter-section">
@@ -249,7 +241,7 @@
         document.getElementById('resetBtn').addEventListener('click', function () {
             document.getElementById('citySelect').value = '';
             document.getElementById('serviceFilter').value = '';
-            document.getElementById('petTypeFilter').value = '';
+            // document.getElementById('petTypeFilter').value = ''; // Removed
             document.getElementById('priceRangeFilter').value = '';
             document.getElementById('sortBy').value = 'rating_desc';
             loadAllSitters();
@@ -287,7 +279,7 @@
             // 取得篩選條件
             const city = document.getElementById('citySelect').value;
             const serviceItemId = document.getElementById('serviceFilter').value;
-            const petTypeId = document.getElementById('petTypeFilter').value;
+            // const petTypeId = document.getElementById('petTypeFilter').value;
             const priceRange = document.getElementById('priceRangeFilter').value;
             const sortBy = document.getElementById('sortBy').value;
 
@@ -304,7 +296,7 @@
                 cityName: city || null,           // 傳送縣市名稱
                 district: null,                   // 不傳送區域名稱
                 serviceItemIds: serviceItemId ? [parseInt(serviceItemId)] : null,
-                petTypeIds: petTypeId ? [parseInt(petTypeId)] : null,
+                petTypeIds: null, // Removed pet type filter
                 minPrice: minPrice,
                 maxPrice: maxPrice,
                 sortBy: sortBy
