@@ -1,6 +1,8 @@
 package com.petguardian.sitter.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -215,6 +217,21 @@ public class SitterPublicController {
             // [NEW] 服務對象 (寵物種類與體型)
             List<PetSitterServicePetTypeVO> petTypes = petSitterServicePetTypeRepository.findBySitterId(sitterId);
 
+            // [NEW] 建立服務項目名稱對照表 (模擬資料庫)
+            // 對應前端 profile-settings.html: 1=散步, 2=餵食, 3=洗澡
+            Map<Integer, String> serviceNameMap = new HashMap<>();
+            serviceNameMap.put(1, "散步");
+            serviceNameMap.put(2, "餵食");
+            serviceNameMap.put(3, "洗澡");
+
+            // [NEW] 建立服務價格對照表 (Service ID -> Price)
+            Map<Integer, Integer> servicePriceMap = new HashMap<>();
+            if (services != null) {
+                for (PetSitterServiceVO service : services) {
+                    servicePriceMap.put(service.getServiceItemId(), service.getDefaultPrice());
+                }
+            }
+
             // 歷史評價 (僅查詢有評分的訂單)
             List<BookingOrderVO> reviews = bookingOrderRepository
                     .findBySitterIdAndSitterRatingNotNullOrderByEndTimeDesc(sitterId);
@@ -234,6 +251,8 @@ public class SitterPublicController {
             model.addAttribute("services", services);
             model.addAttribute("serviceAreas", serviceAreas);
             model.addAttribute("petTypes", petTypes); // [NEW] 傳遞服務對象
+            model.addAttribute("serviceNameMap", serviceNameMap); // [NEW] 傳遞服務名稱對照表
+            model.addAttribute("servicePriceMap", servicePriceMap); // [NEW] 傳遞服務價格對照表
             model.addAttribute("reviews", reviews);
 
             return "frontend/sitter/sitter-detail";

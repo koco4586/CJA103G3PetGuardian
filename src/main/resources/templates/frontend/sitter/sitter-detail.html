@@ -148,18 +148,29 @@
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead style="background-color: #f8f9fa;">
-                                    <tr>
-                                        <th>寵物種類</th>
-                                        <th>接受體型</th>
-                                        <th>服務項目</th>
+                                    <tr class="text-center">
+                                        <th style="width: 25%; padding: 1rem;">服務項目</th>
+                                        <th style="width: 25%; padding: 1rem;">寵物種類</th>
+                                        <th style="width: 25%; padding: 1rem;">體型</th>
+                                        <th style="width: 25%; padding: 1rem;">價格</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="pt : ${petTypes}">
+                                    <tr th:each="pt : ${petTypes}" class="text-center align-middle">
+                                        <!-- 服務項目 -->
+                                        <td style="padding: 1rem;">
+                                            <span class="badge bg-secondary"
+                                                style="font-size: 0.95rem; padding: 0.5em 1em;"
+                                                th:text="${serviceNameMap.get(pt.serviceItemId) != null ? serviceNameMap.get(pt.serviceItemId) : '項目 ' + pt.serviceItemId}">
+                                                服務項目
+                                            </span>
+                                        </td>
+
                                         <!-- 種類 -->
-                                        <td>
+                                        <td style="padding: 1rem;">
                                             <span th:switch="${pt.typeId}"
-                                                class="badge rounded-pill bg-light text-dark border">
+                                                class="badge rounded-pill bg-light text-dark border"
+                                                style="font-size: 0.95rem; padding: 0.5em 1em;">
                                                 <i class="fas"
                                                     th:classappend="${pt.typeId == 1} ? 'fa-dog' : 'fa-cat'"></i>
                                                 <span th:case="1">狗</span>
@@ -168,17 +179,21 @@
                                         </td>
 
                                         <!-- 體型 -->
-                                        <td>
-                                            <span th:switch="${pt.sizeId}">
+                                        <td style="padding: 1rem;">
+                                            <span th:switch="${pt.sizeId}" style="font-size: 1rem;">
                                                 <span th:case="1">小型</span>
                                                 <span th:case="2">中型</span>
                                                 <span th:case="3">大型</span>
+                                                <span th:case="*">不限</span>
                                             </span>
                                         </td>
 
-                                        <!-- 對應的服務項目ID -->
-                                        <td>
-                                            <small class="text-muted" th:text="'項目 ID: ' + ${pt.serviceItemId}"></small>
+                                        <!-- 價格 -->
+                                        <td style="padding: 1rem;">
+                                            <span class="text-danger fw-bold" style="font-size: 1.1rem;"
+                                                th:text="${servicePriceMap.get(pt.serviceItemId) != null ? '$' + servicePriceMap.get(pt.serviceItemId) : '另洽'}">
+                                                $500
+                                            </span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -186,33 +201,7 @@
                         </div>
                     </div>
                     <div th:if="${petTypes == null or petTypes.isEmpty()}" class="text-center text-muted">
-                        未設定服務對象
-                    </div>
-                </div>
-
-                <!-- D & E. 服務種類與價格 -->
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-hand-holding-heart"></i> 服務項目</h3>
-                    <div th:if="${services != null and !services.isEmpty()}">
-                        <div class="service-item" th:each="srv : ${services}">
-                            <div>
-                                <!-- [FIX] VO 無 serviceName，暫時顯示 ID 或 switch 映射 -->
-                                <strong th:switch="${srv.serviceItemId}">
-                                    <span th:case="1">到府照顧</span>
-                                    <span th:case="2">遛狗服務</span>
-                                    <span th:case="3">家庭寄宿</span>
-                                    <span th:case="4">洗澡美容</span>
-                                    <span th:case="*">其他服務 (ID:[[${srv.serviceItemId}]])</span>
-                                </strong>
-                                <!-- [FIX] VO 無 serviceDesc，顯示固定文字 -->
-                                <p class="text-muted mb-0 small">專業貼心服務</p>
-                            </div>
-                            <!-- [FIX] 屬性名稱是 defaultPrice -->
-                            <span class="price-text" th:text="'$' + ${srv.defaultPrice}">$500</span>
-                        </div>
-                    </div>
-                    <div th:if="${services == null or services.isEmpty()}" class="text-center text-muted">
-                        暫無設定服務項目
+                        未設定服務對象與價格
                     </div>
                 </div>
 
