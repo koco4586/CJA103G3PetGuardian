@@ -24,6 +24,14 @@
             border-radius: 30px;
             padding: 20px;
         }
+
+        .deactivate {
+            color: brown;
+        }
+
+        .rightone {
+            text-align: right;
+        }
     </style>
 </head>
 
@@ -48,7 +56,7 @@
             <span class="mustbe">*必填</span>
             <span>密碼</span><br>
             <input type="password" class="mem_pw" placeholder="********" disabled>
-            <a href="#">變更密碼</a><br><br>
+            <a href="./member_management_resetpw.html">變更密碼</a><br><br>
 
             <span>身分證字號</span><br>
             <input type="text" class="mem_uid" placeholder="請輸入身分證字號">
@@ -84,6 +92,9 @@
             <button type="reset">清除重填</button><br><br>
         </form>
         <a href="#">返回首頁</a>
+        <div class="rightone">
+            <a href="./member_management_deactivate.html" class="deactivate">停用帳號</a>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -122,6 +133,7 @@
 
                 fetch("http://localhost:8080/management", {
                     method: "PUT",
+                    credentials: "include",
                     body: formData         //FormData 是瀏覽器提供的「表單資料物件」,瀏覽器會自動Content-Type: multipart/form-data
                 }).then(res => res.json()).then(data => {
                     console.log(data);
