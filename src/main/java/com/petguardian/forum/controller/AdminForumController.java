@@ -24,11 +24,13 @@ import com.petguardian.forum.service.ForumService;
 import com.petguardian.forum.model.DeletedCommentDTO;
 import com.petguardian.forum.model.DeletedPostDTO;
 import com.petguardian.forum.model.ForumPostReportVO;
+import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.ForumVO;
 import com.petguardian.forum.model.HandledCommentDTO;
 import com.petguardian.forum.model.HandledPostDTO;
 import com.petguardian.forum.model.PendingCommentDTO;
 import com.petguardian.forum.model.PendingPostDTO;
+import com.petguardian.forum.model.PostHandledResultDetailDTO;
 import com.petguardian.forum.model.PostReviewDetailDTO;
 import com.petguardian.forum.model.RejectedCommentDTO;
 import com.petguardian.forum.model.RejectedPostDTO;
@@ -179,6 +181,31 @@ public class AdminForumController {
 
 	}
 	
+	@PostMapping("get-one-handled-post-to-display")
+	public String getOneHandledPostToDisplay(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		PostReviewDetailDTO reviewDto = forumPostReportService.getPostReviewDetailToHandle(reportId);
+		PostHandledResultDetailDTO handledResultDto = forumPostReportService.getPostHandledResultDetailToDisplay(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("handledResultDto", handledResultDto);
+		model.addAttribute("reviewDto", reviewDto);
+		model.addAttribute("picsId", picsId);
+		
+		return "backend/forum/display-handled-post";
+	}
+	
+	@PostMapping("get-one-handled-post-to-recover")
+	public String getOneHandledPostToRecover(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, RedirectAttributes ra) {
+		
+		forumPostReportService.recoverPost(postId, reportId);
+		ra.addFlashAttribute("successMsgs", "貼文已成功恢復");
+		
+		return "redirect:/admin/forum/get-all-handled-posts";
+	}
+	
 	@GetMapping("get-all-pending-posts")
 	public String getAllPendingPosts(ModelMap model) {
 		
@@ -247,6 +274,22 @@ public class AdminForumController {
 	
 	}
 	
+	@PostMapping("get-one-rejected-post-to-display")
+	public String getOneRejectedPostToDisplay(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		PostReviewDetailDTO reviewDto = forumPostReportService.getPostReviewDetailToHandle(reportId);
+		PostHandledResultDetailDTO handledResultDto = forumPostReportService.getPostHandledResultDetailToDisplay(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("handledResultDto", handledResultDto);
+		model.addAttribute("reviewDto", reviewDto);
+		model.addAttribute("picsId", picsId);
+		
+		return "backend/forum/display-rejected-post";
+	}
+	
 	@GetMapping("get-all-deleted-posts")
 	public String getAllDeletedPosts(ModelMap model) {
 		
@@ -258,6 +301,27 @@ public class AdminForumController {
 		
 		return "backend/forum/forum-deleted-post";
 	
+	}
+	
+	@PostMapping("get-one-deleted-post-to-display")
+	public String getOneDeletedPostToDisplay(@RequestParam("postId") Integer postId, ModelMap model) {
+		
+		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		model.addAttribute("forumPostVO", forumPostVO);
+		model.addAttribute("picsId", picsId);
+		
+		return "backend/forum/display-deleted-post";
+	}
+	
+	@PostMapping("get-one-deleted-post-to-recover")
+	public String getOneDeletedPostToRecover(@RequestParam("postId") Integer postId, RedirectAttributes ra) {
+		
+		forumPostReportService.recoverPost(postId, null);
+		ra.addFlashAttribute("successMsgs", "貼文已成功恢復");
+		
+		return "redirect:/admin/forum/get-all-deleted-posts";
 	}
 	
 	@GetMapping("get-all-handled-comments")

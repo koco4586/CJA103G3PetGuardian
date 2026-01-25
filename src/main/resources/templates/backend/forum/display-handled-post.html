@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 貼文檢舉處理詳情</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" th:href="@{/css/backend/style.css}">
+    
+    <style>
+        :root {
+            --primary-color: #ce875be8;
+            --bg-color: #f4f7f6;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --white: #ffffff;
+            --shadow: 0 10px 25px rgba(0,0,0,0.08);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --info-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #fbc02d;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-back {
+            background-color: var(--white);
+            color: var(--text-dark);
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-back:hover { 
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        /* 核心佈局：左側寬度鎖定 */
+        .review-layout {
+            display: grid;
+            grid-template-columns: calc(100% - 410px) 380px; 
+            gap: 30px;
+            align-items: start;
+            width: 100%;
+        }
+
+        .post-info-column {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            width: 100%; 
+            box-sizing: border-box;
+            min-height: 600px;
+        }
+
+        @media (max-width: 1100px) {
+            .review-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .post-title {
+            color: var(--text-dark);
+            font-size: 2rem;
+            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .post-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #edf2f7;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .post-main-text {
+            font-size: 1.1rem;
+            color: #4a5568;
+            line-height: 1.9;
+            white-space: pre-wrap;
+            margin-bottom: 30px;
+        }
+
+        .post-img-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .post-img-box img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .report-info-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px; 
+        }
+
+        .info-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-color);
+        }
+
+        .record-card::before {
+            background: var(--info-color);
+        }
+
+        .report-item {
+            margin-bottom: 18px;
+        }
+        .report-label { 
+            font-weight: 700; 
+            color: var(--text-muted); 
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .report-value { font-size: 1.05rem; color: var(--text-dark); }
+		
+		.badge-report {
+	        display: inline-block;
+	        padding: 6px 16px;
+	        border-radius: 50px;
+	        background: #fff3e0;
+	        color: #e67e22;
+	        font-size: 0.9rem;
+	        font-weight: 700;
+	    }
+		
+        .badge-status {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: white;
+        }
+        .status-handled { background-color: var(--danger-color); }
+        .status-rejected { background-color: var(--info-color); }
+
+        .box-content {
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .reason-box { background: #fdf2e9; border-left: 4px solid #e67e22; }
+        .result-box { background: #eef2f7; border-left: 4px solid var(--info-color); color: #34495e; }
+    	
+    	/* 基礎按鈕結構 (維持原樣) */
+		.btn-handle {
+		    flex: 1;
+		    padding: 12px 5px;
+		    border-radius: 10px;
+		    border: none;
+		    font-weight: 700;
+		    font-size: 0.95rem;
+		    cursor: pointer;
+		    transition: var(--transition);
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    gap: 6px;
+		    color: white;
+		    white-space: nowrap;
+		}
+		
+		/* 恢復按鈕：綠色配色與跳起效果 */
+		.btn-recover { 
+		    background-color: #2ecc71; /* 成功綠 */
+		    margin-top: 20px; /* 這裡可依需求調整與上方內容的間距 */
+		    width: 100%;    /* 讓它在側欄撐滿 */
+		}
+		
+		.btn-recover:hover { 
+		    background-color: #27ae60; /* 深綠色 */
+		    transform: translateY(-2px) !important; /* 跳起效果 */
+		    box-shadow: 0 8px 15px rgba(46, 204, 113, 0.3) !important; /* 綠色發光陰影 */
+		}
+    
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="page-header">
+        <a href="javascript:history.back()" class="btn-back">
+            <i class="fas fa-chevron-left"></i> 返回列表
+        </a>
+        <div style="text-align: right;">
+            <span style="color: var(--text-muted); font-weight: 600;">案件編號：[[${reviewDto.reportId}]]</span>
+        </div>
+    </div>
+
+    <div class="review-layout">
+        <div class="post-info-column">
+            <h1 class="post-title" th:text="${reviewDto.postTitle}">貼文標題</h1>
+            
+            <div class="post-meta">
+                <span><i class="far fa-user"></i> 作者 ID: <b th:text="${reviewDto.authorId}"></b></span>
+                <span><i class="fas fa-fingerprint"></i> 貼文 ID: [[${reviewDto.postId}]]</span>
+            </div>
+            
+            <div class="post-main-text" th:text="${reviewDto.postContent}">內容載入中...</div>
+            
+            <div class="post-img-box" th:if="${not #lists.isEmpty(picsId)}">
+                <th:block th:each="picId : ${picsId}">
+                    <img th:src="@{/forum/get-pic-id-for-pic(picId=${picId})}" alt="貼文照片">
+                </th:block>
+            </div>
+        </div>
+
+        <div class="report-info-column">
+            
+            <div class="info-card">
+                <h3><i class="fas fa-shield-alt" style="color: #e74c3c;"></i> 檢舉詳情</h3>
+                
+                <div class="report-item">
+                    <span class="report-label">檢舉類型</span>
+                    <span class="badge-report" th:switch="${reviewDto.reportType}">
+                        <span th:case="0"><i class="fas fa-user-slash"></i> 騷擾</span>
+                        <span th:case="1"><i class="fas fa-bullhorn"></i> 垃圾訊息</span>
+                        <span th:case="2"><i class="fas fa-exclamation-triangle"></i> 不當內容</span>
+                        <span th:case="3"><i class="fas fa-mask"></i> 詐騙</span>
+                        <span th:case="*">其他</span>
+                    </span>
+                </div>
+
+                <div class="report-item">
+                    <span class="report-label">檢舉者 ID</span>
+                    <span class="report-value"><i class="fas fa-user-circle"></i> [[${reviewDto.memId}]]</span>
+                </div>
+
+                <div class="report-item">
+                    <span class="report-label">檢舉描述</span>
+                    <div class="box-content reason-box" th:text="${reviewDto.reportReason}"></div>
+                </div>
+            </div>
+
+            <div class="info-card record-card">
+                <h3><i class="fas fa-clipboard-check" style="color: var(--info-color);"></i> 審核紀錄</h3>
+                
+                <div class="report-item">
+                    <span class="report-label">處理狀態</span>
+                    <div th:switch="${handledResultDto.reportStatus}">
+                        <span th:case="1" class="badge-status status-handled">
+                            <i class="fas fa-trash-alt"></i> 違規下架
+                        </span>
+                        <span th:case="2" class="badge-status status-rejected">
+                            <i class="fas fa-check-circle"></i> 檢舉駁回
+                        </span>
+                        <span th:case="0" class="badge-status" style="background-color: #999;">待處理</span>
+                    </div>
+                </div>
+
+                <div class="report-item">
+                    <span class="report-label">處理時間</span>
+                    <span class="report-value" style="font-size: 0.9rem;">
+                        <i class="far fa-calendar-check"></i> 
+                        [[${#dates.format(handledResultDto.handleTime, 'yyyy-MM-dd HH:mm:ss')}]]
+                    </span>
+                </div>
+
+                <div class="report-item">
+                    <span class="report-label">處理結果</span>
+                    <div class="box-content result-box" th:text="${#strings.isEmpty(handledResultDto.handleResult) ? '無備註。' : handledResultDto.handleResult}"></div>
+                </div>
+                
+                <div class="action-group" style="margin-top: 25px;">
+				    <form th:action="@{/admin/forum/get-one-handled-post-to-recover}" method="post" style="width: 100%;">
+				        <input type="hidden" name="postId" th:value="${reviewDto.postId}">
+				        <input type="hidden" name="reportId" th:value="${handledResultDto.reportId}">
+				        
+				        <button type="submit" class="btn-handle btn-recover">
+				            <i class="fas fa-undo-alt"></i> 恢復貼文
+				        </button>
+				    </form>
+				</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

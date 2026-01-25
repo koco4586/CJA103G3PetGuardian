@@ -11,6 +11,10 @@ public class PendingPostDTO {
 	private Integer reportType;
 	private Timestamp reportTime;
 	
+	public PendingPostDTO() {
+		super();
+	}
+
 	public PendingPostDTO(Integer reportId, Integer memId, Integer postId, Integer authorId, Integer reportType,
 			Timestamp reportTime) {
 		super();

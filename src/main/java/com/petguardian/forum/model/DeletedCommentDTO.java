@@ -10,6 +10,10 @@ public class DeletedCommentDTO {
 	private Integer postId;
 	private Timestamp lastEditedAt;
 	
+	public DeletedCommentDTO() {
+		super();
+	}
+
 	public DeletedCommentDTO(Integer commentId, String commentContent, Integer memId, Integer postId,
 			Timestamp lastEditedAt) {
 		super();
