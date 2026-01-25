@@ -78,14 +78,8 @@ public class SitterDashboardController {
         System.out.println("sitter.getServiceTime(): " + sitter.getServiceTime());
         System.out.println("===========================");
 
-        // 6. 計算平均評分
-        double averageRating = 0.0;
-        if (sitter.getSitterRatingCount() != null && sitter.getSitterRatingCount() > 0) {
-            // 總星星數 / 總評價數
-            averageRating = (double) sitter.getSitterStarCount() / sitter.getSitterRatingCount();
-            // 取小數點後一位 (例如 4.8)
-            averageRating = Math.round(averageRating * 10.0) / 10.0;
-        }
+        // 6. 計算平均評分 (改用 SitterVO 方法)
+        double averageRating = sitter.getAverageRating();
 
         model.addAttribute("sitter", sitter);
         model.addAttribute("serviceTime", sitter.getServiceTime()); // 單獨傳遞，避免物件狀態問題

@@ -120,50 +120,90 @@
             <div class="col-md-4">
                 <div class="profile-card">
                     <!-- 預設頭像或保母上傳的頭像 -->
-                    <img src="/images/frontend/default-avatar.png" class="profile-avatar" alt="保母頭像">
+                    <!-- 預設頭像或保母上傳的頭像 -->
+                    <img th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
+                        class="profile-avatar" alt="保母頭像">
 
                     <!-- B. 保母名稱 -->
                     <h2 class="mb-2" th:text="${sitter.sitterName}">保母名稱</h2>
 
-                    <div class="d-flex justify-center align-center mb-3 text-warning">
+                    <!-- <div class="d-flex justify-center align-center mb-3 text-warning">
                         <i class="fas fa-star"></i>
                         <span class="ms-1 fw-bold"
                             th:text="${sitter.sitterStarCount != null ? sitter.sitterStarCount : '0.0'}">5.0</span>
                         <span class="text-muted ms-1"
                             th:text="'(' + (${sitter.sitterRatingCount != null ? sitter.sitterRatingCount : 0}) + ' 則評價)'">(10
                             則評價)</span>
-                    </div>
+                    </div> -->
 
-                    <p class="text-muted" th:if="${sitter.sitterAdd}" th:text="'📍 ' + ${sitter.sitterAdd}">台北市大安區</p>
+                    <!-- <p class="text-muted" th:if="${sitter.sitterAdd}" th:text="'📍 ' + ${sitter.sitterAdd}">台北市大安區</p> -->
                 </div>
             </div>
 
             <!-- 右側：詳細資訊 -->
             <div class="col-md-8">
 
-                <!-- C & D. 服務種類與價格 -->
+                <!-- C. 服務對象 (寵物種類與體型) -->
                 <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-hand-holding-heart"></i> 服務項目</h3>
-                    <div th:if="${services != null and !services.isEmpty()}">
-                        <div class="service-item" th:each="srv : ${services}">
-                            <div>
-                                <!-- [FIX] VO 無 serviceName，暫時顯示 ID 或 switch 映射 -->
-                                <strong th:switch="${srv.serviceItemId}">
-                                    <span th:case="1">到府照顧</span>
-                                    <span th:case="2">遛狗服務</span>
-                                    <span th:case="3">家庭寄宿</span>
-                                    <span th:case="4">洗澡美容</span>
-                                    <span th:case="*">其他服務 (ID:[[${srv.serviceItemId}]])</span>
-                                </strong>
-                                <!-- [FIX] VO 無 serviceDesc，顯示固定文字 -->
-                                <p class="text-muted mb-0 small">專業貼心服務</p>
-                            </div>
-                            <!-- [FIX] 屬性名稱是 defaultPrice -->
-                            <span class="price-text" th:text="'$' + ${srv.defaultPrice}">$500</span>
+                    <h3 class="section-title"><i class="fas fa-paw"></i> 服務對象</h3>
+                    <div th:if="${petTypes != null and !petTypes.isEmpty()}">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr class="text-center">
+                                        <th style="width: 25%; padding: 1rem;">服務項目</th>
+                                        <th style="width: 25%; padding: 1rem;">寵物種類</th>
+                                        <th style="width: 25%; padding: 1rem;">體型</th>
+                                        <th style="width: 25%; padding: 1rem;">價格</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="pt : ${petTypes}" class="text-center align-middle">
+                                        <!-- 服務項目 -->
+                                        <td style="padding: 1rem;">
+                                            <span class="badge bg-secondary"
+                                                style="font-size: 0.95rem; padding: 0.5em 1em;"
+                                                th:text="${serviceNameMap.get(pt.serviceItemId) != null ? serviceNameMap.get(pt.serviceItemId) : '項目 ' + pt.serviceItemId}">
+                                                服務項目
+                                            </span>
+                                        </td>
+
+                                        <!-- 種類 -->
+                                        <td style="padding: 1rem;">
+                                            <span th:switch="${pt.typeId}"
+                                                class="badge rounded-pill bg-light text-dark border"
+                                                style="font-size: 0.95rem; padding: 0.5em 1em;">
+                                                <i class="fas"
+                                                    th:classappend="${pt.typeId == 1} ? 'fa-dog' : 'fa-cat'"></i>
+                                                <span th:case="1">狗</span>
+                                                <span th:case="2">貓</span>
+                                            </span>
+                                        </td>
+
+                                        <!-- 體型 -->
+                                        <td style="padding: 1rem;">
+                                            <span th:switch="${pt.sizeId}" style="font-size: 1rem;">
+                                                <span th:case="1">小型</span>
+                                                <span th:case="2">中型</span>
+                                                <span th:case="3">大型</span>
+                                                <span th:case="*">不限</span>
+                                            </span>
+                                        </td>
+
+                                        <!-- 價格 -->
+                                        <td style="padding: 1rem;">
+                                            <span class="text-danger fw-bold" style="font-size: 1.1rem;"
+                                                th:text="${servicePriceMap.get(pt.serviceItemId) != null ? '$' + servicePriceMap.get(pt.serviceItemId) : '另洽'}">
+                                                $500
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div th:if="${services == null or services.isEmpty()}" class="text-center text-muted">
-                        暫無設定服務項目
+                    <div th:if="${petTypes == null or petTypes.isEmpty()}" class="text-center text-muted">
+                        未設定服務對象與價格
                     </div>
                 </div>
 
@@ -181,21 +221,19 @@
                     </div>
                 </div>
 
-                <!-- F. 歷史評價 -->
-                <div class="section-card">
+                <!-- F. 歷史評價 (暫時隱藏) -->
+                <!-- <div class="section-card">
                     <h3 class="section-title"><i class="fas fa-comments"></i> 歷史評價</h3>
 
                     <div th:if="${reviews != null and !reviews.isEmpty()}">
                         <div class="review-card" th:each="review : ${reviews}">
                             <div class="review-header">
-                                <!-- 假設 bookingOrder 中有 member 關聯，這裡簡化顯示 -->
                                 <strong>會員 <span th:text="${review.memId}">ID</span></strong>
                                 <div class="text-warning" th:if="${review.sitterRating != null}">
                                     <i class="fas fa-star"
                                         th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
                                 </div>
                             </div>
-                            <!-- [FIX] 屬性名稱是 sitterReview -->
                             <p class="mb-0 text-muted" th:text="${review.sitterReview}">很棒的保母！</p>
                             <small class="text-muted"
                                 th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
@@ -206,7 +244,7 @@
                         <i class="far fa-comment-dots fa-2x mb-2"></i>
                         <p>目前尚無評價紀錄</p>
                     </div>
-                </div>
+                </div> -->
 
             </div>
         </div>

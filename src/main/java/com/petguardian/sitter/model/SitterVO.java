@@ -175,4 +175,13 @@ public class SitterVO implements Serializable {
 	public void setServiceAreas(List<ServiceAreaVO> serviceAreas) {
 		this.serviceAreas = serviceAreas;
 	}
+
+	// 方便前端直接呼叫的平均評分計算 (Transient 屬性)
+	public Double getAverageRating() {
+		if (this.sitterRatingCount != null && this.sitterRatingCount > 0) {
+			double avg = (double) this.sitterStarCount / this.sitterRatingCount;
+			return Math.round(avg * 10.0) / 10.0;
+		}
+		return 0.0;
+	}
 }

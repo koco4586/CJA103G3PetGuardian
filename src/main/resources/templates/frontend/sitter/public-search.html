@@ -117,7 +117,7 @@
         <!-- 測試會員提示 -->
         <div class="test-member-badge" th:if="${currentMember}">
             <i class="fas fa-user"></i>
-            目前登入：<span th:text="${currentMember.memName}">測試會員</span>（測試用）
+            目前登入：<span th:text="${currentMember.memName}">測試會員</span>
         </div>
 
         <h1 class="mb-2">🐾 搜尋保姆</h1>
@@ -137,46 +137,37 @@
                     </select>
                 </div>
 
-                <!-- 服務項目篩選（暫時停用，等服務項目模組完成） -->
+                <!-- 服務項目篩選 -->
                 <div class="col-md-4 filter-section">
                     <label class="filter-label">服務項目</label>
                     <select id="serviceFilter" class="form-control" disabled>
-                        <option value="">全部服務（開發中）</option>
+                        <option value="">全部服務 (開發中)</option>
                     </select>
                 </div>
 
-                <!-- 寵物類型篩選 -->
-                <div class="col-md-4 filter-section">
-                    <label class="filter-label">寵物類型</label>
-                    <select id="petTypeFilter" class="form-control">
-                        <option value="">全部類型</option>
-                        <option value="1">狗</option>
-                        <option value="2">貓</option>
-                    </select>
-                </div>
+
 
                 <!-- 價格範圍 -->
-                <div class="col-md-4 filter-section">
+                <!-- <div class="col-md-4 filter-section">
                     <label class="filter-label">價格範圍</label>
                     <select id="priceRangeFilter" class="form-control">
                         <option value="">不限價格</option>
-                        <option value="0-500">$500 以下</option>
-                        <option value="500-1000">$500 - $1,000</option>
-                        <option value="1000-1500">$1,000 - $1,500</option>
-                        <option value="1500-2000">$1,500 - $2,000</option>
-                        <option value="2000-99999">$2,000 以上</option>
+                        <option value="0-300">$300 以下</option>
+                        <option value="300-500">$300 - $500</option>
+                        <option value="500-800">$500 - $800</option>
+                        <option value="800-1000">$800 - $1,000</option>
+                        <option value="1000-99999">$1,000 以上</option>
                     </select>
-                </div>
+                </div> -->
 
                 <!-- 排序選項 -->
-                <div class="col-md-4 filter-section">
+                <!-- <div class="col-md-4 filter-section">
                     <label class="filter-label">排序方式</label>
                     <select id="sortBy" class="form-control">
-                        <option value="rating_desc">評分（高到低）</option>
                         <option value="price_asc">價格（低到高）</option>
                         <option value="price_desc">價格（高到低）</option>
                     </select>
-                </div>
+                </div> -->
 
                 <!-- 搜尋按鈕 -->
                 <div class="col-12 text-center mt-3">
@@ -247,11 +238,10 @@
 
         // 重置按鈕點擊事件
         document.getElementById('resetBtn').addEventListener('click', function () {
-            document.getElementById('citySelect').value = '';
             document.getElementById('serviceFilter').value = '';
-            document.getElementById('petTypeFilter').value = '';
-            document.getElementById('priceRangeFilter').value = '';
-            document.getElementById('sortBy').value = 'rating_desc';
+            // document.getElementById('petTypeFilter').value = ''; // Removed
+            // document.getElementById('priceRangeFilter').value = '';
+            // document.getElementById('sortBy').value = 'rating_desc';
             loadAllSitters();
         });
 
@@ -287,27 +277,27 @@
             // 取得篩選條件
             const city = document.getElementById('citySelect').value;
             const serviceItemId = document.getElementById('serviceFilter').value;
-            const petTypeId = document.getElementById('petTypeFilter').value;
-            const priceRange = document.getElementById('priceRangeFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
+            // const petTypeId = document.getElementById('petTypeFilter').value;
+            // const priceRange = document.getElementById('priceRangeFilter').value;
+            // const sortBy = document.getElementById('sortBy').value;
 
-            // 解析價格範圍
+            // 解析價格範圍 (已註解)
             let minPrice = null, maxPrice = null;
-            if (priceRange) {
+            /* if (priceRange) {
                 const [min, max] = priceRange.split('-').map(Number);
                 minPrice = min;
                 maxPrice = max;
-            }
+            } */
 
             // 建立搜尋條件（不包含 district）
             const criteria = {
                 cityName: city || null,           // 傳送縣市名稱
                 district: null,                   // 不傳送區域名稱
                 serviceItemIds: serviceItemId ? [parseInt(serviceItemId)] : null,
-                petTypeIds: petTypeId ? [parseInt(petTypeId)] : null,
-                minPrice: minPrice,
-                maxPrice: maxPrice,
-                sortBy: sortBy
+                petTypeIds: null, // Removed pet type filter
+                minPrice: null,
+                maxPrice: null,
+                sortBy: null
             };
 
             // 發送搜尋請求
@@ -356,7 +346,7 @@
             card.className = 'sitter-card';
 
             // 計算星星顯示
-            const stars = generateStars(sitter.averageRating || 0);
+            // const stars = generateStars(sitter.averageRating || 0);
 
             // 價格顯示
             const priceText = sitter.minPrice && sitter.maxPrice
@@ -388,7 +378,6 @@
                     <div class="col-md-8">
                         <div class="d-flex align-items-center mb-2">
                              <div class="sitter-name mb-0 me-3">${sitter.sitterName}</div>
-                             <div class="rating-stars" style="font-size: 0.9rem;">${stars}</div>
                         </div>
                         
                         <!-- 寵物類型與地區 -->
@@ -396,13 +385,7 @@
                             ${petTypeBadges}
                             <span class="text-muted ms-2"><i class="fas fa-map-marker-alt"></i> 服務地區: ${location}</span>
                         </div>
-
-                        <!-- 價格 -->
-                        <div>
-                            <span class="price-tag">${priceText}</span>
-                        </div>
-                    </div>
-                    
+                        <br>
                     <div class="col-md-4 text-end">
                         <a href="/public/sitter/detail/${sitter.sitterId}" class="btn btn-primary">
                             <i class="fas fa-info-circle"></i> 查看詳情

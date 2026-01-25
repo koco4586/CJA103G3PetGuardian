@@ -19,6 +19,9 @@ import com.petguardian.sitter.service.SitterApplicationService;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterMemberRepository;
 
+import com.petguardian.common.service.AuthStrategyService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
@@ -33,7 +36,7 @@ import jakarta.validation.Valid;
 public class SitterApplicationController {
 
     @Autowired
-    private com.petguardian.common.service.AuthStrategyService authStrategyService;
+    private AuthStrategyService authStrategyService;
 
     @Autowired
     private SitterApplicationService service;
@@ -52,7 +55,7 @@ public class SitterApplicationController {
      * @return 申請頁面路徑或重導向路徑
      */
     @GetMapping("/apply")
-    public String showApplyForm(jakarta.servlet.http.HttpServletRequest request, HttpSession session, Model model,
+    public String showApplyForm(HttpServletRequest request, HttpSession session, Model model,
             RedirectAttributes redirectAttributes) {
 
         Integer memId = authStrategyService.getCurrentUserId(request);
@@ -68,11 +71,22 @@ public class SitterApplicationController {
             for (SitterApplicationVO app : existingApps) {
                 if (app.getAppStatus() == 0) {
                     model.addAttribute("errorMessage", "您已有待審核的申請，請耐心等候結果");
-                    // 可以考慮在此處 return 轉導或讓前端隱藏按鈕
-                } else if (app.getAppStatus() == 1) {
-                    model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
-                }
+
+                    model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
+
+                    // (測試註解)可以考慮在此處 return 轉導或讓前端隱藏按鈕
+                } // else if (app.getAppStatus() == 1) {
+                  // model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
+
+                // model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
+                // }
+
             }
+
+        }
+        // [NEW] 檢查是否已通過審核 (改用 Service 方法)
+        if (service.isSitter(memId)) {
+            return "redirect:/sitter/dashboard";// 導回保姆個人頁面
         }
 
         // ✅ 準備 Model 屬性
@@ -114,7 +128,7 @@ public class SitterApplicationController {
         model.addAttribute("defaultCity", "台北市");
         model.addAttribute("defaultDistrict", "大安區");
 
-        return "frontend/dashboard-sitter-registration";
+        return "frontend/sitter/dashboard-sitter-registration";
     }
 
     /**
@@ -132,7 +146,7 @@ public class SitterApplicationController {
     public String submitApplication(
             @Valid @ModelAttribute("sitterApplication") SitterApplicationDTO dto,
             BindingResult bindingResult,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
@@ -149,7 +163,7 @@ public class SitterApplicationController {
             if (bindingResult.hasErrors()) {
                 // 重新準備 Model 屬性（因為表單驗證失敗要重新顯示）
                 prepareModelAttributes(request, session, model);
-                return "frontend/dashboard-sitter-registration";
+                return "frontend/sitter/dashboard-sitter-registration";
             }
 
             // 確保 memId 正確
@@ -166,13 +180,13 @@ public class SitterApplicationController {
             // 業務邏輯錯誤 (如:重複申請) -> 保留資料並顯示錯誤
             model.addAttribute("errorMessage", e.getMessage());
             prepareModelAttributes(request, session, model);
-            return "frontend/dashboard-sitter-registration";
+            return "frontend/sitter/dashboard-sitter-registration";
 
         } catch (Exception e) {
             // 其他未預期錯誤 -> 保留資料並顯示錯誤
             model.addAttribute("errorMessage", "系統錯誤，請稍後再試： " + e.getMessage());
             prepareModelAttributes(request, session, model);
-            return "frontend/dashboard-sitter-registration";
+            return "frontend/sitter/dashboard-sitter-registration";
         }
     }
 
@@ -186,7 +200,7 @@ public class SitterApplicationController {
      * @return 申請列表頁面路徑
      */
     @GetMapping("/applications")
-    public String listApplications(jakarta.servlet.http.HttpServletRequest request, HttpSession session, Model model,
+    public String listApplications(HttpServletRequest request, HttpSession session, Model model,
             RedirectAttributes redirectAttributes) {
         // 從 Session 取得當前登入會員 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
@@ -210,7 +224,7 @@ public class SitterApplicationController {
      * @param session HttpSession
      * @param model   Spring Model
      */
-    private void prepareModelAttributes(jakarta.servlet.http.HttpServletRequest request, HttpSession session,
+    private void prepareModelAttributes(HttpServletRequest request, HttpSession session,
             Model model) {
         String memName = authStrategyService.getCurrentUserName(request);
         String memPhone = (String) session.getAttribute("memPhone");
@@ -231,33 +245,22 @@ public class SitterApplicationController {
      * 邏輯：
      * 1. 檢查使用者是否登入 -> 未登入轉 login
      * 2. 檢查使用者是否有「已通過 (Status=1)」的申請紀錄
-     *    - 是 -> 導向到保姆主頁 (sitter-dashboard.html)
-     *    - 否 -> 導向到申請頁面 (sitter/apply)
+     * - 是 -> 導向到保姆主頁 (sitter-dashboard.html)
+     * - 否 -> 導向到申請頁面 (sitter/apply)
      */
     @GetMapping("/hub")
-    public String checkSitterStatus(jakarta.servlet.http.HttpServletRequest request) {
+    public String checkSitterStatus(HttpServletRequest request) {
         // 1. 取得當前會員 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
             return "redirect:/member/login";
         }
 
-        // 2. 查詢該會員是否有「已通過」的保姆資格
-        List<SitterApplicationVO> apps = service.getApplicationsByMember(memId);
-        boolean isSitter = false;
-        
-        for (SitterApplicationVO app : apps) {
-            if (app.getAppStatus() == 1) { // 1 = 已通過
-                isSitter = true;
-                break;
-            }
-        }
-
-        // 3. 根據身分進行分流
-        if (isSitter) {
+        // 2. 查詢該會員是否有「已通過」的保姆資格 (改用 Service 方法)
+        if (service.isSitter(memId)) {
             return "redirect:/sitter/dashboard"; // 前往保姆主頁
         } else {
-            return "redirect:/sitter/apply";     // 前往申請頁面
+            return "redirect:/sitter/apply"; // 前往申請頁面
         }
     }
 }
