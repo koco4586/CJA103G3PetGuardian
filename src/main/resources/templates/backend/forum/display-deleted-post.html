@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pet Guardian - 貼文恢復預覽</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+:root {
+	--primary-color: #ce875be8;
+	--bg-color: #f4f7f6;
+	--text-dark: #2c3e50;
+	--text-muted: #7f8c8d;
+	--white: #ffffff;
+	--success-green: #2ecc71;
+	--shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+	--transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body {
+	background-color: var(--bg-color);
+	color: var(--text-dark);
+	font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+	line-height: 1.6;
+	margin: 0;
+}
+
+.container {
+	max-width: 900px; /* 縮小寬度使其置中感更強 */
+	margin: 0 auto;
+	padding: 40px 20px;
+}
+
+/* 返回按鈕樣式 */
+.btn-back {
+	background-color: var(--white);
+	color: var(--text-dark);
+	padding: 10px 22px;
+	border-radius: 30px;
+	text-decoration: none;
+	font-weight: 600;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+	transition: var(--transition);
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 25px;
+}
+
+.btn-back:hover {
+	background-color: var(--primary-color);
+	color: white;
+	transform: translateX(-5px);
+}
+
+/* 文章主體卡片 */
+.post-card {
+	background: var(--white);
+	border-radius: 20px;
+	padding: 50px; /* 加大內距提升質感 */
+	box-shadow: var(--shadow);
+	margin-bottom: 30px;
+	position: relative;
+	overflow: hidden;
+}
+
+/* 頂部裝飾條 */
+.post-card::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 8px;
+	background: repeating-linear-gradient(45deg, #e74c3c, #e74c3c 10px, #f1c40f 10px, #f1c40f 20px); /* 警示刪除感 */
+}
+
+.post-title {
+	font-size: 2.2rem;
+	font-weight: 800;
+	margin: 0 0 20px 0;
+	color: var(--text-dark);
+}
+
+.post-meta {
+	display: flex;
+	gap: 25px;
+	padding-bottom: 20px;
+	margin-bottom: 30px;
+	border-bottom: 1px solid #edf2f7;
+	color: var(--text-muted);
+	font-size: 0.95rem;
+}
+
+.post-main-text {
+	font-size: 1.15rem;
+	color: #4a5568;
+	line-height: 2;
+	white-space: pre-wrap;
+	margin-bottom: 40px;
+}
+
+/* 圖片佈局 */
+.post-img-box {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: 20px;
+}
+
+.post-img-box img {
+	width: 100%;
+	height: 220px;
+	object-fit: cover;
+	border-radius: 15px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+	transition: var(--transition);
+}
+
+.post-img-box img:hover {
+	transform: scale(1.02);
+}
+
+/* 底部按鈕區塊 */
+.action-area {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+}
+
+.btn-recover {
+	background-color: var(--success-green);
+	color: white;
+	padding: 16px 60px; /* 加大按鈕 */
+	border-radius: 12px;
+	border: none;
+	font-weight: 800;
+	font-size: 1.1rem;
+	cursor: pointer;
+	transition: var(--transition);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+}
+
+.btn-recover:hover {
+	background-color: #27ae60;
+	transform: translateY(-3px);
+	box-shadow: 0 10px 25px rgba(46, 204, 113, 0.4);
+}
+
+.btn-recover:active {
+	transform: translateY(-1px);
+}
+</style>
+</head>
+<body>
+
+	<div class="container">
+		<a href="javascript:history.back()" class="btn-back"> 
+			<i class="fas fa-chevron-left"></i> 返回列表
+		</a>
+
+		<div class="post-card">
+			<h1 class="post-title" th:text="${forumPostVO.postTitle}">貼文標題</h1>
+
+			<div class="post-meta">
+				<span><i class="far fa-user"></i> 作者 ID: <b th:text="${forumPostVO.member.memId}"></b></span> 
+				<span><i class="fas fa-fingerprint"></i> 貼文 ID: [[${forumPostVO.postId}]]</span>
+				<span style="color: #e74c3c;"><i class="fas fa-eye-slash"></i> 當前狀態：已刪除</span>
+			</div>
+
+			<div class="post-main-text" th:text="${forumPostVO.postContent}">內容載入中...</div>
+
+			<div class="post-img-box" th:if="${not #lists.isEmpty(picsId)}">
+				<th:block th:each="picId : ${picsId}">
+					<img th:src="@{/forum/get-pic-id-for-pic(picId=${picId})}" alt="貼文照片">
+				</th:block>
+			</div>
+		</div>
+
+		<div class="action-area">
+			<form th:action="@{/admin/forum/get-one-deleted-post-to-recover}" method="post">
+				<input type="hidden" name="postId" th:value="${forumPostVO.postId}">
+				
+				<button type="submit" class="btn-recover">
+					<i class="fas fa-undo-alt"></i> 恢復貼文
+				</button>
+			</form>
+		</div>
+	</div>
+
+</body>
+</html>
