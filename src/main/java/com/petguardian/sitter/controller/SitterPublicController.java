@@ -233,8 +233,8 @@ public class SitterPublicController {
             }
 
             // 歷史評價 (僅查詢有評分的訂單)
-            List<BookingOrderVO> reviews = bookingOrderRepository
-                    .findBySitterIdAndSitterRatingNotNullOrderByEndTimeDesc(sitterId);
+            // List<BookingOrderVO> reviews = bookingOrderRepository
+            // .findBySitterIdAndSitterRatingNotNullOrderByEndTimeDesc(sitterId);
 
             // 3. 處理會員登入資訊 (保留原有邏輯)
             Integer memId = authStrategyService.getCurrentUserId(request);
@@ -253,7 +253,7 @@ public class SitterPublicController {
             model.addAttribute("petTypes", petTypes); // [NEW] 傳遞服務對象
             model.addAttribute("serviceNameMap", serviceNameMap); // [NEW] 傳遞服務名稱對照表
             model.addAttribute("servicePriceMap", servicePriceMap); // [NEW] 傳遞服務價格對照表
-            model.addAttribute("reviews", reviews);
+            // model.addAttribute("reviews", reviews);
 
             return "frontend/sitter/sitter-detail";
 

@@ -164,7 +164,7 @@
                 <div class="col-md-4 filter-section">
                     <label class="filter-label">排序方式</label>
                     <select id="sortBy" class="form-control">
-                        <option value="rating_desc">評分（高到低）</option>
+                        <!-- <option value="rating_desc">評分（高到低）</option> -->
                         <option value="price_asc">價格（低到高）</option>
                         <option value="price_desc">價格（高到低）</option>
                     </select>
@@ -348,7 +348,7 @@
             card.className = 'sitter-card';
 
             // 計算星星顯示
-            const stars = generateStars(sitter.averageRating || 0);
+            // const stars = generateStars(sitter.averageRating || 0);
 
             // 價格顯示
             const priceText = sitter.minPrice && sitter.maxPrice
@@ -380,7 +380,6 @@
                     <div class="col-md-8">
                         <div class="d-flex align-items-center mb-2">
                              <div class="sitter-name mb-0 me-3">${sitter.sitterName}</div>
-                             <div class="rating-stars" style="font-size: 0.9rem;">${stars}</div>
                         </div>
                         
                         <!-- 寵物類型與地區 -->

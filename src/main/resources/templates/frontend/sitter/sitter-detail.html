@@ -125,14 +125,14 @@
                     <!-- B. 保母名稱 -->
                     <h2 class="mb-2" th:text="${sitter.sitterName}">保母名稱</h2>
 
-                    <div class="d-flex justify-center align-center mb-3 text-warning">
+                    <!-- <div class="d-flex justify-center align-center mb-3 text-warning">
                         <i class="fas fa-star"></i>
                         <span class="ms-1 fw-bold"
                             th:text="${sitter.sitterStarCount != null ? sitter.sitterStarCount : '0.0'}">5.0</span>
                         <span class="text-muted ms-1"
                             th:text="'(' + (${sitter.sitterRatingCount != null ? sitter.sitterRatingCount : 0}) + ' 則評價)'">(10
                             則評價)</span>
-                    </div>
+                    </div> -->
 
                     <p class="text-muted" th:if="${sitter.sitterAdd}" th:text="'📍 ' + ${sitter.sitterAdd}">台北市大安區</p>
                 </div>
@@ -219,21 +219,19 @@
                     </div>
                 </div>
 
-                <!-- F. 歷史評價 -->
-                <div class="section-card">
+                <!-- F. 歷史評價 (暫時隱藏) -->
+                <!-- <div class="section-card">
                     <h3 class="section-title"><i class="fas fa-comments"></i> 歷史評價</h3>
 
                     <div th:if="${reviews != null and !reviews.isEmpty()}">
                         <div class="review-card" th:each="review : ${reviews}">
                             <div class="review-header">
-                                <!-- 假設 bookingOrder 中有 member 關聯，這裡簡化顯示 -->
                                 <strong>會員 <span th:text="${review.memId}">ID</span></strong>
                                 <div class="text-warning" th:if="${review.sitterRating != null}">
                                     <i class="fas fa-star"
                                         th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
                                 </div>
                             </div>
-                            <!-- [FIX] 屬性名稱是 sitterReview -->
                             <p class="mb-0 text-muted" th:text="${review.sitterReview}">很棒的保母！</p>
                             <small class="text-muted"
                                 th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
@@ -244,7 +242,7 @@
                         <i class="far fa-comment-dots fa-2x mb-2"></i>
                         <p>目前尚無評價紀錄</p>
                     </div>
-                </div>
+                </div> -->
 
             </div>
         </div>
