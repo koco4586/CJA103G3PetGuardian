@@ -19,6 +19,8 @@ import com.petguardian.sitter.service.SitterApplicationService;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterMemberRepository;
 
+import com.petguardian.common.service.AuthStrategyService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -34,7 +36,7 @@ import jakarta.validation.Valid;
 public class SitterApplicationController {
 
     @Autowired
-    private com.petguardian.common.service.AuthStrategyService authStrategyService;
+    private AuthStrategyService authStrategyService;
 
     @Autowired
     private SitterApplicationService service;
@@ -72,11 +74,22 @@ public class SitterApplicationController {
 
                     model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
 
-                    // 可以考慮在此處 return 轉導或讓前端隱藏按鈕
-                } else if (app.getAppStatus() == 1) {
-                    model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
+                    // (測試註解)可以考慮在此處 return 轉導或讓前端隱藏按鈕
+                } // else if (app.getAppStatus() == 1) {
+                  // model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
 
-                    model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
+                // model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
+                // }
+
+            }
+
+        }
+        // [NEW] 檢查是否已通過審核
+        if (memId != null) {
+            List<SitterApplicationVO> existingApps = service.getApplicationsByMember(memId);
+            for (SitterApplicationVO app : existingApps) { // 檢查
+                if (app.getAppStatus() == 1) { // 已通過審核 1=保姆身分
+                    return "redirect:/sitter/dashboard";// 導回保姆個人頁面
                 }
             }
         }
