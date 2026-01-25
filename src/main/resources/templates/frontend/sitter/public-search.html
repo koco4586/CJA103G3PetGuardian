@@ -137,18 +137,18 @@
                     </select>
                 </div>
 
-                <!-- 服務項目篩選（暫時停用，等服務項目模組完成） -->
+                <!-- 服務項目篩選 -->
                 <div class="col-md-4 filter-section">
                     <label class="filter-label">服務項目</label>
                     <select id="serviceFilter" class="form-control" disabled>
-                        <option value="">全部服務（開發中）</option>
+                        <option value="">全部服務 (開發中)</option>
                     </select>
                 </div>
 
 
 
                 <!-- 價格範圍 -->
-                <div class="col-md-4 filter-section">
+                <!-- <div class="col-md-4 filter-section">
                     <label class="filter-label">價格範圍</label>
                     <select id="priceRangeFilter" class="form-control">
                         <option value="">不限價格</option>
@@ -158,17 +158,16 @@
                         <option value="800-1000">$800 - $1,000</option>
                         <option value="1000-99999">$1,000 以上</option>
                     </select>
-                </div>
+                </div> -->
 
                 <!-- 排序選項 -->
-                <div class="col-md-4 filter-section">
+                <!-- <div class="col-md-4 filter-section">
                     <label class="filter-label">排序方式</label>
                     <select id="sortBy" class="form-control">
-                        <!-- <option value="rating_desc">評分（高到低）</option> -->
                         <option value="price_asc">價格（低到高）</option>
                         <option value="price_desc">價格（高到低）</option>
                     </select>
-                </div>
+                </div> -->
 
                 <!-- 搜尋按鈕 -->
                 <div class="col-12 text-center mt-3">
@@ -239,11 +238,10 @@
 
         // 重置按鈕點擊事件
         document.getElementById('resetBtn').addEventListener('click', function () {
-            document.getElementById('citySelect').value = '';
             document.getElementById('serviceFilter').value = '';
             // document.getElementById('petTypeFilter').value = ''; // Removed
-            document.getElementById('priceRangeFilter').value = '';
-            document.getElementById('sortBy').value = 'rating_desc';
+            // document.getElementById('priceRangeFilter').value = '';
+            // document.getElementById('sortBy').value = 'rating_desc';
             loadAllSitters();
         });
 
@@ -280,16 +278,16 @@
             const city = document.getElementById('citySelect').value;
             const serviceItemId = document.getElementById('serviceFilter').value;
             // const petTypeId = document.getElementById('petTypeFilter').value;
-            const priceRange = document.getElementById('priceRangeFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
+            // const priceRange = document.getElementById('priceRangeFilter').value;
+            // const sortBy = document.getElementById('sortBy').value;
 
-            // 解析價格範圍
+            // 解析價格範圍 (已註解)
             let minPrice = null, maxPrice = null;
-            if (priceRange) {
+            /* if (priceRange) {
                 const [min, max] = priceRange.split('-').map(Number);
                 minPrice = min;
                 maxPrice = max;
-            }
+            } */
 
             // 建立搜尋條件（不包含 district）
             const criteria = {
@@ -297,9 +295,9 @@
                 district: null,                   // 不傳送區域名稱
                 serviceItemIds: serviceItemId ? [parseInt(serviceItemId)] : null,
                 petTypeIds: null, // Removed pet type filter
-                minPrice: minPrice,
-                maxPrice: maxPrice,
-                sortBy: sortBy
+                minPrice: null,
+                maxPrice: null,
+                sortBy: null
             };
 
             // 發送搜尋請求
