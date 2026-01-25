@@ -120,7 +120,9 @@
             <div class="col-md-4">
                 <div class="profile-card">
                     <!-- 預設頭像或保母上傳的頭像 -->
-                    <img src="/images/frontend/default-avatar.png" class="profile-avatar" alt="保母頭像">
+                    <!-- 預設頭像或保母上傳的頭像 -->
+                    <img th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
+                        class="profile-avatar" alt="保母頭像">
 
                     <!-- B. 保母名稱 -->
                     <h2 class="mb-2" th:text="${sitter.sitterName}">保母名稱</h2>
@@ -134,7 +136,7 @@
                             則評價)</span>
                     </div> -->
 
-                    <p class="text-muted" th:if="${sitter.sitterAdd}" th:text="'📍 ' + ${sitter.sitterAdd}">台北市大安區</p>
+                    <!-- <p class="text-muted" th:if="${sitter.sitterAdd}" th:text="'📍 ' + ${sitter.sitterAdd}">台北市大安區</p> -->
                 </div>
             </div>
 
