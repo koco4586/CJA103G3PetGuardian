@@ -28,20 +28,12 @@ import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.service.model.ServiceAreaVO;
 import com.petguardian.booking.model.BookingOrderVO;
+import com.petguardian.common.service.AuthStrategyService;
+import com.petguardian.area.model.AreaRepository;
 
-import com.petguardian.petsitter.service.PetSitterService;
-import com.petguardian.service.service.ServiceAreaService;
-import com.petguardian.booking.model.BookingOrderRepository;
-import com.petguardian.petsitter.model.PetSitterServiceVO;
-import com.petguardian.service.model.ServiceAreaVO;
-import com.petguardian.booking.model.BookingOrderVO;
-
-import com.petguardian.petsitter.service.PetSitterService;
-import com.petguardian.service.service.ServiceAreaService;
-import com.petguardian.booking.model.BookingOrderRepository;
-import com.petguardian.petsitter.model.PetSitterServiceVO;
-import com.petguardian.service.model.ServiceAreaVO;
-import com.petguardian.booking.model.BookingOrderVO;
+// [NEW] 引入服務對象相關 Repository 與 VO
+import com.petguardian.petsitter.model.PetSitterServicePetTypeRepository;
+import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -60,10 +52,10 @@ public class SitterPublicController {
     private SitterMemberRepository sitterMemberRepository;
 
     @Autowired
-    private com.petguardian.common.service.AuthStrategyService authStrategyService;
+    private AuthStrategyService authStrategyService;
 
     @Autowired
-    private com.petguardian.area.model.AreaRepository areaRepository;
+    private AreaRepository areaRepository;
 
     @Autowired
     private PetSitterService petSitterService;
@@ -73,6 +65,10 @@ public class SitterPublicController {
 
     @Autowired
     private BookingOrderRepository bookingOrderRepository;
+
+    // [NEW] 注入服務對象 Repository
+    @Autowired
+    private PetSitterServicePetTypeRepository petSitterServicePetTypeRepository;
 
     /**
      * 顯示公開的保姆搜尋頁面
@@ -215,6 +211,10 @@ public class SitterPublicController {
             List<PetSitterServiceVO> services = petSitterService.getServicesBySitter(sitterId);
             // 服務地區
             List<ServiceAreaVO> serviceAreas = serviceAreaService.getServiceAreasBySitter(sitterId);
+
+            // [NEW] 服務對象 (寵物種類與體型)
+            List<PetSitterServicePetTypeVO> petTypes = petSitterServicePetTypeRepository.findBySitterId(sitterId);
+
             // 歷史評價 (僅查詢有評分的訂單)
             List<BookingOrderVO> reviews = bookingOrderRepository
                     .findBySitterIdAndSitterRatingNotNullOrderByEndTimeDesc(sitterId);
@@ -233,6 +233,7 @@ public class SitterPublicController {
             model.addAttribute("sitter", sitter);
             model.addAttribute("services", services);
             model.addAttribute("serviceAreas", serviceAreas);
+            model.addAttribute("petTypes", petTypes); // [NEW] 傳遞服務對象
             model.addAttribute("reviews", reviews);
 
             return "frontend/sitter/sitter-detail";

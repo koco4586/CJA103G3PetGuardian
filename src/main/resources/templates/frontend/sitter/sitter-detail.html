@@ -141,7 +141,56 @@
             <!-- 右側：詳細資訊 -->
             <div class="col-md-8">
 
-                <!-- C & D. 服務種類與價格 -->
+                <!-- C. 服務對象 (寵物種類與體型) -->
+                <div class="section-card">
+                    <h3 class="section-title"><i class="fas fa-paw"></i> 服務對象</h3>
+                    <div th:if="${petTypes != null and !petTypes.isEmpty()}">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th>寵物種類</th>
+                                        <th>接受體型</th>
+                                        <th>服務項目</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="pt : ${petTypes}">
+                                        <!-- 種類 -->
+                                        <td>
+                                            <span th:switch="${pt.typeId}"
+                                                class="badge rounded-pill bg-light text-dark border">
+                                                <i class="fas"
+                                                    th:classappend="${pt.typeId == 1} ? 'fa-dog' : 'fa-cat'"></i>
+                                                <span th:case="1">狗</span>
+                                                <span th:case="2">貓</span>
+                                            </span>
+                                        </td>
+
+                                        <!-- 體型 -->
+                                        <td>
+                                            <span th:switch="${pt.sizeId}">
+                                                <span th:case="1">小型</span>
+                                                <span th:case="2">中型</span>
+                                                <span th:case="3">大型</span>
+                                            </span>
+                                        </td>
+
+                                        <!-- 對應的服務項目ID -->
+                                        <td>
+                                            <small class="text-muted" th:text="'項目 ID: ' + ${pt.serviceItemId}"></small>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div th:if="${petTypes == null or petTypes.isEmpty()}" class="text-center text-muted">
+                        未設定服務對象
+                    </div>
+                </div>
+
+                <!-- D & E. 服務種類與價格 -->
                 <div class="section-card">
                     <h3 class="section-title"><i class="fas fa-hand-holding-heart"></i> 服務項目</h3>
                     <div th:if="${services != null and !services.isEmpty()}">
