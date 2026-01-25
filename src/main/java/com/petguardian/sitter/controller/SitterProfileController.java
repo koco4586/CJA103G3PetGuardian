@@ -397,55 +397,13 @@ public class SitterProfileController {
                 return response;
             }
 
-            // 3. 解析前端傳來的資料
-            // 注意：service_time 只能存 24 小時，但前端傳來的是一週七天的資料
-            // 策略：如果任何一天的某個時段是「可預約」，就設為可預約
+            // 3. 解析前端傳來的資料 (邏輯移至 Service)
             @SuppressWarnings("unchecked")
             Map<String, Map<String, String>> scheduleData = (Map<String, Map<String, String>>) requestData
                     .get("scheduleData");
 
-            // 4. 建立 24 小時的狀態字串（合併七天的資料）
-            System.out.println("=== 解析前端資料 (Daily Mode) ===");
-            System.out.println("scheduleData keys: " + scheduleData.keySet());
-
-            char[] serviceTimeArray = new char[24];
-            // 初始化為全部不可預約
-            for (int i = 0; i < 24; i++) {
-                serviceTimeArray[i] = '0';
-            }
-
-            // 遍歷七天的資料
-            for (int day = 0; day < 7; day++) {
-                String dayKey = String.valueOf(day);
-                if (scheduleData.containsKey(dayKey)) {
-                    Map<String, String> daySchedule = scheduleData.get(dayKey);
-
-                    for (int hour = 0; hour < 24; hour++) {
-                        String hourStr = String.valueOf(hour);
-                        if (daySchedule.containsKey(hourStr)) {
-                            String status = daySchedule.get(hourStr);
-                            // 0: 可預約
-                            // service_time: 0=不可預約, 1=可預約
-                            if (status.equals("0")) {
-                                // 只要任何一天這個時段是可預約，就設為可預約
-                                serviceTimeArray[hour] = '1';
-                            }
-                        }
-                    }
-                }
-            }
-
-            String serviceTime = new String(serviceTimeArray);
-
-            // Debug: 印出要儲存的資料
-            System.out.println("=== 儲存行程 Debug ===");
-            System.out.println("memId: " + memId);
-            System.out.println("sitterId: " + sitter.getSitterId());
-            System.out.println("serviceTime: " + serviceTime);
-            System.out.println("=====================");
-
-            // 5. 更新資料庫
-            sitterService.updateServiceTime(sitter.getSitterId(), serviceTime);
+            // 4. Update via Service
+            sitterService.updateWeeklySchedule(sitter.getSitterId(), scheduleData);
 
             response.put("success", true);
             response.put("message", "儲存成功");

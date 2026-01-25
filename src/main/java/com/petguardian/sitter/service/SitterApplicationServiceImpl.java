@@ -186,4 +186,25 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
     public List<SitterApplicationVO> getAllApplications() {
         return repository.findAll();
     }
+
+    /**
+     * 檢查會員是否已經擁有有效的保姆資格 (即通過審核)
+     * 
+     * @param memId 會員編號
+     * @return true 若已是保姆
+     */
+    @Override
+    public boolean isSitter(Integer memId) {
+        if (memId == null) {
+            return false;
+        }
+
+        List<SitterApplicationVO> applications = repository.findByMemId(memId);
+        for (SitterApplicationVO app : applications) {
+            if (app.getAppStatus() == 1) { // 1 = 已通過
+                return true;
+            }
+        }
+        return false;
+    }
 }

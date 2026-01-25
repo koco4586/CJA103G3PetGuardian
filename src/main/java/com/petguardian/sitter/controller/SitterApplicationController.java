@@ -84,14 +84,9 @@ public class SitterApplicationController {
             }
 
         }
-        // [NEW] 檢查是否已通過審核
-        if (memId != null) {
-            List<SitterApplicationVO> existingApps = service.getApplicationsByMember(memId);
-            for (SitterApplicationVO app : existingApps) { // 檢查
-                if (app.getAppStatus() == 1) { // 已通過審核 1=保姆身分
-                    return "redirect:/sitter/dashboard";// 導回保姆個人頁面
-                }
-            }
+        // [NEW] 檢查是否已通過審核 (改用 Service 方法)
+        if (service.isSitter(memId)) {
+            return "redirect:/sitter/dashboard";// 導回保姆個人頁面
         }
 
         // ✅ 準備 Model 屬性
@@ -261,19 +256,8 @@ public class SitterApplicationController {
             return "redirect:/member/login";
         }
 
-        // 2. 查詢該會員是否有「已通過」的保姆資格
-        List<SitterApplicationVO> apps = service.getApplicationsByMember(memId);
-        boolean isSitter = false;
-
-        for (SitterApplicationVO app : apps) {
-            if (app.getAppStatus() == 1) { // 1 = 已通過
-                isSitter = true;
-                break;
-            }
-        }
-
-        // 3. 根據身分進行分流
-        if (isSitter) {
+        // 2. 查詢該會員是否有「已通過」的保姆資格 (改用 Service 方法)
+        if (service.isSitter(memId)) {
             return "redirect:/sitter/dashboard"; // 前往保姆主頁
         } else {
             return "redirect:/sitter/apply"; // 前往申請頁面

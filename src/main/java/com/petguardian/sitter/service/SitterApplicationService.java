@@ -55,4 +55,12 @@ public interface SitterApplicationService {
      * @return List<SitterApplicationVO>
      */
     List<SitterApplicationVO> getAllApplications();
+
+    /**
+     * 檢查會員是否已經擁有有效的保姆資格 (即通過審核)
+     * 
+     * @param memId 會員編號
+     * @return true 若已是保姆
+     */
+    boolean isSitter(Integer memId);
 }
