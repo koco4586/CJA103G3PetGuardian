@@ -1,99 +1,186 @@
-<!doctype html>
-<html lang="zh-Hant">
-
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pet Guardian - 評價管理</title>
+    <meta charset="UTF-8">
+    <title>檢舉申訴中心 | PetGuardian</title>
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../static/css/backend/style.css">
-    <link rel="stylesheet" href="../../static/css/backend/reviews.css">
+
+    <style>
+        .report-main { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        
+        /* 頁籤切換 */
+        .tab-container { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #eee; }
+        .tab-btn { 
+            padding: 12px 25px; border: none; background: none; cursor: pointer;
+            font-size: 1rem; color: #666; position: relative;
+        }
+        .tab-btn.active { color: #ff6b6b; font-weight: bold; }
+        .tab-btn.active::after {
+            content: ''; position: absolute; bottom: -2px; left: 0; width: 100%;
+            height: 3px; background: #ff6b6b;
+        }
+
+        /* 隱藏區塊 */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        /* 表格樣式 (別人的風格) */
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: #555; }
+        td { padding: 15px 12px; border-bottom: 1px solid #f5f5f5; vertical-align: top; }
+        .source-tag { background: #eef2f7; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; color: #5a6d90; }
+        
+        /* 表單樣式 (你的風格) */
+        .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .type-option { 
+            flex: 1; padding: 15px; border: 1px solid #eee; border-radius: 10px; 
+            text-align: center; cursor: pointer; transition: 0.3s;
+        }
+        .type-option.active { background: #fff5f5; border-color: #ff6b6b; color: #ff6b6b; }
+        
+        .image-upload-wrapper { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .upload-btn-box { 
+            width: 100px; height: 100px; border: 2px dashed #ddd; border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #999; cursor: pointer;
+        }
+        .preview-img-box { position: relative; width: 100px; height: 100px; }
+        .preview-img-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .remove-img { 
+            position: absolute; top: -5px; right: -5px; background: #ff4d4d; 
+            color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer;
+        }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; }
+        .btn-submit { background: #ff6b6b; color: white; border: none; padding: 12px 30px; border-radius: 25px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 20px; }
+    </style>
 </head>
-
 <body>
-    <script src="../../static/js/backend/sidebar.js"></script>
 
-    <div class="main-content">
-        <header>
-            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
-                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
-            <div>
-                <h1>評價檢舉管理</h1>
-                <div class="sub">處理全站（保母/商城）違規評價申訴</div>
-            </div>
-        </header>
-
-        <section>
-            <div class="tab-container">
-                <button class="tab-btn active">
-                    <i class="fa-solid fa-gavel"></i> 待處理檢舉件
-                </button>
-                <button class="tab-btn" style="opacity: 0.5; cursor: not-allowed;">
-                    <i class="fa-solid fa-circle-check"></i> 已結案紀錄
-                </button>
-            </div>
-
-            <div class="card">
-                <h3>檢舉審核列表</h3>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>來源</th>
-                            <th>被檢舉評價內容</th>
-                            <th>評價人 / 評分</th>
-                            <th>檢舉原因</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <span class="source-tag">保母預約</span><br>
-                                <strong>Linda Liu</strong>
-                            </td>
-                            <td>
-                                <div style="font-style: italic; color: #444;">「這個人根本不愛狗，態度超級差，大家千萬別上當...」</div>
-                                <div style="color:#999; font-size:0.8rem; margin-top:5px;">評價 ID: R-8821</div>
-                            </td>
-                            <td>
-                                王小明<br>
-                                <i class="fa-solid fa-star" style="color:gold"></i> 1.0
-                            </td>
-                            <td><span class="report-reason">人身攻擊 / 言語騷擾</span></td>
-                            <td>
-                                <button class="btn" style="background:#d9534f;"
-                                    onclick="confirm('確認刪除此評價並懲處用戶？')">刪除</button>
-                                <button class="btn ghost" onclick="alert('已駁回檢舉')">駁回</button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                <span class="source-tag">二手商城</span><br>
-                                <strong>自動餵食器</strong>
-                            </td>
-                            <td>
-                                <div style="font-style: italic; color: #444;">「想買更便宜的加我微信: pet-keeper123」</div>
-                                <div style="color:#999; font-size:0.8rem; margin-top:5px;">評價 ID: R-9012</div>
-                            </td>
-                            <td>
-                                帳號: Unknown<br>
-                                <i class="fa-solid fa-star" style="color:gold"></i> 5.0
-                            </td>
-                            <td><span class="report-reason">垃圾訊息 / 外部連結</span></td>
-                            <td>
-                                <button class="btn" style="background:#d9534f;">刪除</button>
-                                <button class="btn ghost">駁回</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+<div class="report-main">
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="showTab('audit', this)">
+            <i class="fa-solid fa-gavel"></i> 待審核檢舉
+        </button>
+        <button class="tab-btn" onclick="showTab('create', this)">
+            <i class="fa-solid fa-pen-to-square"></i> 發起新申訴
+        </button>
     </div>
 
-</body>
+    <section id="audit-section" class="content-section active">
+        <div class="card">
+            <h3>檢舉待處理清單</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>來源</th>
+                        <th>被檢舉內容</th>
+                        <th>檢舉原因</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="source-tag">保母服務</span><br><strong>保母: 堅果</strong></td>
+                        <td><div style="font-size: 0.9rem;">訂單號: RSV20240501001</div></td>
+                        <td>人身攻擊</td>
+                        <td>
+                            <button class="btn" style="color: #d9534f;">刪除</button>
+                            <button class="btn ghost">駁回</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
+    <section id="create-section" class="content-section">
+        <div class="card">
+            <h3>填寫申訴資訊</h3>
+            <div class="type-selector">
+                <div class="type-option active" onclick="switchType('SITTER', this)">
+                    <i class="fas fa-user-shield"></i><br>檢舉保母
+                </div>
+                <div class="type-option" onclick="switchType('RESERVATION', this)">
+                    <i class="fas fa-calendar-check"></i><br>檢舉預約訂單
+                </div>
+                <div class="type-option" onclick="switchType('SHOP', this)">
+                    <i class="fas fa-shopping-cart"></i><br>檢舉商城賣家
+                </div>
+            </div>
+
+            <form id="reportForm">
+                <input type="hidden" id="reportType" value="SITTER">
+                <div style="margin-bottom: 15px;">
+                    <label id="targetLabel">被檢舉保母名稱：</label>
+                    <input type="text" class="form-control" id="targetInfo" value="保母：堅果" readonly>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>檢舉詳細內容：</label>
+                    <textarea class="form-control" rows="5" placeholder="請描述發生經過..." required></textarea>
+                </div>
+                <div>
+                    <label>證據照片 (最多3張)：</label>
+                    <div class="image-upload-wrapper">
+                        <div id="previewArea" style="display: flex; gap: 10px;"></div>
+                        <div class="upload-btn-box" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-camera fa-lg"></i>
+                            <span style="font-size: 0.7rem; margin-top:5px;">上傳圖片</span>
+                        </div>
+                        <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">送出檢舉申訴</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<script>
+    // 頁籤切換邏輯
+    function showTab(tabName, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabName + '-section').classList.add('active');
+    }
+
+    // 檢舉類別切換
+    function switchType(type, element) {
+        document.querySelectorAll('.type-option').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('reportType').value = type;
+        const label = document.getElementById('targetLabel');
+        const info = document.getElementById('targetInfo');
+
+        if(type === 'SITTER') { label.innerText = "被檢舉保母名稱："; info.value = "保母：堅果"; }
+        else if(type === 'RESERVATION') { label.innerText = "被檢舉預約訂單編號："; info.value = "RSV20240501001"; }
+        else { label.innerText = "被檢舉商城賣家："; info.value = "PetShopA (ORD12345)"; }
+    }
+
+    // 圖片預覽邏輯
+    const fileInput = document.getElementById('fileInput');
+    const previewArea = document.getElementById('previewArea');
+    let uploadedFiles = [];
+
+    fileInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            if (uploadedFiles.length >= 3) return;
+            uploadedFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = e => {
+                const div = document.createElement('div');
+                div.className = 'preview-img-box';
+                div.innerHTML = `<img src="${e.target.result}"><button type="button" class="remove-img" onclick="this.parentElement.remove()">×</button>`;
+                previewArea.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+</script>
+</body>
 </html>

@@ -52,6 +52,14 @@
 #countdownText {
     transition: opacity 0.2s ease-in-out;
 }
+
+#preview_img {
+    max-width: 200px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    display: block;    /* 變成區塊元素 */
+    margin: 10px auto; /* 左右自動邊距達成水平置中 */
+}
 </style>
 </head>
 
@@ -125,7 +133,7 @@
     <td>寵物姓名:</td>
     <td>
       <input type="text" name="petName"
-             th:value="${pet.petName}" />
+             th:value="${pet.petName}" required/>
     </td>
   </tr>
 
@@ -227,6 +235,7 @@
     let isDeleted = false; // 追蹤使用者是否點擊了刪除按鈕
 
     window.onload = function() {
+    	updateForm.dataset.submitting = 'false';
         const savedData = JSON.parse(sessionStorage.getItem("pending_data"));
         if (savedData) {
             // 回填文字欄位
@@ -283,7 +292,15 @@
     	e.preventDefault(); // 先攔截所有送出
         if (this.dataset.submitting === 'true') return;
         
+     // 🔴 1. 取得姓名欄位並檢查
+        const nameInput = document.querySelector('input[name="petName"]');
+        if (!nameInput.value.trim()) {
+            alert("請輸入寵物姓名！"); // 或者用自定義的警告樣式
+            nameInput.focus();
+            return; // 攔截，不往下執行
+        }
 
+        this.dataset.submitting = 'true';
         if (isDeleted) {
             submitWithDelete(this);
             return;
@@ -310,15 +327,28 @@
 
         
 
-        function submitWithDelete(form) {
-            const delInput = document.createElement("input");
-            delInput.type = "hidden";
-            delInput.name = "deleteImage";
-            delInput.value = "true";
-            form.appendChild(delInput);
-            form.dataset.submitting = 'true';
-            form.submit();
-        }
+    function submitWithDelete(form) {
+        // 取得當前輸入的值，確保確認頁面顯示的是最新的文字
+        const currentName = document.querySelector('input[name="petName"]').value;
+        const currentAge = document.querySelector('input[name="petAge"]').value;
+        const currentGender = document.querySelector('select[name="petGender"]').value;
+
+        const pendingData = {
+            petId: document.querySelector('input[name="petId"]').value,
+            memId: document.querySelector('input[name="memId"]').value,
+            petName: currentName,
+            petAge: currentAge,
+            petGender: currentGender,
+            typeId: document.querySelector('select[name="typeId"]').value,  // 🔴 確保名稱對應 VO
+            sizeId: document.querySelector('select[name="sizeId"]').value,  // 🔴 確保名稱對應 VO
+            petDescription: document.querySelector('textarea[name="petDescription"]').value,
+            deleteImage: isDeleted ? "true" : "false",
+            img_base64: "",       
+            fromPage: window.location.href
+        };
+
+        saveAndRedirect(pendingData); 
+    }
    
         
         
@@ -342,9 +372,10 @@
         sizeId: document.querySelector('select[name="sizeId"]').value,
         petDescription: document.querySelector('textarea[name="petDescription"]').value,
         deleteImage: isDeleted ? "true" : "false",
-        img_base64: null,
+        img_base64: "",
         fromPage: window.location.href
     };
+   
 
     if (hasImageNow && (hasChanged || isNewFile)) {
         // 【情境：有圖且資料變更】 -> 繪製畫布
@@ -397,7 +428,12 @@ function saveAndRedirect(data) {
     sessionStorage.setItem("pending_data", JSON.stringify(data));
     window.location.href = "/pet/confirm";
 }
+
+
 </script>
 
+
+<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+ <script th:src="@{/js/frontend/main.js}"></script>
 </body>
 </html>
