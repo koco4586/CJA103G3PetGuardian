@@ -1,4 +1,4 @@
-package com.petguardian.backend.repository;
+package com.petguardian.backend.model;
 
 import com.petguardian.member.model.Member;
 import org.springframework.data.jpa.repository.JpaRepository;

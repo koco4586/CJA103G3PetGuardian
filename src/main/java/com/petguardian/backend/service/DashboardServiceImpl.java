@@ -1,10 +1,10 @@
 package com.petguardian.backend.service;
 
+import com.petguardian.backend.model.BackendMemberRepository;
 import com.petguardian.sitter.model.SitterApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.petguardian.backend.repository.BackendMemberRepository;
 import com.petguardian.orders.model.ReturnOrderRepository;
 import com.petguardian.sellerreview.model.SellerReviewReportRepository;
 

@@ -13,6 +13,13 @@ window.toggleSidebar = function () {
     }
 };
 
+// 切換子選單
+window.toggleSubmenu = function (e) {
+    e.preventDefault();
+    const parent = e.currentTarget.parentElement;
+    parent.classList.toggle('open');
+};
+
 document.addEventListener("DOMContentLoaded", function () {
     // 定義側邊欄的 HTML 結構
     const sidebarHTML = `
@@ -28,11 +35,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 <li data-page="index"><a href="/admin/index"><i class="fa-solid fa-gauge-high"></i> 首頁</a></li>
                 <li data-page="members"><a href="/admin/membermanagementpage"><i class="fa-solid fa-users"></i> 會員管理</a></li>
                 <li data-page="sitters"><a href="/admin/sitter/manage"><i class="fa-solid fa-paw"></i> 保母系統</a></li>
-                <li data-page="bookings"><a href="/admin/bookings/all"><i class="fa-regular fa-calendar-check"></i> 預約管理</a></li>
+                <li class="has-submenu" data-page="bookings">
+                    <a href="#" onclick="toggleSubmenu(event)">
+                        <span><i class="fa-regular fa-calendar-check"></i> 預約管理</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li data-page="bookings-all"><a href="/admin/bookings/all"><i class="fa-solid fa-list"></i> 預約列表</a></li>
+                        <li data-page="bookings-reviews"><a href="/admin/reviews"><i class="fa-solid fa-star"></i> 評價管理</a></li>
+                    </ul>
+                </li>
                 <li data-page="chat"><a href="/admin/chat"><i class="fa-solid fa-comments"></i> 聊天監控</a></li>
-                <li data-page="reviews"><a href="/admin/reviews"><i class="fa-solid fa-star"></i> 評價管理</a></li>
                 <li data-page="news"><a href="/admin/news/list"><i class="fa-solid fa-bullhorn"></i> 消息管理</a></li>
-                <li data-page="market"><a href="/admin/store/manage"><i class="fa-solid fa-store"></i> 二手商城</a></li>
+                <li class="has-submenu" data-page="market">
+                    <a href="#" onclick="toggleSubmenu(event)">
+                        <span><i class="fa-solid fa-store"></i> 二手商城</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li data-page="market-manage"><a href="/admin/store/manage"><i class="fa-solid fa-box"></i> 商品管理</a></li>
+                        <li data-page="market-reviews"><a href="/admin/store-reviews"><i class="fa-solid fa-flag"></i> 評價管理</a></li>
+                    </ul>
+                </li>
                 <li data-page="forum"><a href="/admin/forum/list-all-forum"><i class="fa-solid fa-message"></i> 討論區管理</a></li>
                  <li data-page="accounts"><a href="/admin/adminmanagementpage"><i class="fa-solid fa-user-lock"></i> 管理員帳號</a></li>
             </ul>
@@ -51,16 +75,18 @@ document.addEventListener("DOMContentLoaded", function () {
         pageName = "members";
     } else if (currentPath.includes("/admin/sitter/manage")) {
         pageName = "sitters";
-    } else if (currentPath.includes("/admin/bookings/all")) {
-        pageName = "bookings";
+    } else if (currentPath.includes("/admin/reviews")) {
+        pageName = "bookings-reviews";
+    } else if (currentPath.includes("/admin/bookings")) {
+        pageName = "bookings-all";
     } else if (currentPath.includes("/admin/chat")) {
         pageName = "chat";
-    } else if (currentPath.includes("/admin/reviews")) {
-        pageName = "reviews";
     } else if (currentPath.includes("/admin/news/list")) {
         pageName = "news";
-    } else if (currentPath.includes("/admin/store/manage")) {
-        pageName = "market";
+    } else if (currentPath.includes("/admin/store-reviews")) {
+        pageName = "market-reviews";
+    } else if (currentPath.includes("/admin/store/manage") || currentPath.includes("/admin/store")) {
+        pageName = "market-manage";
     } else if (currentPath.includes("/admin/forum/list-all-forum")) {
         pageName = "forum";
     } else if (currentPath.includes("/admin/adminmanagementpage")) {
@@ -72,6 +98,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const activeItem = document.querySelector(`[data-page="${pageName}"]`);
     if (activeItem) {
         activeItem.classList.add("active");
+        // 如果是子選單項目，自動展開父選單
+        const parentSubmenu = activeItem.closest('.has-submenu');
+        if (parentSubmenu) {
+            parentSubmenu.classList.add("open");
+        }
     }
 });
 
