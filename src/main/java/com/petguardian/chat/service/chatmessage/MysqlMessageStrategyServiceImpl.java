@@ -2,6 +2,7 @@ package com.petguardian.chat.service.chatmessage;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.chat.model.ChatMessageRepository;
 import com.petguardian.chat.model.ChatMessageEntity;
+import com.petguardian.chat.model.ChatRoomRepository;
 
 // Context in same package
 
@@ -23,17 +25,20 @@ import com.petguardian.chat.model.ChatMessageEntity;
  * 
  * Note: Marked as @Primary until Redis implementation is active.
  */
-@Service
-@Primary
+@Service("mysqlStrategy")
+@Primary // Temporary until Proxy is implemented
 public class MysqlMessageStrategyServiceImpl implements MessageStrategyService {
 
     // ============================================================
     // DEPENDENCIES
     // ============================================================
     private final ChatMessageRepository messageRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
-    public MysqlMessageStrategyServiceImpl(ChatMessageRepository messageRepository) {
+    public MysqlMessageStrategyServiceImpl(ChatMessageRepository messageRepository,
+            ChatRoomRepository chatRoomRepository) {
         this.messageRepository = messageRepository;
+        this.chatRoomRepository = chatRoomRepository;
     }
 
     // ============================================================
@@ -82,5 +87,27 @@ public class MysqlMessageStrategyServiceImpl implements MessageStrategyService {
     @Transactional(readOnly = true)
     public List<ChatMessageEntity> findAllById(Iterable<String> messageIds) {
         return messageRepository.findAllById(messageIds);
+    }
+
+    // ============================================================
+    // METADATA OPERATIONS
+    // ============================================================
+
+    @Override
+    @Transactional
+    public void updateRoomMetadata(Integer chatroomId, Integer senderId, String content) {
+        // We fetch the entity - in MySQL this acquires a lock if in a transaction
+        // For Redis/Async strategy, this entire method will look different (Hash op)
+        chatRoomRepository.findById(chatroomId).ifPresent(chatroom -> {
+            chatroom.setLastMessageAt(LocalDateTime.now());
+            // Truncate preview
+            String preview = content.length() > 200 ? content.substring(0, 200) : content;
+            chatroom.setLastMessagePreview(preview);
+
+            // Update sender's read status
+            chatroom.updateLastReadAt(senderId);
+
+            chatRoomRepository.save(chatroom);
+        });
     }
 }

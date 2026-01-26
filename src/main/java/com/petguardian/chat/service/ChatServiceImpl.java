@@ -3,7 +3,6 @@ package com.petguardian.chat.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,11 +50,6 @@ import io.hypersistence.tsid.TSID;
  */
 @Service
 public class ChatServiceImpl implements ChatService {
-    // ============================================================
-    // CONSTANTS
-    // ============================================================
-    private static final int MAX_PREVIEW_LENGTH = 200;
-
     // ============================================================
     // DEPENDENCIES
     // ============================================================
@@ -125,8 +119,8 @@ public class ChatServiceImpl implements ChatService {
         // Delegate persistence to strategy (supports Sync MySQL or Async Redis)
         ChatMessageEntity saved = messageStrategyService.save(context);
 
-        // Update chatroom metadata (last message, sender's read status)
-        updateChatroomAfterMessage(chatroom, senderId, dto.getContent());
+        // Update chatroom metadata via strategy (abstracted write path)
+        messageStrategyService.updateRoomMetadata(chatroom.getChatroomId(), senderId, dto.getContent());
 
         // Build response DTO
         return buildResponseDto(saved, dto.getSenderName(), receiverId);
@@ -220,17 +214,6 @@ public class ChatServiceImpl implements ChatService {
         }
         // Fallback: Legacy/New Chat Flow - Default to Type 0
         return chatRoomCreationStrategy.findOrCreate(senderId, receiverId, 0);
-    }
-
-    private void updateChatroomAfterMessage(ChatRoomEntity chatroom, Integer senderId, String content) {
-        chatroom.setLastMessageAt(LocalDateTime.now());
-        String preview = content.length() > MAX_PREVIEW_LENGTH ? content.substring(0, MAX_PREVIEW_LENGTH) : content;
-        chatroom.setLastMessagePreview(preview);
-
-        // Update sender's read status
-        chatroom.updateLastReadAt(senderId);
-
-        chatroomRepository.save(chatroom);
     }
 
     private ChatMessageDTO buildResponseDto(ChatMessageEntity saved, String senderName, Integer receiverId) {

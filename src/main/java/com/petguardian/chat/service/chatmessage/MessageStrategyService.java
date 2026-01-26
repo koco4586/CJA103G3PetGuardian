@@ -77,4 +77,21 @@ public interface MessageStrategyService {
      * Used typically for resolving reply contexts in bulk.
      */
     List<ChatMessageEntity> findAllById(Iterable<String> messageIds);
+
+    // ============================================================
+    // METADATA OPERATIONS
+    // ============================================================
+
+    /**
+     * Updates the chatroom metadata (last message, preview, timestamps).
+     * 
+     * Abstracting this allows different persistence strategies:
+     * - MySQL: Updates Entity + Save (ACID)
+     * - Redis: Updates Hash + Push to Queue (Eventual)
+     * 
+     * @param chatroomId The target room
+     * @param senderId   Who sent the message (for read status)
+     * @param content    Message content (for preview)
+     */
+    void updateRoomMetadata(Integer chatroomId, Integer senderId, String content);
 }
