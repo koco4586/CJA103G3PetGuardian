@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 商城評價檢舉管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" th:href="@{/css/backend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/backend/reviews.css}">
+</head>
+
+<body>
+    <script th:src="@{/js/backend/sidebar.js}"></script>
+
+    <!-- 自訂確認對話框 -->
+    <div id="confirmModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-icon" id="modalIcon"></div>
+            <h3 id="modalTitle"></h3>
+            <p id="modalMessage"></p>
+            <div class="modal-buttons">
+                <button id="modalCancel" class="btn ghost">取消</button>
+                <button id="modalConfirm" class="btn"></button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.2s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+        }
+        .modal-icon.approve {
+            background: #ffeaea;
+            color: #d9534f;
+        }
+        .modal-icon.reject {
+            background: #e8f5e9;
+            color: #5cb85c;
+        }
+        .modal-box h3 {
+            margin: 0 0 10px;
+            font-size: 1.3rem;
+            color: #333;
+        }
+        .modal-box p {
+            margin: 0 0 25px;
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .modal-buttons .btn {
+            min-width: 100px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .modal-buttons .btn.ghost {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .modal-buttons .btn.ghost:hover {
+            background: #e0e0e0;
+        }
+        .modal-buttons .btn.approve-btn {
+            background: #d9534f;
+            color: #fff;
+        }
+        .modal-buttons .btn.approve-btn:hover {
+            background: #c9302c;
+        }
+        .modal-buttons .btn.reject-btn {
+            background: #5cb85c;
+            color: #fff;
+        }
+        .modal-buttons .btn.reject-btn:hover {
+            background: #449d44;
+        }
+    </style>
+
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>商城評價檢舉管理</h1>
+                <div class="sub">處理商城賣家評價違規申訴</div>
+            </div>
+        </header>
+
+        <!-- 訊息提示 -->
+        <div th:if="${message}" class="alert alert-success"
+            style="background:#d4edda;color:#155724;padding:10px 15px;border-radius:5px;margin:10px 0;">
+            <i class="fa-solid fa-circle-check"></i> <span th:text="${message}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger"
+            style="background:#f8d7da;color:#721c24;padding:10px 15px;border-radius:5px;margin:10px 0;">
+            <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${error}"></span>
+        </div>
+
+        <section>
+            <div class="tab-container">
+                <a th:href="@{/admin/store-reviews(tab='pending')}"
+                    th:classappend="${currentTab == 'pending' || currentTab == null} ? 'active' : ''" class="tab-btn">
+                    <i class="fa-solid fa-gavel"></i> 待處理檢舉件
+                </a>
+                <a th:href="@{/admin/store-reviews(tab='closed')}"
+                    th:classappend="${currentTab == 'closed'} ? 'active' : ''" class="tab-btn">
+                    <i class="fa-solid fa-circle-check"></i> 已結案紀錄
+                </a>
+            </div>
+
+            <div class="card">
+                <h3 th:text="${currentTab == 'closed'} ? '已結案檢舉列表' : '檢舉審核列表'">檢舉審核列表</h3>
+
+                <!-- 無資料時顯示 -->
+                <div th:if="${#lists.isEmpty(reports)}" style="text-align:center;padding:40px;color:#999;">
+                    <i class="fa-solid fa-inbox" style="font-size:3rem;margin-bottom:10px;"></i>
+                    <p th:text="${currentTab == 'closed'} ? '目前沒有已結案的檢舉紀錄' : '目前沒有待處理的檢舉'"></p>
+                </div>
+
+                <!-- 有資料時顯示表格 -->
+                <table th:if="${!#lists.isEmpty(reports)}">
+                    <thead>
+                        <tr>
+                            <!-- <th>檢舉ID</th> -->
+                            <th style="white-space: nowrap;">被檢舉人</th>
+                            <th>被檢舉評價內容</th>
+                            <th>檢舉原因</th>
+                            <!-- <th>檢舉人</th> -->
+                            <th th:text="${currentTab == 'closed'} ? '狀態' : '操作'">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="report : ${reports}">
+                            <!-- <td>
+                                <span class="source-tag">商城評價</span><br>
+                                <strong th:text="'#' + ${report.reviewRptId}"></strong>
+                            </td> -->
+                            <td style="white-space: nowrap;">
+                                <span th:text="${report.buyerName}"></span>
+                            </td>
+                            <td>
+                                <div style="font-style: italic; color: #444;">
+                                    <span th:if="${report.reviewContent != null and !report.reviewContent.isEmpty()}"
+                                        th:text="'「' + ${report.reviewContent} + '」'"></span>
+                                    <span th:if="${report.reviewContent == null or report.reviewContent.isEmpty()}"
+                                        style="color:#999;">（無評價內容）</span>
+                                </div>
+                                <div style="color:#999; font-size:0.8rem; margin-top:5px;"></div>
+                            </td>
+                            <td>
+                                <span class="report-reason" th:text="${report.reportReason}"></span>
+                            </td>
+                            <!-- <td>
+                                <span th:text="${report.reporterName}"></span><br>
+                                <small style="color:#999;"
+                                    th:text="${#temporals.format(report.reportTime, 'yyyy-MM-dd HH:mm')}"></small>
+                            </td> -->
+                            <!-- 待處理：顯示操作按鈕 -->
+                            <td th:if="${currentTab != 'closed'}">
+                                <form th:action="@{/admin/store-reviews/approve/{id}(id=${report.reviewRptId})}"
+                                    method="post" style="display:inline;" th:id="'approveForm-' + ${report.reviewRptId}">
+                                    <button type="button" class="btn" style="background:#d9534f;"
+                                        th:onclick="'showConfirmModal(\'approve\', ' + ${report.reviewRptId} + ')'">通過</button>
+                                </form>
+                                <form th:action="@{/admin/store-reviews/reject/{id}(id=${report.reviewRptId})}"
+                                    method="post" style="display:inline;" th:id="'rejectForm-' + ${report.reviewRptId}">
+                                    <button type="button" class="btn ghost"
+                                        th:onclick="'showConfirmModal(\'reject\', ' + ${report.reviewRptId} + ')'">駁回</button>
+                                </form>
+                            </td>
+                            <!-- 已結案：顯示狀態 -->
+                            <td th:if="${currentTab == 'closed'}">
+                                <span th:if="${report.reportStatus == 1}" class="badge"
+                                    style="background:#d9534f;color:#fff;padding:3px 8px;border-radius:3px;">
+                                    <i class="fa-solid fa-check"></i> 檢舉成立
+                                </span>
+                                <span th:if="${report.reportStatus == 2}" class="badge"
+                                    style="background:#5cb85c;color:#fff;padding:3px 8px;border-radius:3px;">
+                                    <i class="fa-solid fa-xmark"></i> 檢舉不成立
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let currentFormId = null;
+
+        function showConfirmModal(type, reportId) {
+            const modal = document.getElementById('confirmModal');
+            const icon = document.getElementById('modalIcon');
+            const title = document.getElementById('modalTitle');
+            const message = document.getElementById('modalMessage');
+            const confirmBtn = document.getElementById('modalConfirm');
+
+            if (type === 'approve') {
+                currentFormId = 'approveForm-' + reportId;
+                icon.className = 'modal-icon approve';
+                icon.innerHTML = '<i class="fa-solid fa-gavel"></i>';
+                title.textContent = '確認通過檢舉';
+                message.textContent = '通過此檢舉後，該評價將被隱藏，不再顯示於前台。確定要執行此操作嗎？';
+                confirmBtn.textContent = '確認通過';
+                confirmBtn.className = 'btn approve-btn';
+            } else {
+                currentFormId = 'rejectForm-' + reportId;
+                icon.className = 'modal-icon reject';
+                icon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                title.textContent = '確認駁回檢舉';
+                message.textContent = '駁回此檢舉後，該評價將維持顯示狀態。確定要執行此操作嗎？';
+                confirmBtn.textContent = '確認駁回';
+                confirmBtn.className = 'btn reject-btn';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function hideConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            currentFormId = null;
+        }
+
+        document.getElementById('modalCancel').addEventListener('click', hideConfirmModal);
+
+        document.getElementById('modalConfirm').addEventListener('click', function() {
+            if (currentFormId) {
+                document.getElementById(currentFormId).submit();
+            }
+        });
+
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideConfirmModal();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

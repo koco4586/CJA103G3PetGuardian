@@ -5,31 +5,47 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatMemberEntity;
-import com.petguardian.chat.model.ChatMemberRepository;
 import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
+import java.util.Map;
 
 @Service
 public class ChatRoomMapperImpl implements ChatRoomMapper {
 
-    private final ChatMemberRepository memberRepository;
-
-    public ChatRoomMapperImpl(ChatMemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
+    @Override
+    public ChatRoomDTO toDto(ChatRoomEntity chatRoomEntity, Integer currentUserId, String partnerName) {
+        if (chatRoomEntity == null) {
+            return null;
+        }
+        return mapBaseFields(chatRoomEntity, currentUserId, partnerName);
     }
 
     @Override
-    public ChatRoomDTO toDto(ChatRoomEntity chatRoomEntity, Integer currentUserId) {
+    public ChatRoomDTO toDto(ChatRoomEntity chatRoomEntity, Integer currentUserId,
+            Map<Integer, ChatMemberEntity> preloadedMembers) {
         if (chatRoomEntity == null) {
             return null;
         }
 
+        Integer partnerId = chatRoomEntity.getOtherMemberId(currentUserId);
+        ChatMemberEntity partner = preloadedMembers.get(partnerId);
+        String partnerName = (partner != null) ? partner.getMemName() : "Unknown User";
+
+        return mapBaseFields(chatRoomEntity, currentUserId, partnerName);
+    }
+
+    /**
+     * Shared mapping logic for base fields.
+     */
+    private ChatRoomDTO mapBaseFields(ChatRoomEntity chatRoomEntity, Integer currentUserId, String partnerName) {
         ChatRoomDTO dto = new ChatRoomDTO();
         dto.setChatroomId(chatRoomEntity.getChatroomId());
 
         Integer partnerId = chatRoomEntity.getOtherMemberId(currentUserId);
         dto.setPartnerId(partnerId);
-        dto.setDisplayName(resolveDisplayName(chatRoomEntity, partnerId));
+
+        String roomTag = resolveRoomTag(chatRoomEntity);
+        dto.setDisplayName(partnerName + " - " + roomTag);
 
         dto.setLastMessage(chatRoomEntity.getLastMessagePreview());
         dto.setLastMessageTime(chatRoomEntity.getLastMessageAt());
@@ -38,27 +54,19 @@ public class ChatRoomMapperImpl implements ChatRoomMapper {
         return dto;
     }
 
-    private String resolveDisplayName(ChatRoomEntity chatRoomEntity, Integer partnerId) {
-        String partnerName = memberRepository.findById(partnerId)
-                .map(ChatMemberEntity::getMemName)
-                .orElse("Unknown User");
-
-        String roomTag = resolveRoomTag(chatRoomEntity);
-        return partnerName + " - " + roomTag;
-    }
-
     private String resolveRoomTag(ChatRoomEntity chatRoomEntity) {
-        if (chatRoomEntity.getChatroomName() != null && !chatRoomEntity.getChatroomName().isEmpty()) {
-            return chatRoomEntity.getChatroomName();
-        }
+        Byte typeByte = chatRoomEntity.getChatroomType();
+        int type = typeByte != null ? typeByte.intValue() : 0;
 
-        int type = chatRoomEntity.getChatroomType() != null ? chatRoomEntity.getChatroomType() : 0;
         switch (type) {
             case 0:
                 return "寵物服務";
             case 1:
-                return "商品諮詢";
+                return "寵物商品諮詢";
             default:
+                if (chatRoomEntity.getChatroomName() != null && !chatRoomEntity.getChatroomName().isEmpty()) {
+                    return chatRoomEntity.getChatroomName();
+                }
                 return "一般聊天";
         }
     }

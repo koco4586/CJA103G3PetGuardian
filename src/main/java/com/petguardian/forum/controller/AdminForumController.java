@@ -21,8 +21,12 @@ import com.petguardian.forum.service.ForumPostPicsService;
 import com.petguardian.forum.service.ForumPostReportService;
 import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
+import com.petguardian.forum.model.CommentHandledResultDetailDTO;
+import com.petguardian.forum.model.CommentReviewDetailDTO;
 import com.petguardian.forum.model.DeletedCommentDTO;
 import com.petguardian.forum.model.DeletedPostDTO;
+import com.petguardian.forum.model.ForumCommentReportVO;
+import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostReportVO;
 import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.ForumVO;
@@ -241,7 +245,6 @@ public class AdminForumController {
 			                       RedirectAttributes ra, ModelMap model) {
 		
 		if(result.hasErrors()) {
-			result.getAllErrors().forEach(error -> System.out.println("驗證錯誤: " + error.getDefaultMessage()));
 			PostReviewDetailDTO dto = forumPostReportService.getPostReviewDetailToHandle(reportId);
 			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
 			model.addAttribute("dto", dto);
@@ -350,6 +353,51 @@ public class AdminForumController {
 		
 	}
 	
+	@PostMapping("get-one-pending-comment-to-handle")
+	public String getOnePendingCommentToHandle(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		CommentReviewDetailDTO dto = forumCommentReportService.getCommentReviewDetailToHandle(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("dto", dto);
+		model.addAttribute("picsId", picsId);
+		model.addAttribute("commentList", commentList);
+		model.addAttribute("forumCommentReportVO", new ForumCommentReportVO());
+		
+		return "backend/forum/handle-pending-comment";
+
+	}
+	
+	@PostMapping("handle-comment-report")
+	public String handleCommentReport(@Valid ForumCommentReportVO forumCommentReportVO, BindingResult result,
+			   @RequestParam("reportId") Integer reportId, @RequestParam("commentId") Integer commentId, 
+               @RequestParam("handleResult") String handleResult, @RequestParam("action") String action, 
+               @RequestParam("postId") Integer postId, RedirectAttributes ra, ModelMap model) {
+		
+		if(result.hasErrors()) {
+			CommentReviewDetailDTO dto = forumCommentReportService.getCommentReviewDetailToHandle(reportId);
+			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+			List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
+			model.addAttribute("dto", dto);
+			model.addAttribute("commentList", commentList);
+			model.addAttribute("picsId", picsId);
+			return "backend/forum/handle-pending-comment";
+		}
+		
+		if("delete".equals(action)) {
+			forumCommentReportService.updateHandleResult(reportId, commentId, handleResult);
+			ra.addFlashAttribute("successMsgs", "留言已隱藏");
+			return "redirect:/admin/forum/get-all-pending-comments";
+		}
+		
+		forumCommentReportService.dismissCommentReport(reportId, handleResult);
+		ra.addFlashAttribute("successMsgs", "檢舉已駁回");
+		return "redirect:/admin/forum/get-all-pending-comments";
+	}
+	
 	@GetMapping("get-all-rejected-comments")
 	public String getAllRejectedComments(ModelMap model) {
 		
@@ -360,6 +408,25 @@ public class AdminForumController {
 		model.addAttribute("commentList", commentList);
 		
 		return "backend/forum/forum-rejected-comment";
+		
+	}
+	
+	@PostMapping("get-one-rejected-comment-to-display")
+	public String getOneRejectedCommentToDisplay(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		CommentReviewDetailDTO reviewDto = forumCommentReportService.getCommentReviewDetailToHandle(reportId);
+		CommentHandledResultDetailDTO handledResultDto = forumCommentReportService.getCommentHandledResultDetailToDisplay(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("handledResultDto", handledResultDto);
+		model.addAttribute("reviewDto", reviewDto);
+		model.addAttribute("picsId", picsId);
+		model.addAttribute("commentList", commentList);
+		
+		return "backend/forum/display-rejected-comment";
 		
 	}
 	

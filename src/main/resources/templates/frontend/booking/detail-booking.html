@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>預約明細 - Pet Guardian</title>
+	<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+	<link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+	<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<style>
+		.details-container {
+			max-width: 550px;
+			margin: 4rem auto;
+			padding: 3rem;
+			background: white;
+			border-radius: 2.5rem;
+			box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
+			border: 1px solid #f0f0f0;
+		}
+
+		.success-hero {
+			text-align: center;
+			margin-bottom: 2.5rem;
+		}
+
+		.hero-icon {
+			font-size: 4rem;
+			color: #22c55e;
+			margin-bottom: 1rem;
+		}
+
+		.detail-item {
+			display: flex;
+			justify-content: space-between;
+			padding: 1.2rem 0;
+			border-bottom: 1px solid #f5f5f5;
+		}
+
+		.item-label {
+			color: #71717a;
+			font-weight: 500;
+		}
+
+		.item-value {
+			color: #18181b;
+			font-weight: 600;
+		}
+
+		.total-box {
+			background: var(--primary-color);
+			color: white;
+			padding: 1.5rem;
+			border-radius: 1.5rem;
+			margin-top: 2rem;
+			text-align: center;
+			font-size: 1.3rem;
+			font-weight: 700;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+	</style>
+</head>
+
+<body>
+	<header id="main-header" class="header"></header>
+
+	<main class="container">
+		<div class="details-container">
+			<div class="success-hero">
+				<i class="fa-solid fa-circle-check hero-icon"></i>
+				<h2 style="font-weight: 700; margin: 0;">預約申請成功！</h2>
+				<p style="color: #666; margin-top: 0.5rem;" th:text="'訂單編號：#BK-' + ${result.bookingOrderId}"></p>
+			</div>
+
+			<div class="booking-list-details">
+				<div class="detail-item">
+					<span class="item-label">預約開始時間</span>
+					<span class="item-value"
+						th:text="${#temporals.format(result.startTime, 'yyyy-MM-dd HH:mm')}"></span>
+				</div>
+				<div class="detail-item">
+					<span class="item-label">預約結束時間</span>
+					<span class="item-value" th:text="${#temporals.format(result.endTime, 'yyyy-MM-dd HH:mm')}"></span>
+				</div>
+				<div class="detail-item">
+					<span class="item-label">服務對象</span>
+					<span class="item-value" th:text="${petName != null ? petName : '毛孩夥伴'}"></span>
+				</div>
+				<div class="detail-item">
+					<span class="item-label">付款狀態</span>
+					<span class="item-value" style="color: #f59e0b;">待支付</span>
+				</div>
+
+				<div class="total-box">
+					<span>預約總計金額</span>
+					<span th:text="'$' + ${result.reservationFee}"></span>
+				</div>
+			</div>
+
+			<div class="d-flex gap-md" style="margin-top: 3rem;">
+				<a th:href="@{/booking/member-orders}" class="btn btn-primary"
+					style="flex: 1; border-radius: 3rem; text-align: center;">
+					查看預約列表
+				</a>
+				<a href="/" class="btn btn-outline" style="flex: 1; border-radius: 3rem; text-align: center;">
+					回到首頁
+				</a>
+			</div>
+		</div>
+	</main>
+
+	<script th:src="@{/js/frontend/main.js}"></script>
+</body>
+
+</html>

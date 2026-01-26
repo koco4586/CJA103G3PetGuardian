@@ -11,8 +11,6 @@
     <link rel="stylesheet" th:href="@{/css/frontend/store-seller.css}">
 </head>
 
-</head>
-
 <body>
 <header id="main-header" class="header"></header>
 
@@ -116,13 +114,13 @@
                         <p style="color: #868e96; font-weight:500;">訂單總數</p>
                     </div>
 
-                    <!-- 待出貨（抓訂單狀態為「已付款」的數量） -->
+                    <!-- 待出貨 -->
                     <div class="stat-card" style="flex: 1; min-width: 180px;" onclick="location.href='/seller/orders'">
                         <div class="stat-number" style="color: #fa5252;" th:text="${pendingShipment}">0</div>
                         <p style="color: #868e96; font-weight:500;">待出貨</p>
                     </div>
 
-                    <!-- 平均評分（顯示 平均分/5.0） -->
+                    <!-- 平均評分 -->
                     <div class="stat-card" style="flex: 1; min-width: 180px;">
                         <div class="stat-number" style="color: #f59e0b;">
                             <span th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</span>
@@ -133,33 +131,32 @@
                         </p>
                     </div>
 
-                    <!-- 總評價數量（可點擊展開評價列表） -->
-                    <div class="stat-card" style="flex: 1; min-width: 180px;" onclick="toggleReviewsList()">
+                    <!-- 總評價數量 -->
+                    <div class="stat-card" style="flex: 1; min-width: 180px; cursor: pointer;" onclick="toggleReviewsList()">
                         <div class="stat-number" style="color: #8b5cf6;" th:text="${totalRatingCount}">0</div>
                         <p style="color: #868e96; font-weight:500;">
                             <i class="fas fa-comment"></i> 總評價數量
+                        </p>
                         <div style="font-size: 0.8rem; color: var(--primary-color); margin-top: 0.25rem;">
                             <i class="fas fa-eye"></i> 點擊瀏覽全部
                         </div>
-                        </p>
                     </div>
 
-                    <!-- 總營收（已完成訂單累計） -->
+                    <!-- 總營收 -->
                     <div class="stat-card" style="flex: 1; min-width: 180px;">
                         <div class="stat-number" style="color: #339af0;">
                             $<span th:text="${#numbers.formatInteger(totalRevenue, 0, 'COMMA')}">0</span>
                         </div>
                         <p style="color: #868e96; font-weight:500;">
                             <i class="fas fa-coins"></i> 總營收
-                        <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                            <i style="color: #ffd43b;"></i> 已完成訂單累計
-                        </div>
                         </p>
-
+                        <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                            已完成訂單累計
+                        </div>
                     </div>
                 </div>
 
-                <!-- 評價列表（可展開/收合） -->
+                <!-- 評價列表 -->
                 <div id="reviewsList" class="card" style="margin-top: 2rem; display: none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h4 style="margin: 0;">
@@ -189,7 +186,7 @@
                                         <span th:if="${reviewData.rating > 0}"
                                               th:each="i : ${#numbers.sequence(1, reviewData.rating)}"
                                               style="color: #ffc107;">
-                                        <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
                                         </span>
 
                                         <span th:if="${reviewData.rating < 5}"
@@ -257,7 +254,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <!-- 使用 productsWithImages 顯示商品圖片 -->
                         <tr th:each="item : ${productsWithImages}">
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0;">
                                 <img th:src="${item.mainImage}" alt="商品圖片"
@@ -284,7 +280,6 @@
                                       class="badge badge-secondary">已下架</span>
                             </td>
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; white-space: nowrap;">
-                                <!-- 編輯按鈕：傳遞所有商品資料 -->
                                 <button class="btn btn-sm btn-outline edit-product-btn"
                                         th:data-pro-id="${item.product.proId}"
                                         th:data-pro-name="${item.product.proName}"
@@ -407,11 +402,20 @@
                                         </button>
                                     </th:block>
 
-                                    <!-- 查看訂單詳情 -->
-                                    <a th:href="@{/seller/order/{id}(id=${item.order.orderId})}"
-                                       class="btn btn-sm btn-outline" title="查看訂單">
+                                    <!-- 查看訂單詳情（改用 Modal） -->
+                                    <button type="button" class="btn btn-sm btn-outline view-order-btn"
+                                            th:data-order-id="${item.order.orderId}"
+                                            th:data-buyer-name="${item.buyerName}"
+                                            th:data-order-total="${item.order.orderTotal}"
+                                            th:data-order-time="${#temporals.format(item.order.orderTime, 'yyyy-MM-dd HH:mm')}"
+                                            th:data-order-status="${item.order.orderStatus}"
+                                            th:data-receiver-name="${item.order.receiverName}"
+                                            th:data-receiver-phone="${item.order.receiverPhone}"
+                                            th:data-receiver-address="${item.order.receiverAddress}"
+                                            th:data-special-instructions="${item.order.specialInstructions}"
+                                            onclick="openOrderDetailModal(this)" title="查看訂單">
                                         <i class="fas fa-file-invoice"></i>
-                                    </a>
+                                    </button>
 
                                     <!-- 聊天按鈕 -->
                                     <a th:href="@{/chat(targetUserId=${item.order.buyerMemId})}"
@@ -436,8 +440,7 @@
     </div>
 </div>
 
-<!-- 商品 Modal -->
-
+<!-- ========== 商品 Modal ========== -->
 <div id="productModal" class="modal">
     <div class="modal-content">
         <button type="button" onclick="closeProductModal()" class="close-btn">&times;</button>
@@ -504,10 +507,10 @@
                            style="width: auto; height: auto; padding: 10px 20px; flex-direction: row; gap: 8px;">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <span>選擇圖片</span>
-                        <input type="file" id="productImages" name="productImages" accept="image/*" multiple
+                        <input type="file" id="productImages" name="productImages" accept="image/*"
                                style="display: none;" onchange="previewNewImages(this)">
                     </label>
-                    <span style="color: #999; font-size: 0.85rem;">支援 JPG、PNG，最多 5 張</span>
+                    <span style="color: #999; font-size: 0.85rem;">支援 JPG、PNG，最多 1 張</span>
                 </div>
 
                 <div id="deleteImageInputs"></div>
@@ -524,12 +527,91 @@
         </form>
     </div>
 </div>
-<footer id="main-footer" class="footer"></footer>
 
+<!-- ========== 訂單詳情 Modal ========== -->
+<div id="orderDetailModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <button type="button" onclick="closeOrderDetailModal()" class="close-btn">&times;</button>
+
+        <h3 style="margin-bottom: 0.5rem;">
+            <i class="fas fa-file-invoice" style="color: var(--primary-color);"></i>
+            訂單詳情
+            <span id="detailOrderId" style="font-weight: 400; color: #999; margin-left: 0.5rem;">#0</span>
+        </h3>
+        <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 1.5rem;">
+
+        <!-- 訂單基本資訊 -->
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                <i class="fas fa-info-circle" style="color: var(--primary-color);"></i> 訂單資訊
+            </h4>
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="detail-label">訂單狀態</span>
+                    <span class="detail-value" id="detailOrderStatus">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">下單時間</span>
+                    <span class="detail-value" id="detailOrderTime">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">買家</span>
+                    <span class="detail-value" id="detailBuyerName">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">訂單金額</span>
+                    <span class="detail-value" id="detailOrderTotal" style="color: var(--primary-color); font-weight: 600;">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收件資訊 -->
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                <i class="fas fa-truck" style="color: var(--primary-color);"></i> 收件資訊
+            </h4>
+            <div class="detail-grid">
+                <div class="detail-row">
+                    <span class="detail-label">收件人</span>
+                    <span class="detail-value" id="detailReceiverName">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">聯絡電話</span>
+                    <span class="detail-value" id="detailReceiverPhone">-</span>
+                </div>
+                <div class="detail-row" style="grid-column: 1 / -1;">
+                    <span class="detail-label">收件地址</span>
+                    <span class="detail-value" id="detailReceiverAddress">-</span>
+                </div>
+                <div class="detail-row" id="detailSpecialRow" style="grid-column: 1 / -1; display: none;">
+                    <span class="detail-label">備註</span>
+                    <span class="detail-value" id="detailSpecialInstructions">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 訂單商品 -->
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                <i class="fas fa-shopping-cart" style="color: var(--primary-color);"></i> 訂單商品
+            </h4>
+            <div id="orderItemsContainer" style="background: #f9f9f9; border-radius: 8px; padding: 12px;">
+                <!-- 商品項目由 JavaScript 動態載入 -->
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" onclick="closeOrderDetailModal()" class="btn-sm btn-outline" style="min-width: 100px;">
+                關閉
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer id="main-footer" class="footer"></footer>
 
 <script src="/js/frontend/main.js"></script>
 <script src="/js/frontend/seller/seller.js"></script>
-
 
 </body>
 </html>

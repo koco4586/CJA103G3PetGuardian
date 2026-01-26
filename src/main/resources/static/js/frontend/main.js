@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
                 <ul class="nav-links">
                     <li><a href="/" class="nav-link">首頁</a></li>
-                    <li><a href="/public/sitter/search" class="nav-link">預約服務</a></li>
+                    <li><a href="/booking/services" class="nav-link">預約服務</a></li>
                     <li class="dropdown">
                         <a href="/store" class="nav-link">二手商城 <i class="fas fa-chevron-down" style="font-size: 0.8rem; margin-left: 4px;"></i></a>
                         <div class="dropdown-menu" style="left:0; right:auto; width:160px; top:120%;">
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="dropdown-menu">
                         <a href="/login" class="dropdown-item">登入 / 註冊</a>
                         <a href="/dashboard" class="dropdown-item">會員中心</a>
-                        <a href="/sitter/dashboard" class="dropdown-item">保母專區</a>
+                        <a href="/sitter/hub" class="dropdown-item">保母專區</a>
                         <hr style="border:0; border-top:1px solid #eee; margin: 0.5rem 0;">
                         <a href="/logout" class="dropdown-item">登出</a>
                     </div>

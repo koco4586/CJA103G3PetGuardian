@@ -1,6 +1,7 @@
 package com.petguardian.seller.controller;
 
 import com.petguardian.common.service.AuthStrategyService;
+import com.petguardian.orders.model.OrderItemVO;
 import com.petguardian.seller.model.ProType;
 import com.petguardian.seller.service.ProductService;
 import com.petguardian.seller.service.SellerDashboardService;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -216,6 +219,55 @@ public class SellerController {
         model.addAttribute("buyerName", orderDetail.get("buyerName"));
 
         return "frontend/seller/order-detail";
+    }
+
+    /**
+     * 取得訂單商品項目（AJAX）
+     * 用於訂單Modal中動態載入商品明細
+     */
+    @GetMapping("/order/{orderId}/items")
+    @ResponseBody
+    public List<Map<String, Object>> getOrderItems(@PathVariable Integer orderId, HttpServletRequest request) {
+        Integer sellerId = getCurrentMemId(request);
+        if (sellerId == null) {
+            return new ArrayList<>();
+        }
+
+        // 驗證訂單是否屬於該賣家
+        Map<String, Object> orderDetail = orderService.getOrderDetail(sellerId, orderId);
+        if (orderDetail == null) {
+            return new ArrayList<>();
+        }
+
+        // 取得訂單項目
+        List<OrderItemVO> items = (List<OrderItemVO>) orderDetail.get("items");
+        if (items == null || items.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 轉換為前端需要的格式
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (OrderItemVO item : items) {
+            Map<String, Object> itemData = new HashMap<>();
+            itemData.put("proId", item.getProId());
+            itemData.put("proPrice", item.getProPrice());
+            itemData.put("quantity", item.getQuantity());
+            itemData.put("subtotal", item.getSubtotal());
+
+            // 透過 ProductService 取得商品名稱
+            String productName = productService.getProductById(item.getProId())
+                    .map(product -> product.getProName())
+                    .orElse("商品 #" + item.getProId());
+            itemData.put("productName", productName);
+
+            // 取得商品主圖片
+            String productImage = productService.getProductMainImage(item.getProId());
+            itemData.put("productImage", productImage);
+
+            result.add(itemData);
+        }
+
+        return result;
     }
 
     /**

@@ -74,28 +74,30 @@ public class SitterPublicController {
      * @param model Spring Model 用於傳遞目前登入會員資訊(currentMember/currentMemberId)
      * @return String 保姆搜尋頁面路徑 "frontend/sitter/public-search"
      */
-    @GetMapping("/search")
-    public String showSearchPage(HttpServletRequest request, Model model) {
-        // 從資料庫撈取會員資料 (如果已登入)
-        Integer memId = authStrategyService.getCurrentUserId(request);
-
-        if (memId != null) {
-            SitterMemberVO memberVO = sitterService.getSitterMemberById(memId);
-            if (memberVO != null) {
-                SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO);
-                model.addAttribute("currentMember", fakeMember);
-            }
-            model.addAttribute("currentMemberId", memId);
-
-            // [NEW] 查詢是否為保姆，並傳遞 sitterId 供前端隱藏自己卡片
-            SitterVO mySitter = sitterService.getSitterByMemId(memId);
-            if (mySitter != null) {
-                model.addAttribute("currentSitterId", mySitter.getSitterId());
-            }
-        }
-
-        return "frontend/sitter/public-search";
-    }
+    /*
+     * @GetMapping("/search")
+     * public String showSearchPage(HttpServletRequest request, Model model) {
+     * // 從資料庫撈取會員資料 (如果已登入)
+     * Integer memId = authStrategyService.getCurrentUserId(request);
+     * 
+     * if (memId != null) {
+     * SitterMemberVO memberVO = sitterService.getSitterMemberById(memId);
+     * if (memberVO != null) {
+     * SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO);
+     * model.addAttribute("currentMember", fakeMember);
+     * }
+     * model.addAttribute("currentMemberId", memId);
+     * 
+     * // [NEW] 查詢是否為保姆，並傳遞 sitterId 供前端隱藏自己卡片
+     * SitterVO mySitter = sitterService.getSitterByMemId(memId);
+     * if (mySitter != null) {
+     * model.addAttribute("currentSitterId", mySitter.getSitterId());
+     * }
+     * }
+     * 
+     * return "frontend/sitter/public-search";
+     * }
+     */
 
     /**
      * AJAX API：根據條件搜尋保姆

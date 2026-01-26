@@ -10,13 +10,14 @@ public class PendingCommentDTO {
 	private Integer authorId;
 	private Integer reportType;
 	private Timestamp reportTime;
+	private Integer postId;	// 查全部留言用
 	
 	public PendingCommentDTO() {
 		super();
 	}
 
 	public PendingCommentDTO(Integer reportId, Integer memId, Integer commentId, Integer authorId,
-			Integer reportType, Timestamp reportTime) {
+			Integer reportType, Timestamp reportTime, Integer postId) {
 		super();
 		this.reportId = reportId;
 		this.memId = memId;
@@ -24,6 +25,7 @@ public class PendingCommentDTO {
 		this.authorId = authorId;
 		this.reportType = reportType;
 		this.reportTime = reportTime;
+		this.postId = postId;
 	}
 
 	public Integer getReportId() {
@@ -72,6 +74,14 @@ public class PendingCommentDTO {
 
 	public void setReportTime(Timestamp reportTime) {
 		this.reportTime = reportTime;
+	}
+
+	public Integer getPostId() {
+		return postId;
+	}
+
+	public void setPostId(Integer postId) {
+		this.postId = postId;
 	}
 	
 }

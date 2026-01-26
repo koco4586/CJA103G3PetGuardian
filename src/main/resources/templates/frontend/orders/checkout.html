@@ -102,10 +102,13 @@
                                 </div>
                             </div>
                             <!-- 聯絡賣家按鈕 -->
-                            <a href="#" class="btn btn-outline" th:onclick="'openChatWithSeller(' + ${sellerId} + ')'"
-                                style="white-space: nowrap;">
-                                <i class="fas fa-comment-dots"></i> 聯絡賣家
-                            </a>
+                            <form th:action="@{/chat/connect/store}" method="post" style="display:inline;">
+                                <input type="hidden" name="targetUserId" th:value="${sellerId}" />
+                                <input type="hidden" name="chatroomType" value="1" />
+                                <button type="submit" class="btn btn-outline" style="white-space: nowrap;">
+                                    <i class="fas fa-comment-dots"></i> 聯絡賣家
+                                </button>
+                            </form>
                         </div>
 
                         <!-- 評論展開區 -->
@@ -277,15 +280,15 @@
                                             </select>
                                         </form>
                                         <div class="d-flex align-center gap-sm">
-                                            <span style="font-weight: 700; color: var(--primary-color); font-size: 1.05rem;"
+                                            <span
+                                                style="font-weight: 700; color: var(--primary-color); font-size: 1.05rem;"
                                                 th:text="'$' + ${#numbers.formatInteger(item.subtotal, 1, 'COMMA')}">$0</span>
                                             <!-- 移除按鈕 -->
                                             <form th:action="@{/cart/remove}" method="post" style="display: inline;"
                                                 th:id="'remove-form-' + ${item.proId}">
                                                 <input type="hidden" name="proId" th:value="${item.proId}">
                                                 <button type="button" class="btn-remove" title="移除"
-                                                    th:data-pro-id="${item.proId}"
-                                                    th:data-pro-name="${item.proName}"
+                                                    th:data-pro-id="${item.proId}" th:data-pro-name="${item.proName}"
                                                     onclick="showRemoveConfirm(this.dataset.proId, this.dataset.proName)">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
@@ -662,21 +665,21 @@
         }
 
         // 點擊確認移除按鈕
-        document.getElementById('confirm-remove-btn').addEventListener('click', function() {
+        document.getElementById('confirm-remove-btn').addEventListener('click', function () {
             if (currentRemoveProId) {
                 document.getElementById('remove-form-' + currentRemoveProId).submit();
             }
         });
 
         // 點擊背景關閉對話框
-        document.getElementById('confirm-modal').addEventListener('click', function(e) {
+        document.getElementById('confirm-modal').addEventListener('click', function (e) {
             if (e.target === this) {
                 hideRemoveConfirm();
             }
         });
 
         // ESC 鍵關閉對話框
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && document.getElementById('confirm-modal').classList.contains('show')) {
                 hideRemoveConfirm();
             }
