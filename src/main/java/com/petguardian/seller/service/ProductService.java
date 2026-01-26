@@ -2,7 +2,6 @@ package com.petguardian.seller.service;
 
 import com.petguardian.seller.model.ProType;
 import com.petguardian.seller.model.Product;
-import com.petguardian.wallet.model.Wallet;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.Optional;
  */
 public interface ProductService {
 
-    // ==================== 基本查詢 ====================
+    // 基本查詢
 
     /**
      * 取得賣家的所有商品（按上架時間降序）
@@ -32,7 +31,7 @@ public interface ProductService {
      */
     List<ProType> getAllProTypes();
 
-    // ==================== 商品 CRUD ====================
+    // 商品 CRUD
 
     /**
      * 儲存商品（新增或更新）
@@ -44,11 +43,16 @@ public interface ProductService {
      */
     void deleteProduct(Integer proId);
 
-    // ==================== 圖片管理 ====================
+    /**
+     * 賣家刪除自己的商品（會驗證權限）
+     */
+    boolean deleteProductBySeller(Integer sellerId, Integer proId);
+
+    // 圖片管理
 
     /**
      * 取得商品的所有圖片（Base64 格式）
-     * 回傳 List<Map>，每個 Map 包含：productPicId, imageBase64
+     * 回傳 List，每個 Map 包含：productPicId, imageBase64
      */
     List<Map<String, Object>> getProductImages(Integer proId);
 
@@ -68,11 +72,11 @@ public interface ProductService {
      */
     void deleteProductImage(Integer productPicId);
 
-    // ==================== 整合查詢（給 Controller 用） ====================
+    // 整合查詢（給 Controller 用）
 
     /**
      * 取得賣家商品列表（含主圖）
-     * 回傳 List<Map>，每個 Map 包含：
+     * 回傳 List，每個 Map 包含：
      * - product: Product
      * - mainImage: 主圖 Base64
      */
@@ -80,22 +84,14 @@ public interface ProductService {
 
     /**
      * 儲存商品（含圖片處理）
-     * 處理：新增/更新商品、儲存新圖片、刪除指定圖片
-     *
-     * 回傳儲存後的商品
+     * 處理：新增或更新商品、儲存新圖片、刪除指定圖片
      */
     Product saveProductWithImages(Integer sellerId, Integer proId, String proName,
                                   Integer proTypeId, Integer proPrice, String proDescription,
                                   Integer stockQuantity, Integer proState,
                                   List<MultipartFile> newImages, List<Integer> deleteImageIds);
 
-    /**
-     * 刪除商品（含圖片）
-     * 回傳 true 成功，false 失敗（非該賣家商品）
-     */
-    boolean deleteProductBySeller(Integer sellerId, Integer proId);
-
-    // ==================== 統計 ====================
+    // 統計
 
     /**
      * 計算賣家商品總數
@@ -103,36 +99,7 @@ public interface ProductService {
     long countSellerProducts(Integer sellerId);
 
     /**
-     * 計算賣家上架中商品數
+     * 計算上架中商品數量（proState = 1）
      */
     long countActiveProducts(Integer sellerId);
-
-    // ==================== 舊方法（保留相容性） ====================
-
-    /**
-     * @deprecated 請使用 getSellerProducts
-     */
-    @Deprecated
-    List<Product> getSellerProuducts(Integer memId);
-
-    /**
-     * @deprecated 請使用 getProductById
-     */
-    @Deprecated
-    Optional<Product> getProuductById(Integer proId);
-
-    /**
-     * @deprecated 請使用 deleteProduct
-     */
-    @Deprecated
-    void deleteById(Integer proid);
-
-    // ==================== 錢包服務（內部介面） ====================
-
-    interface WalletService {
-        Optional<Wallet> getWalletByMemId(Integer memId);
-        void addBalance(Integer memId, Integer amount);
-        void deductBalance(Integer memId, Integer amount);
-        Wallet createWallet(Integer memId);
-    }
 }
