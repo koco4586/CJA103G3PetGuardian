@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pet Guardian - 評價管理</title>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css}" />
+    <link rel="stylesheet" th:href="@{/css/backend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/backend/reviews.css}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: linear-gradient(135deg, #f5d876 0%, #e8a87c 50%, #c38d9e 100%);
+            min-height: 100vh;
+        }
+
+/* 主內容區 */
+        .main-content {
+            margin-left: 240px;
+            transition: 0.3s;
+            min-height: 100vh;
+            width: calc(100% - 240px);
+        }
+        .sidebar.collapsed + .main-content { 
+            margin-left: 0;
+            width: 100%;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .menu-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .menu-btn:hover { background: #2980b9; }
+        .sub { color: #777; font-size: 0.9rem; margin-top: 5px; }
+
+        section { 
+            padding: 30px;
+            width: 100%;
+        }
+
+        
+        /* 卡片 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .card h3 {
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        /* 表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* 檢舉類型按鈕 */
+        
+
+        /* 表單元素 */
+        textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 10px; 
+            min-height: 120px;
+            font-family: inherit;
+            transition: 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #c38d9e;
+            box-shadow: 0 0 0 3px rgba(195, 141, 158, 0.1);
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: 0.3s;
+            margin-right: 5px;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* 內容區塊切換 */
+       
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }    </style>
+   
+</head>
+
+<body>
+    <script th:src="@{/js/backend/sidebar.js}"></script>
+
+	<div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-paw"></i> Pet Guardian
+        </div>
+        </div>
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>評價檢舉管理</h1>
+                <div class="sub">處理全站（保母/商城）違規評價申訴</div>
+            </div>
+        </header>
+
+        <section>
+            <div class="tab-container">
+                <button class="tab-btn active" data-target="admin-section">
+                    <i class="fa-solid fa-gavel"></i> 待審核檢舉
+                </button>
+                
+            </div>
+
+			<div id="admin-section" class="card content-section">
+			<div class="card">
+			</div>
+                <h3>檢舉審核列表</h3>
+                <table>
+                    <thead>
+                        <tr><th>申訴編號</th>
+<!--                 		<th>發起會員</th> -->
+                			<th>內容</th>
+                			<th>原因</th>
+                			<th>狀態</th></tr>
+                    </thead>
+                    
+                    <tbody>
+                        
+                        
+                        <tr th:each="complaint : ${complaintList}">
+                <td th:text="${complaint.bookingReportId}">1</td>
+                <td th:text="${complaint.reportMemId}">1001</td>
+                <td th:text="${complaint.reportReason}">內容載入中...</td>
+                <td>
+                    <span th:if="${complaint.reportStatus == 0}" style="color: orange;">待處理</span>
+                    <span th:if="${complaint.reportStatus == 1}" style="color: green;">申訴通過</span>
+                	<span th:if="${complaint.reportStatus == 2}" style="color: red; font-weight: bold;">申訴駁回</span>
+                </td>
+                <td>
+    <button th:if="${complaint.reportStatus == 0}"
+    		class="btn" 
+            style="background: #3498db;" 
+            th:onclick="'handleReview(' + ${complaint.bookingReportId} + ')'">
+        處理
+    </button>
+    
+    <span th:unless="${complaint.reportStatus == 0}" style="color: #888;">
+            <i class="fa-solid fa-circle-check"></i> 已結案
+            </span>
+</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(complaintList)}">
+                <td colspan="5" style="text-align: center;">目前沒有待處理的申訴</td>
+            </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            </section>
+				</div>
+
+            
+                
+                
+               
+                
+           
+        
+    
+    
+    
+
+<script type="text/javascript">
+
+
+
+
+
+
+
+function handleReview(reportId) {
+    // 第一步：確認是否進入處理流程
+    Swal.fire({
+        title: '確認處理',
+        text: `您是否要開始處理申訴案號：#${reportId}？`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3498db',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: '是的，開始審核',
+        cancelButtonText: '取消'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // 第二步：彈出審核選項
+            openAuditModal(reportId);
+        }
+    });
+}
+
+function openAuditModal(reportId) {
+    Swal.fire({
+        title: '審核結果',
+        text: '請選擇對此申訴案的處理方式：',
+        icon: 'info',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check"></i> 核准申訴',
+        denyButtonText: '<i class="fa-solid fa-xmark"></i> 駁回申訴',
+        cancelButtonText: '暫時關閉',
+        confirmButtonColor: '#27ae60', // 綠色 (核准)
+        denyButtonColor: '#e74c3c',    // 紅色 (駁回)
+    }).then((result) => {
+        let status = 0;
+        let statusText = "";
+
+        if (result.isConfirmed) {
+            status = 1; // 假設 1 是核准
+            statusText = "已核准";
+        } else if (result.isDenied) {
+            status = 2; // 假設 2 是駁回
+            statusText = "已駁回";
+        } else {
+            return; // 使用者按取消
+        }
+
+        // 第三步：發送 AJAX 到後端
+        sendAuditResult(reportId, status, statusText);
+    });
+}
+
+function sendAuditResult(reportId, status, statusText) {
+    // 🚩 這裡的地址必須是 /admin (類別路徑) + /pet/updateReportStatus (方法路徑)
+    fetch('/admin/pet/updateReportStatus', { 
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded' 
+        },
+        body: new URLSearchParams({
+            'reportId': reportId,
+            'status': status
+        })
+    })
+    .then(res => res.json()) // 因為你的 Controller 回傳的是 ResponseEntity.ok(Map)
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: '處理成功',
+                text: `案號 #${reportId} 已標記為「${statusText}」`,
+                icon: 'success',
+                confirmButtonText: '確定'
+            }).then(() => {
+                location.reload(); // 成功後刷新頁面，Thymeleaf 會根據新的 Status 變色
+            });
+        } else {
+            Swal.fire('錯誤', '後台更新失敗', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        Swal.fire('錯誤', '連線異常，請檢查網路或伺服器路徑', 'error');
+    });
+}
+
+    
+
+
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>檢舉申訴中心 | PetGuardian</title>
+
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+
+    <style>
+        .report-main {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        /* 檢舉類別切換 */
+        .report-type-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .type-btn {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .type-btn i { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+        .type-btn.active {
+            border-color: #ff6b6b;
+            background-color: #fff5f5;
+            color: #ff6b6b;
+        }
+
+        .report-form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .form-section { margin-bottom: 25px; }
+        .form-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        /* 圖片上傳區域 */
+        .image-upload-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .upload-btn-box {
+            width: 120px;
+            height: 120px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #999;
+            flex-direction: column;
+        }
+        .preview-img-box {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+        .preview-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-img {
+            position: absolute; top: 5px; right: 5px;
+            background: rgba(255,0,0,0.7); color: white;
+            border: none; border-radius: 50%; cursor: pointer;
+            width: 20px; height: 20px; line-height: 18px;
+        }
+
+        .btn-submit-report {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn-submit-report:hover { background: #ee5253; }
+    </style>
+</head>
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="report-main">
+        <h2 style="text-align: center; margin-bottom: 10px;">檢舉申訴中心</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">請選擇檢舉類別，我們將有專人處理您的申訴。</p>
+
+        <div class="report-type-group">
+            <div class="type-btn active" onclick="switchType('SITTER', this)">
+                <i class="fas fa-user-shield"></i>
+                <span>檢舉保母</span>
+            </div>
+            <div class="type-btn" onclick="switchType('RESERVATION', this)">
+                <i class="fas fa-calendar-check"></i>
+                <span>預約服務訂單</span>
+            </div>
+            <div class="type-btn" onclick="switchType('SHOP', this)">
+                <i class="fas fa-shopping-cart"></i>
+                <span>商城訂單(賣家)</span>
+            </div>
+        </div>
+
+        <div class="report-form-card">
+            <form id="reportForm">
+                <input type="hidden" id="reportType" name="reportType" value="SITTER">
+
+                <div class="form-section">
+                    <label id="targetLabel">被檢舉保母名稱：</label>
+                    <input type="text" class="form-control" id="targetInfo" placeholder="請輸入對象或單號" readonly>
+                    </div>
+
+                <div class="form-section">
+                    <label>檢舉內容詳述：</label>
+                    <textarea class="form-control" rows="6" placeholder="請詳細說明檢舉原因、發生經過..." required></textarea>
+                </div>
+
+                <div class="form-section">
+                    <label>證據照片上傳 (最多3張)：</label>
+                    <div class="image-upload-wrapper">
+                        <div id="previewArea" style="display: flex; gap: 10px;"></div>
+                        <div class="upload-btn-box" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-camera fa-2x"></i>
+                            <span style="font-size: 0.8rem; margin-top: 5px;">新增照片</span>
+                        </div>
+                        <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-report">送出檢舉申訴</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 切換檢舉對象邏輯 ---
+        function switchType(type, element) {
+            // 移除所有按鈕的 active
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            
+            // 設定隱藏欄位值
+            document.getElementById('reportType').value = type;
+
+            // 切換文字提示
+            const label = document.getElementById('targetLabel');
+            const placeholder = document.getElementById('targetInfo');
+
+            switch(type) {
+                case 'SITTER':
+                    label.innerText = "被檢舉保母名稱：";
+                    placeholder.value = "保母：堅果"; // 假設資料
+                    break;
+                case 'RESERVATION':
+                    label.innerText = "被檢舉預約訂單編號：";
+                    placeholder.value = "RSV20240501001";
+                    break;
+                case 'SHOP':
+                    label.innerText = "被檢舉商城訂單/賣家：";
+                    placeholder.value = "ORD99887766 (賣家: PetShopA)";
+                    break;
+            }
+        }
+
+        // --- 2. 圖片預覽邏輯 ---
+        const fileInput = document.getElementById('fileInput');
+        const previewArea = document.getElementById('previewArea');
+        let uploadedFiles = [];
+
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                if (uploadedFiles.length >= 3) return; // 限制三張
+                uploadedFiles.push(file);
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-img-box';
+                    div.innerHTML = `
+                        <img src="${event.target.result}">
+                        <button type="button" class="remove-img" onclick="removeImage(this)">×</button>
+                    `;
+                    previewArea.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        function removeImage(btn) {
+            btn.parentElement.remove();
+            // 這裡還需要額外處理 uploadedFiles 陣列，實際傳送後端時需同步
+        }
+    </script>
+
+</body>
+</html>
