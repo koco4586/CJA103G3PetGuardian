@@ -3,6 +3,11 @@ package com.petguardian.sitter.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import com.petguardian.petsitter.model.PetType;
+import com.petguardian.petsitter.model.PetSize;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -89,6 +94,24 @@ public class SitterProfileController {
         // 6. 查詢所有可用縣市 (改為縣市 + AJAX 連動地區)
         List<String> availableCities = areaService.getAllCities();
         model.addAttribute("availableCities", availableCities);
+
+        // [NEW] 準備 Enum 資料供前端選單與列表顯示
+        model.addAttribute("petTypeOptions", PetType.values());
+        model.addAttribute("petSizeOptions", PetSize.values());
+
+        Map<Integer, String> petTypeMap = Arrays.stream(PetType.values())
+                .collect(Collectors.toMap(PetType::getId, PetType::getLabel));
+        Map<Integer, String> petSizeMap = Arrays.stream(PetSize.values())
+                .collect(Collectors.toMap(PetSize::getId, PetSize::getLabel));
+
+        // 傳統寫法對照
+        // Map<Integer, String> petSizeMap = new HashMap<>();
+        // for (PetSize size : PetSize.values()) {
+        // petSizeMap.put(size.getId(), size.getLabel());
+        // }
+
+        model.addAttribute("petTypeMap", petTypeMap);
+        model.addAttribute("petSizeMap", petSizeMap);
 
         // 7. 準備 Model
         model.addAttribute("sitter", sitter);
