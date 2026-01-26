@@ -81,17 +81,17 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
      */
     @Override
     public BookingOrderVO createBooking(BookingOrderVO order) {
-    	// 0. 檢查：寵物 ID 在資料庫中真的存在
+        // 0. 檢查：寵物 ID 在資料庫中真的存在
         PetVO pet = petRepository.findByPrimaryKey(order.getPetId()).orElse(null);
         if (pet == null) {
             throw new IllegalArgumentException("預約失敗：找不到對應的寵物資料 (ID: " + order.getPetId() + ")");
         }
-        
+
         if (!pet.getMemId().equals(order.getMemId())) {
-            throw new IllegalArgumentException("預約失敗：這隻寵物不屬於您。");
+            throw new IllegalArgumentException("預約失敗：因保姆此時段休息,還請另外再預約其他時間,謝謝");
         }
-    	
-    	LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime now = LocalDateTime.now();
 
         // 1. 時間邏輯檢查
         if (!order.getEndTime().isAfter(order.getStartTime())) {
@@ -138,8 +138,20 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
         // 9. 執行訂單存檔
         BookingOrderVO savedOrder = orderRepository.save(order);
 
-        // 10. 同步更新保母排程字串 (將對應時段設為 '1' 佔用)
-        updateSitterSchedule(savedOrder, '1');
+        // 10. 同步更新保母排程字串
+        // [修改邏輯] 增加緩衝時間機制：
+        // 為了讓保姆在服務與服務之間有喘息空間，
+        // 系統會強制將「佔用時間」往後延伸 1 小時 (Buffer Time)。
+        // 範例：會員預約 10:00~11:00，系統實際佔用 10:00~12:00。
+        BookingOrderVO bufferOrder = new BookingOrderVO();
+        bufferOrder.setSitterId(savedOrder.getSitterId());
+        bufferOrder.setBookingOrderId(savedOrder.getBookingOrderId()); // 關聯同一張單
+        bufferOrder.setStartTime(savedOrder.getStartTime());
+        // [關鍵] 結束時間自動 +1 小時，作為緩衝
+        bufferOrder.setEndTime(savedOrder.getEndTime().plusHours(1));
+
+        // 使用加長版的時間來更新行事曆，寫入狀態 '2' (已預約)
+        updateSitterSchedule(bufferOrder, '2');
 
         return savedOrder;
     }
@@ -210,13 +222,13 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
      * 從資料庫找出該保母當天所有「未取消」的訂單，並加總成一個 24 位元的排程整數。
      */
     private int getSitterScheduleBits(Integer sitterId, LocalDate date) {
-    	// 直接查詢排程表，若無紀錄代表整天都是空的 (0)
+        // 直接查詢排程表，若無紀錄代表整天都是空的 (0)
         return scheduleRepository.findBySitterIdAndScheduleDate(sitterId, date)
                 .map(schedule -> {
                     // 將 "00011100..." 字串轉回 int 位元
                     return convertStatusStringToBits(schedule.getBookingStatus());
                 })
-                .orElse(0); 
+                .orElse(0);
     }
 
     /**
@@ -226,7 +238,8 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
         int bits = 0;
         // 遍歷 24 個字元
         for (int i = 0; i < 24; i++) {
-            if (status.charAt(i) == '1') {
+            // 只要狀態不是 0 (空閒)，可能是 1(休息) 或 2(預約)，都視為佔用
+            if (status.charAt(i) != '0') {
                 bits |= (1 << i);
             }
         }
