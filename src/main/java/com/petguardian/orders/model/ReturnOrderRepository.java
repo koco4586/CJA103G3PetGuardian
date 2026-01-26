@@ -30,4 +30,10 @@ public interface ReturnOrderRepository extends JpaRepository<ReturnOrderVO, Inte
 //    根據賣家ID查詢退貨單（透過 JOIN）
     @Query("SELECT r FROM ReturnOrderVO r JOIN OrdersVO o ON r.orderId = o.orderId WHERE o.sellerMemId = :sellerMemId ORDER BY r.applyTime DESC")
     List<ReturnOrderVO> findBySellerMemId(@Param("sellerMemId") Integer sellerMemId);
+
+    /**
+     * 計算指定退貨狀態的退貨單數量
+     * return_status: 0=審核中, 1=退貨通過, 2=退貨失敗
+     */
+    long countByReturnStatus(Integer returnStatus);
 }
