@@ -232,21 +232,18 @@ public class StoreController {
             HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            redirectAttr.addFlashAttribute("error", "請先登入");
             return "redirect:/store";
         }
 
         // 取得商品資訊
         Optional<Product> productOpt = productService.getProductById(proId);
         if (productOpt.isEmpty()) {
-            redirectAttr.addFlashAttribute("error", "商品不存在");
             return "redirect:/store";
         }
         Product product = productOpt.get();
 
         // 驗證庫存
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
-            redirectAttr.addFlashAttribute("error", "「" + product.getProName() + "」庫存不足");
             return "redirect:/store";
         }
 
@@ -475,7 +472,6 @@ public class StoreController {
         // 檢查是否已在購物車中
         boolean exists = cart.stream().anyMatch(item -> item.getProId().equals(proId));
         if (exists) {
-            redirectAttr.addFlashAttribute("message", "此商品已在購物車中");
             return "redirect:/store/checkout";
         }
 
@@ -485,7 +481,6 @@ public class StoreController {
         cart.add(newItem);
         session.setAttribute("cart", cart);
 
-        redirectAttr.addFlashAttribute("message", "已加入加購商品");
         return "redirect:/store/checkout";
     }
 
@@ -511,7 +506,6 @@ public class StoreController {
             // 數量為 0 或負數，移除商品
             cart.removeIf(item -> item.getProId().equals(proId));
             session.setAttribute("cart", cart);
-            redirectAttr.addFlashAttribute("message", "已從購物車移除");
 
             // 若購物車為空導回商城
             if (cart.isEmpty()) {
@@ -539,7 +533,6 @@ public class StoreController {
                 .ifPresent(item -> item.setQuantity(quantity));
 
         session.setAttribute("cart", cart);
-        redirectAttr.addFlashAttribute("message", "已更新數量");
         return "redirect:/store/checkout";
     }
 
@@ -555,8 +548,6 @@ public class StoreController {
 
         cart.removeIf(item -> item.getProId().equals(proId));
         session.setAttribute("cart", cart);
-
-        redirectAttr.addFlashAttribute("message", "已從購物車移除");
 
         // 若購物車已空，導回商城
         if (cart.isEmpty()) {

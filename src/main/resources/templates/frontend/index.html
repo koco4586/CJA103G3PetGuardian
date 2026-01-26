@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetGuardian 寵護家 | 最溫暖的寵物照護平台</title>
-    <link rel="stylesheet" href="../../static/css/frontend/style.css">
-    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .hero {
@@ -107,7 +107,7 @@
                         <option>🛁 寵物洗澡</option>
                     </select>
                     <input type="text" placeholder="輸入地區 (如: 台北市大安區)">
-                    <button class="btn btn-primary" onclick="window.location.href='services.html'">
+                    <button class="btn btn-primary" onclick="window.location.href='/services'">
                         🔍 搜尋保母
                     </button>
                 </div>
@@ -125,7 +125,7 @@
 
         <div class="grid-list-view">
             <div class="category-card d-flex align-center gap-md"
-                onclick="window.location.href='services.html?type=walk'" style="text-align: left; padding: 1.5rem;">
+                onclick="window.location.href='/services?type=walk'" style="text-align: left; padding: 1.5rem;">
                 <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🐕‍🦺</div>
                 <div>
                     <h3 class="mb-0">散步遛狗</h3>
@@ -133,7 +133,7 @@
                 </div>
             </div>
             <div class="category-card d-flex align-center gap-md"
-                onclick="window.location.href='services.html?type=care'" style="text-align: left; padding: 1.5rem;">
+                onclick="window.location.href='/services?type=care'" style="text-align: left; padding: 1.5rem;">
                 <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🏠</div>
                 <div>
                     <h3 class="mb-0">到府照顧</h3>
@@ -141,14 +141,14 @@
                 </div>
             </div>
             <div class="category-card d-flex align-center gap-md"
-                onclick="window.location.href='services.html?type=bath'" style="text-align: left; padding: 1.5rem;">
+                onclick="window.location.href='/services?type=bath'" style="text-align: left; padding: 1.5rem;">
                 <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🛁</div>
                 <div>
                     <h3 class="mb-0">到府洗澡</h3>
                     <p style="color: #666; font-size: 0.9rem; margin:0;">免出門，專業美容師服務</p>
                 </div>
             </div>
-            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='store.html'"
+            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/store'"
                 style="text-align: left; padding: 1.5rem;">
                 <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🛍️</div>
                 <div>
@@ -184,7 +184,7 @@
                     </div>
                     <div class="d-flex justify-between align-center">
                         <span style="color: var(--primary-color); font-weight: 700;">$300起</span>
-                        <a href="services.html" class="btn btn-outline btn-sm">預約</a>
+                        <a href="/services" class="btn btn-outline btn-sm">預約</a>
                     </div>
                 </div>
             </div>
@@ -209,7 +209,7 @@
                     </div>
                     <div class="d-flex justify-between align-center">
                         <span style="color: var(--primary-color); font-weight: 700;">$500起</span>
-                        <a href="services.html" class="btn btn-outline btn-sm">預約</a>
+                        <a href="/services" class="btn btn-outline btn-sm">預約</a>
                     </div>
                 </div>
             </div>
@@ -234,21 +234,20 @@
                     </div>
                     <div class="d-flex justify-between align-center">
                         <span style="color: var(--primary-color); font-weight: 700;">$250起</span>
-                        <a href="services.html" class="btn btn-outline btn-sm">預約</a>
+                        <a href="/services" class="btn btn-outline btn-sm">預約</a>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="text-center mt-3 mb-2">
-            <a href="services.html" class="btn btn-secondary">查看更多保母 -></a>
+            <a href="/services" class="btn btn-secondary">查看更多保母 -></a>
         </div>
     </div>
 
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 
-    <script src="../../static/js/frontend/data.js"></script>
-    <script src="../../static/js/frontend/main.js"></script>
+    <script src="/js/frontend/main.js"></script>
 </body>
 
 </html>
