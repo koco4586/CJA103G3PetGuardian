@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class SitterApplicationDTO {
     private Integer appId;
     private Integer memId;
+    private Integer sitterId;
     private String appIntro;
     private String appExperience;
     private Byte appStatus;
@@ -32,6 +33,7 @@ public class SitterApplicationDTO {
         return new SitterApplicationDTO(
                 vo.getAppId(),
                 vo.getMemId(),
+                vo.getSitterId(),
                 vo.getAppIntro(),
                 vo.getAppExperience(),
                 vo.getAppStatus(),
@@ -47,6 +49,7 @@ public class SitterApplicationDTO {
         SitterApplicationVO vo = new SitterApplicationVO();
         vo.setAppId(this.appId);
         vo.setMemId(this.memId);
+        vo.setSitterId(this.sitterId);
         vo.setAppIntro(this.appIntro);
         vo.setAppExperience(this.appExperience);
         vo.setAppStatus(this.appStatus);

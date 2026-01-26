@@ -114,17 +114,31 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
                 }
 
                 // 3.3 建立保姆資料
-                sitterService.createSitter(memId, sitterName, sitterAdd);
+                SitterVO newSitter = sitterService.createSitter(memId, sitterName, sitterAdd);
+                vo.setSitterId(newSitter.getSitterId());
+            } else {
+                vo.setSitterId(existingSitter.getSitterId());
             }
 
-            // TODO: 會員功能完成後,取消以下註解以啟用會員保姆狀態更新
-            // 3.4 更新會員的保姆狀態為啟用
-            // Optional<Member> memberOpt = memberRepository.findById(memId);
-            // if (memberOpt.isPresent()) {
-            // Member member = memberOpt.get();
-            // member.setMemSitterStatus(1); // 啟用保姆狀態
-            // memberRepository.save(member);
-            // }
+            /*
+             * =================================================================
+             * [PENDING INTEGRATION] 等待會員模組整合
+             * =================================================================
+             * 目標：當審核通過時，同步更新 Member 資料表的 mem_sitter_status 欄位
+             * 
+             * 啟用步驟：
+             * 1. 注入 MemberRepository (需由會員模組提供)
+             * 2. 解除以下程式碼的註解
+             * 
+             * 預期程式碼：
+             * Optional<Member> memberOpt = memberRepository.findById(memId);
+             * if (memberOpt.isPresent()) {
+             * Member member = memberOpt.get();
+             * member.setMemSitterStatus(1); // 1: 啟用保姆權限
+             * memberRepository.save(member);
+             * }
+             * =================================================================
+             */
         }
 
         return repository.save(vo);
@@ -171,5 +185,26 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
     @Override
     public List<SitterApplicationVO> getAllApplications() {
         return repository.findAll();
+    }
+
+    /**
+     * 檢查會員是否已經擁有有效的保姆資格 (即通過審核)
+     * 
+     * @param memId 會員編號
+     * @return true 若已是保姆
+     */
+    @Override
+    public boolean isSitter(Integer memId) {
+        if (memId == null) {
+            return false;
+        }
+
+        List<SitterApplicationVO> applications = repository.findByMemId(memId);
+        for (SitterApplicationVO app : applications) {
+            if (app.getAppStatus() == 1) { // 1 = 已通過
+                return true;
+            }
+        }
+        return false;
     }
 }

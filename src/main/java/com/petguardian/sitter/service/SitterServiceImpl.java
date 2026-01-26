@@ -13,10 +13,19 @@ import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.model.SitterSearchCriteria;
 import com.petguardian.sitter.model.SitterSearchDTO;
+import com.petguardian.sitter.model.SitterMemberRepository;
+import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.booking.model.BookingScheduleVO;
 import com.petguardian.booking.model.BookingScheduleRepository;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
+
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+import com.petguardian.service.model.ServiceAreaVO;
+import com.petguardian.area.model.AreaVO;
 
 /**
  * 保姆業務邏輯實作
@@ -37,6 +46,9 @@ public class SitterServiceImpl implements SitterService {
 
     @Autowired
     private BookingScheduleRepository bookingScheduleRepository;
+
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
 
     /**
      * 建立保姆資料
@@ -191,6 +203,7 @@ public class SitterServiceImpl implements SitterService {
     // ========== 排程相關功能 (透過會員 ID) ==========
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingScheduleVO> getScheduleByMember(Integer memId, int year, int month) {
         SitterVO sitter = repository.findByMemId(memId);
         if (sitter == null) {
@@ -354,6 +367,14 @@ public class SitterServiceImpl implements SitterService {
         return results;
     }
 
+    /**
+     * 依會員 ID 查詢會員資訊
+     */
+    @Override
+    public SitterMemberVO getSitterMemberById(Integer memId) {
+        return sitterMemberRepository.findById(memId).orElse(null);
+    }
+
     // ========== 私有輔助方法 ==========
 
     /**
@@ -455,5 +476,46 @@ public class SitterServiceImpl implements SitterService {
     private Integer getPetTypeIdByName(String petTypeName) {
         // TODO: 實作從 pet_type 表查詢
         return null;
+    }
+
+    /**
+     * 更新保姆的一週行程 (從前端傳來的複雜 JSON 資料解析並儲存)
+     */
+    @Override
+    @Transactional
+    public void updateWeeklySchedule(Integer sitterId,
+            java.util.Map<String, java.util.Map<String, String>> scheduleData) {
+        // 1. 建立 24 小時的狀態字串（合併七天的資料）
+        char[] serviceTimeArray = new char[24];
+        // 初始化為全部不可預約
+        for (int i = 0; i < 24; i++) {
+            serviceTimeArray[i] = '0';
+        }
+
+        // 2. 遍歷七天的資料
+        for (int day = 0; day < 7; day++) {
+            String dayKey = String.valueOf(day);
+            if (scheduleData.containsKey(dayKey)) {
+                java.util.Map<String, String> daySchedule = scheduleData.get(dayKey);
+
+                for (int hour = 0; hour < 24; hour++) {
+                    String hourStr = String.valueOf(hour);
+                    if (daySchedule.containsKey(hourStr)) {
+                        String status = daySchedule.get(hourStr);
+                        // 0: 可預約 (前端傳來的狀態)
+                        // service_time: 0=不可預約, 1=可預約 (資料庫儲存的狀態)
+                        if ("0".equals(status)) {
+                            // 只要任何一天這個時段是可預約，就設為可預約
+                            serviceTimeArray[hour] = '1';
+                        }
+                    }
+                }
+            }
+        }
+
+        String serviceTime = new String(serviceTimeArray);
+
+        // 3. 更新資料庫
+        updateServiceTime(sitterId, serviceTime);
     }
 }

@@ -2,6 +2,7 @@ package com.petguardian.sitter.service;
 
 import java.util.List;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterSearchCriteria;
 import com.petguardian.sitter.model.SitterSearchDTO;
 import com.petguardian.booking.model.BookingScheduleVO;
@@ -115,4 +116,21 @@ public interface SitterService {
      * @return List<SitterSearchDTO> 所有啟用中的保姆列表
      */
     List<SitterSearchDTO> getAllActiveSitters();
+
+    /**
+     * 依會員 ID 查詢會員資訊 (用於保姆模組)
+     * 分離 Repository 與 Controller 的相依性
+     * 
+     * @param memId 會員編號
+     * @return SitterMemberVO
+     */
+    SitterMemberVO getSitterMemberById(Integer memId);
+
+    /**
+     * 更新保姆的一週行程 (從前端傳來的複雜 JSON 資料解析並儲存)
+     * 
+     * @param sitterId     保姆編號
+     * @param scheduleData 前端傳來的一週行程資料
+     */
+    void updateWeeklySchedule(Integer sitterId, java.util.Map<String, java.util.Map<String, String>> scheduleData);
 }

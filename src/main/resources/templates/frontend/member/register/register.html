@@ -23,7 +23,7 @@
 <body>
     <h1>寵護家會員註冊</h1>
 
-    <form action="">
+    <form>
 
         <span class="mustbe">＊必填</span>
 
@@ -86,7 +86,7 @@
                 }
 
 
-                let fetch_url = "http://localhost:8080/register";
+                let fetch_url = "http://localhost:8080/front/register";
 
                 fetch(fetch_url, {
                     method: "POST",
@@ -97,7 +97,7 @@
                 }).then(res => res.json()).then(data => {
                     console.log(data);
                     if (data.result === "註冊成功") {  // 後端返回 {result: true}
-                        window.location.href = "/html/member/register/registersuccess.html";
+                        window.location.href = "/html/frontend/member/register/registersuccess.html";
                     }
                 });
 

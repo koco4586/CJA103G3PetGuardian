@@ -13,6 +13,10 @@ import com.petguardian.productfavoritelist.service.ProductFavoriteListService;
 import com.petguardian.orders.service.ReturnOrderService;
 import com.petguardian.sellerreview.model.SellerReviewVO;
 import com.petguardian.sellerreview.service.SellerReviewService;
+import com.petguardian.wallet.model.WalletRepository;
+import com.petguardian.seller.model.ProType;
+import com.petguardian.seller.model.ProTypeRepository;
+import com.petguardian.store.service.ImageCacheService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +66,15 @@ public class StoreController {
     @Autowired
     private AuthStrategyService authService;
 
+    @Autowired
+    private WalletRepository walletRepository;
+
+    @Autowired
+    private ProTypeRepository proTypeRepository;
+
+    @Autowired
+    private ImageCacheService imageCacheService;
+
     // ==================== 輔助方法 ====================
 
     /**
@@ -84,18 +97,10 @@ public class StoreController {
     }
 
     /**
-     * 將商品圖片轉換為 Base64 字串
+     * 將商品圖片轉換為 Base64 字串（使用快取服務）
      */
     private String getProductImageBase64(Integer proId) {
-        List<ProductPic> pics = productPicDAO.findByProduct_ProId(proId);
-
-        if (!pics.isEmpty() && pics.get(0).getProPic() != null) {
-            byte[] imageBytes = pics.get(0).getProPic();
-            return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
-        }
-
-        // 預設佔位圖（1x1 灰色像素）
-        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+        return imageCacheService.getProductImageBase64(proId);
     }
 
     /**
@@ -111,6 +116,11 @@ public class StoreController {
         dto.setProDescription(product.getProDescription());
         dto.setImageBase64(getProductImageBase64(product.getProId()));
         dto.setFavorited(favoriteIds != null && favoriteIds.contains(product.getProId()));
+        // 加入分類資訊
+        if (product.getProType() != null) {
+            dto.setProTypeId(product.getProType().getProTypeId());
+            dto.setProTypeName(product.getProType().getProTypeName());
+        }
         return dto;
     }
 
@@ -175,11 +185,19 @@ public class StoreController {
      * GET /store
      */
     @GetMapping("/store")
-    public String storePage(Model model, HttpSession session, HttpServletRequest request) {
+    public String storePage(@RequestParam(required = false) Integer categoryId,
+            Model model, HttpSession session, HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
 
         // 取得所有上架商品
         List<Product> products = productService.getAllActiveProducts();
+
+        // 如果有指定分類，進行篩選
+        if (categoryId != null) {
+            products = products.stream()
+                    .filter(p -> p.getProType() != null && categoryId.equals(p.getProType().getProTypeId()))
+                    .collect(Collectors.toList());
+        }
 
         // 取得使用者收藏的商品 ID 集合 (若未登入則為空集合)
         Set<Integer> favoriteIds = (memId != null)
@@ -191,8 +209,13 @@ public class StoreController {
                 .map(p -> toProductDisplayDTO(p, favoriteIds))
                 .collect(Collectors.toList());
 
+        // 取得所有商品分類
+        List<ProType> categories = proTypeRepository.findAll();
+
         model.addAttribute("products", productDTOs);
         model.addAttribute("memId", memId);
+        model.addAttribute("categories", categories);
+        model.addAttribute("selectedCategoryId", categoryId);
 
         return "frontend/orders/store";
     }
@@ -209,21 +232,18 @@ public class StoreController {
             HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            redirectAttr.addFlashAttribute("error", "請先登入");
             return "redirect:/store";
         }
 
         // 取得商品資訊
         Optional<Product> productOpt = productService.getProductById(proId);
         if (productOpt.isEmpty()) {
-            redirectAttr.addFlashAttribute("error", "商品不存在");
             return "redirect:/store";
         }
         Product product = productOpt.get();
 
         // 驗證庫存
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
-            redirectAttr.addFlashAttribute("error", "商品庫存不足");
             return "redirect:/store";
         }
 
@@ -325,8 +345,14 @@ public class StoreController {
                 .collect(Collectors.toList());
         checkout.setUpsellProducts(upsellDTOs);
 
+        // 6. 取得會員錢包餘額
+        Integer walletBalance = walletRepository.findByMemId(memId)
+                .map(wallet -> wallet.getBalance())
+                .orElse(0);
+
         model.addAttribute("checkout", checkout);
         model.addAttribute("sellerId", sellerId);
+        model.addAttribute("walletBalance", walletBalance);
 
         return "frontend/orders/checkout";
     }
@@ -439,14 +465,13 @@ public class StoreController {
 
         // 驗證庫存
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
-            redirectAttr.addFlashAttribute("error", "商品庫存不足");
+            redirectAttr.addFlashAttribute("error", "「" + product.getProName() + "」庫存不足");
             return "redirect:/store/checkout";
         }
 
         // 檢查是否已在購物車中
         boolean exists = cart.stream().anyMatch(item -> item.getProId().equals(proId));
         if (exists) {
-            redirectAttr.addFlashAttribute("message", "此商品已在購物車中");
             return "redirect:/store/checkout";
         }
 
@@ -456,7 +481,6 @@ public class StoreController {
         cart.add(newItem);
         session.setAttribute("cart", cart);
 
-        redirectAttr.addFlashAttribute("message", "已加入加購商品");
         return "redirect:/store/checkout";
     }
 
@@ -482,7 +506,6 @@ public class StoreController {
             // 數量為 0 或負數，移除商品
             cart.removeIf(item -> item.getProId().equals(proId));
             session.setAttribute("cart", cart);
-            redirectAttr.addFlashAttribute("message", "已從購物車移除");
 
             // 若購物車為空導回商城
             if (cart.isEmpty()) {
@@ -510,7 +533,6 @@ public class StoreController {
                 .ifPresent(item -> item.setQuantity(quantity));
 
         session.setAttribute("cart", cart);
-        redirectAttr.addFlashAttribute("message", "已更新數量");
         return "redirect:/store/checkout";
     }
 
@@ -526,8 +548,6 @@ public class StoreController {
 
         cart.removeIf(item -> item.getProId().equals(proId));
         session.setAttribute("cart", cart);
-
-        redirectAttr.addFlashAttribute("message", "已從購物車移除");
 
         // 若購物車已空，導回商城
         if (cart.isEmpty()) {

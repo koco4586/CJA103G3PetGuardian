@@ -16,7 +16,7 @@ import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.common.service.AuthStrategyService;
-import com.petguardian.chat.service.ChatRoomMapper;
+import com.petguardian.chat.service.mapper.ChatRoomMapper;
 import com.petguardian.chat.service.ChatService;
 
 import jakarta.servlet.http.HttpServletRequest;

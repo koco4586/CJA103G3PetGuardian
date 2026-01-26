@@ -11,90 +11,187 @@
     <link rel="stylesheet" href="/css/frontend/dashboard.css">
     <link rel="stylesheet" href="/css/frontend/store.css">
     <style>
-        /* Override store grid for dashboard context if needed */
-        .store-grid {
-            padding: 1rem 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1.5rem;
-        }
-
-        /* Ensure cards fit the container */
-        .store-product-card {
-            background: white;
+        /* Flash Messages */
+        .flash-message {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.875rem 1.5rem;
             border-radius: 12px;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .flash-message.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: none;
+        }
+
+        .flash-message.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Stock Info */
+        .stock-info {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        .stock-info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Product Card Click */
+        .store-product-card {
+            cursor: pointer;
+        }
+
+        /* Image Wrapper */
+        .product-image-wrapper {
+            position: relative;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 12px;
         }
 
-        .store-product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        .product-image-wrapper img {
+            transition: transform 0.4s ease;
         }
 
-        /* Copy from store.html */
+        .store-product-card:hover .product-image-wrapper img {
+            transform: scale(1.08);
+        }
+
+        /* Favorite Button */
+        .btn-like {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: #bbb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-like:hover {
+            background: white;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-like.active {
+            color: #e74c3c;
+            background: #fff5f5;
+        }
+
+        .btn-like.active i {
+            color: #e74c3c;
+        }
+
+        /* Buy Button */
         .btn-buy-now {
             width: 100%;
-            padding: 0.75rem 1rem;
-            background: var(--primary-color, #4a90a4);
+            padding: 0.8rem 1rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #c4956a 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(212, 163, 115, 0.3);
             text-decoration: none;
-            /* Ensure link underline is removed */
         }
 
         .btn-buy-now:hover {
-            background: #3a7a94;
-            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 163, 115, 0.4);
         }
 
-        /* Optimized Sold Out Style */
-        .btn-buy-now:disabled,
-        .btn-buy-now[disabled] {
-            background: #f1f3f5;
-            color: #adb5bd;
+        .btn-buy-now:disabled {
+            background: #d5d5d5;
             cursor: not-allowed;
-            border: 1px solid #dee2e6;
             box-shadow: none;
         }
 
-        /* Ensure disabled button doesn't have hover effect */
-        .btn-buy-now:disabled:hover,
-        .btn-buy-now[disabled]:hover {
-            background: #f1f3f5;
-        }
-
-        .flash-message {
-            position: fixed;
-            top: 80px;
+        /* Sold Out Badge */
+        .sold-out-badge {
+            position: absolute;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            padding: 1rem 2rem;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 0.6rem 1.75rem;
             border-radius: 8px;
-            z-index: 9999;
-            animation: fadeIn 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95rem;
+            z-index: 5;
+            backdrop-filter: blur(4px);
         }
 
-        .flash-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        /* Sold Out Card */
+        .store-product-card.sold-out {
+            opacity: 0.7;
         }
 
-        .flash-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .store-product-card.sold-out .product-image-wrapper img {
+            filter: grayscale(30%);
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 5rem 2rem;
+            background: #fafafa;
+            border-radius: 20px;
+            border: 2px dashed #e5e5e5;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -112,64 +209,37 @@
     </div>
 
     <div class="container dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="text-center mb-2">
-                <div class="avatar-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
-                </div>
-                <h4 th:text="${memberName} ?: '會員'">會員名稱</h4>
-                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
-            </div>
-            <nav>
-                <a href="/dashboard" class="menu-item">
-                    <i class="fas fa-user"></i> 個人資料
-                </a>
-                <a href="/dashboard/pets" class="menu-item">
-                    <i class="fas fa-paw"></i> 我的寵物
-                </a>
-                <a th:href="@{/dashboard/orders}" class="menu-item">
-                    <i class="fas fa-receipt"></i> 商城訂單紀錄
-                </a>
-                <a href="/dashboard/bookings" class="menu-item">
-                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
-                </a>
-                <a th:href="@{/dashboard/favorites}" class="menu-item active">
-                    <i class="fas fa-heart"></i> 收藏列表
-                </a>
-                <a href="/dashboard/sitter-registration" class="menu-item"
-                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
-                    <i class="fas fa-user-plus"></i> 成為保母
-                </a>
-                <a href="/logout" class="menu-item" style="color: var(--danger);">
-                    <i class="fas fa-sign-out-alt"></i> 登出
-                </a>
-            </nav>
-        </div>
+        <!-- Sidebar (共用元件) -->
+        <div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='favorites')}"></div>
 
         <!-- Main Content -->
         <div class="main-content">
             <div id="favorites">
                 <div class="d-flex justify-between align-center mb-2">
                     <h2 style="margin: 0;">我的收藏</h2>
+                    <a th:href="@{/store}" class="btn btn-outline btn-sm">
+                        <i class="fas fa-store"></i> 返回商城
+                    </a>
+                </div>
+
+                <div class="d-flex justify-between align-center mb-2">
+                    <div class="sub-tabs" style="margin-bottom: 0;">
+                        <div class="sub-tab" onclick="filterFavorites('sitters', this)">保母</div>
+                        <div class="sub-tab active" onclick="filterFavorites('store', this)">二手商品</div>
+                        <div class="sub-tab" onclick="filterFavorites('articles', this)">文章</div>
+                    </div>
                     <span style="color: #999; font-size: 0.9rem;"
                         th:text="${favorites != null} ? '共 ' + ${#lists.size(favorites)} + ' 件商品' : '共 0 件商品'">
                         共 0 件商品
                     </span>
                 </div>
 
-                <div class="sub-tabs">
-                    <div class="sub-tab" onclick="filterFavorites('sitters', this)">保母</div>
-                    <div class="sub-tab active" onclick="filterFavorites('store', this)">二手商品</div>
-                    <div class="sub-tab" onclick="filterFavorites('articles', this)">文章</div>
-                </div>
-
                 <!-- Empty State -->
-                <div th:if="${#lists.isEmpty(favorites)}" style="text-align: center; padding: 4rem 2rem;">
-                    <i class="fas fa-heart-broken" style="font-size: 4rem; color: #ddd; margin-bottom: 1rem;"></i>
-                    <h3 style="color: #999;">目前沒有收藏</h3>
-                    <p style="color: #999; margin-bottom: 2rem;">快去商城逛逛吧！</p>
-                    <a th:href="@{/store}" class="btn btn-primary">
+                <div th:if="${#lists.isEmpty(favorites)}" class="empty-state">
+                    <i class="fas fa-heart-broken"></i>
+                    <h3 style="color: #999; margin-bottom: 0.5rem;">目前沒有收藏</h3>
+                    <p>快去商城逛逛吧！</p>
+                    <a th:href="@{/store}" class="btn btn-primary" style="margin-top: 1.5rem;">
                         <i class="fas fa-store"></i> 前往商城
                     </a>
                 </div>
@@ -178,12 +248,19 @@
                 <div class="store-grid" th:if="${!#lists.isEmpty(favorites)}">
 
                     <div th:each="fav : ${favorites}" class="store-product-card"
+                        th:data-product-id="${fav.proId}"
                         th:onclick="${fav.stockQuantity > 0} ? 'window.location.href=\'/product/' + ${fav.proId} + '/buy\'' : 'return false;'"
-                        th:classappend="${fav.stockQuantity <= 0} ? ' sold-out' : ''" style="cursor: pointer;">
+                        th:classappend="${fav.stockQuantity <= 0} ? ' sold-out' : ''">
 
                         <div class="product-image-wrapper">
-                            <!-- Product Image -->
-                            <img th:src="${fav.productImg}" th:alt="${fav.productTitle}" class="store-product-img">
+                            <!-- Product Image (使用 API 端點 + 懶加載) -->
+                            <img th:src="@{'/api/product/' + ${fav.proId} + '/image'}"
+                                 th:alt="${fav.productTitle}"
+                                 class="store-product-img"
+                                 loading="lazy">
+
+                            <!-- Sold Out Badge -->
+                            <div th:if="${fav.stockQuantity <= 0}" class="sold-out-badge">已售完</div>
 
                             <!-- Remove Button (Active Like Button) -->
                             <form th:action="@{/favorites/remove}" method="post" onclick="event.stopPropagation();"
@@ -196,26 +273,31 @@
                         </div>
 
                         <div class="store-product-body">
-                            <!-- Meta -->
-                            <div class="store-product-meta">
-                                <span class="badge badge-accent">二手商品</span>
-                            </div>
-
                             <!-- Title -->
                             <h3 class="store-product-title" th:text="${fav.productTitle}">商品名稱</h3>
 
                             <!-- Price -->
-                            <div class="d-flex justify-between align-center mt-2">
-                                <span class="store-product-price"
-                                    th:text="'$' + ${#numbers.formatInteger(fav.productPrice, 1, 'COMMA')}">$0</span>
+                            <div class="store-product-price" style="margin: 0.5rem 0;"
+                                th:text="'$' + ${#numbers.formatInteger(fav.productPrice, 1, 'COMMA')}">$0</div>
+
+                            <!-- Stock Info -->
+                            <div class="stock-info">
+                                <span th:if="${fav.stockQuantity > 0}">
+                                    <i class="fas fa-cube" style="font-size: 0.75rem;"></i>
+                                    <span th:text="'剩餘 ' + ${fav.stockQuantity} + ' 件'">剩餘 X 件</span>
+                                </span>
+                                <span th:unless="${fav.stockQuantity > 0}" style="color: #e74c3c;">
+                                    <i class="fas fa-times-circle" style="font-size: 0.75rem;"></i> 已售完
+                                </span>
                             </div>
 
-                            <!-- Buy Button logic based on stockQuantity -->
+                            <!-- Buy Now Button -->
                             <a th:if="${fav.stockQuantity > 0}" th:href="@{/product/{id}/buy(id=${fav.proId})}"
-                                class="btn-buy-now mt-2" onclick="event.stopPropagation();">
+                                class="btn-buy-now" style="margin-top: auto;" onclick="event.stopPropagation();">
                                 <i class="fas fa-shopping-bag"></i> 立即購買
                             </a>
-                            <button th:unless="${fav.stockQuantity > 0}" class="btn-buy-now mt-2" disabled>
+                            <button th:unless="${fav.stockQuantity > 0}" class="btn-buy-now" style="margin-top: auto;"
+                                disabled>
                                 <i class="fas fa-times-circle"></i> 已售完
                             </button>
                         </div>

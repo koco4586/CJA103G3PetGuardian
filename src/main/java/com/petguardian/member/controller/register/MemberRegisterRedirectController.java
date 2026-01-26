@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/petguardian")
+@RequestMapping("/front")
 public class MemberRegisterRedirectController {
 
-    @GetMapping("/register")
+    @GetMapping("/registerpage")
     public String register(){
     return "frontend/member/register/register";
     }

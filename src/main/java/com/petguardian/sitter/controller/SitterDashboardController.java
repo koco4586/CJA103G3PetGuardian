@@ -78,12 +78,16 @@ public class SitterDashboardController {
         System.out.println("sitter.getServiceTime(): " + sitter.getServiceTime());
         System.out.println("===========================");
 
+        // 6. 計算平均評分 (改用 SitterVO 方法)
+        double averageRating = sitter.getAverageRating();
+
         model.addAttribute("sitter", sitter);
         model.addAttribute("serviceTime", sitter.getServiceTime()); // 單獨傳遞，避免物件狀態問題
         model.addAttribute("serviceCount", serviceCount);
         model.addAttribute("areaCount", areaCount);
         model.addAttribute("services", services); // 新增詳細列表
         model.addAttribute("areas", areas); // 新增詳細列表
+        model.addAttribute("averageRating", averageRating); // 新增平均評分
 
         return "frontend/sitter/dashboard";
     }

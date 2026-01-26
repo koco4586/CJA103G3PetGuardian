@@ -10,27 +10,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/frontend/dashboard.css">
     <style>
+        /* Flash Messages */
         .flash-message {
             position: fixed;
-            top: 80px;
+            top: 90px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 1rem 2rem;
-            border-radius: 8px;
+            padding: 0.875rem 1.5rem;
+            border-radius: 12px;
             z-index: 9999;
             animation: fadeIn 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
 
         .flash-message.success {
-            background: #d4edda;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
             color: #155724;
-            border: 1px solid #c3e6cb;
+            border: none;
         }
 
         .flash-message.error {
-            background: #f8d7da;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
             color: #721c24;
-            border: 1px solid #f5c6cb;
+            border: none;
         }
 
         @keyframes fadeIn {
@@ -45,36 +48,78 @@
             }
         }
 
-        .order-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        /* Order List */
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
+        /* Order Card */
+        .order-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e5e5;
+            transition: all 0.25s ease;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+            border-color: rgba(212, 163, 115, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Order Header */
         .order-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 0.875rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
         }
 
+        .order-header>div:first-child {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .order-id-label {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .order-id-value {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        /* Order Items */
         .order-items {
-            margin-bottom: 1rem;
+            margin-bottom: 0.875rem;
+            background: #fafafa;
+            border-radius: 10px;
+            padding: 0.375rem;
         }
 
         .order-item {
             display: flex;
-            gap: 1rem;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f5f5f5;
+            gap: 0.875rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: background 0.2s ease;
         }
 
-        .order-item:last-child {
-            border-bottom: none;
+        .order-item:hover {
+            background: white;
+        }
+
+        .order-item:not(:last-child) {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
         }
 
         .order-item img {
@@ -82,53 +127,144 @@
             height: 60px;
             object-fit: cover;
             border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         }
 
+        .order-item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .order-item-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 0.2rem;
+            line-height: 1.35;
+        }
+
+        .order-item-meta {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .order-item-price {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Order Footer */
         .order-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 1rem;
-            border-top: 1px solid #eee;
+            padding-top: 0.875rem;
+            border-top: 1px solid #f0f0f0;
         }
 
+        .order-total-label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .order-total-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-left: 0.5rem;
+        }
+
+        /* Status Badge */
         .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            padding: 0.3rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .status-paid {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1565c0;
+        }
+
+        .status-shipped {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #ef6c00;
+        }
+
+        .status-completed {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #2e7d32;
+        }
+
+        .status-canceled {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #c62828;
+        }
+
+        .status-refunding {
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+            color: #ad1457;
+        }
+
+        .status-refunded {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            color: #6a1b9a;
+        }
+
+        /* Order Time */
+        .order-time {
+            text-align: right;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed #e5e5e5;
+        }
+
+        .order-time small {
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
             font-size: 0.85rem;
             font-weight: 600;
         }
 
-        .status-paid {
-            background: #e3f2fd;
-            color: #1976d2;
+        .status-indicator.reviewed {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
         }
 
-        .status-shipped {
-            background: #fff3e0;
+        .status-indicator.reviewed i {
+            color: #43a047;
+        }
+
+        .status-indicator.time-limit {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #e65100;
+            border: 1px solid #ffcc80;
+        }
+
+        .status-indicator.time-limit i {
             color: #f57c00;
         }
 
-        .status-completed {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-
-        .status-canceled {
-            background: #ffebee;
-            color: #d32f2f;
-        }
-
-        .status-refunding {
-            background: #fce4ec;
-            color: #c2185b;
-        }
-
-        .status-refunded {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-
+        /* Rating Star */
         .rating-star {
             cursor: pointer;
             transition: transform 0.1s;
@@ -140,6 +276,40 @@
 
         .rating-star.active {
             color: #ffd43b;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3.5rem 2rem;
+            background: linear-gradient(135deg, #fffcf9 0%, #faf8f5 100%);
+            border-radius: 16px;
+            border: 2px dashed rgba(212, 163, 115, 0.25);
+        }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: #999;
+            margin-bottom: 0.4rem;
+            font-size: 1.1rem;
+        }
+
+        .empty-state p {
+            color: #aaa;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Filter Buttons Active State */
+        .btn.btn-outline.btn-sm.active {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #c4956a 100%);
+            color: white;
+            border-color: transparent;
         }
 
         /* 訂單詳情樣式 */
@@ -404,6 +574,116 @@
         .image-preview-item .remove-btn:hover {
             background: var(--danger);
         }
+
+        /* 確認對話框樣式 */
+        .confirm-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            transition: background 0.2s ease, visibility 0.2s ease;
+        }
+
+        .confirm-modal-overlay.show {
+            background: rgba(0, 0, 0, 0.5);
+            visibility: visible;
+        }
+
+        .confirm-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .confirm-modal-overlay.show .confirm-modal {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .confirm-modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+
+        .confirm-modal-icon i {
+            font-size: 1.5rem;
+            color: #388e3c;
+        }
+
+        .confirm-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.75rem;
+        }
+
+        .confirm-modal-message {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-modal-cancel,
+        .btn-modal-confirm {
+            flex: 1;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-modal-cancel {
+            background: #f3f4f6;
+            color: #666;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-modal-confirm {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn-modal-confirm:hover {
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3);
+        }
     </style>
 </head>
 
@@ -420,66 +700,39 @@
     </div>
 
     <div class="container dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="text-center mb-2">
-                <div class="avatar-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
-                </div>
-                <h4 th:text="${memberName} ?: '會員'">會員名稱</h4>
-                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
-            </div>
-            <nav>
-                <a href="/dashboard" class="menu-item">
-                    <i class="fas fa-user"></i> 個人資料
-                </a>
-                <a href="/dashboard/pets" class="menu-item">
-                    <i class="fas fa-paw"></i> 我的寵物
-                </a>
-                <a th:href="@{/dashboard/orders}" class="menu-item active">
-                    <i class="fas fa-receipt"></i> 商城訂單紀錄
-                </a>
-                <a href="/dashboard/bookings" class="menu-item">
-                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
-                </a>
-                <a th:href="@{/dashboard/favorites}" class="menu-item">
-                    <i class="fas fa-heart"></i> 收藏列表
-                </a>
-                <a href="/dashboard/sitter-registration" class="menu-item"
-                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
-                    <i class="fas fa-user-plus"></i> 成為保母
-                </a>
-                <a href="/logout" class="menu-item" style="color: var(--danger);">
-                    <i class="fas fa-sign-out-alt"></i> 登出
-                </a>
-            </nav>
-        </div>
+        <!-- Sidebar (共用元件) -->
+        <div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='orders')}"></div>
 
         <!-- Main Content -->
         <div class="main-content">
             <div class="d-flex justify-between align-center mb-2">
                 <h2 style="margin: 0;">商城訂單紀錄</h2>
+                <a th:href="@{/store}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-store"></i> 返回商城
+                </a>
+            </div>
+
+            <!-- 篩選按鈕 -->
+            <div class="d-flex justify-between align-center mb-2">
+                <div class="d-flex gap-sm">
+                    <a th:href="@{/dashboard/orders}" class="btn btn-outline btn-sm"
+                        th:classappend="${filter == null or filter == 'all'} ? 'active' : ''">全部</a>
+                    <a th:href="@{/dashboard/orders(filter='processing')}" class="btn btn-outline btn-sm"
+                        th:classappend="${filter == 'processing'} ? 'active' : ''">進行中</a>
+                    <a th:href="@{/dashboard/orders(filter='completed')}" class="btn btn-outline btn-sm"
+                        th:classappend="${filter == 'completed'} ? 'active' : ''">已完成</a>
+                    <a th:href="@{/dashboard/orders(filter='cancelled')}" class="btn btn-outline btn-sm"
+                        th:classappend="${filter == 'cancelled'} ? 'active' : ''">已取消</a>
+                </div>
                 <span style="color: #999; font-size: 0.9rem;" th:text="'共 ' + ${#lists.size(orders)} + ' 筆訂單'">共 0
                     筆訂單</span>
             </div>
 
-            <!-- 篩選按鈕 -->
-            <div class="d-flex gap-sm mb-2">
-                <a th:href="@{/dashboard/orders}" class="btn btn-outline btn-sm"
-                    th:classappend="${filter == null or filter == 'all'} ? 'active' : ''">全部</a>
-                <a th:href="@{/dashboard/orders(filter='processing')}" class="btn btn-outline btn-sm"
-                    th:classappend="${filter == 'processing'} ? 'active' : ''">進行中</a>
-                <a th:href="@{/dashboard/orders(filter='completed')}" class="btn btn-outline btn-sm"
-                    th:classappend="${filter == 'completed'} ? 'active' : ''">已完成</a>
-                <a th:href="@{/dashboard/orders(filter='cancelled')}" class="btn btn-outline btn-sm"
-                    th:classappend="${filter == 'cancelled'} ? 'active' : ''">已取消</a>
-            </div>
-
             <!-- Empty State -->
-            <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 4rem 2rem;">
-                <i class="fas fa-receipt" style="font-size: 4rem; color: #ddd; margin-bottom: 1rem;"></i>
-                <h3 style="color: #999;">目前沒有訂單</h3>
-                <p style="color: #999; margin-bottom: 2rem;">快去商城選購商品吧！</p>
+            <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
+                <i class="fas fa-receipt"></i>
+                <h3>目前沒有訂單</h3>
+                <p>快去商城選購商品吧！</p>
                 <a th:href="@{/store}" class="btn btn-primary">
                     <i class="fas fa-store"></i> 前往商城
                 </a>
@@ -500,18 +753,23 @@
                     <!-- Order Header -->
                     <div class="order-header">
                         <div>
-                            <span style="color: #999; font-size: 0.85rem;">訂單編號</span>
-                            <span style="font-weight: 700; margin-left: 0.5rem;"
-                                th:text="${order.orderId}">#ORD001</span>
+                            <span class="order-id-label">訂單編號</span>
+                            <span class="order-id-value" th:text="${order.orderId}">#ORD001</span>
                         </div>
                         <div>
                             <span th:switch="${order.orderStatus}">
-                                <span th:case="0" class="status-badge status-paid">已付款</span>
-                                <span th:case="1" class="status-badge status-shipped">已出貨</span>
-                                <span th:case="2" class="status-badge status-completed">已完成</span>
-                                <span th:case="3" class="status-badge status-canceled">已取消</span>
-                                <span th:case="4" class="status-badge status-refunding">申請退貨中</span>
-                                <span th:case="5" class="status-badge status-refunded">退貨完成</span>
+                                <span th:case="0" class="status-badge status-paid"><i class="fas fa-credit-card"></i>
+                                    已付款</span>
+                                <span th:case="1" class="status-badge status-shipped"><i class="fas fa-truck"></i>
+                                    已出貨</span>
+                                <span th:case="2" class="status-badge status-completed"><i
+                                        class="fas fa-check-circle"></i> 已完成</span>
+                                <span th:case="3" class="status-badge status-canceled"><i
+                                        class="fas fa-times-circle"></i> 已取消</span>
+                                <span th:case="4" class="status-badge status-refunding"><i class="fas fa-undo"></i>
+                                    申請退貨中</span>
+                                <span th:case="5" class="status-badge status-refunded"><i
+                                        class="fas fa-check-double"></i> 退貨完成</span>
                                 <span th:case="*" class="status-badge">未知狀態</span>
                             </span>
                         </div>
@@ -520,47 +778,49 @@
                     <!-- Order Items -->
                     <div class="order-items">
                         <div th:each="item : ${items}" class="order-item">
-                            <img th:src="${item.productImg}" th:alt="${item.productTitle}">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600;" th:text="${item.productTitle}">商品名稱</div>
-                                <small style="color: #999;">
-                                    <span th:text="'$' + ${item.proPrice}">$0</span>
+                            <img th:src="@{'/api/product/' + ${item.proId} + '/image'}" th:alt="${item.productTitle}"
+                                loading="lazy">
+                            <div class="order-item-info">
+                                <div class="order-item-title" th:text="${item.productTitle}">商品名稱</div>
+                                <div class="order-item-meta">
+                                    <span th:text="'$' + ${#numbers.formatInteger(item.proPrice, 1, 'COMMA')}">$0</span>
                                     <span th:text="' x ' + ${item.quantity}">x 1</span>
-                                </small>
+                                </div>
                             </div>
-                            <div style="font-weight: 700; color: var(--primary-color);"
-                                th:text="'$' + ${item.subtotal}">$0</div>
+                            <div class="order-item-price"
+                                th:text="'$' + ${#numbers.formatInteger(item.subtotal, 1, 'COMMA')}">$0</div>
                         </div>
                     </div>
 
                     <!-- Order Footer -->
                     <div class="order-footer">
-                        <div>
-                            <span style="color: #999; font-size: 0.9rem;">訂單金額</span>
-                            <span
-                                style="font-size: 1.2rem; font-weight: 700; color: var(--primary-color); margin-left: 0.5rem;"
-                                th:text="'$' + ${order.orderTotal}">$0</span>
+                        <div class="d-flex align-center">
+                            <span class="order-total-label">訂單金額</span>
+                            <span class="order-total-value"
+                                th:text="'$' + ${#numbers.formatInteger(order.orderTotal, 1, 'COMMA')}">$0</span>
                         </div>
                         <div class="d-flex gap-sm">
                             <!-- 已付款且可取消（24小時內）：可取消訂單 -->
                             <form th:if="${order.orderStatus == 0 and canCancel}"
                                 th:action="@{/orders/{id}/cancel(id=${order.orderId})}" method="post"
-                                onsubmit="return confirm('確定要取消此訂單嗎？款項將退回錢包。');">
-                                <button type="submit" class="btn btn-outline btn-sm">
+                                th:id="'cancel-order-form-' + ${order.orderId}">
+                                <button type="button" class="btn btn-outline btn-sm" th:data-order-id="${order.orderId}"
+                                    onclick="showCancelOrderModal(this.dataset.orderId)">
                                     <i class="fas fa-times"></i> 取消訂單
                                 </button>
                             </form>
                             <!-- 已付款但已超過取消期限 -->
-                            <span th:if="${order.orderStatus == 0 and !canCancel}"
-                                style="color: #999; font-size: 0.85rem;" title="下單超過24小時，無法取消">
+                            <span th:if="${order.orderStatus == 0 and !canCancel}" class="status-indicator time-limit"
+                                title="下單超過24小時，無法取消">
                                 <i class="fas fa-clock"></i> 已過取消期限
                             </span>
 
                             <!-- 已出貨：可確認收貨 -->
                             <form th:if="${order.orderStatus == 1}"
                                 th:action="@{/orders/{id}/confirm(id=${order.orderId})}" method="post"
-                                onsubmit="return confirm('確定已收到商品嗎？');">
-                                <button type="submit" class="btn btn-primary btn-sm">
+                                th:id="'confirm-receive-form-' + ${order.orderId}">
+                                <button type="button" class="btn btn-primary btn-sm" th:data-order-id="${order.orderId}"
+                                    onclick="showConfirmReceiveModal(this.dataset.orderId)">
                                     <i class="fas fa-check"></i> 確認收貨
                                 </button>
                             </form>
@@ -573,19 +833,19 @@
 
                             <!-- 已完成：顯示已評價 -->
                             <span th:if="${order.orderStatus == 2 and order.hasReview}"
-                                style="color: #999; font-size: 0.85rem;">
-                                <i class="fas fa-check"></i> 已評價
+                                class="status-indicator reviewed">
+                                <i class="fas fa-check-circle"></i> 已評價
                             </span>
 
                             <!-- 已完成且可申請退貨（72小時內且尚未評價） -->
-                            <button th:if="${order.orderStatus == 2 and !order.hasReview and canApplyReturn}" type="button"
-                                class="btn btn-outline btn-sm"
+                            <button th:if="${order.orderStatus == 2 and !order.hasReview and canApplyReturn}"
+                                type="button" class="btn btn-outline btn-sm"
                                 th:onclick="'openReturnModal(' + ${order.orderId} + ', ' + ${order.orderTotal} + ')'">
                                 <i class="fas fa-undo"></i> 申請退貨
                             </button>
                             <!-- 已完成但已超過退貨期限 -->
                             <span th:if="${order.orderStatus == 2 and !order.hasReview and !canApplyReturn}"
-                                style="color: #999; font-size: 0.85rem;" title="收貨超過24小時，無法申請退貨">
+                                class="status-indicator time-limit" title="收貨超過24小時，無法申請退貨">
                                 <i class="fas fa-clock"></i> 已過退貨期限
                             </span>
 
@@ -598,10 +858,12 @@
                     </div>
 
                     <!-- Order Time -->
-                    <div style="text-align: right; margin-top: 0.5rem;">
-                        <small style="color: #999;"
-                            th:text="'下單時間：' + ${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm')}">
-                            下單時間：2024-01-01 12:00
+                    <div class="order-time">
+                        <small>
+                            <i class="far fa-clock" style="margin-right: 0.25rem;"></i>
+                            <span th:text="'下單時間：' + ${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm')}">
+                                下單時間：2024-01-01 12:00
+                            </span>
                         </small>
                     </div>
 
@@ -699,17 +961,19 @@
 
                 <!-- 詳細說明 -->
                 <div class="form-group mb-2">
-                    <label class="form-label">詳細說明 <span style="color: var(--danger);">*</span></label>
+                    <label class="form-label">詳細說明（選填）</label>
                     <textarea name="returnDescription" class="form-control" rows="3"
-                        placeholder="請詳細描述商品問題（最多 500 字）..." maxlength="500" required></textarea>
+                        placeholder="請詳細描述商品問題（最多 500 字）..." maxlength="500"></textarea>
                     <small style="color: #999; font-size: 0.85rem;">最多 500 字</small>
                 </div>
 
                 <!-- 上傳圖片 -->
                 <div class="form-group mb-2">
                     <label class="form-label">上傳圖片（選填，最多 5 張）</label>
-                    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('returnImages').click()">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #999; margin-bottom: 0.5rem;"></i>
+                    <div class="image-upload-area" id="imageUploadArea"
+                        onclick="document.getElementById('returnImages').click()">
+                        <i class="fas fa-cloud-upload-alt"
+                            style="font-size: 2rem; color: #999; margin-bottom: 0.5rem;"></i>
                         <p style="color: #999; margin: 0;">點擊或拖曳圖片至此處上傳</p>
                         <small style="color: #bbb;">支援 JPG、PNG 格式，單張最大 5MB</small>
                     </div>
@@ -828,7 +1092,46 @@
         </div>
     </div>
 
+    <!-- 取消訂單對話框 -->
+    <div id="cancel-order-modal" class="confirm-modal-overlay">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+                <i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i>
+            </div>
+            <h3 class="confirm-modal-title">取消訂單</h3>
+            <p class="confirm-modal-message">確定要取消此訂單嗎？款項將退回錢包。</p>
+            <div class="confirm-modal-buttons">
+                <button type="button" class="btn-modal-cancel" onclick="hideCancelOrderModal()">
+                    取消
+                </button>
+                <button type="button" class="btn-modal-confirm" id="confirm-cancel-btn"
+                    style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <i class="fas fa-check"></i> 確定取消
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <!-- 確認收貨對話框 -->
+    <div id="confirm-receive-modal" class="confirm-modal-overlay">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <h3 class="confirm-modal-title">確認收貨</h3>
+            <p class="confirm-modal-message">確定已收到商品嗎？確認後將完成此訂單。</p>
+            <div class="confirm-modal-buttons">
+                <button type="button" class="btn-modal-cancel" onclick="hideConfirmReceiveModal()">
+                    取消
+                </button>
+                <button type="button" class="btn-modal-confirm" id="confirm-receive-btn">
+                    <i class="fas fa-check"></i> 確定收貨
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="/js/frontend/main.js"></script>
     <script>
@@ -934,7 +1237,7 @@
 
             selectedFiles.forEach((file, index) => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const div = document.createElement('div');
                     div.className = 'image-preview-item';
                     div.innerHTML = `
@@ -961,20 +1264,20 @@
         }
 
         // 拖曳上傳功能
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const uploadArea = document.getElementById('imageUploadArea');
             if (uploadArea) {
-                uploadArea.addEventListener('dragover', function(e) {
+                uploadArea.addEventListener('dragover', function (e) {
                     e.preventDefault();
                     this.classList.add('dragover');
                 });
 
-                uploadArea.addEventListener('dragleave', function(e) {
+                uploadArea.addEventListener('dragleave', function (e) {
                     e.preventDefault();
                     this.classList.remove('dragover');
                 });
 
-                uploadArea.addEventListener('drop', function(e) {
+                uploadArea.addEventListener('drop', function (e) {
                     e.preventDefault();
                     this.classList.remove('dragover');
 
@@ -1149,6 +1452,75 @@
 
             timeline.innerHTML = html;
         }
+
+        // 確認收貨對話框
+        let currentReceiveOrderId = null;
+
+        function showConfirmReceiveModal(orderId) {
+            currentReceiveOrderId = orderId;
+            document.getElementById('confirm-receive-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideConfirmReceiveModal() {
+            document.getElementById('confirm-receive-modal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentReceiveOrderId = null;
+        }
+
+        // 點擊確認收貨按鈕
+        document.getElementById('confirm-receive-btn').addEventListener('click', function () {
+            if (currentReceiveOrderId) {
+                document.getElementById('confirm-receive-form-' + currentReceiveOrderId).submit();
+            }
+        });
+
+        // 取消訂單對話框
+        let currentCancelOrderId = null;
+
+        function showCancelOrderModal(orderId) {
+            currentCancelOrderId = orderId;
+            document.getElementById('cancel-order-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideCancelOrderModal() {
+            document.getElementById('cancel-order-modal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentCancelOrderId = null;
+        }
+
+        // 點擊確認取消按鈕
+        document.getElementById('confirm-cancel-btn').addEventListener('click', function () {
+            if (currentCancelOrderId) {
+                document.getElementById('cancel-order-form-' + currentCancelOrderId).submit();
+            }
+        });
+
+        // 點擊背景關閉對話框
+        document.getElementById('confirm-receive-modal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                hideConfirmReceiveModal();
+            }
+        });
+
+        document.getElementById('cancel-order-modal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                hideCancelOrderModal();
+            }
+        });
+
+        // ESC 鍵關閉對話框
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('confirm-receive-modal').classList.contains('show')) {
+                    hideConfirmReceiveModal();
+                }
+                if (document.getElementById('cancel-order-modal').classList.contains('show')) {
+                    hideCancelOrderModal();
+                }
+            }
+        });
     </script>
 
 </body>

@@ -20,9 +20,9 @@
         <div class="sidebar">
             <div class="text-center mb-2">
                 <div class="avatar-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
+                    <img th:src="${avatarUrl}" class="avatar">
                 </div>
-                <h4>李小明</h4>
+                <h4 th:text="${memName}">會員姓名</h4>
                 <p style="color: #999; font-size: 0.9rem;">一般會員</p>
             </div>
             <nav>
@@ -41,7 +41,7 @@
                 <a href="dashboard-favorites.html" class="menu-item">
                     <i class="fas fa-heart"></i> 收藏列表
                 </a>
-                <a href="dashboard-sitter-registration.html" class="menu-item active"
+                <a th:href="@{/sitter/apply}" class="menu-item active"
                     style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
                     <i class="fas fa-user-plus"></i> 成為保母
                 </a>
@@ -59,7 +59,19 @@
                 <p style="color: #666; margin-bottom: 2rem;">加入我們的專業保母團隊，開始您的寵物照顧事業！</p>
 
                 <div class="card">
-                    <form th:action="@{/sitter/apply}" method="post" th:object="${sitterApplication}">
+                    <!-- 訊息提示區塊 -->
+                    <div th:if="${successMessage}" class="alert alert-success" role="alert"
+                        style="color: green; background: #d4edda; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
+                        <span th:text="${successMessage}"></span>
+                    </div>
+
+                    <div th:if="${errorMessage}" class="alert alert-danger" role="alert"
+                        style="color: red; background: #f8d7da; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
+                        <span th:text="${errorMessage}"></span>
+                    </div>
+
+                    <form th:action="@{/sitter/apply}" method="post" th:object="${sitterApplication}"
+                        onsubmit="return confirmSubmit()">
                         <!-- 申請人資料（唯讀顯示） -->
                         <h3 class="mb-3" style="font-size: 1.2rem; color: var(--primary-color);">申請人資料</h3>
                         <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
@@ -112,6 +124,20 @@
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
     <script src="/js/frontend/main.js"></script>
+
+    <script>
+        function confirmSubmit() {
+            // 1. 跳出詢問視窗
+            if (confirm('確定要提交申請成為保母嗎？')) {
+                // 2. 使用者按確定 -> 跳出感謝視窗
+                // alert('感謝您的申請，請耐心等候審核結果！'); // [修正] 移除前端假提示，改由後端回傳正確訊息與提示框
+                // 3. 回傳 true -> 表單送出
+                return true;
+            }
+            // 使用者按取消 -> 回傳 false -> 停留在原頁面，資料保留
+            return false;
+        }
+    </script>
 </body>
 
 </html>

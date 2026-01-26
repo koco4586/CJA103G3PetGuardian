@@ -13,19 +13,25 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.forum.service.ForumCommentReportService;
 import com.petguardian.forum.service.ForumCommentService;
+import com.petguardian.forum.service.ForumPostPicsService;
 import com.petguardian.forum.service.ForumPostReportService;
 import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
 import com.petguardian.forum.model.DeletedCommentDTO;
 import com.petguardian.forum.model.DeletedPostDTO;
+import com.petguardian.forum.model.ForumPostReportVO;
+import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.ForumVO;
 import com.petguardian.forum.model.HandledCommentDTO;
 import com.petguardian.forum.model.HandledPostDTO;
 import com.petguardian.forum.model.PendingCommentDTO;
 import com.petguardian.forum.model.PendingPostDTO;
+import com.petguardian.forum.model.PostHandledResultDetailDTO;
+import com.petguardian.forum.model.PostReviewDetailDTO;
 import com.petguardian.forum.model.RejectedCommentDTO;
 import com.petguardian.forum.model.RejectedPostDTO;
 
@@ -50,6 +56,9 @@ public class AdminForumController {
 	ForumCommentService forumCommentService;
 	
 	@Autowired
+	ForumPostPicsService forumPostPicsService;
+	
+	@Autowired
 	ForumPostReportService forumPostReportService;
 
 	@Autowired
@@ -72,6 +81,7 @@ public class AdminForumController {
 	@PostMapping("get-forum-id-for-update-status")
 	public String getForumIdForUpdateStatus(@RequestParam("forumStatus") Integer forumStatus,
 			@RequestParam("forumId") Integer forumId, ModelMap model) {
+		
 		// 開始更新資料
 		forumService.updateForumStatus(forumStatus, forumId);
 
@@ -171,6 +181,31 @@ public class AdminForumController {
 
 	}
 	
+	@PostMapping("get-one-handled-post-to-display")
+	public String getOneHandledPostToDisplay(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		PostReviewDetailDTO reviewDto = forumPostReportService.getPostReviewDetailToHandle(reportId);
+		PostHandledResultDetailDTO handledResultDto = forumPostReportService.getPostHandledResultDetailToDisplay(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("handledResultDto", handledResultDto);
+		model.addAttribute("reviewDto", reviewDto);
+		model.addAttribute("picsId", picsId);
+		
+		return "backend/forum/display-handled-post";
+	}
+	
+	@PostMapping("get-one-handled-post-to-recover")
+	public String getOneHandledPostToRecover(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, RedirectAttributes ra) {
+		
+		forumPostReportService.recoverPost(postId, reportId);
+		ra.addFlashAttribute("successMsgs", "貼文已成功恢復");
+		
+		return "redirect:/admin/forum/get-all-handled-posts";
+	}
+	
 	@GetMapping("get-all-pending-posts")
 	public String getAllPendingPosts(ModelMap model) {
 		
@@ -183,6 +218,48 @@ public class AdminForumController {
 		return "backend/forum/forum-pending-post";
 	
 	}
+	
+	@PostMapping("get-one-pending-post-to-handle")
+	public String getOnePendingPostToHandle(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		PostReviewDetailDTO dto = forumPostReportService.getPostReviewDetailToHandle(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("dto", dto);
+		model.addAttribute("picsId", picsId);
+		model.addAttribute("forumPostReportVO", new ForumPostReportVO());
+		
+		return "backend/forum/handle-pending-post";
+	}
+	
+	@PostMapping("handle-post-report")
+	public String handlePostReport(@Valid ForumPostReportVO forumPostReportVO, BindingResult result,
+								   @RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, 
+			                       @RequestParam("handleResult") String handleResult, @RequestParam("action") String action, 
+			                       RedirectAttributes ra, ModelMap model) {
+		
+		if(result.hasErrors()) {
+			result.getAllErrors().forEach(error -> System.out.println("驗證錯誤: " + error.getDefaultMessage()));
+			PostReviewDetailDTO dto = forumPostReportService.getPostReviewDetailToHandle(reportId);
+			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+			model.addAttribute("dto", dto);
+			model.addAttribute("picsId", picsId);
+			return "backend/forum/handle-pending-post";
+		}
+		
+		if("delete".equals(action)) {
+			forumPostReportService.updateHandleResult(reportId, postId, handleResult);
+			ra.addFlashAttribute("successMsgs", "貼文已下架");
+			return "redirect:/admin/forum/get-all-pending-posts";
+		}
+		
+		forumPostReportService.dismissPostReport(reportId, handleResult);
+		ra.addFlashAttribute("successMsgs", "檢舉已駁回");
+		return "redirect:/admin/forum/get-all-pending-posts";
+	}
+	
 	
 	@GetMapping("get-all-rejected-posts")
 	public String getAllRejectedPosts(ModelMap model) {
@@ -197,6 +274,22 @@ public class AdminForumController {
 	
 	}
 	
+	@PostMapping("get-one-rejected-post-to-display")
+	public String getOneRejectedPostToDisplay(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		PostReviewDetailDTO reviewDto = forumPostReportService.getPostReviewDetailToHandle(reportId);
+		PostHandledResultDetailDTO handledResultDto = forumPostReportService.getPostHandledResultDetailToDisplay(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("handledResultDto", handledResultDto);
+		model.addAttribute("reviewDto", reviewDto);
+		model.addAttribute("picsId", picsId);
+		
+		return "backend/forum/display-rejected-post";
+	}
+	
 	@GetMapping("get-all-deleted-posts")
 	public String getAllDeletedPosts(ModelMap model) {
 		
@@ -208,6 +301,27 @@ public class AdminForumController {
 		
 		return "backend/forum/forum-deleted-post";
 	
+	}
+	
+	@PostMapping("get-one-deleted-post-to-display")
+	public String getOneDeletedPostToDisplay(@RequestParam("postId") Integer postId, ModelMap model) {
+		
+		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		model.addAttribute("forumPostVO", forumPostVO);
+		model.addAttribute("picsId", picsId);
+		
+		return "backend/forum/display-deleted-post";
+	}
+	
+	@PostMapping("get-one-deleted-post-to-recover")
+	public String getOneDeletedPostToRecover(@RequestParam("postId") Integer postId, RedirectAttributes ra) {
+		
+		forumPostReportService.recoverPost(postId, null);
+		ra.addFlashAttribute("successMsgs", "貼文已成功恢復");
+		
+		return "redirect:/admin/forum/get-all-deleted-posts";
 	}
 	
 	@GetMapping("get-all-handled-comments")

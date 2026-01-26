@@ -102,7 +102,8 @@
                                 </div>
                             </div>
                             <!-- 聯絡賣家按鈕 -->
-                            <a href="#" class="btn btn-outline" th:onclick="'openChatWithSeller(' + ${sellerId} + ')'" style="white-space: nowrap;">
+                            <a href="#" class="btn btn-outline" th:onclick="'openChatWithSeller(' + ${sellerId} + ')'"
+                                style="white-space: nowrap;">
                                 <i class="fas fa-comment-dots"></i> 聯絡賣家
                             </a>
                         </div>
@@ -241,48 +242,6 @@
                             </div>
                         </div>
 
-                        <!-- 付款方式 -->
-                        <div class="card">
-                            <h3 class="mb-2">
-                                <i class="fas fa-wallet" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                                付款方式
-                            </h3>
-
-                            <!-- 固定使用錢包付款 -->
-                            <input type="hidden" name="paymentMethod" value="0">
-
-                            <div class="payment-info"
-                                style="background: var(--secondary-color); padding: 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
-                                <i class="fas fa-wallet" style="font-size: 2rem; color: var(--primary-color);"></i>
-                                <div>
-                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">錢包餘額付款</div>
-                                    <small style="color: #666;">使用您的平台錢包餘額進行付款</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 注意事項 -->
-                        <div class="card notice-card">
-                            <h4 style="margin-bottom: 1rem; color: var(--text-color);">
-                                <i class="fas fa-info-circle" style="color: var(--warning);"></i>
-                                購買須知
-                            </h4>
-                            <ul style="list-style: disc; padding-left: 1.5rem; color: #666; line-height: 1.8;">
-                                <li>收到商品後請盡快確認，3天內可退貨</li>
-                                <li>商品照片與描述僅供參考，實際狀況以商品為準</li>
-                                <li>如有問題請聯繫客服：0800-000-000</li>
-                            </ul>
-                        </div>
-
-                        <!-- 按鈕區 -->
-                        <div class="d-flex gap-md" style="margin-top: 2rem;">
-                            <a th:href="@{/store}" class="btn btn-outline" style="flex: 1;">
-                                <i class="fas fa-arrow-left"></i> 返回商品
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="submit-order-btn" style="flex: 2;">
-                                <i class="fas fa-lock"></i> 確認並付款
-                            </button>
-                        </div>
                     </form>
 
                 </div>
@@ -299,23 +258,17 @@
                         </h3>
 
                         <!-- 商品列表 -->
-                        <div id="order-items-list" style="margin-bottom: 1.5rem;">
+                        <div id="order-items-list">
                             <div th:each="item : ${checkout.cartItems}" class="cart-item-card">
                                 <!-- Base64 圖片 -->
                                 <img th:src="${item.imageBase64}" th:alt="${item.proName}" class="cart-item-img">
                                 <div class="cart-item-info">
-                                    <div>
-                                        <div style="font-weight: 600; margin-bottom: 0.25rem;"
-                                            th:text="${item.proName}">
-                                            商品名稱</div>
-                                        <div style="color: var(--primary-color); font-weight: 700;"
-                                            th:text="'$' + ${item.proPrice}">$0</div>
-                                    </div>
+                                    <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; line-height: 1.4;"
+                                        th:text="${item.proName}">商品名稱</div>
                                     <div class="d-flex justify-between align-center">
                                         <!-- 數量調整 -->
                                         <form th:action="@{/cart/update}" method="post" class="quantity-control">
                                             <input type="hidden" name="proId" th:value="${item.proId}">
-                                            <label style="font-size: 0.85rem; color: #666;">數量：</label>
                                             <select name="quantity" onchange="this.form.submit()"
                                                 th:with="maxQty=${item.stockQuantity != null and item.stockQuantity > 10 ? 10 : (item.stockQuantity != null ? item.stockQuantity : 10)}">
                                                 <option th:each="i : ${#numbers.sequence(1, maxQty)}" th:value="${i}"
@@ -323,14 +276,17 @@
                                                 </option>
                                             </select>
                                         </form>
-                                        <div class="d-flex align-center gap-md">
-                                            <span style="font-weight: 700; color: var(--primary-color);"
-                                                th:text="'$' + ${item.subtotal}">$0</span>
+                                        <div class="d-flex align-center gap-sm">
+                                            <span style="font-weight: 700; color: var(--primary-color); font-size: 1.05rem;"
+                                                th:text="'$' + ${#numbers.formatInteger(item.subtotal, 1, 'COMMA')}">$0</span>
                                             <!-- 移除按鈕 -->
-                                            <form th:action="@{/cart/remove}" method="post" style="display: inline;">
+                                            <form th:action="@{/cart/remove}" method="post" style="display: inline;"
+                                                th:id="'remove-form-' + ${item.proId}">
                                                 <input type="hidden" name="proId" th:value="${item.proId}">
-                                                <button type="submit" class="btn-remove" title="移除"
-                                                    onclick="return confirm('確定要移除此商品嗎？');">
+                                                <button type="button" class="btn-remove" title="移除"
+                                                    th:data-pro-id="${item.proId}"
+                                                    th:data-pro-name="${item.proName}"
+                                                    onclick="showRemoveConfirm(this.dataset.proId, this.dataset.proName)">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                             </form>
@@ -340,30 +296,68 @@
                             </div>
                         </div>
 
+                        <!-- 總金額 -->
+                        <div class="order-total-section">
+                            <div class="d-flex justify-between align-center">
+                                <span style="font-size: 1.1rem; font-weight: 600;">總金額</span>
+                                <span style="font-size: 1.4rem; font-weight: 800; color: var(--primary-color);"
+                                    th:text="'$' + ${#numbers.formatInteger(checkout.orderTotal, 1, 'COMMA')}">$0</span>
+                            </div>
+                        </div>
+
                         <div class="divider"></div>
 
-                        <!-- 費用明細 -->
-                        <div class="d-flex justify-between mb-1">
-                            <span style="color: #666;">商品小計（<span th:text="${#lists.size(checkout.cartItems)}">0</span>
-                                件）</span>
-                            <span th:text="'$' + ${checkout.orderTotal}">$0</span>
-                        </div>
-                        <div class="d-flex justify-between mb-3"
-                            style="font-size: 1.3rem; font-weight: 800; color: var(--primary-color);">
-                            <span>總金額</span>
-                            <span th:text="'$' + ${checkout.orderTotal}">$0</span>
+                        <!-- 付款方式 -->
+                        <h3 class="mb-2">
+                            <i class="fas fa-wallet" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            付款方式
+                        </h3>
+
+                        <div class="payment-info"
+                            style="background: var(--secondary-color); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <i class="fas fa-wallet" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">錢包餘額付款</div>
+                                    <small style="color: #666;">使用您的平台錢包餘額進行付款</small>
+                                </div>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px dashed #ddd;">
+                                <span style="color: #666;">目前餘額</span>
+                                <span th:class="${walletBalance < checkout.orderTotal} ? 'text-danger' : ''"
+                                    style="font-size: 1.25rem; font-weight: 700;"
+                                    th:style="${walletBalance < checkout.orderTotal} ? 'color: #e03131;' : 'color: var(--primary-color);'"
+                                    th:text="'$' + ${#numbers.formatInteger(walletBalance, 1, 'COMMA')}">$0</span>
+                            </div>
+                            <!-- 餘額不足提示 -->
+                            <div th:if="${walletBalance < checkout.orderTotal}"
+                                style="margin-top: 0.75rem; padding: 0.75rem; background: #fff5f5; border-radius: 8px; color: #e03131; font-size: 0.9rem;">
+                                <i class="fas fa-exclamation-triangle"></i> 餘額不足！
+                            </div>
                         </div>
 
-                        <!-- 安全提示 -->
-                        <div
-                            style="background: var(--secondary-color); padding: 1rem; border-radius: 12px; text-align: center;">
-                            <i class="fas fa-shield-alt"
-                                style="font-size: 2rem; color: var(--success); margin-bottom: 0.5rem;"></i>
-                            <p style="margin: 0; font-size: 0.9rem; color: #666;">
-                                <strong>安全交易保障</strong><br>
-                                由寵護家平台擔保交易安全
-                            </p>
-                        </div>
+                        <!-- 按鈕區 -->
+                        <form th:action="@{/orders/submit}" method="post" id="checkout-form-submit">
+                            <!-- 隱藏欄位：賣家 ID 和付款方式 -->
+                            <input type="hidden" name="sellerId" th:value="${sellerId}">
+                            <input type="hidden" name="paymentMethod" value="0">
+                            <!-- 需要 JavaScript 複製表單欄位 -->
+                            <input type="hidden" name="receiverName" id="hiddenReceiverName">
+                            <input type="hidden" name="receiverPhone" id="hiddenReceiverPhone">
+                            <input type="hidden" name="receiverAddress" id="hiddenReceiverAddress">
+                            <input type="hidden" name="specialInstructions" id="hiddenSpecialInstructions">
+
+                            <div class="d-flex gap-md">
+                                <a th:href="@{/store}" class="btn btn-outline" style="flex: 1;">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="submit-order-btn" style="flex: 2;"
+                                    th:disabled="${walletBalance < checkout.orderTotal}">
+                                    <i class="fas fa-lock"></i> 確認並付款
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -372,6 +366,142 @@
     </div>
 
     <footer id="main-footer" style="background-color: #f9f9f9;"></footer>
+
+    <!-- 自訂確認對話框 -->
+    <div id="confirm-modal" class="confirm-modal-overlay">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="confirm-modal-title">移除商品</h3>
+            <p class="confirm-modal-message">確定要將「<span id="confirm-product-name"></span>」從購物車中移除嗎？</p>
+            <div class="confirm-modal-buttons">
+                <button type="button" class="btn-modal-cancel" onclick="hideRemoveConfirm()">
+                    取消
+                </button>
+                <button type="button" class="btn-modal-confirm" id="confirm-remove-btn">
+                    <i class="fas fa-check"></i> 確定移除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 確認對話框樣式 */
+        .confirm-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            transition: background 0.2s ease, visibility 0.2s ease;
+        }
+
+        .confirm-modal-overlay.show {
+            background: rgba(0, 0, 0, 0.5);
+            visibility: visible;
+        }
+
+        .confirm-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .confirm-modal-overlay.show .confirm-modal {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .confirm-modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+
+        .confirm-modal-icon i {
+            font-size: 1.5rem;
+            color: #dc2626;
+        }
+
+        .confirm-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.75rem;
+        }
+
+        .confirm-modal-message {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .confirm-modal-message span {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-modal-cancel,
+        .btn-modal-confirm {
+            flex: 1;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-modal-cancel {
+            background: #f3f4f6;
+            color: #666;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-modal-confirm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn-modal-confirm:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+    </style>
 
     <script src="/js/frontend/main.js"></script>
 
@@ -387,11 +517,20 @@
                 }, 3000);
             });
 
-            const form = document.getElementById('checkout-form');
-            if (!form) return;
+            const inputForm = document.getElementById('checkout-form');
+            const submitForm = document.getElementById('checkout-form-submit');
+            if (!inputForm || !submitForm) return;
 
-            // 表單驗證
-            form.addEventListener('submit', function (e) {
+            // 同步表單欄位到右側提交表單
+            function syncFormFields() {
+                document.getElementById('hiddenReceiverName').value = document.getElementById('receiverName').value;
+                document.getElementById('hiddenReceiverPhone').value = document.getElementById('receiverPhone').value;
+                document.getElementById('hiddenReceiverAddress').value = document.getElementById('receiverAddress').value;
+                document.getElementById('hiddenSpecialInstructions').value = document.getElementById('specialInstructions').value;
+            }
+
+            // 右側表單提交驗證
+            submitForm.addEventListener('submit', function (e) {
                 let isValid = true;
 
                 // 驗證姓名
@@ -424,7 +563,15 @@
 
                 if (!isValid) {
                     e.preventDefault();
+                    // 滾動到第一個錯誤欄位
+                    const firstError = document.querySelector('.form-control.error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
                 } else {
+                    // 同步表單欄位
+                    syncFormFields();
                     // 顯示載入狀態
                     const btn = document.getElementById('submit-order-btn');
                     if (btn) {
@@ -435,7 +582,7 @@
             });
 
             // 即時驗證
-            const inputs = form.querySelectorAll('input[required]');
+            const inputs = inputForm.querySelectorAll('input[required]');
             inputs.forEach(input => {
                 input.addEventListener('blur', () => validateField(input));
                 input.addEventListener('input', () => {
@@ -498,22 +645,42 @@
             }
         }
 
-        // 開啟與賣家的聊天室
-        function openChatWithSeller(sellerId) {
-            event.preventDefault();
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/chat';
+        // 移除商品確認對話框
+        let currentRemoveProId = null;
 
-            const receiverInput = document.createElement('input');
-            receiverInput.type = 'hidden';
-            receiverInput.name = 'receiverId';
-            receiverInput.value = sellerId;
-
-            form.appendChild(receiverInput);
-            document.body.appendChild(form);
-            form.submit();
+        function showRemoveConfirm(proId, productName) {
+            currentRemoveProId = proId;
+            document.getElementById('confirm-product-name').textContent = productName;
+            document.getElementById('confirm-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
+
+        function hideRemoveConfirm() {
+            document.getElementById('confirm-modal').classList.remove('show');
+            document.body.style.overflow = '';
+            currentRemoveProId = null;
+        }
+
+        // 點擊確認移除按鈕
+        document.getElementById('confirm-remove-btn').addEventListener('click', function() {
+            if (currentRemoveProId) {
+                document.getElementById('remove-form-' + currentRemoveProId).submit();
+            }
+        });
+
+        // 點擊背景關閉對話框
+        document.getElementById('confirm-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideRemoveConfirm();
+            }
+        });
+
+        // ESC 鍵關閉對話框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('confirm-modal').classList.contains('show')) {
+                hideRemoveConfirm();
+            }
+        });
     </script>
 
 </body>

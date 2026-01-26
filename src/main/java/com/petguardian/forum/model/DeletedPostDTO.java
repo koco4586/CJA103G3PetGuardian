@@ -10,6 +10,10 @@ public class DeletedPostDTO {
 	private String forumName;
 	private Timestamp lastEditedAt;
 	
+	public DeletedPostDTO() {
+		super();
+	}
+
 	public DeletedPostDTO(Integer postId, String postTitle, Integer memId, String forumName, Timestamp lastEditedAt) {
 		super();
 		this.postId = postId;

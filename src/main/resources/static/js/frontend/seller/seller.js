@@ -1,133 +1,189 @@
-/**
- * PetGuardian - 賣家管理中心 JavaScript
- */
+// 全域變數
+let existingImagesList = [];
+let deleteImageIdsList = [];
 
-// ==================== 商品 Modal 相關 ====================
-
+// 開啟新增商品 Modal
 function openProductModal() {
     document.getElementById('productModal').classList.add('active');
     document.getElementById('modalTitle').innerText = '新增商品';
+
+    // 清空表單
+    document.getElementById('productForm').reset();
     document.getElementById('proId').value = '';
-    document.getElementById('proName').value = '';
-    document.getElementById('proPrice').value = '';
-    document.getElementById('proDescription').value = '';
-    document.getElementById('stockQuantity').value = '';
-    document.getElementById('proState').value = '1';
+
+    // 清空圖片相關
+    existingImagesList = [];
+    deleteImageIdsList = [];
+    document.getElementById('existingImages').innerHTML = '';
+    document.getElementById('newImagePreview').innerHTML = '';
+    document.getElementById('deleteImageInputs').innerHTML = '';
+    document.getElementById('productImages').value = '';
 }
 
+// 關閉商品 Modal
 function closeProductModal() {
     document.getElementById('productModal').classList.remove('active');
 }
 
-function editProduct(btn) {
+// 開啟編輯商品 Modal
+function openEditProductModal(button) {
+    const proId = button.getAttribute('data-pro-id');
+    const proName = button.getAttribute('data-pro-name');
+    const proTypeId = button.getAttribute('data-pro-type-id');
+    const proPrice = button.getAttribute('data-pro-price');
+    const proDescription = button.getAttribute('data-pro-description');
+    const stockQuantity = button.getAttribute('data-stock-quantity');
+    const proState = button.getAttribute('data-pro-state');
+
+    // 開啟 Modal
     document.getElementById('productModal').classList.add('active');
     document.getElementById('modalTitle').innerText = '編輯商品';
-    document.getElementById('proId').value = btn.getAttribute('data-id');
-    document.getElementById('proName').value = btn.getAttribute('data-name');
-    document.getElementById('proTypeId').value = btn.getAttribute('data-type');
-    document.getElementById('proPrice').value = btn.getAttribute('data-price');
-    document.getElementById('proDescription').value = btn.getAttribute('data-desc');
-    document.getElementById('stockQuantity').value = btn.getAttribute('data-stock');
-    document.getElementById('proState').value = btn.getAttribute('data-state');
+
+    // 填入商品資料
+    document.getElementById('proId').value = proId;
+    document.getElementById('proName').value = proName;
+    document.getElementById('proTypeId').value = proTypeId;
+    document.getElementById('proPrice').value = proPrice || '';
+    document.getElementById('proDescription').value = proDescription || '';
+    document.getElementById('stockQuantity').value = stockQuantity;
+    document.getElementById('proState').value = proState;
+
+    // 清空新圖片預覽
+    document.getElementById('newImagePreview').innerHTML = '';
+    document.getElementById('productImages').value = '';
+
+    // 重置刪除清單
+    deleteImageIdsList = [];
+    document.getElementById('deleteImageInputs').innerHTML = '';
+
+    // 載入現有圖片
+    loadExistingImages(proId);
 }
 
-// 點擊 Modal 外部區域關閉
-document.getElementById('productModal')?.addEventListener('click', function(event) {
-    if (event.target === this) {
-        closeProductModal();
-    }
-});
+// 載入現有商品圖片
+function loadExistingImages(proId) {
+    fetch(`/seller/product/${proId}/images`)
+        .then(response => response.json())
+        .then(images => {
+            existingImagesList = images;
+            const container = document.getElementById('existingImages');
+            container.innerHTML = '';
 
-// ==================== 評價 Modal 相關 ====================
-
-/**
- * 顯示評價 Modal
- */
-function showReviewModal(orderId) {
-    // 發送 AJAX 請求取得評價資料
-    fetch(`/api/seller/order/${orderId}/review`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('評價不存在');
+            if (!images || images.length === 0) {
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            const content = `
-                <div style="background: #f9f9f9; padding: 1.5rem; border-radius: 8px;">
-                    <div style="margin-bottom: 1rem;">
-                        <strong>評分：</strong>
-                        <span style="color: #ffc107; font-size: 1.2rem;">
-                            ${'★'.repeat(data.rating)}${'☆'.repeat(5 - data.rating)}
-                        </span>
-                        <span style="color: #666; margin-left: 8px;">(${data.rating}/5)</span>
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <strong>評價時間：</strong>
-                        <span style="color: #666;">${data.reviewTime}</span>
-                    </div>
-                    <div>
-                        <strong>評價內容：</strong>
-                        <p style="margin: 0.5rem 0 0 0; color: #333; line-height: 1.6;">
-                            ${data.reviewContent || '(買家未留下文字評價)'}
-                        </p>
-                    </div>
-                </div>
-            `;
 
-            document.getElementById('reviewContent').innerHTML = content;
-            document.getElementById('reviewModal').classList.add('active');
+            images.forEach(img => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.style.cssText = 'position: relative; width: 100px; height: 100px;';
+                imgWrapper.setAttribute('data-pic-id', img.productPicId);
+
+                const imgElement = document.createElement('img');
+                imgElement.src = img.imageBase64;
+                imgElement.alt = '商品圖片';
+                imgElement.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px;';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.style.cssText = `
+                    position: absolute;
+                    top: -8px;
+                    right: -8px;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    background: #dc3545;
+                    color: white;
+                    border: 2px solid white;
+                    cursor: pointer;
+                    font-size: 16px;
+                    line-height: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                deleteBtn.onclick = function() {
+                    markImageForDeletion(img.productPicId);
+                };
+
+                imgWrapper.appendChild(imgElement);
+                imgWrapper.appendChild(deleteBtn);
+                container.appendChild(imgWrapper);
+            });
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('載入評價失敗：' + error.message);
+            console.error('載入圖片失敗:', error);
         });
 }
 
-/**
- * 關閉評價 Modal
- */
-function closeReviewModal() {
-    document.getElementById('reviewModal').classList.remove('active');
+// 標記圖片為待刪除
+function markImageForDeletion(picId) {
+    if (!confirm('確定要刪除此圖片嗎?')) {
+        return;
+    }
+
+    deleteImageIdsList.push(picId);
+
+    // 隱藏圖片
+    const imgWrapper = document.querySelector(`[data-pic-id="${picId}"]`);
+    if (imgWrapper) {
+        imgWrapper.style.display = 'none';
+    }
+
+    // 更新隱藏輸入欄位
+    updateDeleteImageInputs();
 }
 
-// 點擊 Modal 外部區域關閉
-document.getElementById('reviewModal')?.addEventListener('click', function(event) {
-    if (event.target === this) {
-        closeReviewModal();
-    }
-});
+// 更新待刪除圖片的隱藏輸入欄位
+function updateDeleteImageInputs() {
+    const container = document.getElementById('deleteImageInputs');
+    container.innerHTML = '';
 
-// ==================== 評論列表展開/收合 ====================
-
-/**
- * 切換評論列表顯示
- */
-function toggleReviewsList() {
-    const reviewsList = document.getElementById('reviewsList');
-    if (reviewsList) {
-        if (reviewsList.style.display === 'none' || reviewsList.style.display === '') {
-            reviewsList.style.display = 'block';
-            // 平滑滾動到評論列表
-            reviewsList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        } else {
-            reviewsList.style.display = 'none';
-        }
-    }
-}
-
-// ==================== 頁面載入完成後執行 ====================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('賣家管理中心 JavaScript 已載入');
-
-    // 如果有成功訊息，3秒後自動隱藏
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.transition = 'opacity 0.5s ease';
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 500);
-        }, 3000);
+    deleteImageIdsList.forEach(picId => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'deleteImageIds';
+        input.value = picId;
+        container.appendChild(input);
     });
-});
+}
+
+// 預覽新上傳的圖片
+function previewNewImages(input) {
+    const container = document.getElementById('newImagePreview');
+    const maxFiles = 5;
+
+    // 計算現有圖片數量(扣除待刪除的)
+    const currentImageCount = existingImagesList.length - deleteImageIdsList.length;
+    const newFileCount = input.files.length;
+
+    if (currentImageCount + newFileCount > maxFiles) {
+        alert(`最多只能上傳 ${maxFiles} 張圖片`);
+        input.value = '';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    Array.from(input.files).forEach(file => {
+        if (!file.type.match('image.*')) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.style.cssText = 'position: relative; width: 100px; height: 100px;';
+
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = '新圖片預覽';
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px;';
+
+            imgWrapper.appendChild(img);
+            container.appendChild(imgWrapper);
+        };
+        reader.readAsDataURL(file);
+    });
+}
