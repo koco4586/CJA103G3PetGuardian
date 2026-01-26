@@ -19,6 +19,8 @@
     <!-- Hidden inputs for current user (Thymeleaf) -->
     <input type="hidden" id="currentUserId" th:value="${currentUser.memId}">
     <input type="hidden" id="currentUserName" th:value="${currentUser.memName}">
+    <!-- [NEW] Flash Attribute for auto-selecting room -->
+    <input type="hidden" id="initialChatroomId" th:value="${activeRoomId}">
 
     <header id="main-header" class="header"></header>
 
