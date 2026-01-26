@@ -1,232 +1,156 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保母預約紀錄 | PetGuardian</title>
-    <link rel="stylesheet" href="../../static/css/frontend/style.css">
-    <link rel="stylesheet" href="../../static/css/frontend/components.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../static/css/frontend/dashboard.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>保母預約紀錄 | PetGuardian</title>
+	<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+	<link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+	<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<style>
+		.dashboard-layout {
+			display: grid;
+			grid-template-columns: 280px 1fr;
+			gap: 2rem;
+			margin-top: 3rem;
+			margin-bottom: 5rem;
+		}
+
+		.dashboard-sidebar {
+			background: white;
+			border-radius: 1.5rem;
+			padding: 2rem;
+			border: 1px solid #f0f0f0;
+			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+			height: fit-content;
+		}
+
+		.menu-link {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			padding: 1rem;
+			border-radius: 1rem;
+			color: #666;
+			transition: all 0.2s ease;
+			margin-bottom: 0.5rem;
+		}
+
+		.menu-link:hover,
+		.menu-link.active {
+			background: #f0f7ff;
+			color: var(--primary-color);
+			font-weight: 600;
+		}
+
+		.booking-card {
+			background: white;
+			border-radius: 1.5rem;
+			padding: 1.8rem;
+			margin-bottom: 1.5rem;
+			border: 1px solid #f0f0f0;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			transition: transform 0.2s;
+		}
+
+		.booking-card:hover {
+			transform: scale(1.01);
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+		}
+
+		.status-pill {
+			padding: 0.4rem 1.2rem;
+			border-radius: 2rem;
+			font-size: 0.85rem;
+			font-weight: 600;
+		}
+	</style>
 </head>
 
 <body>
+	<header id="main-header" class="header"></header>
 
-    <header id="main-header" class="header"></header>
+	<div class="container dashboard-layout">
+		<!-- 側邊欄 -->
+		<aside class="dashboard-sidebar">
+			<div class="text-center mb-3">
+				<div
+					style="width: 80px; height: 80px; background: #e0f2f1; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem;">
+					<i class="fas fa-user-circle"></i>
+				</div>
+				<h4 th:text="${memName}" style="font-weight: 700; margin: 0;">會員姓名</h4>
+				<p style="color: #999; font-size: 0.85rem;">優質寵物主人</p>
+			</div>
 
-    <div class="container dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="text-center mb-2">
-                <div class="avatar-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar">
-                </div>
-                <h4>李小明</h4>
-                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
-            </div>
-            <nav>
-                <a href="dashboard.html" class="menu-item">
-                    <i class="fas fa-user"></i> 個人資料
-                </a>
-                <a href="dashboard-pets.html" class="menu-item">
-                    <i class="fas fa-paw"></i> 我的寵物
-                </a>
-                <a href="dashboard-orders.html" class="menu-item">
-                    <i class="fas fa-receipt"></i> 商城訂單紀錄
-                </a>
-                <a href="dashboard-bookings.html" class="menu-item active">
-                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
-                </a>
-                <a href="dashboard-favorites.html" class="menu-item">
-                    <i class="fas fa-heart"></i> 收藏列表
-                </a>
-                <a href="dashboard-sitter-registration.html" class="menu-item"
-                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
-                    <i class="fas fa-user-plus"></i> 成為保母
-                </a>
-                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
-                    onclick="alert('已登出'); window.location.href='index.html'">
-                    <i class="fas fa-sign-out-alt"></i> 登出
-                </div>
-            </nav>
-        </div>
+			<nav>
+				<a href="#" class="menu-link"><i class="fas fa-user"></i> 個人資料</a>
+				<a href="#" class="menu-link"><i class="fas fa-paw"></i> 我的寵物</a>
+				<a href="/booking/memberOrders" class="menu-link active"><i class="fas fa-calendar-check"></i>
+					保母預約紀錄</a>
+				<a href="#" class="menu-link"><i class="fas fa-heart"></i> 收藏列表</a>
+				<div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
+					<a href="#" class="menu-link" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> 登出</a>
+				</div>
+			</nav>
+		</aside>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <div id="bookings">
-                <h2 class="mb-2">保母預約紀錄</h2>
+		<!-- 主要內容 -->
+		<main class="dashboard-content">
+			<div class="d-flex justify-between align-center mb-3">
+				<h2 style="font-weight: 700;"><a href="/booking/services"
+						style="color: inherit; text-decoration: none;">會員預約列表</a></h2>
+				<a href="/booking/services" class="btn btn-primary btn-sm" style="border-radius: 2rem;">+ 新增預約</a>
+			</div>
 
-                <div class="d-flex gap-sm mb-3">
-                    <button class="btn btn-outline btn-sm active" onclick="filterBookings('all', this)">全部</button>
-                    <button class="btn btn-outline btn-sm" onclick="filterBookings('upcoming', this)">即將到來</button>
-                    <button class="btn btn-outline btn-sm" onclick="filterBookings('completed', this)">已完成</button>
-                    <button class="btn btn-outline btn-sm" onclick="filterBookings('cancelled', this)">已取消</button>
-                </div>
+			<!-- 動態資料迴圈 -->
+			<div class="booking-list">
+				<div th:each="order : ${bookingList}" class="booking-card">
+					<div class="d-flex align-center gap-lg">
+						<div
+							style="background: #fdf2f8; color: #db2777; width: 56px; height: 56px; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+							<i class="fas fa-calendar-day"></i>
+						</div>
+						<div>
+							<h4 th:text="${order.sitterName}" style="margin: 0; font-size: 1.2rem; font-weight: 700;">
+								保母姓名</h4>
+							<div style="color: #666; font-size: 0.9rem; margin-top: 0.3rem;">
+								<i class="far fa-clock mr-xs"></i>
+								<span
+									th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')} + ' ~ ' + ${#temporals.format(order.endTime, 'HH:mm')}"></span>
+							</div>
+						</div>
+					</div>
 
-                <div class="order-list">
-                    <!-- Booking 1: Upcoming -->
-                    <div class="order-item status-upcoming">
-                        <div class="order-info">
-                            <div class="order-meta">
-                                <span>#B-20260115-01</span>
-                                <span class="badge badge-primary">進行中</span>
-                            </div>
-                            <div class="order-product">
-                                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100"
-                                    class="order-thumb" style="border-radius: 50%;">
-                                <div>
-                                    <h4 style="margin-bottom: 0.2rem">王小美保母 (到府照顧)</h4>
-                                    <div style="color: #666; font-size: 0.9rem;">
-                                        <i class="far fa-clock"></i> 2026/01/15 14:00 - 18:00
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-center gap-md">
-                            <button class="btn btn-primary btn-sm">聯絡保母</button>
-                            <button class="btn btn-outline btn-sm text-danger"
-                                onclick="openCancelBookingModal('B-20260115-01', '2026-01-15')"
-                                style="padding: 0.4rem 1rem; font-size: 0.9rem; border-color: #ffc9c9; background: #fff5f5; color: #fa5252;">取消預約</button>
-                        </div>
-                    </div>
+					<div class="d-flex align-center gap-lg">
+						<div class="text-right">
+							<div style="font-weight: 700; color: #ea580c; font-size: 1.2rem;"
+								th:text="'$' + ${order.reservationFee}"></div>
+							<div style="font-size: 0.75rem; color: #bbb;"
+								th:text="'ID: #BK-' + ${order.bookingOrderId}"></div>
+						</div>
 
-                    <!-- Booking 2: Completed -->
-                    <div class="order-item status-completed">
-                        <div class="order-info">
-                            <div class="order-meta">
-                                <span>#B-20231225-05</span>
-                                <span>•</span>
-                                <span class="badge badge-success">已完成</span>
-                            </div>
-                            <div class="order-product">
-                                <img src="https://images.unsplash.com/photo-1517423568366-eb980dd2d396?auto=format&fit=crop&q=80&w=100"
-                                    class="order-thumb" style="border-radius: 50%;">
-                                <div>
-                                    <h4 style="margin-bottom: 0.2rem">快樂狗旅館 (寄宿)</h4>
-                                    <div style="color: #666; font-size: 0.9rem;">
-                                        <i class="far fa-clock"></i> 2023/12/25 - 2023/12/27
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-center gap-md">
-                            <button class="btn btn-outline btn-sm" onclick="openCareRecordModal('B-20231225-05')"
-                                style="color: #1976d2; border-color: #e3f2fd; background: #e3f2fd20;">
-                                <i class="fas fa-file-medical-alt"></i> 查看照顧紀錄
-                            </button>
-                            <button class="btn btn-outline btn-sm">評價保母</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+						<span th:if="${order.orderStatus == 0}" class="status-pill"
+							style="background: #fff8e1; color: #f57c00;">審核中</span>
+						<span th:if="${order.orderStatus == 1}" class="status-pill"
+							style="background: #e3f2fd; color: #1976d2;">進行中</span>
 
-    <!-- Care Record Modal -->
-    <div id="careRecordModal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-        <div
-            style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative;">
-            <button onclick="document.getElementById('careRecordModal').style.display='none'"
-                style="position:absolute; right:1.5rem; top:1.5rem; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-            <h3 class="mb-3">保母照顧紀錄</h3>
+						<button class="btn btn-outline btn-sm" style="border-radius: 2rem;">管理</button>
+					</div>
+				</div>
 
-            <div class="timeline" style="border-left: 2px solid #eee; padding-left: 1.5rem; margin-left: 0.5rem;">
-                <div class="mb-4" style="position:relative;">
-                    <div
-                        style="position:absolute; left:-2.1rem; width:1.2rem; height:1.2rem; background:#4caf50; border-radius:50%; border:3px solid white;">
-                    </div>
-                    <div style="font-weight:600; font-size:0.9rem; color:#999;">18:00 (結束)</div>
-                    <div>任務完成，皮皮精神很好！已確認門窗鎖好。</div>
-                </div>
-                <div class="mb-4" style="position:relative;">
-                    <div
-                        style="position:absolute; left:-2.1rem; width:1.2rem; height:1.2rem; background:#2196f3; border-radius:50%; border:3px solid white;">
-                    </div>
-                    <div style="font-weight:600; font-size:0.9rem; color:#999;">17:30 (餵食)</div>
-                    <div>晚餐時間，食慾不錯，全部吃光光。</div>
-                </div>
-                <div class="mb-4" style="position:relative;">
-                    <div
-                        style="position:absolute; left:-2.1rem; width:1.2rem; height:1.2rem; background:#2196f3; border-radius:50%; border:3px solid white;">
-                    </div>
-                    <div style="font-weight:600; font-size:0.9rem; color:#999;">15:00 (散步)</div>
-                    <div>到公園散步了30分鐘，有便便一次。</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cancel Booking Modal -->
-    <div id="cancelBookingModal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-        <div style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:450px; position:relative;">
-            <button onclick="closeCancelBookingModal()"
-                style="position:absolute; right:1.5rem; top:1.5rem; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-            <h3 class="mb-2">取消預約</h3>
-            <div id="refundInfo" class="mb-3 p-3" style="background:#f8f9fa; border-radius:8px;">
-                <!-- JS will inject info here -->
-            </div>
-            <div class="d-flex gap-md">
-                <button class="btn btn-outline" style="flex:1" onclick="closeCancelBookingModal()">暫不取消</button>
-                <button class="btn btn-primary" onclick="confirmCancelBooking()"
-                    style="flex:1; background:var(--danger); border-color:var(--danger);">確認取消</button>
-            </div>
-        </div>
-    </div>
-
-    <footer id="main-footer" style="margin-top: 4rem;"></footer>
-
-    <script src="../../static/js/frontend/main.js"></script>
-    <script>
-        function filterBookings(status, btn) {
-            document.querySelectorAll('.btn-outline').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            document.querySelectorAll('.order-item').forEach(item => {
-                if (status === 'all' || item.classList.contains('status-' + status)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
-
-        // Care Record
-        function openCareRecordModal(bookingId) {
-            document.getElementById('careRecordModal').style.display = 'flex';
-        }
-
-        // Cancel Booking
-        let cancelInfo = { id: '', date: '' };
-        function openCancelBookingModal(id, date) {
-            cancelInfo = { id, date };
-            const refundBox = document.getElementById('refundInfo');
-            const today = new Date();
-            const bookingDate = new Date(date);
-            const diffTime = bookingDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays >= 7) {
-                refundBox.innerHTML = `<p style="color:#2f9e44; font-weight:600; margin:0;">全額退費</p>
-                    <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">距離服務日期還有 ${diffDays} 天，可享 100% 退費。</p>`;
-            } else {
-                refundBox.innerHTML = `<p style="color:#e03131; font-weight:600; margin:0;">退還 50% 費用</p>
-                    <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">距離服務日期僅剩 ${diffDays} 天，依規定退還一半金額。</p>`;
-            }
-            document.getElementById('cancelBookingModal').style.display = 'flex';
-        }
-
-        function closeCancelBookingModal() {
-            document.getElementById('cancelBookingModal').style.display = 'none';
-        }
-
-        function confirmCancelBooking() {
-            window.showToast(`預約 #${cancelInfo.id} 已成功取消。`);
-            closeCancelBookingModal();
-        }
-    </script>
+				<div th:if="${#lists.isEmpty(bookingList)}"
+					style="text-align: center; padding: 5rem 0; background: white; border-radius: 2rem; border: 1px dashed #ddd;">
+					<p style="color: #999;">目前沒有進行中的預約</p>
+				</div>
+			</div>
+		</main>
+	</div>
+	<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+	<script th:src="@{/js/frontend/main.js}"></script>
 </body>
 
 </html>
