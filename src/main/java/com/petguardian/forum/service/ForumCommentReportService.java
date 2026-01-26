@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.petguardian.forum.model.CommentHandledResultDetailDTO;
 import com.petguardian.forum.model.CommentReviewDetailDTO;
 import com.petguardian.forum.model.ForumCommentReportRepository;
 import com.petguardian.forum.model.ForumCommentReportVO;
@@ -28,6 +29,24 @@ public class ForumCommentReportService {
 		return repo.findAllHandledComments();
 	}
 	
+	@Transactional
+	public void recoverComment(Integer reportId, Integer commentId) {
+		ForumCommentVO forumCommentVO = commentRepo.findById(commentId)
+				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
+		
+		forumCommentVO.setCommentStatus(1);
+		
+		if(reportId != null) {
+			ForumCommentReportVO forumCommentReportVO = repo.findById(reportId)
+					.orElseThrow(() -> new RuntimeException("找不到該檢舉，編號：" + reportId));
+			forumCommentReportVO.setReportStatus(2);
+			forumCommentReportVO.setHandleResult("管理員已執行恢復操作。");
+			forumCommentReportVO.setForumComment(forumCommentVO);
+			repo.save(forumCommentReportVO);
+		}
+		commentRepo.save(forumCommentVO);
+	}
+	
 	public List<PendingCommentDTO> getAllPendingComments() {
 		return repo.findAllPendingComments();
 	}
@@ -38,6 +57,10 @@ public class ForumCommentReportService {
 	
 	public CommentReviewDetailDTO getCommentReviewDetailToHandle(Integer reportId) {
 		return repo.commentReviewDetailToHandle(reportId);
+	}
+	
+	public CommentHandledResultDetailDTO getCommentHandledResultDetailToDisplay(Integer reportId) {
+		return repo.commentHandledResultDetailToDisplay(reportId);
 	}
 	
 	@Transactional
