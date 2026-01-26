@@ -5,89 +5,141 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>最新消息 | PetGuardian</title>
     <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/news/news.css}">
     <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .page-header {
-            background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
-            padding: 3rem 0;
-            margin-bottom: 2rem;
-            border-bottom-left-radius: 24px;
-            border-bottom-right-radius: 24px;
-        }
 
-        .news-item {
-            border-bottom: 1px solid #eee;
-            padding: 1.5rem 0;
-        }
-
-        .news-item:last-child {
-            border-bottom: none;
-        }
-    </style>
 </head>
 
 <body>
+
 <!-- 動態載入 Header -->
-<header id="main-header" class="header"></header>
+<header id="main-header"></header>
 
-<!-- 頁面標題區 -->
-<div class="page-header">
-    <div class="container">
-        <h1 class="text-center mb-1">📰 最新消息</h1>
-        <p class="text-center" style="color: #666;">掌握最新的平台公告、活動資訊與寵物照護知識</p>
+<!-- 主要內容 -->
+<div class="container" style="padding: 60px 20px; max-width: 1000px; margin: 0 auto;">
+
+    <!-- 頁面標題 -->
+    <div style="text-align: center; margin-bottom: 50px;">
+        <h1 style="font-size: 2.5rem; color: var(--text-color); margin-bottom: 10px;">
+            <i class="fa-solid fa-bullhorn" style="color: var(--primary-color);"></i>
+            最新消息
+        </h1>
+        <p style="color: #999; font-size: 1.1rem;">掌握 Pet Guardian 的最新動態</p>
     </div>
-</div>
 
-<!-- 主要內容區 -->
-<div class="container" style="padding: 0 1rem;">
-    <div style="max-width: 800px; margin: 0 auto;">
+    <!-- 搜尋區塊 -->
+    <div class="search-section">
+        <form th:action="@{/news/search}" method="get" class="search-form">
 
-        <!-- 如果沒有資料顯示提示 -->
-        <div th:if="${#lists.isEmpty(newsList)}" class="text-center" style="padding: 3rem;">
-            <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
-            <p style="color: #999;">目前沒有最新消息。</p>
-        </div>
+            <!-- 分類選擇 -->
+            <div class="search-group">
+                <label for="newsTypeId">
+                    <i class="fa-solid fa-tag"></i> 選擇分類
+                </label>
+                <select id="newsTypeId" name="newsTypeId" class="search-select">
+                    <option value="">全部分類</option>
+                    <option th:each="type : ${newsTypeList}"
+                            th:value="${type.newsTypeId}"
+                            th:text="${type.newsTypeName}"
+                            th:selected="${searchNewsTypeId != null && searchNewsTypeId == type.newsTypeId}">
+                        分類名稱
+                    </option>
+                </select>
+            </div>
 
-        <!-- 消息列表 -->
-        <div th:each="news : ${newsList}" class="news-item">
-            <div class="d-flex justify-between align-center mb-1">
-                <!-- 標籤 -->
+            <!-- 關鍵字搜尋 -->
+            <div class="search-group">
+                <label for="keyword">
+                    <i class="fa-solid fa-magnifying-glass"></i> 關鍵字搜尋
+                </label>
+                <input type="text"
+                       id="keyword"
+                       name="keyword"
+                       class="search-input"
+                       placeholder="輸入標題或內容關鍵字..."
+                       th:value="${searchKeyword}">
+            </div>
+
+            <!-- 按鈕區 -->
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="search-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    搜尋
+                </button>
+                <button type="button" class="reset-btn" onclick="resetSearch()">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    清除
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 搜尋結果提示 -->
+    <div th:if="${searchResultCount != null}" class="search-result-info">
+        <span>
+            <i class="fa-solid fa-circle-info"></i>
+            找到 <strong th:text="${searchResultCount}">0</strong> 則符合條件的消息
+        </span>
+        <a th:href="@{/news/list}" class="clear-search">
+            <i class="fa-solid fa-xmark"></i>
+            清除搜尋
+        </a>
+    </div>
+
+    <!-- 消息列表 -->
+    <div th:if="${!#lists.isEmpty(newsList)}">
+        <div class="news-card" th:each="news : ${newsList}">
+
+            <!-- Meta 資訊 -->
+            <div class="news-meta">
+                <!-- 分類標籤 -->
                 <span class="badge"
                       th:classappend="${news.newsType.newsTypeId == 1 ? 'badge-primary' :
-                                          (news.newsType.newsTypeId == 2 ? 'badge-accent' :
-                                          (news.newsType.newsTypeId == 3 ? 'badge-secondary' : 'badge-warning'))}"
+                                      (news.newsType.newsTypeId == 2 ? 'badge-accent' :
+                                      (news.newsType.newsTypeId == 3 ? 'badge-secondary' : 'badge-warning'))}"
                       th:text="${news.newsType.newsTypeName}">
-                        平台公告
-                    </span>
+                    平台公告
+                </span>
 
                 <!-- 日期 -->
-                <span style="color: #999; font-size: 0.9rem;"
-                      th:text="${#temporals.format(news.publishDate, 'yyyy/MM/dd')}">
-                        2023/12/28
-                    </span>
+                <span style="color: #999;">
+                    <i class="far fa-calendar"></i>
+                    <span th:text="${#temporals.format(news.publishDate, 'yyyy/MM/dd')}">2023/12/28</span>
+                </span>
             </div>
 
             <!-- 標題 -->
-            <h3 class="mb-1" th:text="${news.title}">標題範例</h3>
+            <h3 class="mb-1" style="color: var(--text-color); font-size: 1.5rem; margin-bottom: 12px;"
+                th:text="${news.title}">標題範例</h3>
 
-            <!-- 內容預覽（只顯示前兩行） -->
-            <p style="color: #666; margin-bottom: 1rem;
-                          display: -webkit-box; -webkit-line-clamp: 2;
-                          -webkit-box-orient: vertical; overflow: hidden;"
-               th:text="${news.content}">
+            <!-- 內容預覽，只顯示前兩行，保留換行 -->
+            <p class="news-content-preview" th:text="${news.content}">
                 內容範例...
             </p>
 
             <!-- 閱讀更多連結 -->
-            <a th:href="@{/news/detail/{id}(id=${news.newsId})}"
-               class="text-primary"
-               style="font-weight: 700;">
-                閱讀更多 →
+            <a th:href="@{/news/detail/{id}(id=${news.newsId})}" class="read-more">
+                閱讀更多
+                <i class="fa-solid fa-arrow-right"></i>
             </a>
         </div>
-
     </div>
+
+    <!-- 空狀態 -->
+    <div th:if="${#lists.isEmpty(newsList)}" class="empty-state">
+        <i class="fa-regular fa-newspaper"></i>
+        <h3 style="color: #666;" th:text="${searchResultCount != null ? '沒有找到符合的消息' : '目前沒有消息'}">
+            目前沒有消息
+        </h3>
+        <p th:if="${searchResultCount != null}">
+            請嘗試使用其他關鍵字或分類進行搜尋
+        </p>
+        <p th:unless="${searchResultCount != null}">
+            請稍後再回來查看最新動態！
+        </p>
+    </div>
+
 </div>
 
 <!-- 動態載入 Footer -->
@@ -95,5 +147,11 @@
 
 <!-- JavaScript -->
 <script th:src="@{/js/frontend/main.js}"></script>
+<script>
+    // 清除搜尋條件並重新載入頁面
+    function resetSearch() {
+        window.location.href = '/news/list';
+    }
+</script>
 </body>
 </html>

@@ -26,21 +26,20 @@ public class NewsAdminController {
      */
     @GetMapping("/list")
     public String showNewsManagement(Model model) {
-        // 取得所有消息（包含草稿）
+        // 取得所有消息，包含草稿
         List<News> newsList = newsService.getAllNews();
 
-        // 取得所有消息類別（供新增/編輯時選擇）
+        // 取得所有消息類別，供新增或編輯時選擇
         List<NewsType> newsTypeList = newsService.getAllNewsTypes();
 
         model.addAttribute("newsList", newsList);
         model.addAttribute("newsTypeList", newsTypeList);
 
-        // 回傳模板路徑
         return "backend/news";
     }
 
     /**
-     * 後台 - 新增/更新消息
+     * 後台 - 新增或更新消息
      * URL: POST /admin/news/save
      */
     @PostMapping("/save")
@@ -49,7 +48,7 @@ public class NewsAdminController {
             @RequestParam String title,
             @RequestParam Integer newsTypeId,
             @RequestParam String content,
-            @RequestParam String publishDate,
+            @RequestParam(required = false) String publishDate,
             @RequestParam Integer isPublished,
             RedirectAttributes redirectAttributes) {
 
@@ -70,13 +69,17 @@ public class NewsAdminController {
         news.setContent(content);
         news.setIsPublished(isPublished);
 
-        // 設定消息類別（透過 ID 取得物件）
+        // 設定消息類別，透過 ID 取得物件
         NewsType newsType = newsService.getNewsTypeById(newsTypeId)
                 .orElseThrow(() -> new RuntimeException("消息類別不存在"));
         news.setNewsType(newsType);
 
-        // 解析發布日期
-        news.setPublishDate(LocalDateTime.parse(publishDate));
+        // 解析發布日期，如果為空則使用當前時間
+        if (publishDate != null && !publishDate.trim().isEmpty()) {
+            news.setPublishDate(LocalDateTime.parse(publishDate));
+        } else {
+            news.setPublishDate(LocalDateTime.now());
+        }
 
         // 儲存到資料庫
         newsService.saveNews(news);

@@ -16,6 +16,13 @@ function switchOrderTab(tabName) {
     document.getElementById('order-' + tabName).classList.add('active');
 }
 
+// 格式化時間，將 LocalDateTime 格式轉為易讀格式
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return '-';
+    // 將 "2025-12-31T10:30:00" 轉為 "2025-12-31 10:30:00"
+    return dateTimeStr.replace('T', ' ').substring(0, 19);
+}
+
 // 顯示退貨詳情 Modal
 function showReturnDetail(returnId) {
     fetch('/admin/store/return/' + returnId)
@@ -27,7 +34,8 @@ function showReturnDetail(returnId) {
                 document.getElementById('modal-buyerName').textContent = data.buyerName || '-';
                 document.getElementById('modal-sellerName').textContent = data.sellerName || '-';
                 document.getElementById('modal-refundAmount').textContent = '$' + (data.refundAmount || 0);
-                document.getElementById('modal-applyTime').textContent = data.applyTime || '-';
+                // 使用格式化函數處理申請時間
+                document.getElementById('modal-applyTime').textContent = formatDateTime(data.applyTime);
                 document.getElementById('modal-returnReason').textContent = data.returnReason || '-';
 
                 const imagesContainer = document.getElementById('modal-images-container');
