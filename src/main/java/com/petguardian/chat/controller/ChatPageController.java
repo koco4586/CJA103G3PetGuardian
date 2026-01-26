@@ -4,13 +4,17 @@ import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.chat.model.ChatMemberDTO;
 import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.chat.service.chatmessage.ChatPageService;
+import com.petguardian.chat.service.ChatService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -30,10 +34,14 @@ public class ChatPageController {
     // ============================================================
     private final ChatPageService chatPageService;
     private final AuthStrategyService authStrategyService;
+    private final ChatService chatService;
 
-    public ChatPageController(ChatPageService chatPageService, AuthStrategyService authStrategyService) {
+    public ChatPageController(ChatPageService chatPageService,
+            AuthStrategyService authStrategyService,
+            ChatService chatService) {
         this.chatPageService = chatPageService;
         this.authStrategyService = authStrategyService;
+        this.chatService = chatService;
     }
 
     // ============================================================
@@ -81,8 +89,48 @@ public class ChatPageController {
         // View Model Population
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("chatrooms", chatrooms);
+
+        // [NEW] Inject activeRoomId if present in FlashMap/Model (from
+        // RedirectAttributes)
+        if (model.containsAttribute("activeRoomId")) {
+            model.addAttribute("activeRoomId", model.getAttribute("activeRoomId"));
+        }
+
         // Note: Sidebar data consolidated in ChatRoomDTO (via getMyChatrooms)
 
         return "frontend/chat/chat-mvp";
+    }
+
+    // ============================================================
+    // ACTION ENDPOINTS
+    // ============================================================
+
+    /**
+     * Handles connection requests from external modules (Store).
+     * Creates/Finds a chatroom and redirects to the chat page with the room active.
+     */
+    @PostMapping("/chat/connect/store")
+    public String connectToStoreChat(
+            @RequestParam Integer targetUserId,
+            @RequestParam(defaultValue = "1") Integer chatroomType,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return "redirect:/store";
+        }
+
+        // Basic Security: Prevent Self-Chat
+        if (currentUserId.equals(targetUserId)) {
+            return "redirect:/store";
+        }
+
+        // Reuse existing creation/find logic (Service delegated)
+        com.petguardian.chat.model.ChatRoomDTO room = chatService.findOrCreateChatroom(currentUserId, targetUserId,
+                chatroomType);
+
+        redirectAttributes.addFlashAttribute("activeRoomId", room.getChatroomId());
+        return "redirect:/chat";
     }
 }

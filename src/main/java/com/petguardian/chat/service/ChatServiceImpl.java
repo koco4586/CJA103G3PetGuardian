@@ -12,12 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
+import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.service.chatmessage.MessageStrategyService;
 import com.petguardian.chat.service.chatroom.ChatRoomCreationStrategy;
 import com.petguardian.chat.service.chatroom.ChatVerificationService;
 import com.petguardian.chat.service.mapper.ChatMessageMapper;
+import com.petguardian.chat.service.mapper.ChatRoomMapper;
 import com.petguardian.chat.service.status.ChatReadStatusService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -54,6 +56,7 @@ public class ChatServiceImpl implements ChatService {
     private final MessageStrategyService messageStrategyService;
     private final ChatRoomCreationStrategy chatRoomCreationStrategy;
     private final ChatMessageMapper messageMapper;
+    private final ChatRoomMapper chatRoomMapper;
     private final ChatReadStatusService readStatusService;
     private final ChatVerificationService verificationService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -64,6 +67,7 @@ public class ChatServiceImpl implements ChatService {
             MessageStrategyService messageStrategyService,
             ChatRoomCreationStrategy chatRoomCreationStrategy,
             ChatMessageMapper messageMapper,
+            ChatRoomMapper chatRoomMapper,
             ChatReadStatusService readStatusService,
             ChatVerificationService verificationService,
             SimpMessagingTemplate messagingTemplate,
@@ -72,6 +76,7 @@ public class ChatServiceImpl implements ChatService {
         this.messageStrategyService = messageStrategyService;
         this.chatRoomCreationStrategy = chatRoomCreationStrategy;
         this.messageMapper = messageMapper;
+        this.chatRoomMapper = chatRoomMapper;
         this.readStatusService = readStatusService;
         this.verificationService = verificationService;
         this.messagingTemplate = messagingTemplate;
@@ -174,17 +179,14 @@ public class ChatServiceImpl implements ChatService {
     }
 
     /**
-     * Finds an existing chatroom between two users with a specific type.
-     * Does NOT create a new room if not found.
+     * Finds or creates a chatroom between two users.
+     * Delegates entirely to the creation strategy to ensure consistency.
      */
     @Override
-    @Transactional(readOnly = true)
-    public ChatRoomEntity findChatroom(Integer currentUserId, Integer partnerId, Integer chatroomType) {
-        Integer memId1 = Math.min(currentUserId, partnerId);
-        Integer memId2 = Math.max(currentUserId, partnerId);
-
-        return chatroomRepository.findByMemId1AndMemId2AndChatroomType(memId1, memId2, chatroomType)
-                .orElse(null);
+    @Transactional
+    public ChatRoomDTO findOrCreateChatroom(Integer currentUserId, Integer partnerId, Integer chatroomType) {
+        ChatRoomEntity entity = chatRoomCreationStrategy.findOrCreate(currentUserId, partnerId, chatroomType);
+        return chatRoomMapper.toDto(entity, currentUserId);
     }
 
     // ============================================================

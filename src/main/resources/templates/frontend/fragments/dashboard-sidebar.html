@@ -26,10 +26,12 @@
         <a href="/dashboard/bookings" class="menu-item" th:classappend="${activePage == 'bookings'} ? ' active' : ''">
             <i class="fas fa-calendar-check"></i> 保母預約紀錄
         </a>
-        <a th:href="@{/dashboard/favorites}" class="menu-item" th:classappend="${activePage == 'favorites'} ? ' active' : ''">
+        <a th:href="@{/dashboard/favorites}" class="menu-item"
+            th:classappend="${activePage == 'favorites'} ? ' active' : ''">
             <i class="fas fa-heart"></i> 收藏列表
         </a>
-        <a href="/dashboard/sitter-registration" class="menu-item" th:classappend="${activePage == 'sitter-registration'} ? ' active' : ''"
+        <a href="/sitter/apply" class="menu-item"
+            th:classappend="${activePage == 'sitter-registration'} ? ' active' : ''"
             style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
             <i class="fas fa-user-plus"></i> 成為保母
         </a>
