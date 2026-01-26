@@ -21,6 +21,7 @@ import com.petguardian.forum.service.ForumPostPicsService;
 import com.petguardian.forum.service.ForumPostReportService;
 import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
+import com.petguardian.forum.model.CommentHandledResultDetailDTO;
 import com.petguardian.forum.model.CommentReviewDetailDTO;
 import com.petguardian.forum.model.DeletedCommentDTO;
 import com.petguardian.forum.model.DeletedPostDTO;
@@ -407,6 +408,25 @@ public class AdminForumController {
 		model.addAttribute("commentList", commentList);
 		
 		return "backend/forum/forum-rejected-comment";
+		
+	}
+	
+	@PostMapping("get-one-rejected-comment-to-display")
+	public String getOneRejectedCommentToDisplay(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		CommentReviewDetailDTO reviewDto = forumCommentReportService.getCommentReviewDetailToHandle(reportId);
+		CommentHandledResultDetailDTO handledResultDto = forumCommentReportService.getCommentHandledResultDetailToDisplay(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("handledResultDto", handledResultDto);
+		model.addAttribute("reviewDto", reviewDto);
+		model.addAttribute("picsId", picsId);
+		model.addAttribute("commentList", commentList);
+		
+		return "backend/forum/display-rejected-comment";
 		
 	}
 	

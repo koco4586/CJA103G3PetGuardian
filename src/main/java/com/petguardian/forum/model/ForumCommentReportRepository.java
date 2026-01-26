@@ -34,7 +34,7 @@ public interface ForumCommentReportRepository extends JpaRepository<ForumComment
 	
 	@Query("""
 			select new com.petguardian.forum.model.RejectedCommentDTO(
-				c.commentId, c.commentContent, c.member.memId, p.postId, r.reportType, r.handleTime 
+				c.commentId, c.commentContent, c.member.memId, p.postId, r.reportType, r.handleTime, r.reportId
 			)
 			from ForumCommentReportVO r
 			join r.forumComment c
@@ -57,11 +57,13 @@ public interface ForumCommentReportRepository extends JpaRepository<ForumComment
 	""")
 	public CommentReviewDetailDTO commentReviewDetailToHandle(@Param("reportId") Integer reportId);
 	
-	
-	
-	
-	
-	
-	
+	@Query("""
+			select new com.petguardian.forum.model.CommentHandledResultDetailDTO(
+				r.reportId, r.handleTime, r.reportStatus, r.handleResult
+			)
+			from ForumCommentReportVO r
+			where r.reportId = :reportId
+	""")
+	public CommentHandledResultDetailDTO commentHandledResultDetailToDisplay(@Param("reportId") Integer reportId);
 	
 }
