@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.petguardian.forum.model.CommentHandledResultDetailDTO;
 import com.petguardian.forum.model.CommentReviewDetailDTO;
 import com.petguardian.forum.model.ForumCommentReportRepository;
 import com.petguardian.forum.model.ForumCommentReportVO;
@@ -38,6 +39,10 @@ public class ForumCommentReportService {
 	
 	public CommentReviewDetailDTO getCommentReviewDetailToHandle(Integer reportId) {
 		return repo.commentReviewDetailToHandle(reportId);
+	}
+	
+	public CommentHandledResultDetailDTO getCommentHandledResultDetailToDisplay(Integer reportId) {
+		return repo.commentHandledResultDetailToDisplay(reportId);
 	}
 	
 	@Transactional
