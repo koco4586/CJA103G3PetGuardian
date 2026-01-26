@@ -5,36 +5,24 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatMemberEntity;
-import com.petguardian.chat.model.ChatMemberRepository;
 import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
+import java.util.Map;
 
 @Service
 public class ChatRoomMapperImpl implements ChatRoomMapper {
 
-    private final ChatMemberRepository memberRepository;
-
-    public ChatRoomMapperImpl(ChatMemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
-    }
-
     @Override
-    public ChatRoomDTO toDto(ChatRoomEntity chatRoomEntity, Integer currentUserId) {
+    public ChatRoomDTO toDto(ChatRoomEntity chatRoomEntity, Integer currentUserId, String partnerName) {
         if (chatRoomEntity == null) {
             return null;
         }
-        // Fallback to repository fetch for single item mapping
-        Integer partnerId = chatRoomEntity.getOtherMemberId(currentUserId);
-        String partnerName = memberRepository.findById(partnerId)
-                .map(ChatMemberEntity::getMemName)
-                .orElse("Unknown User");
-
         return mapBaseFields(chatRoomEntity, currentUserId, partnerName);
     }
 
     @Override
     public ChatRoomDTO toDto(ChatRoomEntity chatRoomEntity, Integer currentUserId,
-            java.util.Map<Integer, ChatMemberEntity> preloadedMembers) {
+            Map<Integer, ChatMemberEntity> preloadedMembers) {
         if (chatRoomEntity == null) {
             return null;
         }

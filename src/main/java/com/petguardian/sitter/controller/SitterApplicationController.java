@@ -61,7 +61,7 @@ public class SitterApplicationController {
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "請先登入才能申請成為保姆");
-            return "redirect:/member/login";
+            return "redirect:/front/loginpage";
         }
 
         // [NEW] 預先檢查：是否已有申請中或已通過的紀錄
@@ -156,7 +156,7 @@ public class SitterApplicationController {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
                 redirectAttributes.addFlashAttribute("errorMessage", "請先登入才能申請成為保姆");
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
 
             // ✅ 檢查驗證錯誤
@@ -206,7 +206,7 @@ public class SitterApplicationController {
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "請先登入");
-            return "redirect:/member/login";
+            return "redirect:/front/loginpage";
         }
 
         // 查詢該會員的所有申請
@@ -253,7 +253,7 @@ public class SitterApplicationController {
         // 1. 取得當前會員 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/member/login";
+            return "redirect:/front/loginpage";
         }
 
         // 2. 查詢該會員是否有「已通過」的保姆資格 (改用 Service 方法)
