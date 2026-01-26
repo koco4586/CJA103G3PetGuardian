@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.model.ChatRoomDTO;
-import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.common.service.AuthStrategyService;
-import com.petguardian.chat.service.mapper.ChatRoomMapper;
 import com.petguardian.chat.service.ChatService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,14 +36,11 @@ public class ChatApiController {
     // ============================================================
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
-    private final ChatRoomMapper chatRoomMapper;
 
     public ChatApiController(AuthStrategyService authStrategyService,
-            ChatService chatService,
-            ChatRoomMapper chatRoomMapper) {
+            ChatService chatService) {
         this.authStrategyService = authStrategyService;
         this.chatService = chatService;
-        this.chatRoomMapper = chatRoomMapper;
     }
 
     // ============================================================
@@ -58,7 +53,7 @@ public class ChatApiController {
      * 
      * @param partnerId    Target User ID
      * @param chatroomType Room Type (Default: 0 for 1-on-1)
-     * @return ChatRoomEntity or 404 Not Found
+     * @return ChatRoomDTO
      */
     @GetMapping
     public ResponseEntity<ChatRoomDTO> findChatroom(
@@ -70,14 +65,10 @@ public class ChatApiController {
         if (currentUserId == null) {
             return ResponseEntity.status(401).build();
         }
+        // Always ensures room exists
+        ChatRoomDTO chatroom = chatService.findOrCreateChatroom(currentUserId, partnerId, chatroomType);
 
-        ChatRoomEntity chatroom = chatService.findChatroom(currentUserId, partnerId, chatroomType);
-
-        if (chatroom == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(chatRoomMapper.toDto(chatroom, currentUserId));
+        return ResponseEntity.ok(chatroom);
     }
 
     /**

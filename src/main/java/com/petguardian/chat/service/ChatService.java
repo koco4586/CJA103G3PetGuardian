@@ -3,7 +3,7 @@ package com.petguardian.chat.service;
 import java.util.List;
 
 import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatRoomEntity;
+import com.petguardian.chat.model.ChatRoomDTO;
 
 /**
  * Service Interface for Core Chat Operations.
@@ -45,14 +45,13 @@ public interface ChatService {
     void markRoomAsRead(Integer chatroomId, Integer userId);
 
     /**
-     * Finds an existing chatroom between two users with a specific type.
-     * Does NOT create a new room if not found.
+     * Finds an existing chatroom between two users or creates a chatroom.
      * 
      * @param currentUserId Current user ID
      * @param partnerId     Target partner ID
      * @param chatroomType  Room type (0=Service, 1=Product)
-     * @return ChatRoomVO if found, null otherwise
+     * @return ChatRoomDTO (Never null)
      */
-    ChatRoomEntity findChatroom(Integer currentUserId, Integer partnerId,
+    ChatRoomDTO findOrCreateChatroom(Integer currentUserId, Integer partnerId,
             Integer chatroomType);
 }
