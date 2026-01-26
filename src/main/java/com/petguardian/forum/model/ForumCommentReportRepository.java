@@ -10,7 +10,7 @@ public interface ForumCommentReportRepository extends JpaRepository<ForumComment
 
 	@Query("""
 			select new com.petguardian.forum.model.HandledCommentDTO(
-				c.commentId, c.commentContent, c.member.memId, p.postId, r.reportType, r.handleTime
+				c.commentId, c.commentContent, c.member.memId, p.postId, r.reportType, r.handleTime, r.reportId
 			)
 			from ForumCommentReportVO r
 			join r.forumComment c

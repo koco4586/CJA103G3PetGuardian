@@ -29,6 +29,24 @@ public class ForumCommentReportService {
 		return repo.findAllHandledComments();
 	}
 	
+	@Transactional
+	public void recoverComment(Integer reportId, Integer commentId) {
+		ForumCommentVO forumCommentVO = commentRepo.findById(commentId)
+				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
+		
+		forumCommentVO.setCommentStatus(1);
+		
+		if(reportId != null) {
+			ForumCommentReportVO forumCommentReportVO = repo.findById(reportId)
+					.orElseThrow(() -> new RuntimeException("找不到該檢舉，編號：" + reportId));
+			forumCommentReportVO.setReportStatus(2);
+			forumCommentReportVO.setHandleResult("管理員已執行恢復操作。");
+			forumCommentReportVO.setForumComment(forumCommentVO);
+			repo.save(forumCommentReportVO);
+		}
+		commentRepo.save(forumCommentVO);
+	}
+	
 	public List<PendingCommentDTO> getAllPendingComments() {
 		return repo.findAllPendingComments();
 	}
