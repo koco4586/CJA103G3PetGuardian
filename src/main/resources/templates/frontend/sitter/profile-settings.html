@@ -153,11 +153,11 @@
                             </thead>
                             <tbody>
                                 <tr th:each="spt : ${servicePetTypes}">
-                                    <td th:text="${spt.serviceItemId == 1 ? '散步' : 
-                                                  (spt.serviceItemId == 2 ? '餵食' : '洗澡')}">散步</td>
-                                    <td th:text="${spt.typeId == 1 ? '貓' : '狗'}">狗</td>
-                                    <td th:text="${spt.sizeId == 1 ? '小型' : 
-                                                  (spt.sizeId == 2 ? '中型' : '大型')}">中型</td>
+                                    <td
+                                        th:text="${spt.serviceItemId == 1 ? '散步' : (spt.serviceItemId == 2 ? '餵食' : '洗澡')}">
+                                        散步</td>
+                                    <td th:text="${petTypeMap.get(spt.typeId)}">狗</td>
+                                    <td th:text="${petSizeMap.get(spt.sizeId)}">中型</td>
                                     <td>
                                         <form th:action="@{/sitter/profile/service/pet-type/delete}" method="post"
                                             style="display:inline;">
@@ -189,17 +189,16 @@
                                 <label class="form-label">寵物種類</label>
                                 <select name="typeId" class="form-control" required>
                                     <option value="">請選擇</option>
-                                    <option value="1">貓</option>
-                                    <option value="2">狗</option>
+                                    <option th:each="type : ${petTypeOptions}" th:value="${type.id}"
+                                        th:text="${type.label}">貓</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">體型大小</label>
                                 <select name="sizeId" class="form-control" required>
                                     <option value="">請選擇</option>
-                                    <option value="1">小型</option>
-                                    <option value="2">中型</option>
-                                    <option value="3">大型</option>
+                                    <option th:each="size : ${petSizeOptions}" th:value="${size.id}"
+                                        th:text="${size.label}">小型</option>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">新增</button>

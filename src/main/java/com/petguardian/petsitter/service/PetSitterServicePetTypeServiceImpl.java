@@ -11,6 +11,9 @@ import com.petguardian.petsitter.model.PetSitterServicePetTypeRepository;
 import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
 import com.petguardian.sitter.model.SitterRepository;
 
+import com.petguardian.petsitter.model.PetType;
+import com.petguardian.petsitter.model.PetSize;
+
 /**
  * 保姆服務寵物對象業務邏輯實作
  * 
@@ -43,6 +46,14 @@ public class PetSitterServicePetTypeServiceImpl implements PetSitterServicePetTy
         // 1. 驗證保姆是否存在
         if (sitterId == null || !sitterRepository.existsById(sitterId)) {
             throw new IllegalArgumentException("保姆不存在: " + sitterId);
+        }
+
+        // 1.5 驗證寵物種類與體型是否有效
+        if (PetType.fromId(typeId) == null) {
+            throw new IllegalArgumentException("無效的寵物種類 ID: " + typeId);
+        }
+        if (PetSize.fromId(sizeId) == null) {
+            throw new IllegalArgumentException("無效的寵物體型 ID: " + sizeId);
         }
 
         // 2. 檢查是否已存在相同配置
