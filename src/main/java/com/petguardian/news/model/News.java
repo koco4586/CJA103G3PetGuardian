@@ -37,19 +37,19 @@ public class News {
     @Column(name = "is_published", nullable = false)
     private Integer isPublished = 0; // 0=草稿, 1=已發布
 
-    // 多對一關聯 - 直接使用物件關聯
+    // 多對一關聯
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "news_type_id", nullable = false)
     private NewsType newsType;
 
-    // JPA 生命週期：新增時自動設定時間
+    // 新增時自動設定時間
     @PrePersist
     protected void onCreate() {
         createdTime = LocalDateTime.now();
         updatedTime = LocalDateTime.now();
     }
 
-    // JPA 生命週期：更新時自動修改時間
+    // 更新時自動修改時間
     @PreUpdate
     protected void onUpdate() {
         updatedTime = LocalDateTime.now();
