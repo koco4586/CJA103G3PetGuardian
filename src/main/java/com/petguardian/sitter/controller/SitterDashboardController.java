@@ -51,7 +51,7 @@ public class SitterDashboardController {
         // 1. 檢查登入
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/member/login";
+            return "redirect:/front/loginpage";
         }
 
         // 2. 查詢保母資料

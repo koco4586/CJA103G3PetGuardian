@@ -71,7 +71,7 @@ public class SitterProfileController {
         // 1. 檢查登入
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/member/login";
+            return "redirect:/front/loginpage";
         }
 
         // 2. 查詢保母資料
@@ -140,7 +140,7 @@ public class SitterProfileController {
         try {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -183,7 +183,7 @@ public class SitterProfileController {
         try {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -228,7 +228,7 @@ public class SitterProfileController {
         try {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -271,7 +271,7 @@ public class SitterProfileController {
         try {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
 
             SitterVO sitter = sitterService.getSitterByMemId(memId);
@@ -309,7 +309,7 @@ public class SitterProfileController {
         try {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
             // 刪除服務對象
             petSitterServicePetTypeService.deleteServicePetTypeForMember(memId, servicePetId);
@@ -341,7 +341,7 @@ public class SitterProfileController {
         try {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
 
             // 新增服務地區
@@ -374,7 +374,7 @@ public class SitterProfileController {
         try {
             Integer memId = authStrategyService.getCurrentUserId(request);
             if (memId == null) {
-                return "redirect:/member/login";
+                return "redirect:/front/loginpage";
             }
 
             // 刪除服務地區
