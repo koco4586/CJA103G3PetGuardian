@@ -25,42 +25,6 @@
     box-shadow: 0 15px 40px rgba(0,0,0,0.15);
 }
 
-/* 2. 仿照第二張圖的 Header 設計 */
-header {
-    background: #D4B483; /* 或是您喜歡的奶茶色/橘色漸層 */
-    background: linear-gradient(135deg, #e3c192 0%, #ce875b 100%);
-    padding: 30px;
-    border-radius: 20px;
-    color: white;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 25px rgba(206, 135, 91, 0.2);
-}
-
-header h1 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-}
-
-header .sub {
-    font-size: 1rem;
-    opacity: 0.9;
-}
-
-/* 3. 卡片容器調整 (像第二張圖那樣有圓角跟陰影) */
-section {
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-.card {
-    border: none;
-    background: #fafafa;
-    border-radius: 15px;
-    padding: 20px;
-}
-
 /* 4. 表格質感提升 */
 table {
     width: 100%;
