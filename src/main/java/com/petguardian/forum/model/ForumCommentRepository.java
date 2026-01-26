@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ForumCommentRepository extends JpaRepository<ForumCommentVO, Integer> {
 	
-	@Query(value = "select c from ForumCommentVO c where commentStatus = 1 and c.forumPost.postId = :postId order by c.commentId asc")
+	@Query(value = "select c from ForumCommentVO c where commentStatus = 1 and c.forumPost.postId = :postId order by c.createdAt asc")
 	public List<ForumCommentVO> findCommentsByPostId(@Param("postId") Integer postId);
 	
 	@Query("""
