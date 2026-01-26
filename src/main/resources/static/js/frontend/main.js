@@ -4,22 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (headerEl) {
         headerEl.innerHTML = `
             <div class="container nav">
-                <a href="index.html" class="logo" style="display: flex; align-items: center; text-decoration: none;">
-                    <img src="../../../images/frontend/logo.png" alt="PetGuardian" style="height: 40px; margin-right: 0.5rem;">
+                <a href="/" class="logo" style="display: flex; align-items: center; text-decoration: none;">
+                    <img src="/images/frontend/logo.png" alt="PetGuardian" style="height: 40px; margin-right: 0.5rem;">
                     <span style="font-family: 'Rubik', sans-serif; font-weight: 700; color: var(--text-color); font-size: 1.4rem;">PetGuardian</span>
                 </a>
                 <ul class="nav-links">
-                    <li><a href="index.html" class="nav-link">首頁</a></li>
+                    <li><a href="/" class="nav-link">首頁</a></li>
                     <li><a href="/public/sitter/search" class="nav-link">預約服務</a></li>
                     <li class="dropdown">
-                        <a href="store.html" class="nav-link">二手商城 <i class="fas fa-chevron-down" style="font-size: 0.8rem; margin-left: 4px;"></i></a>
+                        <a href="/store" class="nav-link">二手商城 <i class="fas fa-chevron-down" style="font-size: 0.8rem; margin-left: 4px;"></i></a>
                         <div class="dropdown-menu" style="left:0; right:auto; width:160px; top:120%;">
-                            <a href="store.html" class="dropdown-item">瀏覽商品</a>
-                            <a href="store-seller.html" class="dropdown-item">賣家管理</a>
+                            <a href="/store" class="dropdown-item">瀏覽商品</a>
+                            <a href="/seller/dashboard" class="dropdown-item">賣家管理</a>
                         </div>
                     </li>
                     <li><a href="/forum/list-all-active-forum" class="nav-link">討論區</a></li>
-                    <li><a href="news.html" class="nav-link">最新消息</a></li>
+                    <li><a href="/news/list" class="nav-link">最新消息</a></li>
                 </ul>
                 <div class="d-flex align-center">
                     <a href="#" onclick="enterChat(event)" class="btn btn-outline" style="border:none; margin-right: 0.5rem; font-size: 1.2rem; position: relative; padding: 0.5rem;">
@@ -32,11 +32,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a href="login.html" class="dropdown-item">登入 / 註冊</a>
-                        <a href="dashboard.html" class="dropdown-item">會員中心</a>
-                        <a href="/sitter/hub" class="dropdown-item">保母專區</a>
+                        <a href="/login" class="dropdown-item">登入 / 註冊</a>
+                        <a href="/dashboard" class="dropdown-item">會員中心</a>
+                        <a href="/sitter/dashboard" class="dropdown-item">保母專區</a>
                         <hr style="border:0; border-top:1px solid #eee; margin: 0.5rem 0;">
-                        <a href="#" class="dropdown-item">登出</a>
+                        <a href="/logout" class="dropdown-item">登出</a>
                     </div>
                 </div>
                 <div class="mobile-menu-btn">☰</div>
@@ -58,25 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (footerEl) {
         footerEl.innerHTML = `
             <div class="container" style="padding: 2rem 0;">
-                <div class="d-flex justify-between align-center" style="flex-wrap: wrap; gap: 2rem;">
+                <!--<div class="d-flex justify-center align-center" style="flex-wrap: wrap; gap: 4rem;">
                     <div>
-                        <h3>🐾 PetGuardian 寵護家</h3>
-                        <p style="color: #666;">給毛小孩最溫暖的守護</p>
+                        <h3 style="margin: 0 0 0.25rem 0;">🐾 PetGuardian 寵護家</h3>
+                        <p style="color: #666; margin: 0;">給毛小孩最溫暖的守護</p>
                     </div>
-                    <div>
-                        <h4>快速連結</h4>
-                        <ul style="color: #666;">
-                            <li><a href="about.html">關於我們</a></li>
-                            <li><a href="terms.html">服務條款</a></li>
-                            <li><a href="privacy.html">隱私政策</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4>聯絡我們</h4>
-                        <p style="color: #666;">hello@petguardian.com</p>
-                        <p style="color: #666;">02-1234-5678</p>
-                    </div>
-                </div>
+                </div>-->
                 <div class="text-center mt-2" style="border-top: 1px solid #eee; padding-top: 1rem; color: #999; font-size: 0.9rem;">
                     &copy; 2024 PetGuardian. All rights reserved.
                 </div>
@@ -85,10 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Highlight active nav link
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPath = window.location.pathname;
     const links = document.querySelectorAll('.nav-link');
     links.forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
+        const href = link.getAttribute('href');
+        // 首頁特殊處理
+        if (href === '/' && (currentPath === '/' || currentPath === '/index' || currentPath === '/index.html')) {
+            link.classList.add('active');
+        }
+        // 二手商城：包含 /store 的路徑
+        else if (href === '/store' && currentPath.startsWith('/store')) {
+            link.classList.add('active');
+        }
+        // 其他頁面
+        else if (href !== '/' && currentPath.startsWith(href)) {
             link.classList.add('active');
         }
     });
