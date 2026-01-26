@@ -12,107 +12,80 @@
 </head>
 
 <body>
-<header id="main-header" class="header"></header>
+    <header id="main-header" class="header"></header>
 
-<div class="container" style="margin-top: 2rem;">
-    <div class="d-flex justify-between align-center mb-2">
-        <h2>賣家管理中心</h2>
-    </div>
+    <div class="container" style="margin-top: 2rem;">
+        <div class="d-flex justify-between align-center mb-2">
+            <h2>賣家管理中心</h2>
+        </div>
 
-    <div class="d-flex" style="gap: 1.5rem; align-items: flex-start;">
-        <!-- 側邊欄 -->
-        <div class="seller-sidebar" style="flex: 0 0 250px;">
+        <div class="d-flex" style="gap: 1.5rem; align-items: flex-start;">
+            <!-- 側邊欄 -->
+            <div class="seller-sidebar" style="flex: 0 0 250px;">
 
-            <!-- 賣家個人資訊區塊 -->
-            <div th:if="${sellerInfo != null}"
-                 style="background: #efe0a4;
+                <!-- 賣家個人資訊區塊 -->
+                <div th:if="${sellerInfo != null}" style="background: #efe0a4;
                         border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; color: black;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <!-- 頭像 -->
-                    <div style="position: relative;">
-                        <img th:if="${sellerInfo.memImage != null}"
-                             th:src="${sellerInfo.memImage}" alt="賣家頭像"
-                             style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <!-- 頭像 -->
+                        <div style="position: relative;">
+                            <img th:if="${sellerInfo.memImage != null}" th:src="${sellerInfo.memImage}" alt="賣家頭像"
+                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
                                     border: 3px solid rgba(255,255,255,0.3);">
-                        <div th:unless="${sellerInfo.memImage != null}"
-                             style="width: 60px; height: 60px; border-radius: 50%;
+                            <div th:unless="${sellerInfo.memImage != null}" style="width: 60px; height: 60px; border-radius: 50%;
                                     background: rgba(255,255,255,0.2); display: flex;
                                     align-items: center; justify-content: center;
                                     border: 3px solid rgba(255,255,255,0.3);">
-                            <i class="fas fa-user" style="font-size: 1.5rem;"></i>
+                                <i class="fas fa-user" style="font-size: 1.5rem;"></i>
+                            </div>
                         </div>
-                    </div>
-                    <!-- 資訊 -->
-                    <div style="flex: 1;">
-                        <div style="font-weight: 700; font-size: 1.1rem;"
-                             th:text="${sellerInfo.memName != null ? sellerInfo.memName : '賣家'}">賣家名稱
-                        </div>
-                        <div style="font-size: 0.85rem; opacity: 0.9;">
-                            會員編號：<span th:text="'#' + ${sellerInfo.memId}">ID</span>
+                        <!-- 資訊 -->
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; font-size: 1.1rem;"
+                                th:text="${sellerInfo.memName != null ? sellerInfo.memName : '賣家'}">賣家名稱
+                            </div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">
+                                會員編號：<span th:text="'#' + ${sellerInfo.memId}">ID</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <h3 style="margin-bottom: 1rem;">功能選單</h3>
+                <nav>
+                    <a href="/seller/dashboard" class="seller-menu-item"
+                        th:classappend="${currentView == 'overview' ? 'active' : ''}">
+                        <i class="fas fa-chart-pie"></i> 營運概況
+                    </a>
+                    <a href="/seller/products" class="seller-menu-item"
+                        th:classappend="${currentView == 'products' ? 'active' : ''}">
+                        <i class="fas fa-box-open"></i> 商品管理
+                    </a>
+                    <a href="/seller/orders" class="seller-menu-item"
+                        th:classappend="${currentView == 'orders' ? 'active' : ''}">
+                        <i class="fas fa-clipboard-list"></i> 訂單管理
+                    </a>
+                    <a href="/store" class="seller-menu-item"
+                        style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                        <i class="fas fa-shopping-bag"></i> 返回商城
+                    </a>
+                </nav>
             </div>
 
-            <h3 style="margin-bottom: 1rem;">功能選單</h3>
-            <nav>
-                <a href="/seller/dashboard" class="seller-menu-item"
-                   th:classappend="${currentView == 'overview' ? 'active' : ''}">
-                    <i class="fas fa-chart-pie"></i> 營運概況
-                </a>
-                <a href="/seller/products" class="seller-menu-item"
-                   th:classappend="${currentView == 'products' ? 'active' : ''}">
-                    <i class="fas fa-box-open"></i> 商品管理
-                </a>
-                <a href="/seller/orders" class="seller-menu-item"
-                   th:classappend="${currentView == 'orders' ? 'active' : ''}">
-                    <i class="fas fa-clipboard-list"></i> 訂單管理
-                </a>
-                <a href="/store" class="seller-menu-item"
-                   style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                    <i class="fas fa-shopping-bag"></i> 返回商城
-                </a>
-            </nav>
-        </div>
+            <!-- 主要內容區 -->
+            <div style="flex: 1;">
 
-        <!-- 主要內容區 -->
-        <div style="flex: 1;">
+                <!-- 成功訊息 -->
+                <div th:if="${successMessage}" class="alert"
+                    style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                </div>
 
-            <!-- 成功訊息 -->
-            <div th:if="${successMessage}" class="alert"
-                 style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
-            </div>
-
-            <!-- 錯誤訊息 -->
-            <div th:if="${error}" class="alert"
-                 style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
-            </div>
-
-            <!-- ========== 營運概況 ========== -->
-            <div th:if="${currentView == 'overview'}">
-                <h3 class="mb-2">營運概況</h3>
-                <div class="d-flex gap-md mb-4" style="flex-wrap: wrap;">
-                    <!-- 商品總數 -->
-                    <div class="stat-card" style="flex: 1; min-width: 180px;"
-                         onclick="location.href='/seller/products'">
-                        <div class="stat-number" style="color: var(--primary-color);" th:text="${totalProducts}">0</div>
-                        <p style="color: #868e96; font-weight:500;">商品總數</p>
-                    </div>
-
-                    <!-- 上架中 -->
-                    <div class="stat-card" style="flex: 1; min-width: 180px;"
-                         onclick="location.href='/seller/products'">
-                        <div class="stat-number" style="color: #51cf66;" th:text="${activeProducts}">0</div>
-                        <p style="color: #868e96; font-weight:500;">上架中</p>
-                    </div>
-
-                    <!-- 訂單總數 -->
-                    <div class="stat-card" style="flex: 1; min-width: 180px;" onclick="location.href='/seller/orders'">
-                        <div class="stat-number" style="color: #495057;" th:text="${totalOrders}">0</div>
-                        <p style="color: #868e96; font-weight:500;">訂單總數</p>
-                    </div>
+                <!-- 錯誤訊息 -->
+                <div th:if="${error}" class="alert"
+                    style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                </div>
 
                     <!-- 待出貨 -->
                     <div class="stat-card" style="flex: 1; min-width: 180px;" onclick="location.href='/seller/orders'">
@@ -126,10 +99,6 @@
                             <span th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</span>
                             <span style="font-size: 0.5em; color: #999;">/5.0</span>
                         </div>
-                        <p style="color: #868e96; font-weight:500;">
-                            <i class="fas fa-star" style="color: #ffc107;"></i> 平均評分
-                        </p>
-                    </div>
 
                     <!-- 總評價數量 -->
                     <div class="stat-card" style="flex: 1; min-width: 180px; cursor: pointer;" onclick="toggleReviewsList()">
@@ -168,10 +137,7 @@
                         </button>
                     </div>
 
-                    <div th:if="${#lists.isEmpty(allReviews)}"
-                         style="text-align: center; padding: 3rem; color: #999;">
-                        <i class="fas fa-comment-slash" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-                        <p>目前還沒有評論</p>
+                        </div>
                     </div>
 
                     <div th:if="${!#lists.isEmpty(allReviews)}"
@@ -189,35 +155,57 @@
                                             <i class="fas fa-star"></i>
                                         </span>
 
-                                        <span th:if="${reviewData.rating < 5}"
-                                              th:each="i : ${#numbers.sequence(reviewData.rating + 1, 5)}"
-                                              style="color: #ddd;">
-                                            <i class="fas fa-star"></i>
-                                        </span>
+                        <div th:if="${#lists.isEmpty(allReviews)}"
+                            style="text-align: center; padding: 3rem; color: #999;">
+                            <i class="fas fa-comment-slash"
+                                style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                            <p>目前還沒有評論</p>
+                        </div>
 
-                                        <span style="margin-left: 8px; font-weight: 600;"
-                                              th:text="${reviewData.buyerName}">買家</span>
+                        <div th:if="${!#lists.isEmpty(allReviews)}" style="max-height: 500px; overflow-y: auto;">
+
+                            <div th:each="reviewData : ${allReviews}"
+                                style="padding: 1rem; border-bottom: 1px solid #f0f0f0;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <!-- 星星 -->
+                                        <div style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                            <span th:if="${reviewData.rating > 0}"
+                                                th:each="i : ${#numbers.sequence(1, reviewData.rating)}"
+                                                style="color: #ffc107;">
+                                                <i class="fas fa-star"></i>
+                                            </span>
+
+                                            <span th:if="${reviewData.rating < 5}"
+                                                th:each="i : ${#numbers.sequence(reviewData.rating + 1, 5)}"
+                                                style="color: #ddd;">
+                                                <i class="fas fa-star"></i>
+                                            </span>
+
+                                            <span style="margin-left: 8px; font-weight: 600;"
+                                                th:text="${reviewData.buyerName}">買家</span>
+                                        </div>
+                                        <p style="margin: 0; color: #666;"
+                                            th:text="${reviewData.reviewContent != null ? reviewData.reviewContent : '(買家未留下文字評價)'}">
+                                            評論內容
+                                        </p>
                                     </div>
-                                    <p style="margin: 0; color: #666;"
-                                       th:text="${reviewData.reviewContent != null ? reviewData.reviewContent : '(買家未留下文字評價)'}">
-                                        評論內容
-                                    </p>
-                                </div>
-                                <div style="text-align: right; color: #999; font-size: 0.85rem;">
-                                    <div th:text="'訂單 #' + ${reviewData.orderId}">訂單編號</div>
-                                    <div th:text="${#temporals.format(reviewData.reviewTime, 'yyyy-MM-dd')}">日期</div>
+                                    <div style="text-align: right; color: #999; font-size: 0.85rem;">
+                                        <div th:text="'訂單 #' + ${reviewData.orderId}">訂單編號</div>
+                                        <div th:text="${#temporals.format(reviewData.reviewTime, 'yyyy-MM-dd')}">日期
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- ========== 商品管理 ========== -->
-            <div th:if="${currentView == 'products'}">
-                <div class="d-flex justify-between align-center mb-2">
-                    <h3 class="mb-0">商品管理</h3>
-                    <button class="btn btn-primary" onclick="openProductModal()"
+                <!-- ========== 商品管理 ========== -->
+                <div th:if="${currentView == 'products'}">
+                    <div class="d-flex justify-between align-center mb-2">
+                        <h3 class="mb-0">商品管理</h3>
+                        <button class="btn btn-primary" onclick="openProductModal()"
                             style="white-space: nowrap; padding: 10px 20px;">
                         <i class="fas fa-plus"></i> 上架新商品
                     </button>
@@ -381,14 +369,92 @@
                                             </button>
                                         </form>
 
-                                        <!-- 取消按鈕 -->
-                                        <form th:action="@{/seller/order/cancel}" method="post"
-                                              style="display: inline;">
-                                            <input type="hidden" name="orderId" th:value="${item.order.orderId}">
+                    <div class="card" style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 700px;">
+                            <thead>
+                                <tr>
+                                    <th
+                                        style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left; white-space: nowrap;">
+                                        圖片
+                                    </th>
+                                    <th
+                                        style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left; white-space: nowrap;">
+                                        商品編號
+                                    </th>
+                                    <th
+                                        style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left; white-space: nowrap;">
+                                        商品類別
+                                    </th>
+                                    <th style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left;">
+                                        商品名稱
+                                    </th>
+                                    <th
+                                        style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: right; white-space: nowrap;">
+                                        單價
+                                    </th>
+                                    <th
+                                        style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
+                                        庫存
+                                    </th>
+                                    <th
+                                        style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
+                                        狀態
+                                    </th>
+                                    <th
+                                        style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
+                                        操作
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 使用 productsWithImages 顯示商品圖片 -->
+                                <tr th:each="item : ${productsWithImages}">
+                                    <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0;">
+                                        <img th:src="${item.mainImage}" alt="商品圖片"
+                                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                                    </td>
+                                    <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;"
+                                        th:text="${item.product.proId}">0
+                                    </td>
+                                    <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;"
+                                        th:text="${item.product.proType?.proTypeName}">類別
+                                    </td>
+                                    <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0;"
+                                        th:text="${item.product.proName}">商品名稱
+                                    </td>
+                                    <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; white-space: nowrap; color: var(--primary-color); font-weight: 600;"
+                                        th:text="'$' + ${item.product.proPrice}">$0
+                                    </td>
+                                    <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;"
+                                        th:text="${item.product.stockQuantity}">0
+                                    </td>
+                                    <td
+                                        style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
+                                        <span th:if="${item.product.proState == 1}"
+                                            class="badge badge-success">上架中</span>
+                                        <span th:unless="${item.product.proState == 1}"
+                                            class="badge badge-secondary">已下架</span>
+                                    </td>
+                                    <td
+                                        style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; white-space: nowrap;">
+                                        <!-- 編輯按鈕：傳遞所有商品資料 -->
+                                        <button class="btn btn-sm btn-outline edit-product-btn"
+                                            th:data-pro-id="${item.product.proId}"
+                                            th:data-pro-name="${item.product.proName}"
+                                            th:data-pro-type-id="${item.product.proType.proTypeId}"
+                                            th:data-pro-price="${item.product.proPrice}"
+                                            th:data-pro-description="${item.product.proDescription}"
+                                            th:data-stock-quantity="${item.product.stockQuantity}"
+                                            th:data-pro-state="${item.product.proState}"
+                                            onclick="openEditProductModal(this)" title="編輯">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <form th:action="@{/seller/product/delete}" method="post"
+                                            style="display: inline;">
+                                            <input type="hidden" name="proId" th:value="${item.product.proId}">
                                             <button type="submit" class="btn btn-sm btn-outline" style="color: #dc3545;"
-                                                    onclick="return confirm('確定要取消訂單並退款給買家?')"
-                                                    title="取消訂單">
-                                                <i class="fas fa-times-circle"></i>
+                                                onclick="return confirm('確定要刪除此商品嗎？')" title="刪除">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
                                     </th:block>
@@ -434,73 +500,84 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
-</div>
 
 <!-- ========== 商品 Modal ========== -->
 <div id="productModal" class="modal">
     <div class="modal-content">
         <button type="button" onclick="closeProductModal()" class="close-btn">&times;</button>
 
-        <h3 id="modalTitle">新增商品</h3>
-        <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 1.5rem;">
+            <h3 id="modalTitle">新增商品</h3>
+            <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 1.5rem;">
 
-        <form id="productForm" th:action="@{/seller/product/save}" method="post" enctype="multipart/form-data">
-            <input type="hidden" id="proId" name="proId">
+            <form id="productForm" th:action="@{/seller/product/save}" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="proId" name="proId">
 
-            <div class="form-group">
-                <label>商品名稱 <span class="required">*</span></label>
-                <input type="text" id="proName" name="proName" class="form-input"
-                       required maxlength="20" placeholder="請輸入商品名稱（最多20字）">
-            </div>
-
-            <div class="form-group">
-                <label>商品類別 <span class="required">*</span></label>
-                <select id="proTypeId" name="proTypeId" class="form-input" required>
-                    <option value="">請選擇類別</option>
-                    <option th:each="type : ${proTypes}"
-                            th:value="${type.proTypeId}"
-                            th:text="${type.proTypeName}">類別
-                    </option>
-                </select>
-            </div>
-
-            <div class="form-grid">
                 <div class="form-group">
-                    <label>價格 <span class="required">*</span></label>
-                    <input type="number" id="proPrice" name="proPrice" class="form-input"
-                           required min="1" placeholder="輸入價格">
+                    <label>商品名稱 <span class="required">*</span></label>
+                    <input type="text" id="proName" name="proName" class="form-input" required maxlength="20"
+                        placeholder="請輸入商品名稱（最多20字）">
                 </div>
+
                 <div class="form-group">
-                    <label>庫存數量 <span class="required">*</span></label>
-                    <input type="number" id="stockQuantity" name="stockQuantity" class="form-input"
-                           required min="0" placeholder="輸入庫存">
+                    <label>商品類別 <span class="required">*</span></label>
+                    <select id="proTypeId" name="proTypeId" class="form-input" required>
+                        <option value="">請選擇類別</option>
+                        <option th:each="type : ${proTypes}" th:value="${type.proTypeId}" th:text="${type.proTypeName}">
+                            類別
+                        </option>
+                    </select>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label>商品描述</label>
-                <textarea id="proDescription" name="proDescription" class="form-input"
-                          rows="3" maxlength="1000" placeholder="請輸入商品描述（最多1000字）"></textarea>
-            </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>價格 <span class="required">*</span></label>
+                        <input type="number" id="proPrice" name="proPrice" class="form-input" required min="1"
+                            placeholder="輸入價格">
+                    </div>
+                    <div class="form-group">
+                        <label>庫存數量 <span class="required">*</span></label>
+                        <input type="number" id="stockQuantity" name="stockQuantity" class="form-input" required min="0"
+                            placeholder="輸入庫存">
+                    </div>
+                </div>
 
-            <div class="form-group">
-                <label>商品狀態</label>
-                <select id="proState" name="proState" class="form-input">
-                    <option value="1">上架中</option>
-                    <option value="0">下架</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label>商品描述</label>
+                    <textarea id="proDescription" name="proDescription" class="form-input" rows="3" maxlength="1000"
+                        placeholder="請輸入商品描述（最多1000字）"></textarea>
+                </div>
 
-            <div class="form-group">
-                <label>商品圖片</label>
+                <div class="form-group">
+                    <label>商品狀態</label>
+                    <select id="proState" name="proState" class="form-input">
+                        <option value="1">上架中</option>
+                        <option value="0">下架</option>
+                    </select>
+                </div>
 
-                <div id="existingImages" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;"></div>
+                <div class="form-group">
+                    <label>商品圖片</label>
 
-                <div id="newImagePreview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;"></div>
+                    <div id="existingImages" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                    </div>
+
+                    <div id="newImagePreview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label class="form-upload-box"
+                            style="width: auto; height: auto; padding: 10px 20px; flex-direction: row; gap: 8px;">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>選擇圖片</span>
+                            <input type="file" id="productImages" name="productImages" accept="image/*" multiple
+                                style="display: none;" onchange="previewNewImages(this)">
+                        </label>
+                        <span style="color: #999; font-size: 0.85rem;">支援 JPG、PNG，最多 5 張</span>
+                    </div>
 
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <label class="form-upload-box"
@@ -513,18 +590,17 @@
                     <span style="color: #999; font-size: 0.85rem;">支援 JPG、PNG，最多 1 張</span>
                 </div>
 
-                <div id="deleteImageInputs"></div>
-            </div>
-
-            <div class="form-actions">
-                <button type="button" onclick="closeProductModal()" class="btn-sm btn-outline" style="min-width: 80px;">
-                    取消
-                </button>
-                <button type="submit" class="btn-sm btn-primary" style="min-width: 100px;">
-                    <i class="fas fa-save"></i> 儲存商品
-                </button>
-            </div>
-        </form>
+                <div class="form-actions">
+                    <button type="button" onclick="closeProductModal()" class="btn-sm btn-outline"
+                        style="min-width: 80px;">
+                        取消
+                    </button>
+                    <button type="submit" class="btn-sm btn-primary" style="min-width: 100px;">
+                        <i class="fas fa-save"></i> 儲存商品
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -610,8 +686,9 @@
 
 <footer id="main-footer" class="footer"></footer>
 
-<script src="/js/frontend/main.js"></script>
-<script src="/js/frontend/seller/seller.js"></script>
+    <script src="/js/frontend/main.js"></script>
+    <script src="/js/frontend/seller/seller.js"></script>
 
 </body>
+
 </html>

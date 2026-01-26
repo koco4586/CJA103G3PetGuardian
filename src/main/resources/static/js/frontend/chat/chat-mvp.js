@@ -92,6 +92,25 @@ function initChat() {
     DOM.init();
     updateSendButton(); // Initialize button state
     connect();
+
+    // [NEW] Auto-select room if requested (e.g. redirected from Store)
+    const initialRoomId = document.getElementById('initialChatroomId');
+    if (initialRoomId && initialRoomId.value) {
+        const roomId = initialRoomId.value;
+        // Find partner details from the DOM sidebar item
+        const sidebarItem = document.getElementById('contact-item-' + roomId);
+        if (sidebarItem) {
+            ChatApp.selectRoom(
+                roomId,
+                sidebarItem.dataset.partnerName,
+                sidebarItem.dataset.partnerId
+            );
+        } else {
+            console.warn('[Chat] Requested room ID ' + roomId + ' not found in sidebar list.');
+            // Fallback: Could fetch room details via API if needed, 
+            // but controller should have assured it's in the list.
+        }
+    }
 }
 
 // ============================================================
@@ -112,6 +131,11 @@ function connect() {
                 onMessageReceived(JSON.parse(message.body));
             }
         );
+
+        // [NEW] If we entered a room while connecting, subscribe to it now
+        if (ChatState.currentChatroomId) {
+            subscribeToReadReceipts(ChatState.currentChatroomId);
+        }
     }, function (error) {
         console.error('[WS] Connection error:', error);
         // Jittered reconnect to prevent thundering herd when server restarts
@@ -252,17 +276,31 @@ function selectRoom(chatroomId, partnerName, partnerId) {
     }
 
     // Subscribe to read receipts for this room
-    if (ChatState.readSubscription) {
-        ChatState.readSubscription.unsubscribe();
+    if (ChatState.stompClient && ChatState.stompClient.connected) {
+        subscribeToReadReceipts(ChatState.currentChatroomId);
     }
-    ChatState.readSubscription = ChatState.stompClient.subscribe(
-        '/topic/chatroom.' + ChatState.currentChatroomId + '.read',
-        function () {
-            markLastMessageAsRead();
-        }
-    );
 
     loadChatHistory(ChatState.currentChatroomId);
+}
+
+/**
+ * Safely manages read receipt subscription
+ */
+function subscribeToReadReceipts(chatroomId) {
+    if (ChatState.readSubscription) {
+        ChatState.readSubscription.unsubscribe();
+        ChatState.readSubscription = null;
+    }
+
+    // Double check connection before subscribing
+    if (ChatState.stompClient && ChatState.stompClient.connected) {
+        ChatState.readSubscription = ChatState.stompClient.subscribe(
+            '/topic/chatroom.' + chatroomId + '.read',
+            function () {
+                markLastMessageAsRead();
+            }
+        );
+    }
 }
 
 /**
