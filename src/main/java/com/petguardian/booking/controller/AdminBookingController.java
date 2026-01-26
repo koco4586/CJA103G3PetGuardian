@@ -56,8 +56,10 @@ public class AdminBookingController {
         try {
             bookingService.completePayout(orderId);
             return "success";
+        } catch (RuntimeException e) {
+        	return e.getMessage(); 
         } catch (Exception e) {
-            return "error: " + e.getMessage();
+            return "系統異常，請稍後再試";
         }
     }
     @PostMapping("/rejectRefund")

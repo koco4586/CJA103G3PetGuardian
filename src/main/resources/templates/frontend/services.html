@@ -1,223 +1,337 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>預約服務 | PetGuardian</title>
-    <link rel="stylesheet" href="../../static/css/frontend/style.css">
-    <link rel="stylesheet" href="../../static/css/frontend/components.css">
+    <!-- 使用前台統一樣式 -->
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.4);
+        }
+
         .filter-section {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            margin-bottom: 3rem;
+            margin-top: 1rem;
+        }
+
+        .sitter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .card-premium {
+            background: white;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-premium:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .img-container {
+            position: relative;
+            height: 220px;
+        }
+
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .price-badge {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-tag {
+            background: #f0f7ff;
+            color: var(--primary-color);
+            padding: 0.2rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
     </style>
 </head>
 
 <body>
-
     <header id="main-header" class="header"></header>
 
-    <div class="container" style="padding-top: 2rem;">
-
-        <!-- Filter Section -->
+    <main class="container" style="padding-top: 2rem; padding-bottom: 5rem;">
+        <!-- 搜尋區域 -->
         <div class="filter-section">
-            <h3 class="mb-1">🔍 尋找理想保母</h3>
-            <div class="d-flex gap-md" style="flex-wrap: wrap;">
-                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                    <label class="form-label">服務地區</label>
-                    <select class="form-control">
-                        <option>全台北市</option>
-                        <option>大安區</option>
-                        <option>信義區</option>
-                        <option>中山區</option>
-                    </select>
+            <h2 class="mb-2" style="font-weight: 700; color: #333;">找尋您的完美寵物保母</h2>
+            <div class="d-flex gap-lg" style="flex-wrap: wrap;">
+                <div class="form-group mb-0" style="flex: 2; min-width: 250px;">
+                    <label class="form-label">搜尋地區</label>
+                    <div style="position: relative;">
+                        <i class="fa-solid fa-location-dot"
+                            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #888;"></i>
+                        <input type="text" class="form-control" id="searchArea" placeholder="輸入行政區，如：大安區"
+                            style="padding-left: 2.8rem;">
+                    </div>
                 </div>
-                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                    <label class="form-label">服務類型</label>
-                    <select class="form-control">
-                        <option>全部服務</option>
-                        <option>散步遛狗</option>
-                        <option>到府餵食</option>
-                        <option>洗澡美容</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                    <label class="form-label">預約日期</label>
-                    <input type="date" class="form-control">
-                </div>
-                <div style="align-self: flex-end;">
-                    <button class="btn btn-primary" style="height: 46px; width: 100%;">搜尋</button>
+                <div class="d-flex align-end" style="flex: 0.5;">
+                    <button class="btn btn-primary" style="height: 48px; width: 100%; border-radius: 0.8rem;"
+                        onclick="searchSitters()">
+                        <i class="fa-solid fa-magnifying-glass mr-xs"></i> 搜尋
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Sitter List -->
-        <h2 class="mb-2">推薦保母 (8位)</h2>
-        <div class="grid-list-view" id="sitter-list">
-            <!-- Sitter 1 -->
-            <div class="card card-horizontal">
-                <div class="img-wrapper">
-                    <img
-                        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400">
-                    <button class="btn-like" onclick="toggleFavorite(this)">
-                        <i class="far fa-heart"></i>
-                    </button>
-                </div>
-                <div class="content-wrapper">
-                    <div>
-                        <div class="d-flex gap-sm align-center mb-1">
-                            <h4 style="margin:0; font-size: 1rem;">王小美</h4>
-                            <span style="color: var(--warning); font-size: 0.8rem;">4.9 ★</span>
-                        </div>
-                        <p class="card-text mb-1"
-                            style="color: #666; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            擁有3年養狗經驗，非常有耐心，愛狗如命！
-                        </p>
-                        <div class="d-flex gap-xs mb-1">
-                            <span class="badge badge-primary" style="font-size:0.75rem;">大安區</span>
-                            <span class="badge badge-accent" style="font-size:0.75rem;">散步</span>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-between align-center">
-                        <span style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">$300起</span>
-                        <button class="btn btn-primary btn-sm" onclick="openBookingModal('王小美')">預約</button>
-                    </div>
-                </div>
-            </div>
+        <!-- 列表區域 -->
+        <div class="d-flex justify-between align-center mb-2">
+            <h3 style="font-weight: 700;">精選保母</h3>
+            <span style="color: #666; font-size: 0.9rem;" th:text="'共找到 ' + ${sitters.size()} + ' 位保母'">共找到 0 位保母</span>
+        </div>
 
-            <!-- Sitter 2 -->
-            <div class="card card-horizontal">
-                <div class="img-wrapper">
-                    <img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400">
-                    <button class="btn-like" onclick="toggleFavorite(this)">
+        <div class="sitter-grid" id="sitter-list">
+            <!-- 動態迴圈渲染保母 -->
+            <div class="card-premium" th:each="sitter : ${sitters}">
+                <div class="img-container">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
+                        alt="保姆照片" class="sitter-img">
+                    <div class="price-badge">
+                        $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
+                    </div>
+                    <button class="btn-like"
+                        style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
                         <i class="far fa-heart"></i>
                     </button>
                 </div>
-                <div class="content-wrapper">
-                    <div>
-                        <div class="d-flex gap-sm align-center mb-1">
-                            <h4 style="margin:0; font-size: 1rem;">陳大山</h4>
-                            <span style="color: var(--warning); font-size: 0.8rem;">4.8 ★</span>
-                        </div>
-                        <p class="card-text mb-1"
-                            style="color: #666; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            專業寵物美容師退役，提供最專業的服務。
-                        </p>
-                        <div class="d-flex gap-xs mb-1">
-                            <span class="badge badge-primary" style="font-size:0.75rem;">板橋區</span>
-                            <span class="badge badge-accent" style="font-size:0.75rem;">美容</span>
+                <div class="content" style="padding: 1.5rem;">
+                    <div class="d-flex justify-between align-center mb-1">
+                        <h4 th:text="${sitter.sitterName}" style="margin: 0; font-size: 1.2rem; font-weight: 700;">保母姓名
+                        </h4>
+                        <div style="color: #ffb800; font-size: 0.9rem;">
+                            <i class="fa-solid fa-star"></i>
+                            <span
+                                th:text="${sitter.sitterRatingCount != null && sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitterStarCount * 1.0 / sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
                         </div>
                     </div>
-                    <div class="d-flex justify-between align-center">
-                        <span style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">$500起</span>
-                        <button class="btn btn-primary btn-sm" onclick="openBookingModal('陳大山')">預約</button>
+                    <p style="color: #666; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.2rem;"
+                        th:text="${sitter.sitterAdd}">保母地址</p>
+                    <div class="d-flex gap-xs mb-2">
+                        <span class="category-tag"
+                            th:text="${sitter.sitterAdd != null and sitter.sitterAdd.length() >= 3 ? sitter.sitterAdd.substring(0,3) : '服務中'}">區域</span>
+                        <span class="category-tag">到府照顧</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- Sitter 3 -->
-            <div class="card card-horizontal">
-                <div class="img-wrapper">
-                    <img
-                        src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400">
-                    <button class="btn-like" onclick="toggleFavorite(this)">
-                        <i class="far fa-heart"></i>
-                    </button>
-                </div>
-                <div class="content-wrapper">
-                    <div>
-                        <div class="d-flex gap-sm align-center mb-1">
-                            <h4 style="margin:0; font-size: 1rem;">林沐沐</h4>
-                            <span style="color: var(--warning); font-size: 0.8rem;">5.0 ★</span>
-                        </div>
-                        <p class="card-text mb-1"
-                            style="color: #666; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            週末兼職，喜歡貓貓狗狗。
-                        </p>
-                        <div class="d-flex gap-xs mb-1">
-                            <span class="badge badge-primary" style="font-size:0.75rem;">信義區</span>
-                            <span class="badge badge-accent" style="font-size:0.75rem;">陪玩</span>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-between align-center">
-                        <span style="color: var(--primary-color); font-weight: 700; font-size: 1.1rem;">$250起</span>
-                        <button class="btn btn-primary btn-sm" onclick="openBookingModal('林沐沐')">預約</button>
-                    </div>
+                    <button class="btn btn-primary btn-booking-trigger" style="width: 100%; border-radius: 3rem;"
+                        th:data-name="${sitter.sitterName}" th:data-id="${sitter.sitterId}">
+                        立即預約</button>
                 </div>
             </div>
         </div>
+    </main>
 
-    </div>
-
-    <!-- Simple Booking Modal -->
+    <!-- 預約 Modal -->
     <div id="bookingModal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-        <div style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:500px; position:relative;">
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
+        <div
+            style="background: white; padding: 2.5rem; border-radius: 2rem; width: 95%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
             <button onclick="closeModal()"
-                style="position:absolute; right:1rem; top:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-            <h3>預約 - <span id="sitterName"></span></h3>
-            <form class="mt-2" onsubmit="event.preventDefault(); alert('預約請求已發送！'); closeModal();">
+                style="position: absolute; right: 1.5rem; top: 1.5rem; background: #f0f0f0; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
+            <h3 style="font-weight: 700; font-size: 1.5rem;">
+                預約 <span id="sitterName" style="color: var(--primary-color);"></span>
+            </h3>
+
+            <form id="realBookingForm" class="mt-2">
+                <input type="hidden" id="modalSitterId">
                 <div class="form-group">
-                    <label class="form-label">選擇寵物</label>
-                    <div class="d-flex gap-sm">
-                        <label class="d-flex align-center gap-xs"
-                            style="border:1px solid #ddd; padding:0.5rem; border-radius:8px; cursor:pointer;">
-                            <input type="radio" name="pet" checked> 皮皮 (狗)
-                        </label>
-                        <label class="d-flex align-center gap-xs"
-                            style="border:1px solid #ddd; padding:0.5rem; border-radius:8px; cursor:pointer;">
-                            <input type="radio" name="pet"> 咪咪 (貓)
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">選擇服務</label>
-                    <select class="form-control">
-                        <option>散步遛狗 (30min)</option>
-                        <option>散步遛狗 (60min)</option>
-                        <option>到府洗澡</option>
+                    <label class="form-label">選擇小毛孩</label> <select class="form-control" id="petId">
+                        <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
+
+                        <option th:each="pet : ${myPets}" th:value="${pet.petId}"
+                            th:text="${pet.petName} + ' (種類ID: ' + ${pet.typeId} + ')'">
+                        </option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">預約時間</label>
-                    <input type="datetime-local" class="form-control">
+                    <label class="form-label">服務項目</label> <select class="form-control" id="serviceItemId">
+                        <option value="1">散步遛狗</option>
+                        <option value="2">到府餵食</option>
+                        <option value="3">洗澡美容</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">備註需求</label>
-                    <textarea class="form-control" rows="3"></textarea>
+                    <label class="form-label">開始時間</label> <input type="datetime-local" id="startTime"
+                        class="form-control">
                 </div>
-                <button class="btn btn-primary" style="width:100%;">確認預約</button>
+                <div class="form-group">
+                    <label class="form-label">結束時間</label> <input type="datetime-local" id="endTime"
+                        class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">特別需求</label>
+                    <textarea class="form-control" id="bookingNotes" rows="2" placeholder="有什麼想告訴保母的嗎？"></textarea>
+                </div>
+                <button type="button" class="btn btn-primary"
+                    style="width: 100%; border-radius: 3rem; margin-top: 1rem; height: 50px; font-size: 1.1rem;"
+                    onclick="submitBooking()">確認送出</button>
             </form>
         </div>
     </div>
 
-    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+    <script th:src="@{/js/frontend/main.js}"></script>
 
-    <script src="../../static/js/frontend/main.js"></script>
     <script>
-        const modal = document.getElementById('bookingModal');
+        // 1. 確保關鍵函數在最外層全域作用域，保證隨時可被呼叫
+        function openBookingModal(name, id) {
+            console.log("正在開啟預約彈窗 (Global):", name, id);
+            const modal = document.getElementById('bookingModal');
+            const sitterNameSpan = document.getElementById('sitterName');
+            const sitterIdInput = document.getElementById('modalSitterId');
+            const startInput = document.getElementById('startTime');
+            const endInput = document.getElementById('endTime');
 
-        function openBookingModal(name) {
-            document.getElementById('sitterName').innerText = name;
+            if (!modal || !sitterNameSpan || !sitterIdInput) {
+                console.error("找不到必要的彈窗元件");
+                return;
+            }
+
+            sitterNameSpan.innerText = name;
+            sitterIdInput.value = id;
+
+            // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
+            const now = new Date();
+            const minDate = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+            const maxDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+
+            function formatDT(date) {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                const h = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                return `${y}-${m}-${d}T${h}:${min}`;
+            }
+
+            const minStr = formatDT(minDate);
+            const maxStr = formatDT(maxDate);
+
+            if (startInput) {
+                startInput.min = minStr;
+                startInput.max = maxStr;
+                startInput.value = minStr; // 預設帶入最早可選時間
+            }
+            if (endInput) {
+                endInput.min = minStr;
+                endInput.max = maxStr;
+            }
+
             modal.style.display = 'flex';
         }
 
         function closeModal() {
-            modal.style.display = 'none';
+            const modal = document.getElementById('bookingModal');
+            if (modal) modal.style.display = 'none';
         }
 
-        // Close on outside click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
+        // 2. 監聽器初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("預約系統已完全就緒");
+            const modal = document.getElementById('bookingModal');
+
+            // 使用事件委派監聽點擊， closest 確保點擊按鈕內部也能觸發
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btn-booking-trigger');
+                if (btn) {
+                    const name = btn.getAttribute('data-name');
+                    const id = btn.getAttribute('data-id');
+                    openBookingModal(name, id);
+                }
+            });
+
+            // 點擊背景關閉
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
         });
+
+        // 3. 提交邏輯
+        async function submitBooking() {
+            const petId = document.getElementById('petId').value;
+            if (!petId) {
+                alert("目前尚無寵物資料，請先新增寵物！");
+                return;
+            }
+
+            const startVal = document.getElementById('startTime').value;
+            const endVal = document.getElementById('endTime').value;
+
+            if (!startVal || !endVal) {
+                alert("請填寫時間！");
+                return;
+            }
+
+            if (new Date(startVal) >= new Date(endVal)) {
+                alert("結束時間需晚於開始時間！");
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append('sitterId', document.getElementById('modalSitterId').value);
+            formData.append('petId', petId);
+            formData.append('serviceItemId', document.getElementById('serviceItemId').value);
+            formData.append('startTime', startVal);
+            formData.append('endTime', endVal);
+            formData.append('bookingNotes', document.getElementById('bookingNotes').value);
+
+            try {
+                const response = await fetch('/booking/submit', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert("預約成功！");
+                    window.location.href = "/booking/memberOrders";
+                } else {
+                    const msg = await response.text();
+                    alert("預約失敗：" + msg);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("發生系統錯誤");
+            }
+        }
+
+        function searchSitters() {
+            const area = document.getElementById('searchArea').value;
+            window.location.href = `/booking/search?area=${encodeURIComponent(area)}`;
+        }
     </script>
+    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 </body>
 
 </html>
