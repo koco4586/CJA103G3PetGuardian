@@ -25,7 +25,7 @@ public class Complaintcontroller {
 	@Autowired
 	private Complaintservice complaintservice;
 	// 🔹 後台管理頁面（管理員審核用）
-    @GetMapping("/reviews")
+    @GetMapping("/reviews1")
     public String adminReviews(HttpSession session, Model model) {
         // 檢查是否為管理員
 //        Integer userRole = (Integer) session.getAttribute("userRole");
@@ -35,7 +35,7 @@ public class Complaintcontroller {
 //        }
     	List<ComplaintVO> list = complaintservice.getAll(); 
         model.addAttribute("complaintList", list);
-        return "backend/reviews";  // 對應 templates/backend/reviews.html
+        return "backend/reviews1";  // 對應 templates/backend/reviews.html
     }
     
     @PostMapping("/pet/updateReportStatus")
