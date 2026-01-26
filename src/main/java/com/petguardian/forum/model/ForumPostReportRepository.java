@@ -64,10 +64,4 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 	""")
 	public PostHandledResultDetailDTO postHandledResultDetailToDisplay(@Param("reportId") Integer reportId);
 	
-	
-	
-	
-	
-	
-	
 }
