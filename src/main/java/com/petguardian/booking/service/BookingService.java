@@ -17,13 +17,14 @@ import com.petguardian.booking.model.BookingScheduleVO;
 /**
  * 負責處理預約訂單的建立、退款審核、撥款流程以及同步更新保母排程。
  */
-@Service
-@Transactional
+
 public interface BookingService {
 
 	List<BookingOrderVO> getOrdersByMemberId(Integer memId);
 	
 	List<BookingOrderVO> getActiveOrdersByMemberId(Integer memId);
+	
+	List<BookingOrderVO> findByMemberAndStatus(Integer memId, Integer status);
 
 	BookingOrderVO getOrderById(Integer orderId);
 

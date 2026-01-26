@@ -61,6 +61,14 @@ public class BookingServiceImpl implements BookingService, BookingExternalDataSe
                 .filter(o -> o.getOrderStatus() == 0 || o.getOrderStatus() == 1)
                 .toList();
     }
+    
+    @Override
+    public List<BookingOrderVO> findByMemberAndStatus(Integer memId, Integer status) {
+        List<BookingOrderVO> allOrders = orderRepository.findByMemId(memId);
+        return allOrders.stream()
+                .filter(order -> order.getOrderStatus().equals(status))
+                .toList();
+    }
 
     /**
      * 【功能：查詢單筆預約詳情】

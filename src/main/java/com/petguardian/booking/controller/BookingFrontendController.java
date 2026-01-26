@@ -55,6 +55,15 @@ public class BookingFrontendController {
     public String showServicesPage(HttpServletRequest request, Model model) {
         // 先撈出所有啟用中的保母，讓頁面有資料顯示
         List<SitterVO> allSitters = sitterRepository.findBySitterStatus((byte) 0);
+        
+        // [New] 排除自己 (若登入者同時也是保姆，不該在列表看到自己)
+        Integer currentMemId = authStrategyService.getCurrentUserId(request);
+        if (currentMemId != null) {
+            allSitters = allSitters.stream()
+                    .filter(s -> !s.getMemId().equals(currentMemId))
+                    .toList();
+        }
+        
         model.addAttribute("sitters", allSitters);
         addCommonAttributes(request, model);
         return "frontend/services";
@@ -65,11 +74,13 @@ public class BookingFrontendController {
         // 從資料庫撈出所有保姆 (排除手動擴充的 Repository 方法，直接使用 findAll)
         List<SitterVO> allSitters = sitterRepository.findAll();
 
+        Integer currentMemId = authStrategyService.getCurrentUserId(request);//// 取得目前登入者 ID
         // 執行複核過濾：
         // 1. 必須是啟用中 (sitterStatus == 0)
         // 2. 如果有傳入地區關鍵字，則地址必須包含該關鍵字
         List<SitterVO> filteredSitters = allSitters.stream()
                 .filter(s -> s.getSitterStatus() == 0)
+                .filter(s -> currentMemId == null || !s.getMemId().equals(currentMemId))
                 .filter(s -> {
                     if (area == null || area.trim().isEmpty()) {
                         return true;
