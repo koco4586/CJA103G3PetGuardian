@@ -3,13 +3,20 @@ package com.petguardian.chat.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.petguardian.chat.model.ChatMemberRepository;
+import com.petguardian.chat.model.ChatMemberEntity;
 import com.petguardian.chat.model.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatRoomDTO;
@@ -59,11 +66,13 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRoomMapper chatRoomMapper;
     private final ChatReadStatusService readStatusService;
     private final ChatVerificationService verificationService;
+    private final ChatMemberRepository memberRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final TSID.Factory tsidFactory;
 
     public ChatServiceImpl(
             ChatRoomRepository chatroomRepository,
+            ChatMemberRepository memberRepository,
             MessageStrategyService messageStrategyService,
             ChatRoomCreationStrategy chatRoomCreationStrategy,
             ChatMessageMapper messageMapper,
@@ -73,6 +82,7 @@ public class ChatServiceImpl implements ChatService {
             SimpMessagingTemplate messagingTemplate,
             TSID.Factory tsidFactory) {
         this.chatroomRepository = chatroomRepository;
+        this.memberRepository = memberRepository;
         this.messageStrategyService = messageStrategyService;
         this.chatRoomCreationStrategy = chatRoomCreationStrategy;
         this.messageMapper = messageMapper;
@@ -140,11 +150,14 @@ public class ChatServiceImpl implements ChatService {
             return Collections.emptyList();
         }
 
+        // Prepare Batch Data
+        Map<String, ChatMessageEntity> replyMap = resolveReplyMap(messages);
+        Map<Integer, ChatMemberEntity> memberMap = resolveMemberMap(messages, replyMap);
+
         // Delegate DTO conversion to mapper
         Integer partnerId = chatroom.getOtherMemberId(currentUserId);
-        List<ChatMessageDTO> dtos = messageMapper.toDtoList(messages, currentUserId, partnerId);
+        List<ChatMessageDTO> dtos = messageMapper.toDtoList(messages, currentUserId, partnerId, memberMap, replyMap);
 
-        // Mark last sent message as read if partner has read (only for first page)
         // Mark last sent message as read if partner has read (only for first page)
         markLatestSelfMessageAsRead(dtos, chatroom, currentUserId, page);
 
@@ -186,7 +199,12 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public ChatRoomDTO findOrCreateChatroom(Integer currentUserId, Integer partnerId, Integer chatroomType) {
         ChatRoomEntity entity = chatRoomCreationStrategy.findOrCreate(currentUserId, partnerId, chatroomType);
-        return chatRoomMapper.toDto(entity, currentUserId);
+
+        String partnerName = memberRepository.findById(partnerId)
+                .map(ChatMemberEntity::getMemName)
+                .orElse("Unknown User");
+
+        return chatRoomMapper.toDto(entity, currentUserId, partnerName);
     }
 
     // ============================================================
@@ -216,18 +234,23 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private ChatMessageDTO buildResponseDto(ChatMessageEntity saved, String senderName, Integer receiverId) {
-        ChatMessageDTO responseDto = new ChatMessageDTO();
-        responseDto.setMessageId(saved.getMessageId());
-        responseDto.setSenderId(saved.getMemberId());
-        responseDto.setReceiverId(receiverId);
-        responseDto.setContent(saved.getMessage());
-        responseDto.setSenderName(senderName);
-        responseDto.setChatroomId(saved.getChatroomId());
+        // Resolve Sender Entity
+        ChatMemberEntity sender = memberRepository.findById(saved.getMemberId()).orElse(null);
 
-        // Delegate reply context decoration to mapper
-        messageMapper.decorateReplyContext(responseDto, saved.getReplyToMessageId());
+        // Resolve Reply Context
+        String replyContent = null;
+        String replySenderName = null;
+        if (saved.getReplyToMessageId() != null) {
+            ChatMessageEntity replyMsg = messageStrategyService.findById(saved.getReplyToMessageId()).orElse(null);
+            if (replyMsg != null) {
+                replyContent = replyMsg.getMessage();
+                replySenderName = memberRepository.findById(replyMsg.getMemberId())
+                        .map(ChatMemberEntity::getMemName)
+                        .orElse(null);
+            }
+        }
 
-        return responseDto;
+        return messageMapper.toDto(saved, sender, replyContent, replySenderName, saved.getMemberId(), receiverId);
     }
 
     private List<ChatMessageEntity> fetchMessagesAsc(Integer chatroomId, Pageable pageable) {
@@ -261,5 +284,41 @@ public class ChatServiceImpl implements ChatService {
                 break;
             }
         }
+    }
+
+    // ============================================================
+    // DATA AGGREGATION HELPERS
+    // ============================================================
+
+    private Map<Integer, ChatMemberEntity> resolveMemberMap(List<ChatMessageEntity> messages,
+            Map<String, ChatMessageEntity> replyMap) {
+        Set<Integer> memberIds = new java.util.HashSet<>();
+
+        // 1. Collect IDs from current batch
+        messages.forEach(msg -> memberIds.add(msg.getMemberId()));
+
+        // 2. Collect IDs from referenced replies
+        replyMap.values().forEach(replyMsg -> memberIds.add(replyMsg.getMemberId()));
+
+        if (memberIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return memberRepository.findAllById(memberIds).stream()
+                .collect(Collectors.toMap(ChatMemberEntity::getMemId, Function.identity()));
+    }
+
+    private Map<String, ChatMessageEntity> resolveReplyMap(List<ChatMessageEntity> messages) {
+        Set<String> replyIds = messages.stream()
+                .map(ChatMessageEntity::getReplyToMessageId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+
+        if (replyIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return messageStrategyService.findAllById(replyIds).stream()
+                .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity()));
     }
 }
