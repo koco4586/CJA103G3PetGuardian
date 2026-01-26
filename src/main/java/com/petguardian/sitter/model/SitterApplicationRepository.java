@@ -29,4 +29,10 @@ public interface SitterApplicationRepository extends JpaRepository<SitterApplica
      * @return List<SitterApplicationVO> 符合狀態的申請列表
      */
     List<SitterApplicationVO> findByAppStatus(Byte appStatus);
+
+    /**
+     * 計算申請狀態不是指定值的申請數量
+     * 用於統計待審保母數量（排除已通過的申請）
+     */
+    long countByAppStatusNot(Byte appStatus);
 }

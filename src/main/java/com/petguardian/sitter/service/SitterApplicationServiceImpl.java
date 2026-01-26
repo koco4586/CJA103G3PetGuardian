@@ -4,15 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.petguardian.sitter.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.petguardian.sitter.model.SitterApplicationRepository;
-import com.petguardian.sitter.model.SitterApplicationVO;
-import com.petguardian.sitter.model.SitterMemberRepository;
-import com.petguardian.sitter.model.SitterMemberVO;
-import com.petguardian.sitter.model.SitterVO;
 
 /**
  * 保姆申請業務邏輯實作
