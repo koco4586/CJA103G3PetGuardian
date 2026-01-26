@@ -1,8 +1,10 @@
 package com.petguardian.pet.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -10,11 +12,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import com.petguardian.pet.model.PetVO;
+import com.petguardian.complaint.model.ComplaintVO;
+import com.petguardian.complaint.model.Complaintservice;
 import com.petguardian.pet.model.PetDTO; // 引入 DTO
 import com.petguardian.pet.service.PetService;
 
 
-import jakarta.servlet.http.HttpServletRequest;
+
 import jakarta.servlet.http.HttpServletResponse;
 
 import jakarta.servlet.http.HttpSession;
@@ -23,21 +27,96 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/pet")
 public class PetController {
 
+	 @Autowired
+	    private PetService petService;
+	 
+	 @Autowired
+	    private Complaintservice complaintservice;
 	
 	@GetMapping("/index")
     public String index() {
         return "/frontend/index"; // 對應 templates/index.html
     }
 
-    // 2. 訪問評價管理 reviews.html
-    // 網址：http://localhost:8081/reviews
-    @GetMapping("/reviews")
-    public String reviews() {
-        return "backend/reviews"; // 對應 templates/reviews.html
+	@GetMapping("/review")
+	public String showReviewPage(Model model) {
+	    // 這裡只負責開門，讓使用者看到網頁
+	    return "/frontend/review"; 
+	}
+
+    // 🔹 前台申訴頁面（一般會員用）
+    @PostMapping("/review")
+    public String userComplaint(HttpSession session, Model model, ComplaintVO vo) {
+        // 檢查是否登入（可選）
+//        Integer memberId = (Integer) session.getAttribute("memberId");
+//        
+//        if (memberId == null) {
+//            return "redirect:/member/login";
+//        }
+
+        // 可以傳入會員資料到前端
+//        model.addAttribute("memberId", memberId);
+    	if (vo.getBookingOrderId() == null) {
+            // 這裡可以做錯誤處理，暫時先手動補一個值測試
+            vo.setBookingOrderId(1); 
+        }
+    	
+    	if (vo.getReportMemId() == null) {
+    		vo.setReportMemId(1001); // 先暫時給會員編號 1
+        }
+
+        // 設定被檢舉人 (to_reported_mem_id) 建議也補一個，不然可能換它報錯
+        if (vo.getToReportedMemId() == null) {
+        	vo.setToReportedMemId(1002);
+        }
+        
+        if (vo.getReportReason() == null || vo.getReportReason().trim().isEmpty()) {
+            vo.setReportReason("使用者未填寫內容 (系統預設)");
+        }
+
+        // 3. 狀態預設為 0
+        vo.setReportStatus(0);
+    	
+    	complaintservice.insert(vo);
+        return "frontend/review";  // 對應 templates/frontend/complaint.html
     }
 	
-    @Autowired
-    private PetService petService;
+    
+    
+    @PostMapping("/submitComplaint")
+    @ResponseBody
+    public ResponseEntity<?> handleComplaint(ComplaintVO vo) {
+        try {
+            // --- 1. 補全後端必要的隱藏欄位 (防止資料庫 NOT NULL 報錯) ---
+            
+            // 如果前端沒傳訂單 ID，預設給 1 (測試用)
+            if (vo.getBookingOrderId() == null) {
+                vo.setBookingOrderId(1);
+            }
+            
+            // 補上申訴時間
+            
+            
+            // 補上初始狀態 (例如 0: 待處理)
+            vo.setReportStatus(0);
+            
+            // 模擬當前登入者 (實際開發應從 Session 取得)
+            vo.setReportMemId(1001); 
+            vo.setToReportedMemId(1002);
+
+            // --- 2. 執行存檔 ---
+            complaintservice.insert(vo); 
+            
+            return ResponseEntity.ok("success");
+
+        } catch (Exception e) {
+            // --- 3. 關鍵：這行會讓真正的錯誤原因出現在你的 Console 下方 ---
+            e.printStackTrace(); 
+            return ResponseEntity.status(500).body("後端存檔失敗：" + e.getMessage());
+        }
+    }
+    
+   
 
     // 1. 保留：圖片顯示功能
     @GetMapping("/img/{petId}")
@@ -68,7 +147,7 @@ public class PetController {
     public String showDashboard(Model model, HttpSession session) {
         // 假設你從 session 拿 memId
         Integer memId = (Integer) session.getAttribute("memId");
-        if (memId == null) memId = 1; // 測試用
+        if (memId == null) memId = 1001; // 測試用
 
         // 抓取該會員的所有寵物清單
         List<PetDTO> petlist = petService.getPetsByMemId(memId); 
@@ -94,8 +173,8 @@ public class PetController {
 //	    if (session.getAttribute("memId") == null) {
 //	        session.setAttribute("memId", 1); 
 //	    }
-	  
-	  Integer memId = (Integer) session.getAttribute("memId");
+	  Integer memId = 1001;
+//	  Integer memId = (Integer) session.getAttribute("memId");
 	  Map<String, Object> pageData = petService.getPetsPageData(whichPage, memId);
 	  System.out.println("資料筆數: " + pageData.get("petlist"));
 	  model.addAllAttributes(pageData); // 確保 pageData 裡面有一個 key 叫做 "petList"
@@ -200,8 +279,8 @@ public class PetController {
     { // 🔴 注入 session
         
         // 取得目前操作者的 ID
-        Integer memId = (Integer) session.getAttribute("memId");
-        
+//        Integer memId = (Integer) session.getAttribute("memId");
+    	Integer memId = 1001;
         // 如果沒登入不能新增 (目前測試可先註解)
         // if (memId == null) return "error: 請先登入";
 
@@ -296,12 +375,12 @@ public class PetController {
                          @RequestParam(required = false) String petImageBase64, // 接收 JS 產生的圖
                          @RequestParam(required = false) String originalBase64,
                          @RequestParam(required = false) String deleteImage,   // 接收刪除旗標
-                         HttpServletRequest request)  //記得把image後面的)去掉才能打開這行註解
+                         HttpSession session)  //記得把image後面的)去掉才能打開這行註解
                         		 throws Exception {
     	
     	 // 從 session 拿真正登入的人 ID(有會員時再打開，以及打開最上面的Http跟上面的Http註解(並且按照後面提示去小修改
         
-    	HttpSession session = request.getSession(false); 
+    	
         
         // 2. 增加安全檢查，防止 session 真的消失
         if (session == null) {
@@ -354,7 +433,7 @@ public class PetController {
     
     @PostMapping("/delete")
     @ResponseBody // ✅ 注意：加上這個，讓回傳的字串直接當成網頁內容
-    public String deletePet(@RequestParam("petId") Integer petId, HttpServletRequest request) {
+    public String deletePet(@RequestParam("petId") Integer petId, HttpSession session) {
         
     	try {
             // 1. 執行刪除
