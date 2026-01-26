@@ -340,6 +340,33 @@ public class AdminForumController {
 
 	}
 	
+	@PostMapping("get-one-handled-comment-to-display")
+	public String getOneHandledCommentToDisplay(@RequestParam("reportId") Integer reportId, @RequestParam("postId") Integer postId, ModelMap model) {
+		
+		// 開始查詢資料
+		CommentReviewDetailDTO reviewDto = forumCommentReportService.getCommentReviewDetailToHandle(reportId);
+		CommentHandledResultDetailDTO handledResultDto = forumCommentReportService.getCommentHandledResultDetailToDisplay(reportId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		List<ForumCommentVO> commentList = forumCommentService.getAllCommentsByPostId(postId);
+		
+		// 查詢完成forward到顯示頁面
+		model.addAttribute("handledResultDto", handledResultDto);
+		model.addAttribute("reviewDto", reviewDto);
+		model.addAttribute("picsId", picsId);
+		model.addAttribute("commentList", commentList);
+		
+		return "backend/forum/display-handled-comment";
+	}
+	
+	@PostMapping("get-one-handled-comment-to-recover")
+	public String getOneHandledCommentToRecover(@RequestParam("reportId") Integer reportId, @RequestParam("commentId") Integer commentId, RedirectAttributes ra) {
+		
+		forumCommentReportService.recoverComment(reportId, commentId);
+		ra.addFlashAttribute("successMsgs", "留言已成功恢復");
+		
+		return "redirect:/admin/forum/get-all-handled-comments";
+	}
+	
 	@GetMapping("get-all-pending-comments")
 	public String getAllPendingComments(ModelMap model) {
 		
@@ -443,19 +470,23 @@ public class AdminForumController {
 		
 	}
 	
+	@PostMapping("get-one-deleted-comment-to-display")
+	public String getOneDeletedCommentToDisplay(@RequestParam("commentId") Integer commentId, ModelMap model) {
+		
+		ForumCommentVO forumCommentVO = forumCommentService.getOneComment(commentId);
+		
+		model.addAttribute("forumCommentVO", forumCommentVO);
+		
+		return "backend/forum/display-deleted-comment";
+	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	@PostMapping("get-one-deleted-comment-to-recover")
+	public String getOneDeletedCommentToRecover(@RequestParam("commentId") Integer commentId, RedirectAttributes ra) {
+		
+		forumCommentReportService.recoverComment(null, commentId);
+		ra.addFlashAttribute("successMsgs", "留言已成功恢復");
+		
+		return "redirect:/admin/forum/get-all-deleted-comments";
+	}
 	
 }
