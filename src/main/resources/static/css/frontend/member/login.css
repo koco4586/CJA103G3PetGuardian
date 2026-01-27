@@ -1,0 +1,127 @@
+:root {
+    --yellow: #FFD966;
+    --orange: #FF8C42;
+    --brown: #6B4C3B;
+    --bg: #F7F3F0;
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        linear-gradient(rgba(247, 243, 240, .9), rgba(247, 243, 240, .9)),
+        url("https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1400&q=80");
+    background-size: cover;
+    background-position: center;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 20px 40px rgba(107, 76, 59, .18);
+    padding: 32px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.logo img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.logo h1 {
+    font-size: 20px;
+    color: var(--brown);
+    margin: 0;
+}
+
+.sub {
+    font-size: 13px;
+    color: #777;
+}
+
+h2 {
+    margin: 16px 0 8px;
+    color: var(--brown);
+}
+
+.form-group {
+    margin-top: 16px;
+}
+
+.form-group label {
+    font-size: 14px;
+    color: var(--brown);
+}
+
+.input {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+}
+
+.input i {
+    color: #aaa;
+}
+
+.input input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 15px;
+}
+
+button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+    color: var(--brown);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: .9;
+}
+
+.msg {
+    margin-top: 14px;
+    font-size: 14px;
+    color: #c0392b;
+    text-align: center;
+    display: none;
+}
+
+/* RWD */
+@media (max-width:480px) {
+    .login-card {
+        margin: 16px;
+        padding: 24px;
+    }
+}

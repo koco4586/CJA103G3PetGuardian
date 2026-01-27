@@ -244,6 +244,7 @@ public class StoreController {
 
         // 驗證庫存
         if (product.getStockQuantity() == null || product.getStockQuantity() < quantity) {
+            redirectAttr.addFlashAttribute("error", "商品庫存不足");
             return "redirect:/store";
         }
 

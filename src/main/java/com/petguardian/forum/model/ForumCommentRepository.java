@@ -8,8 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface ForumCommentRepository extends JpaRepository<ForumCommentVO, Integer> {
 	
-	@Query(value = "select c from ForumCommentVO c where commentStatus = 1 and c.forumPost.postId = :postId order by c.commentId asc")
+	@Query(value = "select c from ForumCommentVO c where commentStatus = 1 and c.forumPost.postId = :postId order by c.createdAt asc")
 	public List<ForumCommentVO> findCommentsByPostId(@Param("postId") Integer postId);
+	
+	//	管理員用
+	@Query(value = "select c from ForumCommentVO c where c.forumPost.postId = :postId order by c.createdAt asc")
+	public List<ForumCommentVO> findAllCommentsByPostId(@Param("postId") Integer postId);
 	
 	@Query("""
 			select new com.petguardian.forum.model.DeletedCommentDTO(

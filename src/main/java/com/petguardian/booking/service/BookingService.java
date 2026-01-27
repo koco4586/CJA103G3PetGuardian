@@ -13,7 +13,6 @@ import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.booking.model.BookingScheduleRepository;
 import com.petguardian.booking.model.BookingScheduleVO;
-import com.petguardian.booking.model.SitterDTO;
 
 /**
  * 負責處理預約訂單的建立、退款審核、撥款流程以及同步更新保母排程。

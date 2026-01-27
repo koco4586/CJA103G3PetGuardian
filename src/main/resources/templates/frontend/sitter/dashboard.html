@@ -13,71 +13,7 @@
 
 <body>
 
-    <header id="custom-header" class="header">
-        <div class="container nav">
-            <!-- Logo -->
-            <a href="/index.html" class="logo" style="display: flex; align-items: center; text-decoration: none;">
-                <img src="/images/frontend/logo.png" alt="PetGuardian" style="height: 40px; margin-right: 0.5rem;">
-                <span
-                    style="font-family: 'Rubik', sans-serif; font-weight: 700; color: var(--text-color); font-size: 1.4rem;">PetGuardian</span>
-            </a>
-
-            <!-- 導航列 -->
-            <ul class="nav-links">
-                <li><a href="/index.html" class="nav-link">首頁</a></li>
-                <li><a href="/public/sitter/search" class="nav-link">預約服務</a></li>
-                <li class="dropdown">
-                    <a href="/store.html" class="nav-link">二手商城 <i class="fas fa-chevron-down"
-                            style="font-size: 0.8rem; margin-left: 4px;"></i></a>
-                    <div class="dropdown-menu" style="left:0; right:auto; width:160px; top:120%;">
-                        <a href="/store.html" class="dropdown-item">瀏覽商品</a>
-                        <a href="/store-seller.html" class="dropdown-item">賣家管理</a>
-                    </div>
-                </li>
-                <li><a href="/forum/list-all-active-forum" class="nav-link">討論區</a></li>
-                <li><a href="/news.html" class="nav-link">最新消息</a></li>
-            </ul>
-
-            <!-- 右側按鈕 -->
-            <div class="d-flex align-center">
-                <!-- 聊天按鈕 -->
-                <a href="#" onclick="enterChat(event)" class="btn btn-outline"
-                    style="border:none; margin-right: 0.5rem; font-size: 1.2rem; position: relative; padding: 0.5rem;">
-                    <i class="fas fa-comment-dots"></i>
-                    <span id="header-chat-dot"
-                        style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; border: 2px solid white; display: none;"></span>
-                </a>
-
-                <!-- 我的帳戶下拉選單 -->
-                <div class="dropdown">
-                    <button class="btn btn-primary d-flex align-center gap-sm">
-                        <span>我的帳戶</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a href="/member/profile" class="dropdown-item">
-                            <i class="fas fa-user"></i> 個人資料
-                        </a>
-                        <!-- 保姆專區連結 -->
-                        <hr class="dropdown-divider">
-                        <a href="/sitter/dashboard" class="dropdown-item">
-                            <i class="fas fa-paw"></i> 保姆專區
-                        </a>
-                        <a href="/member/orders" class="dropdown-item">
-                            <i class="fas fa-shopping-bag"></i> 我的訂單
-                        </a>
-                        <hr style="border:0; border-top:1px solid #eee; margin: 0.5rem 0;">
-                        <a href="#" class="dropdown-item logout-btn">
-                            <i class="fas fa-sign-out-alt"></i> 登出
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 手機選單按鈕 -->
-                <div class="mobile-menu-btn">☰</div>
-            </div>
-        </div>
-    </header>
+    <header id="main-header"></header>
 
 
     <div class="container dashboard-container">
@@ -164,11 +100,11 @@
                     <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務行事曆 (月檢視)</h3>
                     <div style="display: flex; gap: 1rem; font-size: 0.85rem;">
                         <span><span
-                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border:1px solid #ccc; margin-right: 4px;"></span>未排班</span>
+                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border:1px solid #ccc; margin-right: 4px;"></span>休息</span>
                         <span><span
                                 style="display: inline-block; width: 12px; height: 12px; background: #4caf50; margin-right: 4px;"></span>可預約</span>
                         <span><span
-                                style="display: inline-block; width: 12px; height: 12px; background: #ff9800; margin-right: 4px;"></span>已有預約</span>
+                                style="display: inline-block; width: 12px; height: 12px; background: #ff9800; margin-right: 4px;"></span>已預約</span>
                     </div>
                 </div>
 
@@ -287,6 +223,10 @@
                     background-color: #4caf50;
                 }
 
+                .small-hour-dot.booked {
+                    background-color: #ff9800;
+                }
+
                 /* Modal Styles */
                 .hour-cell {
                     border: 1px solid #ddd;
@@ -309,6 +249,14 @@
 
                 .hour-cell:hover {
                     filter: brightness(0.95);
+                }
+
+                .hour-cell.booked {
+                    background-color: #fff3e0;
+                    color: #e65100;
+                    border-color: #ffe0b2;
+                    font-weight: bold;
+                    cursor: not-allowed;
                 }
             </style>
 
@@ -508,6 +456,8 @@
                     // '1' = 已預約 → 灰色 (不加 active class)
                     if (status.charAt(h) === '0') {
                         dot.classList.add('active');  // 綠色
+                    } else if (status.charAt(h) === '2') {
+                        dot.classList.add('booked');  // 橘色
                     }
                     summary.appendChild(dot);
                 }
@@ -552,23 +502,41 @@
                 cell.className = 'hour-cell';
                 cell.textContent = `${String(i).padStart(2, '0')}:00`;
 
-                // 0=Available, 1=Busy
+                // 0=Available, 1=Resting, 2=Booked
                 if (modalCurrentStatus[i] === '0') {
                     cell.classList.add('available');
                     cell.title = "可預約";
+                    cell.onclick = () => toggleStatus(i);
+                } else if (modalCurrentStatus[i] === '2') {
+                    cell.classList.add('booked');
+                    cell.title = "已預約 (不可修改)";
+                    cell.onclick = null; // 禁止點擊
                 } else {
                     cell.classList.add('busy');
-                    cell.title = "休息/已預約";
+                    cell.title = "休息中";
+                    cell.onclick = () => toggleStatus(i);
                 }
 
+                /*
                 cell.onclick = () => {
                     // Toggle '0' <-> '1'
                     modalCurrentStatus[i] = (modalCurrentStatus[i] === '0') ? '1' : '0';
                     renderModalGrid(); // Re-render to update style
                 };
+                */
 
                 container.appendChild(cell);
             }
+        }
+
+        function toggleStatus(i) {
+            // 僅允許 0(空閒) 與 1(休息) 互換，不處理 2
+            if (modalCurrentStatus[i] === '0') {
+                modalCurrentStatus[i] = '1';
+            } else if (modalCurrentStatus[i] === '1') {
+                modalCurrentStatus[i] = '0';
+            }
+            renderModalGrid();
         }
 
         // 儲存設定
