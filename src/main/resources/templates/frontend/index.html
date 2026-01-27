@@ -90,6 +90,15 @@
 
     <header id="main-header" class="header"></header>
 
+    <!-- 顯示後端傳回的 Flash Attribute 錯誤訊息 被停權保母身分的會員-->
+    <div th:if="${errorMessage}" class="alert alert-danger"
+        style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 15px; background: #f8d7da; color: #721c24; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" onclick="this.parentElement.style.display='none'"
+            style="margin-left: 10px; border: none; background: none; cursor: pointer;">&times;</button>
+    </div>
+
     <section class="hero">
         <div class="container d-flex align-center" style="min-height: 400px; position: relative;">
             <div class="hero-content fade-in">
@@ -124,24 +133,24 @@
         </div>
 
         <div class="grid-list-view">
-            <div class="category-card d-flex align-center gap-md"
-                onclick="window.location.href='/services?type=walk'" style="text-align: left; padding: 1.5rem;">
+            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/services?type=walk'"
+                style="text-align: left; padding: 1.5rem;">
                 <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🐕‍🦺</div>
                 <div>
                     <h3 class="mb-0">散步遛狗</h3>
                     <p style="color: #666; font-size: 0.9rem; margin:0;">專業保母陪跑，記錄路線</p>
                 </div>
             </div>
-            <div class="category-card d-flex align-center gap-md"
-                onclick="window.location.href='/services?type=care'" style="text-align: left; padding: 1.5rem;">
+            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/services?type=care'"
+                style="text-align: left; padding: 1.5rem;">
                 <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🏠</div>
                 <div>
                     <h3 class="mb-0">到府照顧</h3>
                     <p style="color: #666; font-size: 0.9rem; margin:0;">餵食、陪玩、維持習慣</p>
                 </div>
             </div>
-            <div class="category-card d-flex align-center gap-md"
-                onclick="window.location.href='/services?type=bath'" style="text-align: left; padding: 1.5rem;">
+            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/services?type=bath'"
+                style="text-align: left; padding: 1.5rem;">
                 <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🛁</div>
                 <div>
                     <h3 class="mb-0">到府洗澡</h3>
