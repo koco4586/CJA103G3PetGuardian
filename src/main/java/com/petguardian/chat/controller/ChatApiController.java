@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.petguardian.chat.model.ChatMessageDTO;
-import com.petguardian.chat.model.ChatRoomDTO;
+import com.petguardian.chat.dto.ChatMessageDTO;
+import com.petguardian.chat.dto.ChatRoomDTO;
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatService;
 
