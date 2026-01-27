@@ -11,7 +11,7 @@ public class MemberLoginRedirectController {
     @GetMapping("/loginpage")
     public String loginpage(){
 
-        return "frontend/member/login/login";
+        return "frontend/member/login/login_backup";
 
     }
 
