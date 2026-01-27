@@ -214,35 +214,31 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public Product saveProductWithImages(Integer sellerId, Integer proId, String proName,
-                                         Integer proTypeId, Integer proPrice, String proDescription,
-                                         Integer stockQuantity, Integer proState,
-                                         List<MultipartFile> newImages, List<Integer> deleteImageIds) {
-
-        Product product = null;
+    public Product saveProductWithImages(Integer sellerId, Integer proId, String proName, Integer proTypeId, Integer proPrice, String proDescription, Integer stockQuantity, Integer proState, List<MultipartFile> newImages, List<Integer> deleteImageIds) {
+        System.out.println("=== ProductServiceImpl.saveProductWithImages 開始 ===");
 
         try {
-            // 判斷是新增還是編輯
+            Product product = null;
+            // 1. 判斷是新增還是編輯
             if (proId != null && proId > 0) {
-                // 編輯模式：取得現有商品
+                System.out.println("模式: 編輯現有商品 ID: " + proId);
                 product = productRepository.findById(proId)
                         .orElseThrow(() -> new RuntimeException("商品不存在"));
 
-                // 驗證是否為該賣家的商品
+                // 驗證權限
                 if (!product.getMemId().equals(sellerId)) {
                     throw new RuntimeException("無權限編輯此商品");
                 }
             } else {
-                // 新增模式：建立新商品
+                System.out.println("模式: 新增商品");
                 product = new Product();
                 product.setMemId(sellerId);
             }
 
-            // 取得商品類別
+            // 2. 設定商品基本資料
             ProType proType = proTypeRepository.findById(proTypeId)
                     .orElseThrow(() -> new RuntimeException("商品類別不存在"));
 
-            // 設定商品基本資料
             product.setProType(proType);
             product.setProName(proName);
             product.setProPrice(proPrice);
@@ -250,32 +246,32 @@ public class ProductServiceImpl implements ProductService {
             product.setStockQuantity(stockQuantity);
             product.setProState(proState);
 
-            // 儲存商品
+            // 儲存商品基本資訊
             Product savedProduct = productRepository.saveAndFlush(product);
-            System.out.println("商品已儲存，ID: " + savedProduct.getProId());
 
-            // 刪除指定的圖片
+            // 3. 執行刪除舊圖片 (如果有收到待刪除 ID)
             if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
-                System.out.println("準備刪除 " + deleteImageIds.size() + " 張圖片");
+                System.out.println("執行刪除圖片，數量: " + deleteImageIds.size());
                 for (Integer picId : deleteImageIds) {
-                    try {
-                        productPicRepository.deleteById(picId);
-                        System.out.println("已刪除圖片 ID: " + picId);
-                    } catch (Exception e) {
-                        System.err.println("刪除圖片失敗 ID: " + picId + ", 錯誤: " + e.getMessage());
-                    }
+                    productPicRepository.deleteById(picId);
                 }
-                productPicRepository.flush();
+                productPicRepository.flush(); // 強制同步資料庫
             }
 
-            // 計算刪除後剩餘的圖片數量
-            List<ProductPic> remainingPics = productPicRepository.findByProduct_ProId(savedProduct.getProId());
-            int remainingCount = remainingPics.size();
+            // 4. 【核心改進】計算剩餘有效的圖片數量
+            // 這裡使用 stream 排除資料庫中 pro_pic 為 null 的無效紀錄
+            List<ProductPic> remainingPics = productPicRepository.findByProduct_ProId(savedProduct.getProId())
+                    .stream()
+                    .filter(p -> p.getProPic() != null && p.getProPic().length > 0)
+                    .collect(java.util.stream.Collectors.toList());
 
-            // 儲存新上傳的圖片（限制最多1張）
+            int remainingCount = remainingPics.size();
+            System.out.println("剩餘有效圖片數量: " + remainingCount);
+
+            // 5. 處理新上傳的圖片
             if (newImages != null && !newImages.isEmpty()) {
-                // 過濾掉空的檔案
-                List<MultipartFile> validImages = new ArrayList<>();
+                // 過濾無效檔案
+                List<MultipartFile> validImages = new java.util.ArrayList<>();
                 for (MultipartFile img : newImages) {
                     if (img != null && !img.isEmpty()) {
                         validImages.add(img);
@@ -283,56 +279,36 @@ public class ProductServiceImpl implements ProductService {
                 }
 
                 if (!validImages.isEmpty()) {
-                    // 計算可以新增的圖片數量
+                    // MAX_IMAGE_COUNT 目前設定為 1
                     int availableSlots = MAX_IMAGE_COUNT - remainingCount;
+                    System.out.println("可用位置: " + availableSlots);
 
-                    if (availableSlots <= 0) {
-                        System.out.println("已達到最大圖片數量限制，跳過新圖片上傳");
-                    } else {
-                        // 只處理允許數量內的圖片
+                    if (availableSlots > 0) {
+                        // 只儲存名額內的圖片 (以你的情況通常就是 1 張)
                         int imagesToSave = Math.min(validImages.size(), availableSlots);
-                        System.out.println("準備儲存 " + imagesToSave + " 張新圖片（限制: " + MAX_IMAGE_COUNT + " 張）");
 
                         for (int i = 0; i < imagesToSave; i++) {
                             MultipartFile image = validImages.get(i);
-                            try {
-                                byte[] imageBytes = image.getBytes();
-                                System.out.println("圖片 " + (i+1) + " 大小: " + imageBytes.length + " bytes");
-
-                                // 檢查圖片大小（限制 10MB）
-                                if (imageBytes.length > 10 * 1024 * 1024) {
-                                    throw new RuntimeException("圖片太大，請選擇小於10MB的圖片");
-                                }
-
-                                // 建立圖片物件
-                                ProductPic pic = new ProductPic();
-                                pic.setProduct(savedProduct);
-                                pic.setProPic(imageBytes);
-
-                                // 儲存圖片
-                                ProductPic savedPic = productPicRepository.save(pic);
-                                System.out.println("圖片 " + (i+1) + " 已儲存，ID: " + savedPic.getProductPicId());
-
-                            } catch (Exception e) {
-                                System.err.println("儲存圖片 " + (i+1) + " 失敗: " + e.getMessage());
-                                e.printStackTrace();
-                                throw new RuntimeException("儲存圖片失敗: " + e.getMessage(), e);
-                            }
+                            ProductPic pic = new ProductPic();
+                            pic.setProduct(savedProduct);
+                            pic.setProPic(image.getBytes());
+                            productPicRepository.save(pic);
+                            System.out.println("成功儲存新圖片");
                         }
-
                         productPicRepository.flush();
-                        System.out.println("所有圖片已儲存完成");
+                    } else {
+                        System.out.println("已達到圖片限制，跳過上傳。請先刪除舊圖。");
                     }
                 }
             }
 
+            System.out.println("=== saveProductWithImages 結束 ===");
             return savedProduct;
 
         } catch (Exception e) {
-            System.err.println("=== 儲存商品過程發生錯誤 ===");
-            System.err.println("錯誤訊息: " + e.getMessage());
+            System.err.println("儲存商品發生錯誤: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("儲存商品失敗: " + e.getMessage(), e);
+            throw new RuntimeException("儲存失敗: " + e.getMessage(), e);
         }
     }
 
