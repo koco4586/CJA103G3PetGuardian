@@ -1,6 +1,6 @@
 package com.petguardian.pet.controller;
 
-import java.io.IOException;
+
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.pet.model.PetVO;
 import com.petguardian.complaint.model.ComplaintVO;
@@ -130,30 +130,26 @@ public class PetController {
         return null;
     }
     
- // --- 2. 新增的：顯示原圖 (給商城或測試用) ---
-    @GetMapping("/img/original/{petId}") // 網址多了 /original
-    @ResponseBody
-    public byte[] getOriginalImg(@PathVariable Integer petId, HttpServletResponse res) {
-        // 這裡呼叫 Service 拿原圖
-        byte[] image = petService.getPetOriginalImage(petId); 
-        if (image != null) {
-            res.setContentType("image/jpeg"); // 告訴瀏覽器這是一張圖
-            return image;
-        }
-        return null;
-    }
+ 
+    
     
     @GetMapping("/dashboard") // 這是網址路徑，對應 window.location.href
-    public String showDashboard(Model model, HttpSession session) {
+    public String showDashboard(Model model, @RequestParam(defaultValue = "1") Integer whichPage, HttpSession session) {
         // 假設你從 session 拿 memId
         Integer memId = (Integer) session.getAttribute("memId");
         if (memId == null) memId = 1001; // 測試用
 
         // 抓取該會員的所有寵物清單
-        List<PetDTO> petlist = petService.getPetsByMemId(memId); 
-        model.addAttribute("petlist", petlist);
+       
+        Map<String, Object> pageData =
+                petService.getPetsPageData(whichPage, memId);
+
+        model.addAllAttributes(pageData);
+        model.addAttribute("whichPage", whichPage);
         
         return "frontend/dashboard-pets"; // 這是你的 HTML 檔案名稱
+        
+        
     }
     
   @GetMapping("/select_page")
@@ -162,7 +158,19 @@ public class PetController {
         // 注意：回傳字串必須與 templates 下的檔案路徑一致
         return "frontend/pet/petselect"; 
     }
-
+  
+  @GetMapping("/listone")
+  public String getPetDetail(@RequestParam("petId") Integer petId, Model model) {
+      // 1. 修正名稱：由 petSvc 改為 petService
+      // 2. 修正方法：既然你其他地方用 getOnePetDTO，這裡也統一使用，確保資料完整
+      PetDTO pet = petService.getOnePetDTO(petId); 
+      
+      // 2. 將資料放入 model 傳給前端
+      model.addAttribute("pet", pet);
+      
+      // 3. 回傳你的詳情頁面名稱
+      return "frontend/pet/petlistonepet"; 
+  }
     // 2. 更新：列出所有（現在使用 DTO 讓 HTML 能顯示類型名稱）
   @GetMapping("/all")
   public String getAll(@RequestParam(defaultValue = "1") Integer whichPage, Model model, 
@@ -173,6 +181,8 @@ public class PetController {
 //	    if (session.getAttribute("memId") == null) {
 //	        session.setAttribute("memId", 1); 
 //	    }
+	  
+	  session.setAttribute("memId", 1001); 
 	  Integer memId = 1001;
 //	  Integer memId = (Integer) session.getAttribute("memId");
 	  Map<String, Object> pageData = petService.getPetsPageData(whichPage, memId);
@@ -266,34 +276,41 @@ public class PetController {
       model.addAttribute("total", total);
       return "frontend/pet/petlistonepet";
   }
-    // 6. 保留：Base64 新增功能
-    @PostMapping("/insertBase64")
-    @ResponseBody
-    public String insertBase64(@RequestParam String petImageBase64,@RequestParam(required = false) String originalBase64,
-    							@RequestParam String petName,
-                               @RequestParam String typeId, @RequestParam String petGender,
-                               @RequestParam(required = false) String petAge, @RequestParam String sizeId,
-                               @RequestParam String petDescription
-    						 ,jakarta.servlet.http.HttpSession session)//會員有了的話把上面的sc後面小括號刪掉並打開這行
     
-    { // 🔴 注入 session
-        
-        // 取得目前操作者的 ID
-//        Integer memId = (Integer) session.getAttribute("memId");
-    	Integer memId = 1001;
-        // 如果沒登入不能新增 (目前測試可先註解)
-        // if (memId == null) return "error: 請先登入";
+    
+  
+  @PostMapping("/insertBase64")
+  @ResponseBody
+  public String insertBase64(@ModelAttribute PetVO petVO, 
+                             @RequestParam("petImageBase64") String petImageBase64,
+                             HttpSession session) {
+      
+	  
+	  try {
+		  
+		  Integer testMemId = 1001; 
+	        petVO.setMemId(testMemId);
+//	        // 1. 取得 Session 中的會員編號
+//	        Integer memId = (Integer) session.getAttribute("memId");
+//	        
+//	        // --- 除錯用：如果 memId 是空的，直接回傳錯誤 ---
+//	        if (memId == null) {
+//	            return "error: 登入逾時或尚未登入，請重新登入再上傳";
+//	        }
+	        
+	     // 2. 處理圖片解碼
+	        if (petImageBase64 != null && petImageBase64.contains(",")) {
+	            String base64Data = petImageBase64.split(",")[1];
+	            petVO.setPetImage(java.util.Base64.getDecoder().decode(base64Data));
+	        }
 
-        // 🔴 傳入 memId 給 Service
-        petService.addPetFromBase64(petImageBase64, originalBase64, petName, typeId, petGender, petAge, sizeId, petDescription, memId);
-        return "success";
-    
-    
-    
-       
-    }
-    
-     
+	        petService.addPetBase64(petVO); 
+	        return "success";
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return "error: " + e.getMessage();
+	    }
+	}
 
     // 7. 保留：一般表單新增
     @PostMapping("/insert")
@@ -372,8 +389,8 @@ public class PetController {
     					 @ModelAttribute PetVO petVO,
     					 @RequestParam(value = "petId", required = false) Integer petId,
                          @RequestParam(required = false) MultipartFile upFiles,
-                         @RequestParam(required = false) String petImageBase64, // 接收 JS 產生的圖
-                         @RequestParam(required = false) String originalBase64,
+                         @RequestParam("petImageBase64") String petImageBase64,
+                         
                          @RequestParam(required = false) String deleteImage,   // 接收刪除旗標
                          HttpSession session)  //記得把image後面的)去掉才能打開這行註解
                         		 throws Exception {
@@ -424,29 +441,65 @@ public class PetController {
             petVO.setMemId(1); 
         }
         
-    	 System.out.println("===== 進入 pet update Controller =====");
-        petService.updatePetWithCanvas(petVO, petImageBase64, originalBase64, deleteImage);
-        
-        return "success";
-        
+        try {
+            // 2. ❗ 核心步驟：撈出舊資料，確保時間與會員 ID 不遺失
+            PetVO oldPet = petService.getOnePet(petVO.getPetId());
+            if (oldPet == null) return "error: 找不到該寵物資料";
+
+            // 繼承舊有重要欄位，防止被前端傳來的 null 覆蓋
+            petVO.setMemId(oldPet.getMemId());
+            petVO.setCreatedTime(oldPet.getCreatedTime());
+
+            // 3. 處理圖片邏輯
+            if (petImageBase64 != null && petImageBase64.contains(",")) {
+                // A. 如果有新的 Base64 圖就解碼
+            	byte[] imageBytes = java.util.Base64.getDecoder().decode(petImageBase64.split(",")[1]);
+            	petVO.setPetImage(imageBytes);
+            } else if (upFiles != null && !upFiles.isEmpty()) {
+                // B. 或者是有上傳檔案 (MultipartFile)
+                petVO.setPetImage(upFiles.getBytes());
+            } else {
+                // C. 都沒有就維持舊圖
+                petVO.setPetImage(oldPet.getPetImage());
+            }
+
+            // 4. 執行更新 (建議統一呼叫 updatePetBase64 或 updatePet)
+            System.out.println("===== 執行 pet update =====");
+            petService.updatePetBase64(petVO); 
+            
+            return "success";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "error: " + e.getMessage();
+        }
     }
+        
+    
     
     @PostMapping("/delete")
-    @ResponseBody // ✅ 注意：加上這個，讓回傳的字串直接當成網頁內容
-    public String deletePet(@RequestParam("petId") Integer petId, HttpSession session) {
+ 
+    public String deletePet(@RequestParam("petId") Integer petId, HttpSession session, RedirectAttributes redirectAttributes) {
         
     	try {
             // 1. 執行刪除
             petService.deletePet(petId);
             
             // 2. 直接回傳成功訊息
-            return "success";
+            redirectAttributes.addFlashAttribute("message", "寵物資料已成功刪除！");
+            
+            // 3. 刪除後返回原本的列表頁面 (Dashboard)
+            return "redirect:/pet/dashboard";
         } catch (Exception e) {
             return "error: 刪除失敗";
         }
     }
         
-        
+    @GetMapping("/Petser_item")
+	public String showpetset(Model model) {
+	    // 這裡只負責開門，讓使用者看到網頁
+	    return "/frontend/pet/Petser_item"; 
+	}
         
         
 }

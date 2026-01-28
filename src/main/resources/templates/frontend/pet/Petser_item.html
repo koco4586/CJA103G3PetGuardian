@@ -35,9 +35,23 @@
 
         /* 右側主要內容區塊 */
         .main-content {
-            flex: 1;
-            padding-left: 30px;
-        }
+	    max-width: 1000px; /* 限制最大寬度，避免在寬螢幕上太散 */
+	    margin: 0 auto;    /* 關鍵：左右自動間距達成置中 */
+	    padding: 40px 20px; 
+	    flex: none;        /* 取消 flex 佈局的伸展 */
+	    width: 100%;
+	}
+	.filter-section {
+	    text-align: center;
+	    margin-bottom: 40px;
+	}
+	
+	.search-box {
+	    display: flex;
+	    justify-content: center;
+	    gap: 10px;
+	    margin-bottom: 15px;
+	}
 
         /* 類似圖片中的卡片樣式 */
         .sitter-card {
@@ -115,7 +129,7 @@
             <span>熱門關鍵字：</span>
             <button class="tag">#到府餵食</button>
             <button class="tag">#狗狗散步</button>
-            <button class="tag">#貓咪美容</button>
+            <button class="tag">#寵物洗護</button>
         </div>
     </section>
 
