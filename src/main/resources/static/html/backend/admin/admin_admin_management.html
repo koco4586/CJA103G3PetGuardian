@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetGuardian｜後台中心</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>管理員帳號管理</h1>
+    <h3>管理員列表</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>管理員編號</th>
+                <th>帳號</th>
+                <th>密碼</th>
+                <th>姓名</th>
+                <th>電子郵件</th>
+                <th>手機號碼</th>
+                <th>狀態</th>
+                <th>建立時間</th>
+                <th>頭像</th>
+                <th>修改資料</th>
+            </tr>
+        </thead>
+
+        <tbody class="tbody"></tbody>
+
+    </table>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+
+        function init() {
+
+            let fetch_url = "http://localhost:8080/admin/admin-admin-management";
+
+            fetch(fetch_url, {
+                credentials: "include"
+            }).then(res => res.json()).then(data => {
+                console.log(data);
+
+                for (i = 0; i < data.length; i++) {
+
+                    let admchinesestatus;
+
+                    if (data[i].admStatus === 0) {
+                        admchinesestatus = "已停用";
+                    } else {
+                        admchinesestatus = "已啟用";
+                    }
+
+                    $(".tbody").append(`
+
+                        <tr>
+                            <td>${data[i].admId}</td>
+                            <td>${data[i].admAccount}</td>
+                            <td><a href="">修改</a></td>
+                            <td>${data[i].admName}</td>
+                            <td>${data[i].admEmail}</td>
+                            <td>${data[i].admTel}</td>
+
+                            <td>
+                                <form>
+                                    <button type="submit" class="statussubmit" data-admid="${data[i].admId}">${admchinesestatus}</button>
+                                 </form>  
+                            </td>
+
+                            <td>${data[i].admCreatedAt}</td>
+
+                            <td><img src="${data[i].admImage}" style="width: 50px;"></td>
+
+                            <td><a href=""><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_q7W2h6ihzOiAti35boAkGjPGTb5WVZ-21A&s" style="width: 20px;"></a></td>
+                            
+                        </tr>
+
+                    `);
+
+                }
+            });
+
+function changeadminstatus(e) {
+
+                e.preventDefault();
+
+                let adminid = $(e.currentTarget).attr("data-admid");// 取得當前按鈕的 admId
+
+                let adminstatusobject = {
+                    "admId": adminid
+                }
+
+                var fetch_url = "http://localhost:8080/admin/admin-admin-management-updatestatus";
+
+                fetch(fetch_url, {
+                    method: "PUT",
+                    credentials: "include",
+                    body: JSON.stringify(adminstatusobject),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }).then(res => res.json()).then(data => {
+                    alert("管理員狀態已變更");
+                    console.log(data.result);
+                    if (data.result === "已停用") {
+                        $(e.currentTarget).html("已停用");
+                    } else {
+                        $(e.currentTarget).html("已啟用");
+                    }
+                });
+
+            }
+
+            $(document).on("click", ".statussubmit", changeadminstatus); 
+
+        }
+
+        $(window).on("load", init);
+
+    </script>
+
+
+</body>
+
+</html>
