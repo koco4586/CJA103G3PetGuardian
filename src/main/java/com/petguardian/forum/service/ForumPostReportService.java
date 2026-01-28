@@ -25,6 +25,16 @@ public class ForumPostReportService {
 	@Autowired
 	ForumPostReportRepository repo;
 	
+	@Transactional
+	public void addReport(ForumPostReportVO forumPostReportVO, Integer postId) {
+		ForumPostVO forumPostVO = postRepo.findById(postId)
+				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+	
+		forumPostReportVO.setForumPost(forumPostVO);
+		repo.save(forumPostReportVO);
+	
+	}
+	
 	public List<HandledPostDTO> getAllHandledPosts() {
 		return repo.findAllHandledPosts();
 	}

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>檢舉內容 | PetGuardian</title>
+<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+<link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root { --primary-orange: #ff9800; --deep-brown: #5d4037; }
+    body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+   
+    .report-container {
+        background: #fff; width: 100%; max-width: 600px;
+        border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        overflow: hidden; margin: 20px;
+    }
+    
+    .report-header {
+        background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
+        padding: 25px; border-bottom: 1px solid #eee; text-align: center;
+    }
+    .report-header h2 { margin: 0; color: var(--deep-brown); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    
+    .report-body { padding: 30px; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-weight: 700; color: #555; margin-bottom: 8px; }
+    .required { color: #e74c3c; margin-left: 4px; }
+    
+    .form-control {
+        width: 100%; padding: 12px 15px; border: 2px solid #eee;
+        border-radius: 10px; font-size: 1rem; box-sizing: border-box;
+        transition: 0.3s; font-family: inherit; font-weight: 600;
+    }
+    .form-control:focus { border-color: var(--primary-orange); outline: none; box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1); }
+    
+    textarea.form-control { resize: none; height: 150px; line-height: 1.6; }
+    
+    .report-footer {
+        padding: 20px 30px; background: #fcfcfc; border-top: 1px solid #f0f0f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    
+    .btn-cancel { text-decoration: none; color: #777; font-weight: 700; transition: 0.2s; }
+    .btn-cancel:hover { color: #333; }
+    
+    .btn-submit {
+        background-color: #ff9800; color: white; border: none;
+        padding: 12px 30px; border-radius: 50px; font-weight: 800;
+        cursor: pointer; transition: transform 0.2s, background 0.2s; font-size: 1rem;
+    }
+    .btn-submit:hover { background-color: #e68a00; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3); }
+    
+    .target-info {
+        background: #fdfdfd; border: 1px dashed #ddd; border-radius: 8px;
+        padding: 15px; margin-bottom: 25px; color: #666; font-size: 0.9rem; font-weight: 600;
+    }
+</style>
+</head>
+<body>
+
+    <form class="report-container" th:action="@{/forumpost/report-post-submit}" th:object="${forumPostReportVO}" method="post">
+        
+        <input type="hidden" name="postId" th:value="${postId}">
+    
+        <div class="report-header">
+            <h2><i class="fas fa-exclamation-triangle" style="color: #ff9800;"></i> 提交檢舉</h2>
+        </div>
+
+	    <div class="report-body">
+            <div class="target-info">
+                檢舉對象：文章 ID - <span th:text="${postId}"></span><br>
+                <small style="color: #999;">我們將在 24 小時內處理您的回報。</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">檢舉類型 <span class="required">*</span></label>
+                <select th:field="*{reportType}" class="form-control">
+                    <option value="0">騷擾</option>
+                    <option value="1">垃圾訊息</option>
+                    <option value="2">不當內容</option>
+                    <option value="3">詐騙</option>
+                    <option value="4">其他</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">詳細說明 <span class="required">*</span></label>
+                <textarea th:field="*{reportReason}" class="form-control" 
+                          placeholder="請具體描述違規情況，例如：包含暴力、色情或攻擊性言語..." 
+                          maxlength="1000"></textarea>
+                <div style="text-align: right; font-size: 12px; color: #999; margin-top: 5px;">限 800 字</div>
+            </div>
+        </div>
+
+        <div class="report-footer">
+            <a href="javascript:history.back()" class="btn-cancel">取消</a>
+            <button type="submit" class="btn-submit">送出檢舉</button>
+        </div>
+        
+        <div id="errorContainer" style="display: none;">
+            <p th:if="${#fields.hasErrors('reportReason')}" th:errors="*{reportReason}"></p>
+        </div>
+    </form>
+
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // 抓取容器內所有的錯誤訊息文字
+            const errorContainer = document.getElementById('errorContainer');
+            if (errorContainer) {
+                const errors = errorContainer.innerText.trim();
+                if (errors !== "") {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '欄位填寫錯誤',
+                        text: errors,
+                        confirmButtonColor: '#ff9800'
+                    });
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
