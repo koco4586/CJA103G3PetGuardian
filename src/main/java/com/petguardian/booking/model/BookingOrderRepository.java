@@ -23,4 +23,7 @@ public interface BookingOrderRepository extends JpaRepository<BookingOrderVO, In
 
     // 統計特定狀態的訂單數量
     long countByOrderStatus(Integer orderStatus);
+
+    // [New] 根據保母 ID 和訂單狀態查詢 (用於通知)
+    List<BookingOrderVO> findBySitterIdAndOrderStatus(Integer sitterId, Integer orderStatus);
 }

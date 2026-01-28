@@ -78,6 +78,16 @@ public class BookingServiceImpl implements BookingService {
         return list;
     }
 
+    // [New] 查詢某保母特定狀態的訂單 (Service層封裝)
+    @Override
+    public List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status) {
+        // 呼叫 Repository 進行查詢 (狀態: 0=待確認, 1=進行中...)
+        List<BookingOrderVO> list = orderRepository.findBySitterIdAndOrderStatus(sitterId, status);
+        // 補充訂單相關資訊 (如會員名稱、寵物名稱等)
+        list.forEach(this::enrichOrderInfo);
+        return list;
+    }
+
     @Override
     public void updateOrderStatusBySitter(Integer orderId, Integer newStatus) {
         scheduleInternalService.updateOrderStatusBySitter(orderId, newStatus);
