@@ -1,6 +1,7 @@
 package com.petguardian.pet.controller;
 
 
+//import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.petguardian.pet.model.PetVO;
 import com.petguardian.complaint.model.ComplaintVO;
 import com.petguardian.complaint.model.Complaintservice;
+//import com.petguardian.evaluate.model.EvaluateDTO;
+//import com.petguardian.evaluate.model.EvaluateRepository;
+import com.petguardian.member.model.Member;
 import com.petguardian.pet.model.PetDTO; // 引入 DTO
 import com.petguardian.pet.service.PetService;
 
@@ -32,6 +36,9 @@ public class PetController {
 	 
 	 @Autowired
 	    private Complaintservice complaintservice;
+	 
+//	 @Autowired
+//	    private EvaluateRepository evaluateRepository; // 注入實例，解決 static 報錯問題
 	
 	@GetMapping("/index")
     public String index() {
@@ -500,6 +507,37 @@ public class PetController {
 	    // 這裡只負責開門，讓使用者看到網頁
 	    return "/frontend/pet/Petser_item"; 
 	}
+    
+
+    
+    
+
+    	
+    @GetMapping("/evaluate")
+    public String showEvaluatePage(HttpSession session, Model model) {
+        // 1. 從 Session 取得身分 (假設你登入時存了身分字串或 ID)
+        // 這裡示範簡單的邏輯判斷
+    	Integer memId = authStrategyService.getCurrentUserId(request);
+        if (memId == null) {
+            return "redirect:/login";
+        }
+
+//        if (roleObj == null) {
+//            // 如果還是抓不到，代表跳轉過程中 Session 被 Security 洗掉了
+//            return "redirect:/front/loginpage"; 
+//        }
+
+         
         
+//        // 將身分傳給前端 (這會影響你剛剛寫的 th:if 區塊)
+//        model.addAttribute("currentRole", roleId); // 建議傳 ID，前端判斷 th:if="${currentRole == 1}"
+//        model.addAttribute("isSitter", isSitter);
+
+        // --- 剩下的假資料邏輯先保持不動，確保畫面能出來 ---
         
+        // ... (你原本的假資料內容) ...
+
+//        model.addAttribute("member", memObj);
+        return "frontend/evaluate"; 
+    }
 }

@@ -136,7 +136,7 @@
                     <td th:text="${pet.petAge} + ' 歲'"></td>
                     <td>
                         <img th:src="@{/pet/img/{id}(id=${pet.petId})}" class="table-img"
-                             alt="無圖片" onerror="this.src='/images/no-image.png';">
+                             alt="無圖片"onerror="this.onerror=null;">
                     </td>
                     <td></td>
                      <td th:text="${pet.petDescription}"></td>
