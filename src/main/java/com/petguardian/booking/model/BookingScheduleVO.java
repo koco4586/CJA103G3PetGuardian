@@ -2,6 +2,8 @@ package com.petguardian.booking.model;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +29,7 @@ public class BookingScheduleVO {
     private Integer bookingOrderId;
 
     @Column(name = "schedule_date", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate scheduleDate;
 
     // 24個1小時狀態字串

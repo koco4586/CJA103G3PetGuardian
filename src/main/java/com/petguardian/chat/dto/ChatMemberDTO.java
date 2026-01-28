@@ -1,5 +1,6 @@
-package com.petguardian.chat.model;
+package com.petguardian.chat.dto;
 
+import com.petguardian.chat.model.ChatMemberEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

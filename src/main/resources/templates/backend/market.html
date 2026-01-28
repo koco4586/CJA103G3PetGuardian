@@ -16,9 +16,11 @@
 <div class="main-content">
     <header>
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+             alt="admin-avatar" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
         <div>
             <h1>二手商城管理</h1>
-            <div class="sub">處理訂單撥款與退貨審核</div>
+            <div class="sub">處理訂單、退貨審核及商品類別管理</div>
         </div>
     </header>
 
@@ -37,14 +39,18 @@
 
         <!-- 主要分頁標籤 -->
         <div class="tab-container">
-            <button class="tab-btn active" onclick="switchMainTab('orders')">
+            <button class="tab-btn active" onclick="switchTab('orders')">
                 <i class="fa-solid fa-file-invoice-dollar"></i>
                 查閱訂單紀錄
             </button>
-            <button class="tab-btn" onclick="switchMainTab('refunds')">
+            <button class="tab-btn" onclick="switchTab('refunds')">
                 <i class="fa-solid fa-rotate-left"></i>
                 退貨申請審核
                 <span class="badge" th:text="${refundPendingCount}" th:if="${refundPendingCount > 0}">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('categories')">
+                <i class="fa-solid fa-tags"></i>
+                商品類別管理
             </button>
         </div>
 
@@ -90,8 +96,8 @@
                                 $0
                             </td>
                             <td>
-                                        <span class="status-badge status-paid"
-                                              th:if="${orderData.order.orderStatus == 0}">已付款</span>
+                                <span class="status-badge status-paid"
+                                      th:if="${orderData.order.orderStatus == 0}">已付款</span>
                                 <span class="status-badge status-shipped"
                                       th:if="${orderData.order.orderStatus == 1}">已出貨</span>
                             </td>
@@ -113,7 +119,7 @@
             <div id="order-closed" class="sub-panel">
                 <div class="card">
                     <h3>結案訂單</h3>
-                    <div class="sub">訂單狀態為「已完成」或「已取消」。已完成的訂單可進行撥款操作。</div>
+                    <div class="sub">訂單狀態為「已完成」或「已取消」，可進行撥款操作</div>
 
                     <table>
                         <thead>
@@ -136,34 +142,33 @@
                                 $0
                             </td>
                             <td>
-                                        <span class="status-badge status-completed"
-                                              th:if="${orderData.order.orderStatus == 2}">已完成</span>
-                                <span class="status-badge status-canceled"
+                                <span class="status-badge status-completed"
+                                      th:if="${orderData.order.orderStatus == 2}">已完成</span>
+                                <span class="status-badge status-cancelled"
                                       th:if="${orderData.order.orderStatus == 3}">已取消</span>
                                 <span class="status-badge status-paidout"
                                       th:if="${orderData.order.orderStatus == 6}">已撥款</span>
                             </td>
                             <td>
-                                <!-- 已完成 -> 可撥款 -->
+                                <!-- 已完成訂單可撥款 -->
                                 <form th:if="${orderData.order.orderStatus == 2}"
                                       th:action="@{/admin/store/payout}" method="post" style="display: inline;">
                                     <input type="hidden" name="orderId" th:value="${orderData.order.orderId}">
-                                    <button type="submit" class="btn btn-primary"
-                                            onclick="return confirm('確定撥款給賣家嗎？')">
+                                    <button type="submit" class="btn"
+                                            style="background: var(--orange); color: white;"
+                                            onclick="return confirm('確定要撥款給賣家嗎？')">
                                         <i class="fa-solid fa-money-bill-transfer"></i> 撥款給賣家
                                     </button>
                                 </form>
 
-                                <!-- 已撥款 -> 灰色按鈕 -->
+                                <!-- 已撥款 -->
                                 <button th:if="${orderData.order.orderStatus == 6}"
                                         class="btn" disabled style="background: #ccc;">
                                     <i class="fa-solid fa-check"></i> 已撥款
                                 </button>
 
-                                <!-- 已取消 -> 無操作 -->
-                                <span th:if="${orderData.order.orderStatus == 3}" style="color: #999;">
-                                            -
-                                        </span>
+                                <!-- 已取消 -->
+                                <span th:if="${orderData.order.orderStatus == 3}" style="color: #999;">-</span>
                             </td>
                         </tr>
 
@@ -205,8 +210,8 @@
                                 $0
                             </td>
                             <td>
-                                        <span class="status-badge status-refunding"
-                                              th:if="${orderData.order.orderStatus == 4}">申請退貨中</span>
+                                <span class="status-badge status-refunding"
+                                      th:if="${orderData.order.orderStatus == 4}">申請退貨中</span>
                                 <span class="status-badge status-refunded"
                                       th:if="${orderData.order.orderStatus == 5}">退貨完成</span>
                             </td>
@@ -252,33 +257,36 @@
                             $0
                         </td>
                         <td>
-                                    <span class="status-badge return-pending"
-                                          th:if="${returnData.isPending}">審核中</span>
+                            <span class="status-badge return-pending"
+                                  th:if="${returnData.isPending}">審核中</span>
                             <span class="status-badge return-approved"
                                   th:if="${returnData.isApproved}">已通過</span>
                             <span class="status-badge return-rejected"
                                   th:if="${returnData.isRejected}">已駁回</span>
                         </td>
                         <td>
-                            <!-- 待審核狀態：顯示三個按鈕 -->
-                            <div th:if="${returnData.isPending}" class="action-btns">
-                                <button type="button" class="btn btn-info"
+                            <!-- 待審核狀態 -->
+                            <div th:if="${returnData.isPending}" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" class="btn"
+                                        style="background: #2196f3; color: white;"
                                         th:onclick="'showReturnDetail(' + ${returnData.returnOrder.returnId} + ')'">
-                                    <i class="fa-solid fa-eye"></i> 查看內容
+                                    <i class="fa-solid fa-eye"></i> 查看
                                 </button>
 
                                 <form th:action="@{/admin/store/return/approve}" method="post" style="display: inline;">
                                     <input type="hidden" name="returnId" th:value="${returnData.returnOrder.returnId}">
-                                    <button type="submit" class="btn btn-primary"
+                                    <button type="submit" class="btn"
+                                            style="background: var(--orange); color: white;"
                                             onclick="return confirm('確定批准退款並撥款給買家嗎？')">
-                                        <i class="fa-solid fa-check"></i> 批准退款
+                                        <i class="fa-solid fa-check"></i> 批准
                                     </button>
                                 </form>
 
                                 <form th:action="@{/admin/store/return/reject}" method="post" style="display: inline;">
                                     <input type="hidden" name="returnId" th:value="${returnData.returnOrder.returnId}">
-                                    <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('確定駁回退款申請嗎？駁回後訂單金額將撥給賣家。')">
+                                    <button type="submit" class="btn ghost"
+                                            style="color: red; border-color: red;"
+                                            onclick="return confirm('確定駁回退款申請嗎？')">
                                         <i class="fa-solid fa-times"></i> 駁回
                                     </button>
                                 </form>
@@ -286,9 +294,10 @@
 
                             <!-- 已處理狀態 -->
                             <div th:unless="${returnData.isPending}">
-                                <button type="button" class="btn btn-info"
+                                <button type="button" class="btn"
+                                        style="background: #2196f3; color: white;"
                                         th:onclick="'showReturnDetail(' + ${returnData.returnOrder.returnId} + ')'">
-                                    <i class="fa-solid fa-eye"></i> 查看內容
+                                    <i class="fa-solid fa-eye"></i> 查看
                                 </button>
                                 <span style="color: #999; margin-left: 10px;">已處理</span>
                             </div>
@@ -306,6 +315,67 @@
                 </table>
             </div>
         </div>
+
+        <!-- ========== 商品類別管理區塊 ========== -->
+        <div id="panel-categories" class="panel">
+
+            <!-- 新增類別按鈕 -->
+            <div style="margin-bottom:16px;">
+                <button class="btn" onclick="openCategoryModal()"
+                        style="background:var(--orange); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer;">
+                    <i class="fa-solid fa-plus"></i> 新增類別
+                </button>
+            </div>
+
+            <!-- 類別列表 -->
+            <div class="card">
+                <h3>商品類別列表</h3>
+                <div class="sub" style="margin-bottom: 15px;">管理二手商城的商品分類</div>
+
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th style="width: 100px;">ID</th>
+                            <th>類別名稱</th>
+                            <th style="width: 120px;">商品數量</th>
+                            <th style="width: 200px;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="typeData : ${proTypesWithCount}">
+                            <td th:text="${typeData.proType.proTypeId}">1</td>
+                            <td th:text="${typeData.proType.proTypeName}">類別名稱</td>
+                            <td th:text="${typeData.productCount} + ' 件'">0 件</td>
+                            <td>
+                                <button class="btn" onclick="editCategory(this)"
+                                        th:data-id="${typeData.proType.proTypeId}"
+                                        th:data-name="${typeData.proType.proTypeName}"
+                                        style="background:var(--orange); color:white; padding:6px 12px; border:none; border-radius:6px; cursor:pointer; margin-right:8px;">
+                                    編輯
+                                </button>
+                                <form th:action="@{/admin/store/protype/delete}" method="post" style="display:inline;"
+                                      onsubmit="return confirm('確定要刪除這個類別嗎？如果此類別下有商品將無法刪除。');">
+                                    <input type="hidden" name="proTypeId" th:value="${typeData.proType.proTypeId}">
+                                    <button type="submit" class="btn ghost"
+                                            th:disabled="${typeData.productCount > 0}"
+                                            style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:6px; cursor:pointer;">
+                                        刪除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(proTypesWithCount)}">
+                            <td colspan="4" style="padding:40px; text-align:center; color:#999;">
+                                目前沒有任何類別
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </section>
 </div>
 
@@ -351,10 +421,37 @@
             <div id="modal-images-container" style="margin-top: 15px; display: none;">
                 <span class="detail-label" style="margin-bottom: 8px; display: block;">退貨圖片</span>
                 <div id="modal-images" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <!-- 圖片會動態載入 -->
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- 新增/編輯類別 Modal -->
+<div id="categoryModal" class="modal-overlay" style="display:none;">
+    <div style="background:white; padding:30px; border-radius:12px; width:90%; max-width:400px;">
+        <h3 id="categoryModalTitle" style="margin:0 0 20px 0;">新增類別</h3>
+        <form th:action="@{/admin/store/protype/add}" method="post" id="categoryForm">
+            <input type="hidden" id="proTypeIdEdit" name="proTypeId">
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600;">類別名稱 <span style="color:red;">*</span></label>
+                <input type="text" id="proTypeName" name="proTypeName" required
+                       placeholder="例如：貓咪用品、狗狗服飾"
+                       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="text-align:right;">
+                <button type="button" onclick="closeCategoryModal()"
+                        style="background:#6c757d; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; margin-right:10px;">
+                    取消
+                </button>
+                <button type="submit"
+                        style="background:var(--orange); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer;">
+                    儲存
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 <script th:src="@{/js/backend/market/market.js}"></script>

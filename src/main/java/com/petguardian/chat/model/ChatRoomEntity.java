@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,7 +25,11 @@ import lombok.NoArgsConstructor;
  * the massive `chat_message` table.
  */
 @Entity
-@Table(name = "chatroom")
+@Table(name = "chatroom", indexes = {
+        @Index(name = "idx_chatroom_members_chatroomtype", columnList = "mem_id1, mem_id2, chatroom_type", unique = true),
+        @Index(name = "idx_mem1_lastmsg", columnList = "mem_id1, last_message_at DESC"),
+        @Index(name = "idx_mem2_lastmsg", columnList = "mem_id2, last_message_at DESC")
+})
 @Data
 @NoArgsConstructor
 public class ChatRoomEntity implements Serializable {
@@ -90,11 +95,17 @@ public class ChatRoomEntity implements Serializable {
      * @param userId The ID of the user marking the room as read
      */
     public void updateLastReadAt(Integer userId) {
-        LocalDateTime now = LocalDateTime.now();
+        updateLastReadAt(userId, LocalDateTime.now());
+    }
+
+    /**
+     * Updates the last read timestamp for a specific user with a specific time.
+     */
+    public void updateLastReadAt(Integer userId, LocalDateTime timestamp) {
         if (userId.equals(memId1)) {
-            this.mem1LastReadAt = now;
+            this.mem1LastReadAt = timestamp;
         } else if (userId.equals(memId2)) {
-            this.mem2LastReadAt = now;
+            this.mem2LastReadAt = timestamp;
         }
     }
 

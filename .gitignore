@@ -92,4 +92,6 @@ src/main/resources/application-dev.properties
 ##############################
 .agent/
 .antigravity/
-.antigravity-agent/
+.antigravity-agent/*.log
+*.log.gz
+${sys:LOG_PATH}/

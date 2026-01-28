@@ -1,22 +1,78 @@
-// 主要分頁切換
-function switchMainTab(tabName) {
+// ==========================================
+// 1. 分頁切換邏輯 (Tabs)
+// ==========================================
+
+// 對應 HTML 中的 onclick="switchTab('...')"
+function switchTab(tabName) {
+    const event = window.event;
+    // 移除所有主分頁按鈕與面板的 active 狀態
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
 
-    event.target.classList.add('active');
-    document.getElementById('panel-' + tabName).classList.add('active');
+    // 設置當前點擊的按鈕與面板為 active
+    if (event) {
+        // 使用 closest 確保點擊到按鈕內的圖標(i標籤)也能正確抓到按鈕
+        event.target.closest('.tab-btn').classList.add('active');
+    }
+
+    const targetPanel = document.getElementById('panel-' + tabName);
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+    }
 }
 
-// 訂單子分頁切換
+// 對應 HTML 中的 onclick="switchOrderTab('...')"
 function switchOrderTab(tabName) {
+    const event = window.event;
     document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.sub-panel').forEach(panel => panel.classList.remove('active'));
 
-    event.target.classList.add('active');
-    document.getElementById('order-' + tabName).classList.add('active');
+    if (event) {
+        event.target.closest('.sub-tab-btn').classList.add('active');
+    }
+
+    const targetSubPanel = document.getElementById('order-' + tabName);
+    if (targetSubPanel) {
+        targetSubPanel.classList.add('active');
+    }
 }
 
-// 顯示退貨詳情 Modal
+// ==========================================
+// 2. 類別 Modal 相關 (Category)
+// ==========================================
+
+function openCategoryModal() {
+    document.getElementById('categoryModalTitle').innerText = '新增類別';
+    document.getElementById('proTypeIdEdit').value = '';
+    document.getElementById('proTypeName').value = '';
+    document.getElementById('categoryForm').action = '/admin/store/protype/add';
+    document.getElementById('categoryModal').style.display = 'flex';
+}
+
+function closeCategoryModal() {
+    document.getElementById('categoryModal').style.display = 'none';
+}
+
+function editCategory(btn) {
+    const id = btn.getAttribute('data-id');
+    const name = btn.getAttribute('data-name');
+    document.getElementById('categoryModalTitle').innerText = '編輯類別';
+    document.getElementById('proTypeIdEdit').value = id;
+    document.getElementById('proTypeName').value = name;
+    document.getElementById('categoryForm').action = '/admin/store/protype/update';
+    document.getElementById('categoryModal').style.display = 'flex';
+}
+
+// ==========================================
+// 3. 退貨詳情 Modal 相關 (Return)
+// ==========================================
+
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return '-';
+    return dateTimeStr.replace('T', ' ').substring(0, 19);
+}
+
+// 顯示退貨詳情
 function showReturnDetail(returnId) {
     fetch('/admin/store/return/' + returnId)
         .then(response => response.json())
@@ -27,7 +83,7 @@ function showReturnDetail(returnId) {
                 document.getElementById('modal-buyerName').textContent = data.buyerName || '-';
                 document.getElementById('modal-sellerName').textContent = data.sellerName || '-';
                 document.getElementById('modal-refundAmount').textContent = '$' + (data.refundAmount || 0);
-                document.getElementById('modal-applyTime').textContent = data.applyTime || '-';
+                document.getElementById('modal-applyTime').textContent = formatDateTime(data.applyTime);
                 document.getElementById('modal-returnReason').textContent = data.returnReason || '-';
 
                 const imagesContainer = document.getElementById('modal-images-container');
@@ -61,16 +117,33 @@ function showReturnDetail(returnId) {
         });
 }
 
-// 關閉 Modal
+// 對應 HTML 中的 onclick="closeModal()"
 function closeModal() {
-    document.getElementById('returnDetailModal').classList.remove('active');
+    const returnModal = document.getElementById('returnDetailModal');
+    if (returnModal) {
+        returnModal.classList.remove('active');
+    }
 }
 
-// 頁面載入完成後執行
+// ==========================================
+// 4. 初始化與點擊外部關閉邏輯
+// ==========================================
+
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('returnDetailModal');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
+    // 類別 Modal 外部點擊關閉
+    const categoryModal = document.getElementById('categoryModal');
+    if (categoryModal) {
+        categoryModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCategoryModal();
+            }
+        });
+    }
+
+    // 退貨 Modal 外部點擊關閉
+    const returnModal = document.getElementById('returnDetailModal');
+    if (returnModal) {
+        returnModal.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
             }

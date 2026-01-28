@@ -1,10 +1,11 @@
 package com.petguardian.chat.service.status;
 
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataReader;
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataWriter;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomEntity;
 
 /**
  * Implementation for managing chat read/unread status.
@@ -12,27 +13,38 @@ import com.petguardian.chat.model.ChatRoomEntity;
 @Service
 public class ChatReadStatusServiceImpl implements ChatReadStatusService {
 
-    private final ChatRoomRepository chatroomRepository;
+    private final ChatRoomMetadataReader metadataReader;
+    private final ChatRoomMetadataWriter metadataWriter;
 
-    public ChatReadStatusServiceImpl(ChatRoomRepository chatroomRepository) {
-        this.chatroomRepository = chatroomRepository;
+    public ChatReadStatusServiceImpl(
+            @Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
+            @Qualifier("metadataWriterProxy") ChatRoomMetadataWriter metadataWriter) {
+        this.metadataReader = metadataReader;
+        this.metadataWriter = metadataWriter;
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean hasUnreadMessages(Integer userId) {
-        return chatroomRepository.countUnreadRooms(userId) > 0;
+        List<com.petguardian.chat.dto.ChatRoomMetadataDTO> rooms = metadataReader.getUserChatrooms(userId);
+        if (rooms == null || rooms.isEmpty())
+            return false;
+
+        return rooms.stream().anyMatch(meta -> {
+            if (meta.getLastMessageAt() == null)
+                return false;
+
+            java.time.LocalDateTime myLastRead = userId.equals(meta.getMemberIds().get(0))
+                    ? meta.getMem1LastReadAt()
+                    : meta.getMem2LastReadAt();
+
+            return myLastRead == null || meta.getLastMessageAt().isAfter(myLastRead);
+        });
     }
 
     @Override
     @Transactional
     public void markRoomAsRead(Integer chatroomId, Integer userId) {
-        ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
-        if (chatroom == null) {
-            return;
-        }
-
-        chatroom.updateLastReadAt(userId);
-        chatroomRepository.save(chatroom);
+        metadataWriter.updateLastReadAtCacheOnly(chatroomId, userId, java.time.LocalDateTime.now());
     }
 }

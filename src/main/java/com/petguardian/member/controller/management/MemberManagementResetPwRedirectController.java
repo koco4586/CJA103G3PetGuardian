@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class MemberManagementResetPwRedirectController {
 
     @GetMapping("/resetpwpage")
-    public String resetpw(){
+    public String resetpwpage(){
         return "redirect:/html/member/management/member_management_resetpw.html";
     }
 

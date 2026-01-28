@@ -89,7 +89,7 @@
                 formData.append("admPassword", insertpassword);
                 formData.append("admPasswordCheck", insertpasswordcheck);
 
-                let fetch_url = "http://localhost:8080/back/admininsert";
+                let fetch_url = "http://localhost:8080/admin/admininsert";
 
                 fetch(fetch_url, {
                     method: "POST",
@@ -102,8 +102,16 @@
                     } else if (data.result === "新增失敗") {
                         alert("新增失敗");
                     } else {
+
+                        // console.log("完整回傳資料：", data);
+                        // console.log("圖片路徑：", data.memImage);
+                        // console.log("所有屬性：", Object.keys(data));
+
+                        // $(".show_image").append(`<img src="${data.memImage}" style="width: 200px;">`);
+
                         alert("新增成功");
                         // window.location.href = "/html/member/register/registersuccess.html";
+
                     }
                 });
             };

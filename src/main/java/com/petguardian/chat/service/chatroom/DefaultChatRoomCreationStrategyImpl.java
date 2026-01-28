@@ -1,6 +1,7 @@
 package com.petguardian.chat.service.chatroom;
 
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.springframework.stereotype.Service;
 
@@ -15,9 +16,15 @@ import com.petguardian.chat.model.ChatRoomEntity;
 public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStrategy {
 
     private final ChatRoomRepository chatroomRepository;
+    private final ChatRoomMetadataReader metadataReader;
+    private final ChatRoomMetadataWriter metadataWriter;
 
-    public DefaultChatRoomCreationStrategyImpl(ChatRoomRepository chatroomRepository) {
+    public DefaultChatRoomCreationStrategyImpl(ChatRoomRepository chatroomRepository,
+            @Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
+            @Qualifier("metadataWriterProxy") ChatRoomMetadataWriter metadataWriter) {
         this.chatroomRepository = chatroomRepository;
+        this.metadataReader = metadataReader;
+        this.metadataWriter = metadataWriter;
     }
 
     @Override
@@ -27,6 +34,20 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
         Integer memId2 = Math.max(userA, userB);
         Integer type = chatroomType != null ? chatroomType : 0;
 
+        // High-Performance Lookup: Cache First via Metadata Service
+        java.util.Optional<com.petguardian.chat.dto.ChatRoomMetadataDTO> cachedRoom = metadataReader
+                .findRoomByMembers(memId1, memId2);
+        if (cachedRoom.isPresent()) {
+            com.petguardian.chat.dto.ChatRoomMetadataDTO meta = cachedRoom.get();
+            ChatRoomEntity entity = new ChatRoomEntity();
+            entity.setChatroomId(meta.getChatroomId());
+            entity.setMemId1(memId1);
+            entity.setMemId2(memId2);
+            entity.setChatroomType(type.byteValue());
+            return entity;
+        }
+
+        // Fallback: Secondary Storage Lookup (Cold Start)
         Optional<ChatRoomEntity> existingRoom = chatroomRepository.findByMemId1AndMemId2AndChatroomType(memId1, memId2,
                 type);
         if (existingRoom.isPresent()) {
@@ -44,7 +65,13 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
         // Default name
         newRoom.setChatroomName("Chat: " + newRoom.getMemId1() + "-" + newRoom.getMemId2());
 
-        return chatroomRepository.save(newRoom);
+        ChatRoomEntity saved = chatroomRepository.save(newRoom);
+
+        // Push to Cache List
+        metadataWriter.addUserToRoom(saved.getMemId1(), saved.getChatroomId());
+        metadataWriter.addUserToRoom(saved.getMemId2(), saved.getChatroomId());
+
+        return saved;
     }
 
     @Override

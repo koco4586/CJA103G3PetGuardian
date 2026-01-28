@@ -50,10 +50,10 @@ public class PetSitterServicePetTypeServiceImpl implements PetSitterServicePetTy
 
         // 1.5 驗證寵物種類與體型是否有效
         if (PetType.fromId(typeId) == null) {
-            throw new IllegalArgumentException("無效的寵物種類 ID: " + typeId);
+            throw new IllegalArgumentException("無效的寵物種類 : " + typeId);
         }
         if (PetSize.fromId(sizeId) == null) {
-            throw new IllegalArgumentException("無效的寵物體型 ID: " + sizeId);
+            throw new IllegalArgumentException("無效的寵物體型 : " + sizeId);
         }
 
         // 2. 檢查是否已存在相同配置

@@ -7,24 +7,14 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.petguardian.chat.model.ChatMemberEntity;
-import com.petguardian.chat.model.ChatMessageDTO;
+import com.petguardian.chat.dto.MemberProfileDTO;
+import com.petguardian.chat.dto.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
 
 @Service
 public class ChatMessageMapperImpl implements ChatMessageMapper {
-
-    // ============================================================
-    // DEPENDENCIES
-    // ============================================================
-    // No dependencies! Core logic only.
-
-    // ============================================================
-    // PUBLIC OPERATIONS
-    // ============================================================
-
     @Override
-    public ChatMessageDTO toDto(ChatMessageEntity chatMessageEntity, ChatMemberEntity sender, String replyContent,
+    public ChatMessageDTO toDto(ChatMessageEntity chatMessageEntity, MemberProfileDTO sender, String replyContent,
             String replySenderName,
             Integer currentUserId, Integer partnerId) {
         ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
@@ -32,7 +22,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         chatMessageDTO.setSenderId(chatMessageEntity.getMemberId());
         chatMessageDTO.setReceiverId(chatMessageEntity.getMemberId().equals(currentUserId) ? partnerId : currentUserId);
         chatMessageDTO.setContent(chatMessageEntity.getMessage());
-        chatMessageDTO.setSenderName(sender != null ? sender.getMemName() : "Unknown");
+        chatMessageDTO.setSenderName(sender != null ? sender.getMemberName() : "Unknown");
         chatMessageDTO.setChatroomId(chatMessageEntity.getChatroomId());
         chatMessageDTO.setChatTime(chatMessageEntity.getChatTime());
 
@@ -45,13 +35,16 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         return chatMessageDTO;
     }
 
+    // ============================================================
+    // PUBLIC OPERATIONS
+    // ============================================================
     /**
      * Bulk converts messages to DTOs.
      */
     @Override
     public List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> chatMessageEntities, Integer currentUserId,
             Integer partnerId,
-            Map<Integer, ChatMemberEntity> memberMap,
+            Map<Integer, MemberProfileDTO> memberMap,
             Map<String, ChatMessageEntity> replyMap) {
         if (chatMessageEntities.isEmpty()) {
             return Collections.emptyList();
@@ -70,12 +63,12 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
      * Maps a single entity to DTO using pre-resolved dependency maps.
      */
     private ChatMessageDTO mapToDto(ChatMessageEntity msg,
-            Map<Integer, ChatMemberEntity> memberMap,
+            Map<Integer, MemberProfileDTO> memberMap,
             Map<String, ChatMessageEntity> replyMap,
             Integer currentUserId,
             Integer partnerId) {
         // Resolve Sender
-        ChatMemberEntity sender = memberMap.get(msg.getMemberId());
+        MemberProfileDTO sender = memberMap.get(msg.getMemberId());
 
         // Resolve Reply Context
         String replyContent = null;
@@ -85,8 +78,8 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
             ChatMessageEntity replyMsg = replyMap.get(msg.getReplyToMessageId());
             if (replyMsg != null) {
                 replyContent = replyMsg.getMessage();
-                ChatMemberEntity replySender = memberMap.get(replyMsg.getMemberId());
-                replySenderName = (replySender != null) ? replySender.getMemName() : null;
+                MemberProfileDTO replySender = memberMap.get(replyMsg.getMemberId());
+                replySenderName = (replySender != null) ? replySender.getMemberName() : null;
             }
         }
 
