@@ -22,30 +22,53 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/sitter")
 public class SitterBookingController {
 
-	@Autowired
-	private BookingService bookingService;
+    @Autowired
+    private BookingService bookingService;
 
-	@Autowired
-	private AuthStrategyService authStrategyService;
-	
-	@Autowired
+    @Autowired
+    private AuthStrategyService authStrategyService;
+
+    @Autowired
     private com.petguardian.booking.service.BookingDataIntegrationService dataService;
 
-	/**
-	 * 【保母預約管理主頁】
-	 */
-	@GetMapping("/bookings")
-    public String listSitterOrders(@RequestParam(required = false) Integer status, 
-                                   HttpServletRequest request,
-                                   Model model) {
-        Integer sitterId = authStrategyService.getCurrentUserId(request);
-        if (sitterId == null) return "redirect:/member/login";
+    /**
+     * 【保母預約管理主頁】
+     */
+    @GetMapping("/bookings")
+    public String listSitterOrders(@RequestParam(required = false) Integer status,
+            HttpServletRequest request,
+            Model model) {
+        Integer memId = authStrategyService.getCurrentUserId(request);
+        if (memId == null) return "redirect:/front/loginpage";
 
-        List<BookingOrderVO> bookingList = (status != null) 
-                ? bookingService.findBySitterAndStatus(sitterId, status)
-                : bookingService.getOrdersBySitterId(sitterId);
-
-        var member = dataService.getMemberInfo(sitterId);
+        var sitterVO = dataService.getSitterInfoByMemId(memId); 
+        if (sitterVO == null) {
+            return "redirect:/"; // 不是保母就踢掉
+        }
+        
+        Integer actualSitterId = sitterVO.getSitterId();
+        
+        List<BookingOrderVO> bookingList = (status != null)
+                ? bookingService.findBySitterAndStatus(actualSitterId, status)
+                : bookingService.getOrdersBySitterId(actualSitterId);
+        
+        for (BookingOrderVO order : bookingList) {
+            try {
+                // 抓取下單的飼主資料
+                var clientMember = dataService.getMemberInfo(order.getMemId());
+                if (clientMember != null) {
+                    order.setMemName(clientMember.getMemName());
+                }
+                // 抓取寵物資料
+                var pet = dataService.getPetInfo(order.getPetId());
+                if (pet != null) {
+                    order.setPetName(pet.getPetName());
+                }
+            } catch (Exception e) {
+                order.setMemName("未知飼主");
+                order.setPetName("未知寵物");
+            }
+        }
         
         // 加上本月收入計算邏輯
         int income = bookingList.stream()
@@ -54,20 +77,20 @@ public class SitterBookingController {
                 .sum();
 
         model.addAttribute("bookingList", bookingList);
-        model.addAttribute("sitter", member); 
+        model.addAttribute("sitter", dataService.getMemberInfo(memId));
         model.addAttribute("currentStatus", status);
         model.addAttribute("monthlyIncome", income);
 
         return "frontend/booking/sitter-bookings";
     }
 
-	/**
-	 * 【保母操作：接受/完成訂單】(AJAX)
-	 */
-	@PostMapping("/{orderId}/updateStatus")
-    public ResponseEntity<String> updateStatus(@PathVariable Integer orderId, 
-                                               @RequestParam Integer newStatus,
-                                               @RequestParam(required = false) String reason) {
+    /**
+     * 【保母操作：接受/完成訂單】(AJAX)
+     */
+    @PostMapping("/updateStatus/{orderId}")
+    public ResponseEntity<String> updateStatus(@PathVariable Integer orderId,
+            @RequestParam Integer newStatus,
+            @RequestParam(required = false) String reason) {
         try {
             if (newStatus == 3) {
                 // 呼叫包含理由的取消邏輯
