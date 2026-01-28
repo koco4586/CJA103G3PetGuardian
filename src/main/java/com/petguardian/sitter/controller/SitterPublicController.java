@@ -207,7 +207,7 @@ public class SitterPublicController {
             // 1. 查詢保姆基本資料 (若無則導回列表)
             SitterVO sitter = sitterService.getSitterById(sitterId);
             if (sitter == null) {
-                return "redirect:/public/sitter/search";
+                return "redirect:/booking/services";
             }
 
             // 2. 查詢完整資料 (新增部分)
@@ -284,7 +284,7 @@ public class SitterPublicController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/public/sitter/search";
+            return "redirect:/booking/services";
         }
     }
 }
