@@ -54,15 +54,19 @@
 				<div class="filter-tabs-wrapper">
 					<div class="filter-group">
 						<a th:href="@{/booking/memberOrders}" class="tab-btn"
-							th:classappend="${currentStatus == null} ? 'active'">全部</a> <a
-							th:href="@{/booking/memberOrders(status=0)}" class="tab-btn"
-							th:classappend="${currentStatus == 0} ? 'active'">即將到來</a> <a
-							th:href="@{/booking/memberOrders(status=1)}" class="tab-btn"
-							th:classappend="${currentStatus == 1} ? 'active'">進行中</a> <a
-							th:href="@{/booking/memberOrders(status=2)}" class="tab-btn"
-							th:classappend="${currentStatus == 2} ? 'active'">服務完成</a> <a
-							th:href="@{/booking/memberOrders(status=3)}" class="tab-btn"
-							th:classappend="${currentStatus == 3} ? 'active'">已取消</a>
+							th:classappend="${currentStatus == null} ? 'active' : ''">全部</a>
+
+						<a th:href="@{/booking/memberOrders(status=0)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 0} ? 'active' : ''">即將到來</a>
+
+						<a th:href="@{/booking/memberOrders(status=1)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 1} ? 'active' : ''">進行中</a>
+
+						<a th:href="@{/booking/memberOrders(status=2)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 2} ? 'active' : ''">服務完成</a>
+
+						<a th:href="@{/booking/memberOrders(status=3)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 3} ? 'active' : ''">已取消</a>
 					</div>
 
 					<a href="/booking/services" class="btn btn-primary btn-sm"
@@ -78,13 +82,17 @@
 							<div class="d-flex align-center gap-sm mb-xs">
 								<h4 th:text="${order.sitterName}">保母姓名</h4>
 								<span th:if="${order.orderStatus == 0}"
-									class="badge-pill status-upcoming">即將到來</span> <span
+									class="badge-pill status-upcoming">即將到來</span> 
+									<span
 									th:if="${order.orderStatus == 1}"
-									class="badge-pill status-ongoing">進行中</span> <span
+									class="badge-pill status-ongoing">進行中</span> 
+									<span
 									th:if="${order.orderStatus == 2}"
-									class="badge-pill status-completed">服務完成</span> <span
+									class="badge-pill status-completed">服務完成</span> 
+									<span
 									th:if="${order.orderStatus == 3}"
 									class="badge-pill status-cancelled">已取消</span>
+								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>	
 							</div>
 							<div style="color: #666; font-size: 0.9rem;">
 								<i class="far fa-clock"></i> <span
@@ -102,22 +110,24 @@
 						</div>
 
 						<div class="d-flex gap-sm">
+							<th:block th:with="isPast=${order.startTime.isBefore(#temporals.createNow())}">
 							<th:block
-								th:if="${order.orderStatus == 0 or order.orderStatus == 1}">
+								th:if="${(order.orderStatus == 0 or order.orderStatus == 1) and !isPast}">
 								<button class="btn btn-primary btn-sm">聯絡保母</button>
 								<button type="button" th:data-id="${order.bookingOrderId}"
+									th:data-start="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"
 									onclick="openCancelModal(this)" class="btn btn-danger">
 									取消預約</button>
 							</th:block>
 
-							<th:block th:if="${order.orderStatus == 2}">
+							<th:block th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
 								<button class="btn btn-outline btn-sm">查看照顧紀錄</button>
 								<button class="btn btn-outline btn-sm">評價保母</button>
 							</th:block>
 
 							<th:block th:if="${order.orderStatus == 3}">
-								<button class="btn btn-outline btn-sm"
-									style="border-radius: 2rem;" disabled>已關閉</button>
+								<span
+									style="color: #ccc; font-size: 0.9rem; margin-right: 1rem;">訂單已結束</span>
 							</th:block>
 						</div>
 					</div>
@@ -153,7 +163,10 @@
 	<script>
 	let currentCancelId = null;
 
-    function openCancelModal(orderId, startDateStr) {
+    function openCancelModal(btn) {
+    	const orderId = btn.getAttribute('data-id');
+        const startDateStr = btn.getAttribute('data-start');
+    	
         currentCancelId = orderId;
         const infoBox = document.getElementById('refundInfoBox');
         
