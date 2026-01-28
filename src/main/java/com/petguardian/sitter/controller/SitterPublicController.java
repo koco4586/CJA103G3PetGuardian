@@ -35,6 +35,8 @@ import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.area.service.AreaService;
 import com.petguardian.petsitter.service.PetSitterServicePetTypeService;
 import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
+import com.petguardian.pet.model.PetRepository;
+import com.petguardian.pet.model.PetVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -43,7 +45,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * 提供不需登入即可訪問的保姆搜尋和查看功能
  */
 @Controller
-@RequestMapping("/public/sitter")
+@RequestMapping("/frontend/public/sitter")
 public class SitterPublicController {
 
     @Autowired
@@ -66,6 +68,9 @@ public class SitterPublicController {
 
     @Autowired
     private PetSitterServicePetTypeService petSitterServicePetTypeService;
+
+    @Autowired
+    private PetRepository petRepository;
 
     /**
      * 顯示公開的保姆搜尋頁面
@@ -245,13 +250,25 @@ public class SitterPublicController {
 
             // 3. 處理會員登入資訊 (保留原有邏輯)
             Integer memId = authStrategyService.getCurrentUserId(request);
+            List<PetVO> myPets = new java.util.ArrayList<>();
+
             if (memId != null) {
                 SitterMemberVO memberVO = sitterService.getSitterMemberById(memId);
                 if (memberVO != null) {
                     SitterMemberDTO fakeMember = SitterMemberDTO.fromEntity(memberVO);
                     model.addAttribute("currentMember", fakeMember);
                 }
+
+                // [NEW] 載入會員寵物 (供預約視窗使用)
+                myPets = petRepository.findByMemId(memId);
             }
+
+            // --- 測試用代碼：手動加入一隻假寵物 (保持與 BookingFrontendController 一致邏輯) ---
+            PetVO dummyPet = new PetVO();
+            dummyPet.setPetId(999);
+            dummyPet.setPetName("測試小黑");
+            myPets.add(dummyPet);
+            // -------------------------------------------------------------
 
             // 4. 將所有資料加入 Model 傳遞給前端
             model.addAttribute("sitter", sitter);
@@ -260,6 +277,7 @@ public class SitterPublicController {
             model.addAttribute("petTypes", petTypes); // [NEW] 傳遞服務對象
             model.addAttribute("serviceNameMap", serviceNameMap); // [NEW] 傳遞服務名稱對照表
             model.addAttribute("servicePriceMap", servicePriceMap); // [NEW] 傳遞服務價格對照表
+            model.addAttribute("myPets", myPets); // [NEW] 傳遞寵物列表
             // model.addAttribute("reviews", reviews);
 
             return "frontend/sitter/sitter-detail";
