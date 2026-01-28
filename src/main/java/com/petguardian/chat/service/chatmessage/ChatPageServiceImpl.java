@@ -3,16 +3,15 @@ package com.petguardian.chat.service.chatmessage;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
-import com.petguardian.chat.model.ChatMemberDTO;
-import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatRoomDTO;
-import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.model.ChatRoomEntity;
-import com.petguardian.chat.model.ChatMemberEntity;
+import com.petguardian.chat.dto.ChatMemberDTO;
+import com.petguardian.chat.dto.ChatRoomDTO;
+import com.petguardian.chat.dto.ChatRoomMetadataDTO;
+import com.petguardian.chat.dto.MemberProfileDTO;
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataReader;
+import org.springframework.beans.factory.annotation.Qualifier;
 import com.petguardian.chat.service.mapper.ChatRoomMapper;
 
 /**
@@ -30,15 +29,12 @@ public class ChatPageServiceImpl implements ChatPageService {
     // DEPENDENCIES
     // ============================================================
 
-    private final ChatMemberRepository memberRepository;
-    private final ChatRoomRepository chatroomRepository;
+    private final ChatRoomMetadataReader metadataReader;
     private final ChatRoomMapper chatRoomMapper;
 
-    public ChatPageServiceImpl(ChatMemberRepository memberRepository,
-            ChatRoomRepository chatroomRepository,
+    public ChatPageServiceImpl(@Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
             ChatRoomMapper chatRoomMapper) {
-        this.memberRepository = memberRepository;
-        this.chatroomRepository = chatroomRepository;
+        this.metadataReader = metadataReader;
         this.chatRoomMapper = chatRoomMapper;
     }
 
@@ -48,9 +44,14 @@ public class ChatPageServiceImpl implements ChatPageService {
 
     @Override
     public ChatMemberDTO getMember(Integer memId) {
-        return memberRepository.findById(memId)
-                .map(ChatMemberDTO::fromEntity)
-                .orElse(null);
+        MemberProfileDTO profile = metadataReader.getMemberProfile(memId);
+        if (profile == null)
+            return null;
+
+        ChatMemberDTO dto = new ChatMemberDTO();
+        dto.setMemId(profile.getMemberId());
+        dto.setMemName(profile.getMemberName());
+        return dto;
     }
 
     /**
@@ -64,15 +65,24 @@ public class ChatPageServiceImpl implements ChatPageService {
      */
     @Override
     public List<ChatRoomDTO> getMyChatrooms(Integer currentUserId) {
-        // 1. Fetch all chatrooms for user
-        List<ChatRoomEntity> chatrooms = chatroomRepository.findByMemId1OrMemId2(currentUserId, currentUserId);
+        // 1. Fetch all chatrooms for user via metadata service (Cache First)
+        List<ChatRoomMetadataDTO> metadataList = metadataReader.getUserChatrooms(currentUserId);
+        if (metadataList == null || metadataList.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
 
-        // 2. Batch load partners (Avoid N+1)
-        Map<Integer, ChatMemberEntity> memberMap = batchLoadPartners(chatrooms, currentUserId);
+        // 2. Batch load partners from cache
+        java.util.Set<Integer> partnerIds = metadataList.stream()
+                .flatMap(m -> m.getMemberIds().stream())
+                .filter(id -> !id.equals(currentUserId))
+                .collect(Collectors.toSet());
+
+        Map<Integer, MemberProfileDTO> memberMap = metadataReader
+                .getMemberProfiles(new java.util.ArrayList<>(partnerIds));
 
         // 3. Map to DTOs and sort by latest activity
-        return chatrooms.stream()
-                .map(room -> chatRoomMapper.toDto(room, currentUserId, memberMap))
+        return metadataList.stream()
+                .map(meta -> chatRoomMapper.toDtoFromMeta(meta, currentUserId, memberMap))
                 .sorted((d1, d2) -> {
                     if (d1.getLastMessageTime() == null)
                         return 1;
@@ -87,12 +97,6 @@ public class ChatPageServiceImpl implements ChatPageService {
     // PRIVATE HELPERS
     // ============================================================
 
-    private Map<Integer, ChatMemberEntity> batchLoadPartners(List<ChatRoomEntity> chatrooms, Integer currentUserId) {
-        java.util.Set<Integer> partnerIds = chatrooms.stream()
-                .map(r -> r.getOtherMemberId(currentUserId))
-                .collect(Collectors.toSet());
-
-        return memberRepository.findAllById(partnerIds).stream()
-                .collect(Collectors.toMap(ChatMemberEntity::getMemId, Function.identity()));
-    }
+    // No longer needed: batchLoadPartners relies on direct repository access.
+    // Unified metadata service handles this now.
 }

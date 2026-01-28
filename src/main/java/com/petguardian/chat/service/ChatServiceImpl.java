@@ -3,7 +3,6 @@ package com.petguardian.chat.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,15 +14,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.petguardian.chat.model.ChatMemberRepository;
-import com.petguardian.chat.model.ChatMemberEntity;
-import com.petguardian.chat.model.ChatMessageDTO;
+import com.petguardian.chat.dto.ChatRoomMetadataDTO;
+import com.petguardian.chat.dto.MemberProfileDTO;
+import com.petguardian.chat.dto.ChatMessageDTO;
+import com.petguardian.chat.dto.ChatRoomDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
-import com.petguardian.chat.model.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
-import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.service.chatmessage.MessageStrategyService;
+import com.petguardian.chat.service.chatmessage.MessageReaderStrategyService;
+import com.petguardian.chat.service.chatmessage.MessageWriterStrategyService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import com.petguardian.chat.service.chatroom.ChatRoomCreationStrategy;
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataReader;
 import com.petguardian.chat.service.chatroom.ChatVerificationService;
 import com.petguardian.chat.service.mapper.ChatMessageMapper;
 import com.petguardian.chat.service.mapper.ChatRoomMapper;
@@ -52,28 +53,23 @@ import io.hypersistence.tsid.TSID;
 @Service
 public class ChatServiceImpl implements ChatService {
     // ============================================================
-    // CONSTANTS
-    // ============================================================
-    private static final int MAX_PREVIEW_LENGTH = 200;
-
-    // ============================================================
     // DEPENDENCIES
     // ============================================================
-    private final ChatRoomRepository chatroomRepository;
-    private final MessageStrategyService messageStrategyService;
+    private final ChatRoomMetadataReader metadataReader;
+    private final MessageReaderStrategyService messageReader;
+    private final MessageWriterStrategyService messageWriter;
     private final ChatRoomCreationStrategy chatRoomCreationStrategy;
     private final ChatMessageMapper messageMapper;
     private final ChatRoomMapper chatRoomMapper;
     private final ChatReadStatusService readStatusService;
     private final ChatVerificationService verificationService;
-    private final ChatMemberRepository memberRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final TSID.Factory tsidFactory;
 
     public ChatServiceImpl(
-            ChatRoomRepository chatroomRepository,
-            ChatMemberRepository memberRepository,
-            MessageStrategyService messageStrategyService,
+            @Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
+            @Qualifier("messageReaderProxy") MessageReaderStrategyService messageReader,
+            @Qualifier("messageWriterProxy") MessageWriterStrategyService messageWriter,
             ChatRoomCreationStrategy chatRoomCreationStrategy,
             ChatMessageMapper messageMapper,
             ChatRoomMapper chatRoomMapper,
@@ -81,9 +77,9 @@ public class ChatServiceImpl implements ChatService {
             ChatVerificationService verificationService,
             SimpMessagingTemplate messagingTemplate,
             TSID.Factory tsidFactory) {
-        this.chatroomRepository = chatroomRepository;
-        this.memberRepository = memberRepository;
-        this.messageStrategyService = messageStrategyService;
+        this.metadataReader = metadataReader;
+        this.messageReader = messageReader;
+        this.messageWriter = messageWriter;
         this.chatRoomCreationStrategy = chatRoomCreationStrategy;
         this.messageMapper = messageMapper;
         this.chatRoomMapper = chatRoomMapper;
@@ -108,11 +104,23 @@ public class ChatServiceImpl implements ChatService {
         Integer senderId = dto.getSenderId();
         Integer receiverId = dto.getReceiverId();
 
+        // 1. Fail Fast Validation (Strategy: Prevent Poison Messages)
+        if (senderId == null) {
+            throw new IllegalArgumentException("Sender ID cannot be null");
+        }
+        if (dto.getContent() == null || dto.getContent().length() > 2000) {
+            throw new IllegalArgumentException("Message content must be between 1 and 2000 characters");
+        }
+        if (dto.getChatroomId() == null && receiverId == null) {
+            throw new IllegalArgumentException("Target (ChatroomId or ReceiverId) must be provided");
+        }
+
         // Ensure valid chatroom exists before saving message
         ChatRoomEntity chatroom = resolveChatroom(dto.getChatroomId(), senderId, receiverId);
 
         // Generate distributed-safe ID (TSID)
-        String messageId = tsidFactory.generate().toString();
+        TSID tsid = tsidFactory.generate();
+        String messageId = tsid.toString();
 
         // Build MessageCreationContext
         MessageCreationContext context = new MessageCreationContext(
@@ -123,10 +131,8 @@ public class ChatServiceImpl implements ChatService {
                 dto.getReplyToId());
 
         // Delegate persistence to strategy (supports Sync MySQL or Async Redis)
-        ChatMessageEntity saved = messageStrategyService.save(context);
-
-        // Update chatroom metadata (last message, sender's read status)
-        updateChatroomAfterMessage(chatroom, senderId, dto.getContent());
+        // Note: Metadata sync is now handled entirely by the strategy implementation.
+        ChatMessageEntity saved = messageWriter.save(context);
 
         // Build response DTO
         return buildResponseDto(saved, dto.getSenderName(), receiverId);
@@ -140,7 +146,7 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public List<ChatMessageDTO> getChatHistory(Integer chatroomId, Integer currentUserId, int page, int size) {
         // Access Control via dedicated service
-        ChatRoomEntity chatroom = verificationService.verifyMembership(chatroomId, currentUserId);
+        ChatRoomMetadataDTO chatroom = verificationService.verifyMembership(chatroomId, currentUserId);
 
         // Fetch paginated messages
         Pageable pageable = PageRequest.of(page, size);
@@ -152,10 +158,13 @@ public class ChatServiceImpl implements ChatService {
 
         // Prepare Batch Data
         Map<String, ChatMessageEntity> replyMap = resolveReplyMap(messages);
-        Map<Integer, ChatMemberEntity> memberMap = resolveMemberMap(messages, replyMap);
+        Map<Integer, MemberProfileDTO> memberMap = resolveMemberMap(messages, replyMap);
 
         // Delegate DTO conversion to mapper
-        Integer partnerId = chatroom.getOtherMemberId(currentUserId);
+        Integer partnerId = chatroom.getMemberIds().stream()
+                .filter(id -> !id.equals(currentUserId))
+                .findFirst()
+                .orElse(null);
         List<ChatMessageDTO> dtos = messageMapper.toDtoList(messages, currentUserId, partnerId, memberMap, replyMap);
 
         // Mark last sent message as read if partner has read (only for first page)
@@ -200,9 +209,7 @@ public class ChatServiceImpl implements ChatService {
     public ChatRoomDTO findOrCreateChatroom(Integer currentUserId, Integer partnerId, Integer chatroomType) {
         ChatRoomEntity entity = chatRoomCreationStrategy.findOrCreate(currentUserId, partnerId, chatroomType);
 
-        String partnerName = memberRepository.findById(partnerId)
-                .map(ChatMemberEntity::getMemName)
-                .orElse("Unknown User");
+        String partnerName = metadataReader.getMemberProfile(partnerId).getMemberName();
 
         return chatRoomMapper.toDto(entity, currentUserId, partnerName);
     }
@@ -213,40 +220,31 @@ public class ChatServiceImpl implements ChatService {
 
     private ChatRoomEntity resolveChatroom(Integer chatroomId, Integer senderId, Integer receiverId) {
         if (chatroomId != null) {
-            ChatRoomEntity chatroom = chatroomRepository.findById(chatroomId).orElse(null);
-            if (chatroom != null) {
-                return chatroom;
+            ChatRoomMetadataDTO meta = metadataReader.getRoomMetadata(chatroomId);
+            if (meta != null) {
+                ChatRoomEntity entity = new ChatRoomEntity();
+                entity.setChatroomId(meta.getChatroomId());
+                entity.setMemId1(meta.getMemberIds().get(0));
+                entity.setMemId2(meta.getMemberIds().get(1));
+                return entity;
             }
         }
         // Fallback: Legacy/New Chat Flow - Default to Type 0
         return chatRoomCreationStrategy.findOrCreate(senderId, receiverId, 0);
     }
 
-    private void updateChatroomAfterMessage(ChatRoomEntity chatroom, Integer senderId, String content) {
-        chatroom.setLastMessageAt(LocalDateTime.now());
-        String preview = content.length() > MAX_PREVIEW_LENGTH ? content.substring(0, MAX_PREVIEW_LENGTH) : content;
-        chatroom.setLastMessagePreview(preview);
-
-        // Update sender's read status
-        chatroom.updateLastReadAt(senderId);
-
-        chatroomRepository.save(chatroom);
-    }
-
     private ChatMessageDTO buildResponseDto(ChatMessageEntity saved, String senderName, Integer receiverId) {
         // Resolve Sender Entity
-        ChatMemberEntity sender = memberRepository.findById(saved.getMemberId()).orElse(null);
+        MemberProfileDTO sender = metadataReader.getMemberProfile(saved.getMemberId());
 
         // Resolve Reply Context
         String replyContent = null;
         String replySenderName = null;
         if (saved.getReplyToMessageId() != null) {
-            ChatMessageEntity replyMsg = messageStrategyService.findById(saved.getReplyToMessageId()).orElse(null);
+            ChatMessageEntity replyMsg = messageReader.findById(saved.getReplyToMessageId()).orElse(null);
             if (replyMsg != null) {
                 replyContent = replyMsg.getMessage();
-                replySenderName = memberRepository.findById(replyMsg.getMemberId())
-                        .map(ChatMemberEntity::getMemName)
-                        .orElse(null);
+                replySenderName = metadataReader.getMemberProfile(replyMsg.getMemberId()).getMemberName();
             }
         }
 
@@ -254,20 +252,20 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private List<ChatMessageEntity> fetchMessagesAsc(Integer chatroomId, Pageable pageable) {
-        List<ChatMessageEntity> desc = messageStrategyService.findLatestMessages(chatroomId, pageable);
+        List<ChatMessageEntity> desc = messageReader.findLatestMessages(chatroomId, pageable);
         List<ChatMessageEntity> asc = new ArrayList<>(desc);
         Collections.reverse(asc);
         return asc;
     }
 
-    private void markLatestSelfMessageAsRead(List<ChatMessageDTO> dtos, ChatRoomEntity chatroom,
+    private void markLatestSelfMessageAsRead(List<ChatMessageDTO> dtos, ChatRoomMetadataDTO chatroom,
             Integer currentUserId,
             int page) {
         if (page != 0) {
             return;
         }
 
-        LocalDateTime partnerLastReadAt = currentUserId.equals(chatroom.getMemId1())
+        LocalDateTime partnerLastReadAt = currentUserId.equals(chatroom.getMemberIds().get(0))
                 ? chatroom.getMem2LastReadAt()
                 : chatroom.getMem1LastReadAt();
 
@@ -290,9 +288,9 @@ public class ChatServiceImpl implements ChatService {
     // DATA AGGREGATION HELPERS
     // ============================================================
 
-    private Map<Integer, ChatMemberEntity> resolveMemberMap(List<ChatMessageEntity> messages,
+    private Map<Integer, MemberProfileDTO> resolveMemberMap(List<ChatMessageEntity> messages,
             Map<String, ChatMessageEntity> replyMap) {
-        Set<Integer> memberIds = new java.util.HashSet<>();
+        java.util.Set<Integer> memberIds = new java.util.HashSet<>();
 
         // 1. Collect IDs from current batch
         messages.forEach(msg -> memberIds.add(msg.getMemberId()));
@@ -304,8 +302,7 @@ public class ChatServiceImpl implements ChatService {
             return Collections.emptyMap();
         }
 
-        return memberRepository.findAllById(memberIds).stream()
-                .collect(Collectors.toMap(ChatMemberEntity::getMemId, Function.identity()));
+        return metadataReader.getMemberProfiles(new ArrayList<>(memberIds));
     }
 
     private Map<String, ChatMessageEntity> resolveReplyMap(List<ChatMessageEntity> messages) {
@@ -318,7 +315,24 @@ public class ChatServiceImpl implements ChatService {
             return Collections.emptyMap();
         }
 
-        return messageStrategyService.findAllById(replyIds).stream()
+        // Optimization: Try to find reply messages in the current batch first
+        Map<String, ChatMessageEntity> foundInBatch = messages.stream()
+                .filter(msg -> replyIds.contains(msg.getMessageId()))
                 .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity()));
+
+        Set<String> missingIds = replyIds.stream()
+                .filter(id -> !foundInBatch.containsKey(id))
+                .collect(Collectors.toSet());
+
+        if (missingIds.isEmpty()) {
+            return foundInBatch;
+        }
+
+        // Only query the strategy (which might hit MySQL) for missing IDs
+        Map<String, ChatMessageEntity> results = new java.util.HashMap<>(foundInBatch);
+        results.putAll(messageReader.findAllById(missingIds).stream()
+                .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity())));
+
+        return results;
     }
 }
