@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>預約管理 | PetGuardian</title>
+<link rel="stylesheet" href="/css/frontend/style.css">
+<link rel="stylesheet" href="/css/frontend/components.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="/css/frontend/sitter/dashboard.css">
+<style>
+/* 針對預約管理額外增加的樣式 */
+.status-badge {
+	padding: 4px 12px;
+	border-radius: 20px;
+	font-size: 0.85rem;
+	font-weight: 500;
+}
+
+.status-pending {
+	background: #fff3e0;
+	color: #ef6c00;
+} /* 待確認 */
+.status-confirmed {
+	background: #e8f5e9;
+	color: #2e7d32;
+} /* 已支付/進行中 */
+.status-completed {
+	background: #e3f2fd;
+	color: #1565c0;
+} /* 服務完成 */
+.booking-card {
+	background: #fff;
+	border-radius: 12px;
+	padding: 1.5rem;
+	margin-bottom: 1rem;
+	border: 1px solid #eee;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.pet-info img {
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.action-group {
+	display: flex;
+	gap: 0.5rem;
+}
+</style>
+</head>
+<body>
+	<header id="main-header"></header>
+
+	<div class="container dashboard-container">
+		<div class="sidebar">
+			<div class="text-center mb-2">
+				<div class="avatar-wrapper">
+					<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter"
+						class="avatar">
+				</div>
+				<h4 th:text="${sitter.memName}">保母姓名</h4>
+				<p style="color: #999; font-size: 0.9rem;">保姆專區</p>
+			</div>
+			<nav>
+				<a href="/sitter/dashboard" class="menu-item"> <i
+					class="fas fa-home"></i> 保姆主頁
+				</a> <a href="/sitter/profile/settings" class="menu-item"> <i
+					class="fas fa-cog"></i> 個人設定
+				</a> <a href="/sitter/booking/manage" class="menu-item active"> <i
+					class="fas fa-calendar-check"></i> 預約管理
+				</a>
+				<div class="menu-item"
+					style="color: var(--danger); cursor: pointer;"
+					onclick="alert('已登出'); window.location.href='/member/login'">
+					<i class="fas fa-sign-out-alt"></i> 登出
+				</div>
+			</nav>
+		</div>
+
+		<div class="main-content">
+			<div
+				style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+				<div>
+					<h2 class="mb-1">預約管理</h2>
+					<p style="color: #666;">在這裡處理您的服務訂單與客戶需求。</p>
+				</div>
+				<div class="text-right">
+					<span style="color: #999; font-size: 0.9rem;">本月預估收入</span>
+					<h3 style="color: #2e7d32; font-weight: bold;">
+						$ <span th:text="${monthlyIncome}">0</span>
+					</h3>
+				</div>
+			</div>
+
+			<div
+				style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+				<a th:href="@{/sitter/booking/manage}" class="tab-item"
+        th:classappend="${currentStatus == null} ? 'active' : ''">全部</a> 
+    
+    <a th:href="@{/sitter/booking/manage(status=0)}" class="tab-item"
+        th:classappend="${currentStatus == 0} ? 'active' : ''">待處理</a>
+    
+    <a th:href="@{/sitter/booking/manage(status=1)}" class="tab-item"
+        th:classappend="${currentStatus == 1} ? 'active' : ''">進行中</a>
+    
+    <a th:href="@{/sitter/booking/manage(status=2)}" class="tab-item"
+        th:classappend="${currentStatus == 2} ? 'active' : ''">已完成</a>
+</div>
+
+			<div class="booking-list">
+				<div th:each="order : ${bookingList}" class="booking-card">
+					<div style="display: flex; gap: 1.5rem; align-items: center;">
+						<div class="pet-info">
+							<img src="/api/placeholder/50/50" alt="Pet">
+						</div>
+						<div>
+							<div
+								style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+								<h4 style="margin: 0;" th:text="${order.memName}">飼主姓名</h4>
+								<span th:if="${order.orderStatus == 0}"
+									class="status-badge status-pending">等待確認</span> <span
+									th:if="${order.orderStatus == 1}"
+									class="status-badge status-confirmed">已支付</span> <span
+									th:if="${order.orderStatus == 2}"
+									class="status-badge status-completed">服務完成</span>
+							</div>
+							<p style="color: #666; font-size: 0.9rem; margin-bottom: 3px;">
+								<i class="fas fa-paw"></i> 寵物：<span th:text="${order.petName}">毛孩名</span>
+							</p>
+							<p style="color: #666; font-size: 0.9rem;">
+								<i class="far fa-clock"></i> 時間：<span
+									th:text="${#temporals.format(order.startTime, 'yyyy/MM/dd HH:mm')}"></span>
+							</p>
+						</div>
+					</div>
+
+					<div style="text-align: right;">
+						<div
+							style="font-weight: bold; color: #1976d2; font-size: 1.1rem; margin-bottom: 10px;"
+							th:text="'$ ' + ${order.reservationFee}"></div>
+						<div class="action-group">
+							<th:block th:if="${order.orderStatus == 0}">
+								<button class="btn btn-primary btn-sm"
+									th:onclick="'acceptOrder(' + ${order.bookingOrderId} + ')'">接受預約</button>
+								<button class="btn btn-outline-danger btn-sm"
+									th:onclick="'rejectOrder(' + ${order.bookingOrderId} + ')'">拒絕</button>
+							</th:block>
+
+							<th:block th:if="${order.orderStatus == 1}">
+								<button class="btn btn-outline-primary btn-sm">聯絡飼主</button>
+								<button class="btn btn-primary btn-sm"
+									th:onclick="'completeOrder(' + ${order.bookingOrderId} + ')'">完成服務</button>
+							</th:block>
+
+							<th:block th:if="${order.orderStatus >= 2}">
+								<button class="btn btn-outline-secondary btn-sm">查看紀錄</button>
+							</th:block>
+						</div>
+					</div>
+				</div>
+
+				<div th:if="${#lists.isEmpty(bookingList)}"
+					style="text-align: center; padding: 5rem 0; color: #999;">
+					<i class="fas fa-calendar-minus"
+						style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+					<p>目前沒有符合條件的預約訂單</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="rejectModal"
+		style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center;">
+		<div
+			style="background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px;">
+			<h3>拒絕預約</h3>
+			<p style="color: #666; margin-bottom: 1rem;">請填寫拒絕原因（選填）：</p>
+			<textarea id="rejectReason" rows="4"
+				style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 1rem;"
+				placeholder="例如：當天臨時有事..."></textarea>
+			<div style="display: flex; gap: 10px; justify-content: flex-end;">
+				<button class="btn btn-outline-secondary"
+					onclick="closeRejectModal()">取消</button>
+				<button class="btn btn-danger" id="confirmRejectBtn">提交並拒絕</button>
+			</div>
+		</div>
+	</div>
+
+	<footer id="main-footer"></footer>
+
+	<script src="/js/frontend/main.js"></script>
+	<script>
+		// 對接後端的 API 函式
+		async
+		function updateStatus(orderId, newStatus) {
+			const statusText = {
+				1 : '接受預約',
+				2 : '完成服務',
+				3 : '拒絕預約'
+			};
+			if (!confirm(`確定要「${statusText[newStatus]}」嗎？`))
+				return;
+
+			// 使用 jQuery 的 post 方法，簡單好用
+			$.post(`/sitter/${orderId}/updateStatus`, {
+				newStatus : newStatus
+			}).done(function(res) {
+				alert(res);
+				location.reload(); // 成功後重新整理頁面
+			}).fail(function(err) {
+				alert("操作失敗：" + err.responseText);
+			});
+		}
+		
+		let currentRejectOrderId = null;
+
+		// 開啟視窗
+		function rejectOrder(orderId) {
+		    currentRejectOrderId = orderId;
+		    document.getElementById('rejectReason').value = ''; // 清空內容
+		    document.getElementById('rejectModal').style.display = 'flex';
+		}
+
+		// 關閉視窗
+		function closeRejectModal() {
+		    document.getElementById('rejectModal').style.display = 'none';
+		}
+
+		// 提交拒絕
+		document.getElementById('confirmRejectBtn').onclick = function() {
+		    const reason = document.getElementById('rejectReason').value;
+		    
+		    $.post(`/sitter/${currentRejectOrderId}/updateStatus`, { 
+		        newStatus: 3, // 3 代表已取消/拒絕
+		        reason: reason 
+		    })
+		    .done(function(res) {
+		        alert("已拒絕該筆預約");
+		        location.reload();
+		    })
+		    .fail(function(err) {
+		        alert("操作失敗：" + err.responseText);
+		    });
+		};
+
+		function acceptOrder(id) { 
+		    updateStatus(id, 1); 
+		}
+
+		function completeOrder(id) { 
+		    updateStatus(id, 2); 
+		}
+
+		// 拒絕預約：維持開啟 Modal 的邏輯
+		function rejectOrder(orderId) {
+		    currentRejectOrderId = orderId;
+		    document.getElementById('rejectReason').value = ''; 
+		    document.getElementById('rejectModal').style.display = 'flex';
+		}
+		
+	</script>
+</body>
+</html>

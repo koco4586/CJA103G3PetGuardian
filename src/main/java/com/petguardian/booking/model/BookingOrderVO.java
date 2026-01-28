@@ -10,12 +10,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 @Entity
 @Table(name = "booking_order")
 @Data
 public class BookingOrderVO {
+	
+	@Transient
+	private String memName;
+	@Transient
+	private String petName;
 	
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

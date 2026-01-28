@@ -119,11 +119,8 @@
             <!-- 動態迴圈渲染保母 -->
             <div class="card-premium" th:each="sitter : ${sitters}">
                 <div class="img-container">
-                    <a th:href="@{'/public/sitter/detail/' + ${sitter.sitterId}}"
-                        style="display:block; height:100%; width:100%; cursor: pointer;">
-                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
-                            alt="保姆照片" class="sitter-img">
-                    </a>
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
+                        alt="保姆照片" class="sitter-img">
                     <div class="price-badge">
                         $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
                     </div>
@@ -204,7 +201,7 @@
             </form>
         </div>
     </div>
-
+	
     <script th:src="@{/js/frontend/main.js}"></script>
 
     <script>
