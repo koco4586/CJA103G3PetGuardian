@@ -8,16 +8,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.petguardian.booking.model.BookingOrderVO;
+import com.petguardian.booking.service.BookingService;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.petsitter.service.PetSitterService;
 import com.petguardian.service.model.ServiceAreaVO;
 import com.petguardian.service.service.ServiceAreaService;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterService;
-import com.petguardian.booking.service.BookingService;
-import com.petguardian.booking.model.BookingOrderVO;
-
-import jakarta.servlet.http.HttpSession;
 
 /**
  * 保姆主頁面控制器

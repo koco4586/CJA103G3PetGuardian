@@ -129,14 +129,9 @@ public class BookingController {
     public String listMemberOrders(@RequestParam(required = false) Integer status, HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-<<<<<<< HEAD
             return "redirect:/front/loginpage";
-=======
-            return "redirect:/loginpage";
->>>>>>> refs/remotes/origin/master
         }
         
-<<<<<<< HEAD
      // 1. 先根據狀態抓出原始資料 (只抓一次)
         List<BookingOrderVO> bookingList;
         if (status != null) {
@@ -147,40 +142,18 @@ public class BookingController {
         }
         
         // 2. 統一處理保母姓名填入
-=======
-        List<BookingOrderVO> bookingList = (status != null) 
-            ? bookingService.findByMemberAndStatus(memId, status)
-            : bookingService.getOrdersByMemberId(memId);
-        
-     // 2. 統一為這些訂單填入保母姓名 (這段邏輯移到這，確保過濾後的訂單都有姓名)
->>>>>>> refs/remotes/origin/master
         for (BookingOrderVO order : bookingList) {
             try {
-<<<<<<< HEAD
                 PetSitterServiceVO service = dataService.getSitterServiceInfo(order.getSitterId(), order.getServiceItemId());
                 if (service != null && service.getSitter() != null) {
                     order.setSitterName(service.getSitter().getSitterName());
                 } else {
                     order.setSitterName("未知保母");
                 }
-=======
-                PetSitterServiceVO service = dataService.getSitterServiceInfo(order.getSitterId(),
-                        order.getServiceItemId());
-                order.setSitterName(service.getSitter().getSitterName());
->>>>>>> refs/remotes/origin/master
             } catch (Exception e) {
                 order.setSitterName("未知保母");
             }
         }
-<<<<<<< HEAD
-=======
-
-        if (status != null) {
-            bookingList = bookingService.findByMemberAndStatus(memId, status);
-        } else {
-            bookingList = bookingService.getActiveOrdersByMemberId(memId);
-        }
->>>>>>> refs/remotes/origin/master
         
         model.addAttribute("bookingList", bookingList);
         model.addAttribute("currentStatus", status);

@@ -11,7 +11,7 @@ public class MemberManagementRedirectController {
     @GetMapping("/managementpage")
     public String management(){
 
-        return "redirect:/html/frontend/member/management/member_management.html";
+        return "redirect:/html/frontend/member/management/member_management_ai.html";//記得要改回來
 
 }
 

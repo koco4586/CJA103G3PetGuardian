@@ -22,11 +22,9 @@ public interface BookingService {
 
 	// 會員端
 	List<BookingOrderVO> getOrdersByMemberId(Integer memId);
-
+	
 	List<BookingOrderVO> getActiveOrdersByMemberId(Integer memId);
 	
-	List<BookingOrderVO> findByMemberAndStatus(Integer memId, Integer status);
-
 	List<BookingOrderVO> findByMemberAndStatus(Integer memId, Integer status);
 
 	BookingOrderVO getOrderById(Integer orderId);
@@ -39,25 +37,12 @@ public interface BookingService {
 	List<BookingOrderVO> getOrdersBySitterId(Integer sitterId);
 	
 	List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status);
-
-<<<<<<< HEAD
-	void updateOrderStatusBySitter(Integer orderId, Integer newStatus);
-
-	// 管理員端
-=======
-	// 保母端
-	List<BookingOrderVO> getOrdersBySitterId(Integer sitterId);
-
-	List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status);
-
-	/** 查詢某保母特定狀態的訂單 (例如待確認) */
+	
 	List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status);
 
 	void updateOrderStatusBySitter(Integer orderId, Integer newStatus);
 
 	// 管理員端
-	void approveRefund(Integer orderId);
->>>>>>> refs/remotes/origin/master
 
 	void completePayout(Integer orderId);
 	
