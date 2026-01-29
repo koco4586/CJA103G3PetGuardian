@@ -1,6 +1,5 @@
 package com.petguardian.chat.service.chatroom;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 
@@ -10,15 +9,15 @@ import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 @Service
 public class ChatVerificationServiceImpl implements ChatVerificationService {
 
-    private final ChatRoomMetadataReader metadataReader;
+    private final ChatRoomMetadataService metadataService;
 
-    public ChatVerificationServiceImpl(@Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader) {
-        this.metadataReader = metadataReader;
+    public ChatVerificationServiceImpl(ChatRoomMetadataService metadataService) {
+        this.metadataService = metadataService;
     }
 
     @Override
     public ChatRoomMetadataDTO verifyMembership(Integer chatroomId, Integer userId) {
-        ChatRoomMetadataDTO meta = metadataReader.getRoomMetadata(chatroomId);
+        ChatRoomMetadataDTO meta = metadataService.getRoomMetadata(chatroomId);
         if (meta == null) {
             throw new IllegalArgumentException("Chatroom not found: " + chatroomId);
         }
@@ -32,7 +31,7 @@ public class ChatVerificationServiceImpl implements ChatVerificationService {
 
     @Override
     public boolean isMember(Integer chatroomId, Integer userId) {
-        ChatRoomMetadataDTO meta = metadataReader.getRoomMetadata(chatroomId);
+        ChatRoomMetadataDTO meta = metadataService.getRoomMetadata(chatroomId);
         if (meta == null) {
             return false;
         }

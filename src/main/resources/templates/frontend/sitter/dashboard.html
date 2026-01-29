@@ -100,7 +100,7 @@
                     <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務行事曆 (月檢視)</h3>
                     <div style="display: flex; gap: 1rem; font-size: 0.85rem;">
                         <span><span
-                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border:1px solid #ccc; margin-right: 4px;"></span>未排班</span>
+                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border:1px solid #ccc; margin-right: 4px;"></span>休息</span>
                         <span><span
                                 style="display: inline-block; width: 12px; height: 12px; background: #4caf50; margin-right: 4px;"></span>可預約</span>
                         <span><span
@@ -223,6 +223,10 @@
                     background-color: #4caf50;
                 }
 
+                .small-hour-dot.reserved {
+                    background-color: #ff9800;
+                }
+
                 /* Modal Styles */
                 .hour-cell {
                     border: 1px solid #ddd;
@@ -245,6 +249,13 @@
 
                 .hour-cell:hover {
                     filter: brightness(0.95);
+                }
+
+                .hour-cell.reserved {
+                    background-color: #ffe0b2;
+                    color: #e65100;
+                    border-color: #ffb74d;
+                    font-weight: bold;
                 }
             </style>
 
@@ -454,6 +465,8 @@
                     // '1' = 已預約 → 灰色 (不加 active class)
                     if (status.charAt(h) === '0') {
                         dot.classList.add('active');  // 綠色
+                    } else if (status.charAt(h) === '2') {
+                        dot.classList.add('reserved'); // 橘色 (Status 2 = Booked)
                     }
                     summary.appendChild(dot);
                 }
@@ -498,23 +511,52 @@
                 cell.className = 'hour-cell';
                 cell.textContent = `${String(i).padStart(2, '0')}:00`;
 
-                // 0=Available, 1=Busy
-                if (modalCurrentStatus[i] === '0') {
+                // 2=Booked/Buffer (Orange) -> LINK TO BOOKING PAGE
+                if (modalCurrentStatus[i] === '2') {
+                    cell.classList.add('reserved');
+                    cell.title = "點擊前往預約管理 (查看/接受/取消)";
+                    cell.style.cursor = "pointer";
+
+                    cell.onclick = () => {
+                        // 跳轉到預約管理頁面 (帶上日期參數方便篩選，需後續實作 frontend 支援參數)
+                        // 目前先單純跳轉
+                        window.location.href = '/sitter/bookings';
+                    };
+                }
+                // 0=Available (Green)
+                else if (modalCurrentStatus[i] === '0') {
                     cell.classList.add('available');
                     cell.title = "可預約";
-                } else {
-                    cell.classList.add('busy');
-                    cell.title = "休息/已預約";
-                }
 
-                cell.onclick = () => {
-                    // Toggle '0' <-> '1'
-                    modalCurrentStatus[i] = (modalCurrentStatus[i] === '0') ? '1' : '0';
-                    renderModalGrid(); // Re-render to update style
-                };
+                    cell.onclick = () => {
+                        modalCurrentStatus[i] = '1'; // 0->1
+                        renderModalGrid();
+                    };
+                }
+                // 1=Resting (Gray)
+                else {
+                    cell.classList.add('busy');
+                    cell.title = "休息中";
+
+                    cell.onclick = () => {
+                        modalCurrentStatus[i] = '0'; // 1->0
+                        renderModalGrid();
+                    };
+                }
 
                 container.appendChild(cell);
             }
+
+        }
+
+        function toggleStatus(i) {
+            // 僅允許 0(空閒) 與 1(休息) 互換，不處理 2
+            if (modalCurrentStatus[i] === '0') {
+                modalCurrentStatus[i] = '1';
+            } else if (modalCurrentStatus[i] === '1') {
+                modalCurrentStatus[i] = '0';
+            }
+            renderModalGrid();
         }
 
         // 儲存設定

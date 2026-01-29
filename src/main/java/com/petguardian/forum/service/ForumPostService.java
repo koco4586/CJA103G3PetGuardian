@@ -2,7 +2,6 @@ package com.petguardian.forum.service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,9 +47,37 @@ public class ForumPostService {
 		repo.save(forumPostVO);
 	}
 	
+	@Transactional
+	public void updatePostWithPics(ForumPostVO forumPostVO, MultipartFile[] postPics) throws IOException {
+		repo.save(forumPostVO);
+		Integer postId = forumPostVO.getPostId();
+	
+		if (postPics != null && postPics.length > 0 && !postPics[0].isEmpty()) {
+			picRepo.deletePicsByPostId(postId); // 先刪除該貼文所有照片，再重新新增
+			for (MultipartFile postPic : postPics) {
+				// 每一張圖都要 new 一個新的物件
+	            ForumPostPicsVO forumPostPicsVO = new ForumPostPicsVO();
+	            forumPostPicsVO.setForumPost(forumPostVO); // 重點：設定關聯 (外鍵) = 對到哪篇文章
+	            byte[] pic = postPic.getBytes();
+	            forumPostPicsVO.setPic(pic);
+	            // 儲存到 (forumpostpicture) 表格
+	            picRepo.save(forumPostPicsVO);
+			}
+		}
+	}
+	
+	@Transactional
+	public void deletePost(Integer postId) {
+		ForumPostVO forumPostVO = repo.findById(postId)
+				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+		forumPostVO.setPostStatus(2);
+		repo.save(forumPostVO);
+	}
+	
 	public ForumPostVO getOnePost(Integer postId) {
-		Optional<ForumPostVO> optional = repo.findById(postId);
-		return optional.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+		ForumPostVO forumPostVO = repo.findById(postId)
+				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+		return forumPostVO;
 	}
 	
 	public List<ForumPostVO> getAllActiveByForumId(Integer forumId){

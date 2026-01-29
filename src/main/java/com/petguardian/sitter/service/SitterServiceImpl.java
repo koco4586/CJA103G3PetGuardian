@@ -17,6 +17,11 @@ import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.booking.model.BookingScheduleVO;
 import com.petguardian.booking.model.BookingScheduleRepository;
+// [NEW] Repositories for search
+import com.petguardian.petsitter.model.PetSitterServiceRepository;
+import com.petguardian.petsitter.model.PetSitterServiceVO;
+import com.petguardian.petsitter.model.PetSitterServicePetTypeRepository;
+import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
 
@@ -49,6 +54,13 @@ public class SitterServiceImpl implements SitterService {
 
     @Autowired
     private SitterMemberRepository sitterMemberRepository;
+
+    // [NEW] 注入服務與寵物類型 Repository
+    @Autowired
+    private PetSitterServiceRepository petSitterServiceRepository;
+
+    @Autowired
+    private PetSitterServicePetTypeRepository petSitterServicePetTypeRepository;
 
     /**
      * 建立保姆資料
@@ -400,8 +412,40 @@ public class SitterServiceImpl implements SitterService {
             dto.setAverageRating(0.0);
         }
 
-        // TODO: 需要注入其他 Repository 來查詢服務項目、寵物類型、價格
-        // 這部分需要在建構子注入 PetSitterServiceRepository 等
+        // [Modified] 查詢服務項目與價格
+        List<String> serviceNames = new ArrayList<>();
+        Integer minPrice = Integer.MAX_VALUE;
+        Integer maxPrice = 0;
+
+        List<PetSitterServiceVO> services = petSitterServiceRepository.findBySitter_SitterId(sitter.getSitterId());
+        for (PetSitterServiceVO svc : services) {
+            // 轉換 ID 為名稱 (Hardcoded Mapping, V18 Schema 相容)
+            String name = getServiceNameById(svc.getServiceItemId());
+            if (name != null) {
+                serviceNames.add(name);
+            }
+            if (svc.getDefaultPrice() != null) {
+                if (svc.getDefaultPrice() < minPrice)
+                    minPrice = svc.getDefaultPrice();
+                if (svc.getDefaultPrice() > maxPrice)
+                    maxPrice = svc.getDefaultPrice();
+            }
+        }
+
+        dto.setServiceNames(serviceNames);
+        dto.setMinPrice(minPrice == Integer.MAX_VALUE ? 0 : minPrice);
+        dto.setMaxPrice(maxPrice);
+
+        // [Modified] 查詢寵物類型
+        List<String> petTypes = new ArrayList<>();
+        List<PetSitterServicePetTypeVO> types = petSitterServicePetTypeRepository.findBySitterId(sitter.getSitterId());
+        for (PetSitterServicePetTypeVO type : types) {
+            String typeName = getPetTypeNameById(type.getTypeId());
+            if (typeName != null && !petTypes.contains(typeName)) {
+                petTypes.add(typeName);
+            }
+        }
+        dto.setPetTypes(petTypes);
 
         // 填入服務地區
         if (sitter.getServiceAreas() != null && !sitter.getServiceAreas().isEmpty()) {
@@ -415,12 +459,6 @@ public class SitterServiceImpl implements SitterService {
         } else {
             dto.setServiceAreas(new ArrayList<>());
         }
-
-        // 暫時設定為空列表
-        dto.setServiceNames(new ArrayList<>());
-        dto.setPetTypes(new ArrayList<>());
-        dto.setMinPrice(null);
-        dto.setMaxPrice(null);
 
         return dto;
     }
@@ -467,15 +505,66 @@ public class SitterServiceImpl implements SitterService {
         }
     }
 
-    // 這兩個方法是暫時的佔位符，實際需要查詢資料庫
+    // [New] Hardcoded Helper Methods (To Replace Missing Tables)
+
     private Integer getServiceIdByName(String serviceName) {
-        // TODO: 實作從 service_item 表查詢
-        return null;
+        if (serviceName == null)
+            return null;
+        switch (serviceName) {
+            case "到府照顧":
+                return 1;
+            case "到府遛狗":
+                return 2;
+            case "寵物寄宿":
+                return 3;
+            case "寵物安親":
+                return 4;
+            default:
+                return null;
+        }
+    }
+
+    private String getServiceNameById(Integer id) {
+        if (id == null)
+            return null;
+        switch (id) {
+            case 1:
+                return "到府照顧";
+            case 2:
+                return "到府遛狗";
+            case 3:
+                return "寵物寄宿";
+            case 4:
+                return "寵物安親";
+            default:
+                return null;
+        }
     }
 
     private Integer getPetTypeIdByName(String petTypeName) {
-        // TODO: 實作從 pet_type 表查詢
-        return null;
+        if (petTypeName == null)
+            return null;
+        switch (petTypeName) {
+            case "貓":
+                return 1;
+            case "狗":
+                return 2;
+            default:
+                return null;
+        }
+    }
+
+    private String getPetTypeNameById(Integer id) {
+        if (id == null)
+            return null;
+        switch (id) {
+            case 1:
+                return "貓";
+            case 2:
+                return "狗";
+            default:
+                return null;
+        }
     }
 
     /**

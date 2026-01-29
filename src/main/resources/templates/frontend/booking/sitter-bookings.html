@@ -116,28 +116,12 @@
 							</div>
 
 							<div class="info-row">
-								<i class="fas fa-hands-helping"></i>
-								<span>服務項目：<span
-										th:text="${order.serviceItemId == 1 ? '散步遛狗' : (order.serviceItemId == 2 ? '到府餵食' : (order.serviceItemId == 3 ? '洗澡美容' : '其他服務'))}"
-										style="color: #1e293b; font-weight: 500;">服務項目</span></span>
-							</div>
-
-							<div class="info-row">
 								<i class="far fa-clock"></i>
-								<span>開始時間：<span th:text="${#temporals.format(order.startTime, 'yyyy/MM/dd HH:mm')}"
-										style="color: #1e293b;">2024/01/01 10:00</span></span>
+								<span>預約時間：<span th:text="${#temporals.format(order.startTime, 'yyyy/MM/dd HH:mm')}"
+										style="color: #1e293b;"></span></span>
 							</div>
 
-							<div class="info-row">
-								<i class="far fa-clock"></i>
-								<span>結束時間：<span th:text="${#temporals.format(order.endTime, 'yyyy/MM/dd HH:mm')}"
-										style="color: #1e293b;">2024/01/01 12:00</span></span>
-							</div>
 
-						<!--  	<div class="info-row" th:if="${order.note}">
-								<i class="far fa-sticky-note"></i>
-								<span th:text="${order.note}" style="font-style: italic;">備註內容...</span>
-							</div>-->
 						</div>
 
 						<!-- 價格與操作區 -->
@@ -170,9 +154,9 @@
 
 								<!-- 已完成/取消 -->
 								<th:block th:if="${order.orderStatus >= 2}">
-							<!--  	<button class="btn btn-outline-secondary btn-sm" disabled>
+									<button class="btn btn-outline-secondary btn-sm" disabled>
 										<i class="fas fa-file-alt"></i> 詳情
-									</button>  -->
+									</button>
 								</th:block>
 							</div>
 						</div>
@@ -194,8 +178,7 @@
 		<div class="modal-content">
 			<h3 class="modal-title">婉拒預約</h3>
 			<p style="color: #64748b; margin-bottom: 1rem;">為了讓飼主了解原因，請建議填寫簡短說明：</p>
-			<textarea id="rejectReason" rows="4" maxlength="200" placeholder="例如：不好意思，該時段家中臨時有事，無法提供服務..."></textarea>
-			<small id="charCount" style="color: #64748b;">(字數限制：4 - 200 字)</small>
+			<textarea id="rejectReason" rows="4" placeholder="例如：不好意思，該時段家中臨時有事，無法提供服務..."></textarea>
 			<div style="display: flex; gap: 12px; justify-content: flex-end;">
 				<button class="btn btn-outline-secondary" onclick="closeRejectModal()">再來想想</button>
 				<button class="btn btn-primary" style="background-color: #ef476f; border-color: #ef476f;"
@@ -209,38 +192,24 @@
 	<!-- Scripts -->
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script>
-		async function updateStatus(orderId, newStatus, reason = null) {
+		async function updateStatus(orderId, newStatus) {
 			const statusText = {
 				1: '接受預約',
 				2: '完成服務',
 				3: '拒絕預約'
 			};
-			if (newStatus !== 3 && !confirm(`確定要「${statusText[newStatus]}」嗎？`)) return;
+			if (!confirm(`確定要「${statusText[newStatus]}」嗎？`)) return;
 
-			const params = new URLSearchParams();
-		    params.append('newStatus', newStatus);
-		    if (reason) params.append('reason', reason);
-			
-		    try {
-		        const response = await fetch(`/sitter/updateStatus/${orderId}`, {
-		            method: 'POST',
-		            body: params, // Fetch 會自動處理 Content-Type
-		        });
-
-		        if (response.ok) {
-		            alert(newStatus === 3 ? "已婉拒該預約" : "更新成功！");
-		            location.reload();
-		        } else {
-		            const errorMsg = await response.text();
-		            alert("操作失敗：" + errorMsg);
-		        }
-		    } catch (error) {
-		        console.error('Error:', error);
-		        alert("網路連線錯誤");
-		    }
+			$.post(`/sitter/updateStatus/${orderId}`, {
+				newStatus: newStatus
+			}).done(function (res) {
+				alert("更新成功！");
+				location.reload();
+			}).fail(function (xhr) {
+				alert("操作失敗：" + (xhr.responseText || "未知錯誤"));
+			});
 		}
-		
-		// --- 拒絕預約 Modal 邏輯 ---
+
 		let currentRejectOrderId = null;
 
 		function rejectOrder(orderId) {
@@ -259,27 +228,23 @@
 				modal.style.display = 'none';
 			}, 300);
 		}
-		
-		function acceptOrder(id) { updateStatus(id, 1); }
-		function completeOrder(id) { updateStatus(id, 2); }
 
 		document.getElementById('confirmRejectBtn').onclick = function () {
-		    const reason = document.getElementById('rejectReason').value.trim();
-		    const minLength = 4;
-		    const maxLength = 200;
+			const reason = document.getElementById('rejectReason').value;
 
-		    if (reason.length < minLength) {
-		        alert(`婉拒理由太短囉！請輸入至少 ${minLength} 個字，讓飼主了解狀況。`);
-		        document.getElementById('rejectReason').focus();
-		        return;
-		    }
-		    if (reason.length > maxLength) {
-		        alert(`婉拒理由太長了（目前 ${reason.length} 字），請縮減到 ${maxLength} 字以內。`);
-		        return;
-		    }
-
-		    updateStatus(currentRejectOrderId, 3, reason);
+			$.post(`/sitter/updateStatus/${currentRejectOrderId}`, {
+				newStatus: 3,
+				reason: reason
+			}).done(function (res) {
+				alert("已婉拒該預約");
+				location.reload();
+			}).fail(function (err) {
+				alert("操作失敗：" + err.responseText);
+			});
 		};
+
+		function acceptOrder(id) { updateStatus(id, 1); }
+		function completeOrder(id) { updateStatus(id, 2); }
 
 		// 點擊 Modal 外部關閉
 		window.onclick = function (event) {

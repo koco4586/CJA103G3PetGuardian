@@ -31,7 +31,7 @@ public class ForumVO implements Serializable{
 	
 	@Column(name = "forum_name")
 	@NotBlank(message = "名稱請勿空白")
-	@Pattern(regexp = "^[^<>\\\\/|\\r\\n]{1,50}$", message = "名稱格式不合法或包含換行，且不能超過50字。")
+	@Pattern(regexp = "^[^<>\\\\/|\\r\\n]{1,50}$", message = "名稱格式不合法或包含換行，且不能超過50字")
 	private String forumName;
 	
 	@Column(name = "created_at", insertable = false, updatable = false)

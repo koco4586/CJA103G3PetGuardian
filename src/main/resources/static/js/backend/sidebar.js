@@ -20,6 +20,14 @@ window.toggleSubmenu = function (e) {
     parent.classList.toggle('open');
 };
 
+// 管理員登出功能
+window.adminLogout = function() {
+    if (confirm('確定要登出嗎?')) {
+        // 清除 session 並導向登入頁
+        window.location.href = '/admin/logout';
+    }
+};
+
 document.addEventListener("DOMContentLoaded", function () {
     // 定義側邊欄的 HTML 結構
     const sidebarHTML = `
@@ -27,13 +35,13 @@ document.addEventListener("DOMContentLoaded", function () {
         <nav id="sidebar">
             <div class="logo">
                 <a href="/admin/index" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit;">
-                    <img src="/images/backend/logo.png" alt="Pet Guardian Logo" style="width:32px; height:32px; object-fit:contain;">
+                    <img src="../../../images/backend/logo.png" alt="Pet Guardian Logo" style="width:32px; height:32px; object-fit:contain;">
                     <strong>Admin</strong>
                 </a>
             </div>
             <ul>
                 <li data-page="index"><a href="/admin/index"><i class="fa-solid fa-gauge-high"></i> 首頁</a></li>
-                <li data-page="members"><a href="/admin/membermanagementpage"><i class="fa-solid fa-users"></i> 會員管理</a></li>
+                <li data-page="members"><a href="/html/backend/member/admin_member_management.html"><i class="fa-solid fa-users"></i> 會員管理</a></li>
                 <li data-page="sitters"><a href="/admin/sitter/manage"><i class="fa-solid fa-paw"></i> 保母系統</a></li>
                 <li class="has-submenu" data-page="bookings">
                     <a href="#" onclick="toggleSubmenu(event)">
@@ -42,10 +50,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     </a>
                     <ul class="submenu">
                         <li data-page="bookings-all"><a href="/admin/bookings/all"><i class="fa-solid fa-list"></i> 預約列表</a></li>
-                        <li data-page="bookings-reviews"><a href="/admin/reviews"><i class="fa-solid fa-star"></i> 評價管理</a></li>
+                        <li data-page="bookings-reviews"><a href="/admin/reviews1"><i class="fa-solid fa-star"></i> 評價管理</a></li>
                     </ul>
                 </li>
-                <li data-page="chat"><a href="/admin/chat"><i class="fa-solid fa-comments"></i> 聊天監控</a></li>
+<!--                <li data-page="chat"><a href="/admin/chat-reports"><i class="fa-solid fa-comments"></i> 聊天監控</a></li>-->
+                <li data-page="chat-reports"><a href="/admin/chat-reports"><i class="fa-solid fa-comment-slash"></i> 聊天檢舉<span class="badge" id="chatReportBadge" style="display:none; margin-left:5px; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">0</span></a></li>
                 <li data-page="news"><a href="/admin/news/list"><i class="fa-solid fa-bullhorn"></i> 消息管理</a></li>
                 <li class="has-submenu" data-page="market">
                     <a href="#" onclick="toggleSubmenu(event)">
@@ -58,8 +67,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     </ul>
                 </li>
                 <li data-page="forum"><a href="/admin/forum/list-all-forum"><i class="fa-solid fa-message"></i> 討論區管理</a></li>
-                 <li data-page="accounts"><a href="/admin/adminmanagementpage"><i class="fa-solid fa-user-lock"></i> 管理員帳號</a></li>
+                <li data-page="accounts"><a href="/html/backend/admin/admin_admin_management.html"><i class="fa-solid fa-user-lock"></i> 管理員帳號</a></li>
             </ul>
+            
+            <div class="sidebar-footer">
+                <div class="admin-info">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span id="adminName">管理員</span>
+                </div>
+                <button class="logout-btn" onclick="adminLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> 登出
+                </button>
+            </div>
         </nav>
     `;
 
@@ -79,6 +98,8 @@ document.addEventListener("DOMContentLoaded", function () {
         pageName = "bookings-reviews";
     } else if (currentPath.includes("/admin/bookings")) {
         pageName = "bookings-all";
+    } else if (currentPath.includes("/admin/chat-reports")) {
+        pageName = "chat-reports";
     } else if (currentPath.includes("/admin/chat")) {
         pageName = "chat";
     } else if (currentPath.includes("/admin/news/list")) {
@@ -104,7 +125,25 @@ document.addEventListener("DOMContentLoaded", function () {
             parentSubmenu.classList.add("open");
         }
     }
+
+    // 載入管理員名稱
+    loadAdminName();
 });
+
+// 載入管理員名稱的函數
+function loadAdminName() {
+    // 從後端取得當前登入的管理員資訊
+    fetch('/admin/current-admin')
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.name) {
+                document.getElementById('adminName').textContent = data.name;
+            }
+        })
+        .catch(error => {
+            console.log('無法載入管理員資訊');
+        });
+}
 
 // 監聽視窗縮放，當視窗變大時自動關閉手機版開啟狀態
 window.addEventListener('resize', () => {

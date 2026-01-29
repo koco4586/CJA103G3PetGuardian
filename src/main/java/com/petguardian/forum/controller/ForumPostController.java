@@ -108,8 +108,7 @@ public class ForumPostController {
 	}
 
 	@PostMapping("insert-post")
-	public String insertPost(@Valid ForumPostVO forumPostVO, BindingResult result, ForumPostPicsVO forumPostPicsVO,
-			ModelMap model,
+	public String insertPost(@Valid ForumPostVO forumPostVO, BindingResult result, ForumPostPicsVO forumPostPicsVO, ModelMap model,
 			@RequestParam("upFiles") MultipartFile[] postPics, RedirectAttributes ra, HttpServletRequest request)
 			throws IOException {
 
@@ -178,20 +177,21 @@ public class ForumPostController {
 			}
 
 		}
-
+		
 		// 使用 AuthStrategyService 取得當前使用者
-		Integer userId = authStrategyService.getCurrentUserId(request);
-		if (userId == null) {
-			model.addAttribute("errorMsgs", "請先登入後再發表文章");
-			return "frontend/forum/add-post";
-		}
+//		Integer userId = authStrategyService.getCurrentUserId(request);
+//		if (userId == null) {
+//			model.addAttribute("errorMsgs", "請先登入後再發表文章");
+//			return "frontend/forum/add-post";
+//			
+//		}
 
 		Member member = new Member();
-		member.setMemId(userId);
+		member.setMemId(1005);
 		forumPostVO.setMember(member);
 
 		// 沒圖片時 -> 新增資料
-		if (postPics == null || postPics.length == 0) {
+		if (postPics == null || postPics.length == 0 || postPics[0].isEmpty()) {
 			forumPostService.addPost(forumPostVO);
 
 			// 設定閃退訊息 (Flash Attribute)，重導向後會消失，不會重複出現
@@ -213,6 +213,142 @@ public class ForumPostController {
 			Integer forumId = forumPostVO.getForum().getForumId();
 
 			return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
+		}
+
+	}
+	
+	@GetMapping("update-post")
+	public String updatePost(@RequestParam("postId") Integer postId, ModelMap model) {
+		
+		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		// 從 Model 中取得剛才 @ModelAttribute 塞進去的 forumId
+		Integer forumId = (Integer) model.getAttribute("forumId");
+		String forumName = forumService.getOneForum(forumId).getForumName();
+		
+		model.addAttribute("picsId", picsId);
+		model.addAttribute("forumPostVO", forumPostVO);
+		model.addAttribute("forumName", forumName);
+		
+		return "frontend/forum/update-post";
+	}
+	
+	@PostMapping("update-post-submit")
+	public String updatePostSubmit(@Valid ForumPostVO forumPostVO, BindingResult result, ForumPostPicsVO forumPostPicsVO, ModelMap model,
+			@RequestParam("upFiles") MultipartFile[] postPics, @RequestParam("forumId") Integer forumId, @RequestParam("forumName") String forumName,
+			RedirectAttributes ra, HttpServletRequest request) throws IOException {
+		
+		Integer postId = forumPostVO.getPostId();
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+		
+		// Java Bean Validation 錯誤處理
+		if (result.hasErrors()) {
+
+			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
+			if (result.hasGlobalErrors()) {
+				result.getGlobalErrors().forEach(error -> {
+					result.rejectValue("upFile", null, error.getDefaultMessage());
+				});
+
+			}
+			model.addAttribute("picsId", picsId);
+			return "frontend/forum/update-post";
+		}
+
+		// MultipartFile convert byte[]
+		MultipartFile upFile = forumPostVO.getUpFile();
+		if (upFile != null && !upFile.isEmpty()) {
+			byte[] mainPic = upFile.getBytes();
+			forumPostVO.setPostPic(mainPic);
+		} else {
+			byte[] mainPic = forumPostService.getPostPic(postId);
+			forumPostVO.setPostPic(mainPic);
+		}
+
+		if (postPics != null && postPics.length > 0) {
+
+			for (int i = 0; i < postPics.length; i++) {
+				if (postPics[i] == null || postPics[i].isEmpty()) {
+					continue;
+				} else {
+					String contentType = postPics[i].getContentType();
+					if (contentType == null || !contentType.startsWith("image/")) {
+						model.addAttribute("errorMsgs", "請上傳圖片檔（jpg, png, gif）");
+						model.addAttribute("picsId", picsId);
+						return "frontend/forum/update-post";
+					}
+
+				}
+
+			}
+
+			if (postPics.length > 6) {
+				model.addAttribute("errorMsgs", "最多上傳6張圖片");
+				model.addAttribute("picsId", picsId);
+				return "frontend/forum/update-post";
+			}
+
+			long maxSize = 1 * 1024 * 1024;
+			long totalMaxSize = 5 * 1024 * 1024;
+			long upFilesTotalSize = 0;
+
+			for (int i = 0; i < postPics.length; i++) {
+				if (postPics[i].isEmpty()) {
+					continue;
+				}
+				if (postPics[i].getSize() > maxSize) {
+					model.addAttribute("errorMsgs", "單張圖片大小不得超過 1MB");
+					model.addAttribute("picsId", picsId);
+					return "frontend/forum/update-post";
+
+				} else {
+					upFilesTotalSize += postPics[i].getSize();
+					if (upFilesTotalSize > totalMaxSize) {
+						model.addAttribute("errorMsgs", "總上傳檔案大小不得超過 5MB");
+						model.addAttribute("picsId", picsId);
+						return "frontend/forum/update-post";
+					}
+
+				}
+
+			}
+
+		}
+		
+		// 使用 AuthStrategyService 取得當前使用者
+//		Integer userId = authStrategyService.getCurrentUserId(request);
+//		if (userId == null) {
+//			model.addAttribute("errorMsgs", "請先登入後再發表文章");
+//			return "frontend/forum/add-post";
+//			
+//		}
+
+		Member member = new Member();
+		member.setMemId(1005);
+		forumPostVO.setMember(member);
+
+		// 沒圖片
+		if (postPics == null || postPics.length == 0 || postPics[0].isEmpty()) {
+			forumPostService.updatePost(forumPostVO);
+
+			// 設定閃退訊息 (Flash Attribute)，重導向後會消失，不會重複出現
+			ra.addFlashAttribute("successMsgs", "🎉 貼文修改成功！");
+			ra.addAttribute("forumId", forumId);
+			ra.addAttribute("forumName", forumName);
+			
+			return "redirect:/forumpost/get-post-id-for-one-post?postId=" + postId;
+
+		} else {
+			// 有圖片
+			forumPostService.updatePostWithPics(forumPostVO, postPics);
+
+			// 設定閃退訊息 (Flash Attribute)，重導向後會消失，不會重複出現
+			ra.addFlashAttribute("successMsgs", "🎉 貼文修改成功！");
+			ra.addAttribute("forumId", forumId);
+			ra.addAttribute("forumName", forumName);
+			
+			return "redirect:/forumpost/get-post-id-for-one-post?postId=" + postId;
 		}
 
 	}
@@ -351,6 +487,31 @@ public class ForumPostController {
 		
 		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
 	}
+	
+	@GetMapping("delete-post")
+	public String deletePost(@RequestParam("postId") Integer postId, 
+							 @RequestParam("forumId") Integer forumId, RedirectAttributes ra) {
+		
+		forumPostService.deletePost(postId);
+		ra.addFlashAttribute("successMsgs", "貼文刪除成功");
+		
+		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
+	}
+	
+	@GetMapping("delete-comment")
+	public String deleteComment(@RequestParam("commentId") Integer commentId, @RequestParam("postId") Integer postId,
+							    @RequestParam("forumId") Integer forumId, RedirectAttributes ra) {
+		
+		forumCommentService.deleteComment(commentId);
+		String forumName = forumService.getOneForum(forumId).getForumName();
+		
+		ra.addAttribute("forumName", forumName);
+		ra.addAttribute("forumId", forumId);
+		ra.addAttribute("postId", postId);
+		ra.addFlashAttribute("successMsgs", "留言刪除成功");
+		
+		return "redirect:/forumpost/get-post-id-for-one-post";
+	}	
 	
 	@ModelAttribute
 	public void addAttribute(@RequestParam(value = "forumId", required = false) Integer forumId,

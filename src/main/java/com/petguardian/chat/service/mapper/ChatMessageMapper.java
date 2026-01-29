@@ -18,7 +18,7 @@ public interface ChatMessageMapper {
          */
         ChatMessageDTO toDto(ChatMessageEntity entity, MemberProfileDTO sender, String replyContent,
                         String replySenderName,
-                        Integer currentUserId, Integer partnerId);
+                        Integer currentUserId, Integer partnerId, Integer reportStatus);
 
         /**
          * Bulk converts a list of message entities to DTOs.
@@ -34,5 +34,6 @@ public interface ChatMessageMapper {
          */
         List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> entities, Integer currentUserId, Integer partnerId,
                         Map<Integer, MemberProfileDTO> memberMap,
-                        Map<String, ChatMessageEntity> replyMap);
+                        Map<String, ChatMessageEntity> replyMap,
+                        Map<String, Integer> reportStatusMap);
 }

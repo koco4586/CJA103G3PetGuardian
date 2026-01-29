@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.forum.model.DeletedCommentDTO;
 import com.petguardian.forum.model.ForumCommentRepository;
@@ -20,11 +21,30 @@ public class ForumCommentService {
 
 	@Autowired
 	ForumPostRepository postRepo;
-
+	
+	@Transactional
+	public void deleteComment(Integer commentId) {
+		ForumCommentVO forumCommentVO = repo.findById(commentId)
+				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
+		forumCommentVO.setCommentStatus(2);
+		repo.save(forumCommentVO);
+	}
+	
+	public ForumCommentVO getOneComment(Integer commentId) {
+		ForumCommentVO forumCommentVO = repo.findById(commentId)
+				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
+		return forumCommentVO;
+	}
+	
 	public List<ForumCommentVO> getCommentsByPostId(Integer postId) {
 		return repo.findCommentsByPostId(postId);
 	}
 
+	public List<ForumCommentVO> getAllCommentsByPostId(Integer postId) {
+		return repo.findAllCommentsByPostId(postId);
+	}
+	
+	@Transactional
 	public void addCommentByPostId(String commentContent, Integer postId, Integer memberId) {
 
 		// ForumPostVO forumPostVO = new ForumPostVO();

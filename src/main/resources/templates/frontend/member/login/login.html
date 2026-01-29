@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 
 <head>
     <meta charset="UTF-8">
@@ -11,106 +11,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        .auth-container {
-            min-height: 80vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--bg-color);
-            padding: 2rem;
-        }
-
-        .auth-card {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            width: 100%;
-            max-width: 450px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .auth-tabs {
-            display: flex;
-            background: #f0f0f0;
-        }
-
-        .auth-tab {
-            flex: 1;
-            padding: 1rem;
-            text-align: center;
-            cursor: pointer;
-            font-weight: 700;
-            color: #999;
-            transition: var(--transition);
-        }
-
-        .auth-tab.active {
-            background: var(--white);
-            color: var(--primary-color);
-        }
-
-        .auth-body {
-            padding: 2rem;
-        }
-
-        /* 載入中效果 */
-        .btn-primary:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            position: relative;
-        }
-
-        .btn-primary.loading::after {
-            content: "";
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            top: 50%;
-            left: 50%;
-            margin-left: 8px;
-            margin-top: -8px;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spinner 0.6s linear infinite;
-        }
-
-        @keyframes spinner {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* 輸入框焦點效果 */
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
+        * {
+            box-sizing: border-box;
         }
     </style>
 
 </head>
 
 <body>
+
+    <h1>PetGuardian寵護家</h1>
+
+    <h2>會員登入</h2>
+
+    <form>
+
+        <span>使用者帳號</span><br>
+        <input type="text" placeholder="請輸入使用者帳號" class="loginacc" required><br><br>
+        <span>使用者密碼</span><br>
+        <input type="password" placeholder="請輸入使用者密碼" class="loginpw" required><br><br>
+        <button type="submit" class="submit">立即登入</button>
+        <button type="reset">清除重填</button>
 
     <header id="main-header" class="header"></header>
 

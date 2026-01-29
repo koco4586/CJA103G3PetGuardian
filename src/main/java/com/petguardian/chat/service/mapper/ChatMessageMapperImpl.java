@@ -16,7 +16,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
     @Override
     public ChatMessageDTO toDto(ChatMessageEntity chatMessageEntity, MemberProfileDTO sender, String replyContent,
             String replySenderName,
-            Integer currentUserId, Integer partnerId) {
+            Integer currentUserId, Integer partnerId, Integer reportStatus) {
         ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
         chatMessageDTO.setMessageId(chatMessageEntity.getMessageId());
         chatMessageDTO.setSenderId(chatMessageEntity.getMemberId());
@@ -25,6 +25,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         chatMessageDTO.setSenderName(sender != null ? sender.getMemberName() : "Unknown");
         chatMessageDTO.setChatroomId(chatMessageEntity.getChatroomId());
         chatMessageDTO.setChatTime(chatMessageEntity.getChatTime());
+        chatMessageDTO.setReportStatus(reportStatus != null ? reportStatus : 0);
 
         if (chatMessageEntity.getReplyToMessageId() != null) {
             chatMessageDTO.setReplyToId(chatMessageEntity.getReplyToMessageId());
@@ -45,13 +46,14 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
     public List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> chatMessageEntities, Integer currentUserId,
             Integer partnerId,
             Map<Integer, MemberProfileDTO> memberMap,
-            Map<String, ChatMessageEntity> replyMap) {
+            Map<String, ChatMessageEntity> replyMap,
+            Map<String, Integer> reportStatusMap) {
         if (chatMessageEntities.isEmpty()) {
             return Collections.emptyList();
         }
 
         return chatMessageEntities.stream()
-                .map(msg -> mapToDto(msg, memberMap, replyMap, currentUserId, partnerId))
+                .map(msg -> mapToDto(msg, memberMap, replyMap, reportStatusMap, currentUserId, partnerId))
                 .collect(Collectors.toList());
     }
 
@@ -65,6 +67,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
     private ChatMessageDTO mapToDto(ChatMessageEntity msg,
             Map<Integer, MemberProfileDTO> memberMap,
             Map<String, ChatMessageEntity> replyMap,
+            Map<String, Integer> reportStatusMap,
             Integer currentUserId,
             Integer partnerId) {
         // Resolve Sender
@@ -83,7 +86,10 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
             }
         }
 
+        // Resolve Report Status
+        Integer status = reportStatusMap != null ? reportStatusMap.getOrDefault(msg.getMessageId(), 0) : 0;
+
         // Delegate to base mapper
-        return toDto(msg, sender, replyContent, replySenderName, currentUserId, partnerId);
+        return toDto(msg, sender, replyContent, replySenderName, currentUserId, partnerId, status);
     }
 }

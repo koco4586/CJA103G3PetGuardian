@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.petguardian.chat.dto.ChatMessageDTO;
 import com.petguardian.chat.dto.ChatRoomDTO;
+import com.petguardian.chat.dto.ReportRequestDTO;
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatService;
+import com.petguardian.chat.service.chatmessage.report.ChatReportService;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,11 +39,13 @@ public class ChatApiController {
     // ============================================================
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
+    private final ChatReportService chatReportService;
 
     public ChatApiController(AuthStrategyService authStrategyService,
-            ChatService chatService) {
+            ChatService chatService, ChatReportService chatReportService) {
         this.authStrategyService = authStrategyService;
         this.chatService = chatService;
+        this.chatReportService = chatReportService;
     }
 
     // ============================================================
@@ -136,5 +141,33 @@ public class ChatApiController {
         // Return new global status
         boolean hasUnread = chatService.hasUnreadMessages(currentUserId);
         return ResponseEntity.ok(Collections.singletonMap("hasUnread", hasUnread));
+    }
+
+    /**
+     * Submits a report for a chat message.
+     */
+    @PostMapping("/report")
+    public ResponseEntity<Void> submitReport(
+            HttpServletRequest request,
+            @RequestBody ReportRequestDTO reportRequest) {
+
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        try {
+            chatReportService.submitReport(
+                    currentUserId,
+                    reportRequest.getMessageId(),
+                    reportRequest.getType(),
+                    reportRequest.getReason());
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            // Already reported
+            return ResponseEntity.status(409).build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

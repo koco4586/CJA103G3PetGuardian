@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.booking.service.BookingService;
 import com.petguardian.common.service.AuthStrategyService;
+import com.petguardian.sitter.service.SitterService;
+import com.petguardian.sitter.model.SitterVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -24,6 +26,9 @@ public class SitterBookingController {
 
     @Autowired
     private BookingService bookingService;
+
+    @Autowired
+    private SitterService sitterService;
 
     @Autowired
     private AuthStrategyService authStrategyService;
@@ -39,37 +44,22 @@ public class SitterBookingController {
             HttpServletRequest request,
             Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
-        if (memId == null) return "redirect:/front/loginpage";
+        if (memId == null)
+            return "redirect:/front/loginpage";
 
-        var sitterVO = dataService.getSitterInfoByMemId(memId); 
-        if (sitterVO == null) {
-            return "redirect:/"; // 不是保母就踢掉
+        // [Fix] 用 MemId 查 SitterId
+        SitterVO sitter = sitterService.getSitterByMemId(memId);
+        if (sitter == null) {
+            return "redirect:/sitter/apply";
         }
-        
-        Integer actualSitterId = sitterVO.getSitterId();
-        
+        Integer sitterId = sitter.getSitterId();
+
         List<BookingOrderVO> bookingList = (status != null)
-                ? bookingService.findBySitterAndStatus(actualSitterId, status)
-                : bookingService.getOrdersBySitterId(actualSitterId);
-        
-        for (BookingOrderVO order : bookingList) {
-            try {
-                // 抓取下單的飼主資料
-                var clientMember = dataService.getMemberInfo(order.getMemId());
-                if (clientMember != null) {
-                    order.setMemName(clientMember.getMemName());
-                }
-                // 抓取寵物資料
-                var pet = dataService.getPetInfo(order.getPetId());
-                if (pet != null) {
-                    order.setPetName(pet.getPetName());
-                }
-            } catch (Exception e) {
-                order.setMemName("未知飼主");
-                order.setPetName("未知寵物");
-            }
-        }
-        
+                ? bookingService.findBySitterAndStatus(sitterId, status)
+                : bookingService.getOrdersBySitterId(sitterId);
+
+        var member = dataService.getMemberInfo(memId);
+
         // 加上本月收入計算邏輯
         int income = bookingList.stream()
                 .filter(o -> o.getOrderStatus() != null && (o.getOrderStatus() == 2 || o.getOrderStatus() == 5))
@@ -77,7 +67,7 @@ public class SitterBookingController {
                 .sum();
 
         model.addAttribute("bookingList", bookingList);
-        model.addAttribute("sitter", dataService.getMemberInfo(memId));
+        model.addAttribute("sitter", member);
         model.addAttribute("currentStatus", status);
         model.addAttribute("monthlyIncome", income);
 

@@ -54,7 +54,7 @@ public class SellerController {
     public String showDashboard(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         // 取得所有營運概況資料（一次呼叫）
