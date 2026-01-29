@@ -178,12 +178,13 @@ public class ForumPostController {
 			}
 
 		}
-
+		
 		// 使用 AuthStrategyService 取得當前使用者
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			model.addAttribute("errorMsgs", "請先登入後再發表文章");
 			return "frontend/forum/add-post";
+			
 		}
 
 		Member member = new Member();
@@ -350,6 +351,43 @@ public class ForumPostController {
 		Integer forumId = forumCommentReportVO.getForumComment().getForumPost().getForum().getForumId();
 		
 		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
+	}
+	
+	@GetMapping("delete-post")
+	public String deletePost(@RequestParam("postId") Integer postId, 
+							 @RequestParam("forumId") Integer forumId, RedirectAttributes ra) {
+		
+		forumPostService.deletePost(postId);
+		ra.addFlashAttribute("successMsgs", "貼文刪除成功");
+		
+		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
+	}
+	
+	@GetMapping("delete-comment")
+	public String deleteComment(@RequestParam("commentId") Integer commentId, @RequestParam("postId") Integer postId,
+							    @RequestParam("forumId") Integer forumId, RedirectAttributes ra) {
+		
+		forumCommentService.deleteComment(commentId);
+		String forumName = forumService.getOneForum(forumId).getForumName();
+		
+		ra.addAttribute("forumName", forumName);
+		ra.addAttribute("forumId", forumId);
+		ra.addAttribute("postId", postId);
+		ra.addFlashAttribute("successMsgs", "留言刪除成功");
+		
+		return "redirect:/forumpost/get-post-id-for-one-post";
+	}
+	
+	@GetMapping("update-post")
+	public String updatePost(@RequestParam("postId") Integer postId, ModelMap model) {
+		
+		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
+		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+
+		model.addAttribute("picsId", picsId);
+		model.addAttribute("forumPostVO", forumPostVO);
+		
+		return "frontend/forum/update-post";
 	}
 	
 	@ModelAttribute
