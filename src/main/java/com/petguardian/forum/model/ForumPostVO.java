@@ -54,7 +54,7 @@ public class ForumPostVO implements Serializable{
 	
 	@Column(name = "post_title")
 	@NotBlank(message = "文章標題請勿空白")
-	@Pattern(regexp = "^[^<>\\\\/|\\r\\n]{1,50}$", message = "標題格式不合法或包含換行，且不能超過50字。")
+	@Pattern(regexp = "^[^<>\\\\/|\\r\\n]{1,50}$", message = "標題格式不合法或包含換行，且不能超過50字")
 	private String postTitle;
 	
 	@Column(name = "post_content", columnDefinition = "longtext")
