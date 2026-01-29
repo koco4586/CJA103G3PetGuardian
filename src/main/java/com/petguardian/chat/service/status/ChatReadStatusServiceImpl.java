@@ -1,9 +1,7 @@
 package com.petguardian.chat.service.status;
 
-import com.petguardian.chat.service.chatroom.ChatRoomMetadataReader;
-import com.petguardian.chat.service.chatroom.ChatRoomMetadataWriter;
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,20 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ChatReadStatusServiceImpl implements ChatReadStatusService {
 
-    private final ChatRoomMetadataReader metadataReader;
-    private final ChatRoomMetadataWriter metadataWriter;
+    private final ChatRoomMetadataService metadataService;
 
-    public ChatReadStatusServiceImpl(
-            @Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
-            @Qualifier("metadataWriterProxy") ChatRoomMetadataWriter metadataWriter) {
-        this.metadataReader = metadataReader;
-        this.metadataWriter = metadataWriter;
+    public ChatReadStatusServiceImpl(ChatRoomMetadataService metadataService) {
+        this.metadataService = metadataService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean hasUnreadMessages(Integer userId) {
-        List<com.petguardian.chat.dto.ChatRoomMetadataDTO> rooms = metadataReader.getUserChatrooms(userId);
+        List<com.petguardian.chat.dto.ChatRoomMetadataDTO> rooms = metadataService.getUserChatrooms(userId);
         if (rooms == null || rooms.isEmpty())
             return false;
 
@@ -45,6 +39,6 @@ public class ChatReadStatusServiceImpl implements ChatReadStatusService {
     @Override
     @Transactional
     public void markRoomAsRead(Integer chatroomId, Integer userId) {
-        metadataWriter.updateLastReadAtCacheOnly(chatroomId, userId, java.time.LocalDateTime.now());
+        metadataService.updateLastReadAt(chatroomId, userId, java.time.LocalDateTime.now());
     }
 }
