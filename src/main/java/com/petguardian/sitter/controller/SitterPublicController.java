@@ -21,7 +21,9 @@ import com.petguardian.sitter.model.SitterSearchDTO;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterMemberDTO;
+import com.petguardian.sitter.model.SitterMemberDTO;
 import com.petguardian.sitter.service.SitterService;
+import com.petguardian.sitter.service.SitterSearchService;
 
 import com.petguardian.petsitter.service.PetSitterService;
 import com.petguardian.service.service.ServiceAreaService;
@@ -50,6 +52,9 @@ public class SitterPublicController {
 
     @Autowired
     private SitterService sitterService;
+
+    @Autowired
+    private SitterSearchService sitterSearchService;
 
     @Autowired
     private AuthStrategyService authStrategyService;
@@ -118,9 +123,9 @@ public class SitterPublicController {
             List<SitterSearchDTO> results;
 
             if (!criteria.hasFilters()) {
-                results = sitterService.getAllActiveSitters();
+                results = sitterSearchService.getAllActiveSitters();
             } else {
-                results = sitterService.searchSitters(criteria);
+                results = sitterSearchService.searchSitters(criteria);
             }
 
             return ResponseEntity.ok(results);
@@ -140,7 +145,7 @@ public class SitterPublicController {
     @ResponseBody
     public ResponseEntity<List<SitterSearchDTO>> getAllSitters() {
         try {
-            List<SitterSearchDTO> results = sitterService.getAllActiveSitters();
+            List<SitterSearchDTO> results = sitterSearchService.getAllActiveSitters();
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             e.printStackTrace();
