@@ -1,12 +1,5 @@
-/* --- 佈局核心 (修正名稱並補齊大括號) --- */
-.dashboard-container {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 2rem;
-    margin-top: 3rem;
-    margin-bottom: 5rem;
-    align-items: start;
-}
+/* --- 佈局核心：沿用 dashboard.css 的 flex 佈局 --- */
+/* .dashboard-container 已定義於 dashboard.css，此處不重複定義 */
 
 /* --- 側邊欄樣式 (僅保留定位邏輯，樣式沿用組內定義) --- */
 .dashboard-sidebar {
