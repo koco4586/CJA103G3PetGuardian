@@ -22,6 +22,8 @@ import com.petguardian.service.model.ServiceAreaVO;
 import com.petguardian.service.service.ServiceAreaService;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterService;
+import com.petguardian.booking.service.BookingService;
+import com.petguardian.booking.model.BookingOrderVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -45,6 +47,9 @@ public class SitterDashboardController {
 
     @Autowired
     private com.petguardian.common.service.AuthStrategyService authStrategyService;
+
+    @Autowired
+    private BookingService bookingService;
 
     /**
      * 保母主頁 (Dashboard)
@@ -105,6 +110,11 @@ public class SitterDashboardController {
         model.addAttribute("services", services); // 新增詳細列表
         model.addAttribute("areas", areas); // 新增詳細列表
         model.addAttribute("averageRating", averageRating); // 新增平均評分
+
+        // [New] 查詢待確認訂單數量 (狀態=0)
+        List<BookingOrderVO> pendingOrders = bookingService.findOrdersBySitterAndStatus(sitter.getSitterId(), 0);
+        int pendingCount = (pendingOrders != null) ? pendingOrders.size() : 0;
+        model.addAttribute("pendingCount", pendingCount);
 
         return "frontend/sitter/dashboard";
     }

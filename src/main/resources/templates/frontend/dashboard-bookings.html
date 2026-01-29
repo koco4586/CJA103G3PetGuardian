@@ -2,73 +2,19 @@
 <html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>保母預約紀錄 | PetGuardian</title>
-	<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
-	<link rel="stylesheet" th:href="@{/css/frontend/components.css}">
-	<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-	<style>
-		.dashboard-layout {
-			display: grid;
-			grid-template-columns: 280px 1fr;
-			gap: 2rem;
-			margin-top: 3rem;
-			margin-bottom: 5rem;
-		}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保母預約紀錄 | PetGuardian</title>
+<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+<link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+<link rel="stylesheet"
+	th:href="@{/css/frontend/booking/dashboard-bookings.css}">
+<link
+	href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap"
+	rel="stylesheet">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-		.dashboard-sidebar {
-			background: white;
-			border-radius: 1.5rem;
-			padding: 2rem;
-			border: 1px solid #f0f0f0;
-			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-			height: fit-content;
-		}
-
-		.menu-link {
-			display: flex;
-			align-items: center;
-			gap: 1rem;
-			padding: 1rem;
-			border-radius: 1rem;
-			color: #666;
-			transition: all 0.2s ease;
-			margin-bottom: 0.5rem;
-		}
-
-		.menu-link:hover,
-		.menu-link.active {
-			background: #f0f7ff;
-			color: var(--primary-color);
-			font-weight: 600;
-		}
-
-		.booking-card {
-			background: white;
-			border-radius: 1.5rem;
-			padding: 1.8rem;
-			margin-bottom: 1.5rem;
-			border: 1px solid #f0f0f0;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			transition: transform 0.2s;
-		}
-
-		.booking-card:hover {
-			transform: scale(1.01);
-			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-		}
-
-		.status-pill {
-			padding: 0.4rem 1.2rem;
-			border-radius: 2rem;
-			font-size: 0.85rem;
-			font-weight: 600;
-		}
-	</style>
 </head>
 
 <body>
@@ -87,58 +33,103 @@
 			</div>
 
 			<nav>
-				<a href="#" class="menu-link"><i class="fas fa-user"></i> 個人資料</a>
-				<a href="#" class="menu-link"><i class="fas fa-paw"></i> 我的寵物</a>
-				<a href="/booking/memberOrders" class="menu-link active"><i class="fas fa-calendar-check"></i>
-					保母預約紀錄</a>
-				<a href="#" class="menu-link"><i class="fas fa-heart"></i> 收藏列表</a>
-				<div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
-					<a href="#" class="menu-link" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> 登出</a>
+				<a href="#" class="menu-link"><i class="fas fa-user"></i> 個人資料</a> <a
+					href="#" class="menu-link"><i class="fas fa-paw"></i> 我的寵物</a> <a
+					href="/booking/memberOrders" class="menu-link active"><i
+					class="fas fa-calendar-check"></i> 保母預約紀錄</a> <a href="#"
+					class="menu-link"><i class="fas fa-heart"></i> 收藏列表</a>
+				<div
+					style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
+					<a href="#" class="menu-link" style="color: #ef4444;"><i
+						class="fas fa-sign-out-alt"></i> 登出</a>
 				</div>
 			</nav>
 		</aside>
 
 		<!-- 主要內容 -->
 		<main class="dashboard-content">
-			<div class="d-flex justify-between align-center mb-3">
-				<h2 style="font-weight: 700;"><a href="/booking/services"
-						style="color: inherit; text-decoration: none;">會員預約列表</a></h2>
-				<a href="/booking/services" class="btn btn-primary btn-sm" style="border-radius: 2rem;">+ 新增預約</a>
+			<h2 class="mb-3" style="font-weight: 700;">會員預約列表</h2>
+
+			<div class="filter-tabs-container">
+				<div class="filter-tabs-wrapper">
+					<div class="filter-group">
+						<a th:href="@{/booking/memberOrders}" class="tab-btn"
+							th:classappend="${currentStatus == null} ? 'active' : ''">全部</a>
+
+						<a th:href="@{/booking/memberOrders(status=0)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 0} ? 'active' : ''">即將到來</a>
+
+						<a th:href="@{/booking/memberOrders(status=1)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 1} ? 'active' : ''">進行中</a>
+
+						<a th:href="@{/booking/memberOrders(status=2)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 2} ? 'active' : ''">服務完成</a>
+
+						<a th:href="@{/booking/memberOrders(status=3)}" class="tab-btn"
+							th:classappend="${currentStatus != null && currentStatus == 3} ? 'active' : ''">已取消</a>
+					</div>
+
+					<a href="/booking/services" class="btn btn-primary btn-sm"
+						style="border-radius: 2rem;">+ 新增預約</a>
+				</div>
 			</div>
 
 			<!-- 動態資料迴圈 -->
 			<div class="booking-list">
 				<div th:each="order : ${bookingList}" class="booking-card">
 					<div class="d-flex align-center gap-lg">
-						<div
-							style="background: #fdf2f8; color: #db2777; width: 56px; height: 56px; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-							<i class="fas fa-calendar-day"></i>
-						</div>
 						<div>
-							<h4 th:text="${order.sitterName}" style="margin: 0; font-size: 1.2rem; font-weight: 700;">
-								保母姓名</h4>
-							<div style="color: #666; font-size: 0.9rem; margin-top: 0.3rem;">
-								<i class="far fa-clock mr-xs"></i>
-								<span
-									th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')} + ' ~ ' + ${#temporals.format(order.endTime, 'HH:mm')}"></span>
+							<div class="d-flex align-center gap-sm mb-xs">
+								<h4 th:text="${order.sitterName}">保母姓名</h4>
+								<span th:if="${order.orderStatus == 0}"
+									class="badge-pill status-upcoming">即將到來</span> 
+									<span
+									th:if="${order.orderStatus == 1}"
+									class="badge-pill status-ongoing">進行中</span> 
+									<span
+									th:if="${order.orderStatus == 2}"
+									class="badge-pill status-completed">服務完成</span> 
+									<span
+									th:if="${order.orderStatus == 3}"
+									class="badge-pill status-cancelled">已取消</span>
+								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>	
+							</div>
+							<div style="color: #666; font-size: 0.9rem;">
+								<i class="far fa-clock"></i> <span
+									th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"></span>
 							</div>
 						</div>
 					</div>
 
 					<div class="d-flex align-center gap-lg">
-						<div class="text-right">
+						<div class="text-right" style="min-width: 100px;">
 							<div style="font-weight: 700; color: #ea580c; font-size: 1.2rem;"
 								th:text="'$' + ${order.reservationFee}"></div>
 							<div style="font-size: 0.75rem; color: #bbb;"
 								th:text="'ID: #BK-' + ${order.bookingOrderId}"></div>
 						</div>
 
-						<span th:if="${order.orderStatus == 0}" class="status-pill"
-							style="background: #fff8e1; color: #f57c00;">審核中</span>
-						<span th:if="${order.orderStatus == 1}" class="status-pill"
-							style="background: #e3f2fd; color: #1976d2;">進行中</span>
+						<div class="d-flex gap-sm">
+							<th:block th:with="isPast=${order.startTime.isBefore(#temporals.createNow())}">
+							<th:block
+								th:if="${(order.orderStatus == 0 or order.orderStatus == 1) and !isPast}">
+								<button class="btn btn-primary btn-sm">聯絡保母</button>
+								<button type="button" th:data-id="${order.bookingOrderId}"
+									th:data-start="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"
+									onclick="openCancelModal(this)" class="btn btn-danger">
+									取消預約</button>
+							</th:block>
 
-						<button class="btn btn-outline btn-sm" style="border-radius: 2rem;">管理</button>
+							<th:block th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
+								<button class="btn btn-outline btn-sm">查看照顧紀錄</button>
+								<button class="btn btn-outline btn-sm">評價保母</button>
+							</th:block>
+
+							<th:block th:if="${order.orderStatus == 3}">
+								<span
+									style="color: #ccc; font-size: 0.9rem; margin-right: 1rem;">訂單已結束</span>
+							</th:block>
+						</div>
 					</div>
 				</div>
 
@@ -149,8 +140,89 @@
 			</div>
 		</main>
 	</div>
-	<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+	<div id="cancelBookingModal"
+		style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; align-items: center; justify-content: center;">
+		<div
+			style="background: white; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 450px; position: relative;">
+			<button onclick="closeCancelModal()"
+				style="position: absolute; right: 1.5rem; top: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+			<h3 class="mb-2">取消預約</h3>
+			<div id="refundInfoBox" class="mb-3 p-3"
+				style="background: #f8f9fa; border-radius: 8px;"></div>
+			<div class="d-flex gap-md">
+				<button class="btn btn-outline"
+					style="flex: 1; border-radius: 2rem;" onclick="closeCancelModal()">暫不取消</button>
+				<button class="btn btn-primary" id="confirmCancelBtn"
+					style="flex: 1; background: #fa5252; border-color: #fa5252; border-radius: 2rem;">確認取消並退款</button>
+			</div>
+		</div>
+	</div>
+	<footer id="main-footer"
+		style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 	<script th:src="@{/js/frontend/main.js}"></script>
+	<script>
+	let currentCancelId = null;
+
+    function openCancelModal(btn) {
+    	const orderId = btn.getAttribute('data-id');
+        const startDateStr = btn.getAttribute('data-start');
+    	
+        currentCancelId = orderId;
+        const infoBox = document.getElementById('refundInfoBox');
+        
+        // 計算退費邏輯
+        const today = new Date();
+        const bookingDate = new Date(startDateStr);
+        const diffTime = bookingDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 7) {
+            infoBox.innerHTML = `
+                <p style="color:#2f9e44; font-weight:600; margin:0;">符合全額退費條件</p>
+                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務還有 ${diffDays} 天，取消將退還 100% 預約金。</p>`;
+        } else if (diffDays > 0) {
+            infoBox.innerHTML = `
+                <p style="color:#ea580c; font-weight:600; margin:0;">酌收手續費 (退還 50%)</p>
+                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務僅剩 ${diffDays} 天，取消將退還 50% 預約金。</p>`;
+        } else {
+            infoBox.innerHTML = `
+                <p style="color:#fa5252; font-weight:600; margin:0;">不可退費</p>
+                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>服務已開始或即將開始，目前取消不予退費。</p>`;
+        }
+
+        document.getElementById('cancelBookingModal').style.display = 'flex';
+        
+        // 綁定按鈕點擊事件 (確保只綁定一次)
+        document.getElementById('confirmCancelBtn').onclick = function() {
+            handleRefund(currentCancelId);
+        };
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelBookingModal').style.display = 'none';
+    }
+
+    async function handleRefund(orderId) {
+        try {
+            const response = await fetch(`/booking/refund/${orderId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                alert("取消成功！系統已自動處理退款審核。");
+                window.location.reload();
+            } else {
+                const errorMsg = await response.text();
+                alert("取消失敗：");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("系統錯誤，請稍後再試。");
+        }
+        closeCancelModal();
+    }
+	</script>
 </body>
 
 </html>
