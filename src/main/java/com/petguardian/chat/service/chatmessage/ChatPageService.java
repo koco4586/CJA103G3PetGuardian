@@ -1,8 +1,8 @@
 package com.petguardian.chat.service.chatmessage;
 
 import java.util.List;
-import com.petguardian.chat.model.ChatMemberDTO;
-import com.petguardian.chat.model.ChatRoomDTO;
+import com.petguardian.chat.dto.ChatMemberDTO;
+import com.petguardian.chat.dto.ChatRoomDTO;
 
 /**
  * Service Interface for Chat View Data Aggregation.

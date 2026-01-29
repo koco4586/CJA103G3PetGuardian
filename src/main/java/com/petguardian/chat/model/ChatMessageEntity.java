@@ -3,7 +3,7 @@ package com.petguardian.chat.model;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import jakarta.persistence.Index;
 
 /**
  * Entity: Chat Message.
@@ -25,10 +27,13 @@ import lombok.NoArgsConstructor;
  * independent scaling or microservice extraction.
  */
 @Entity
-@Table(name = "chat_message")
+@Table(name = "chat_message", indexes = {
+        @Index(name = "idx_chatroom_tsid", columnList = "chatroom_id, message_id DESC"),
+        @Index(name = "idx_member_id", columnList = "member_id")
+})
 @Data
 @NoArgsConstructor
-public class ChatMessageEntity implements Serializable {
+public class ChatMessageEntity implements Persistable<String>, Serializable {
 
     @Id
     @Column(name = "message_id", length = 13, updatable = false)
@@ -43,12 +48,24 @@ public class ChatMessageEntity implements Serializable {
     @Column(name = "message", length = 2000)
     private String message;
 
-    @CreationTimestamp
-    @Column(name = "chat_time", insertable = false, updatable = false)
+    @Column(name = "chat_time")
     private LocalDateTime chatTime;
 
     @Column(name = "reply_to_message_id", length = 13)
     private String replyToMessageId; // Reference to parent message ID
+
+    @Override
+    public String getId() {
+        return messageId;
+    }
+
+    @Override
+    public boolean isNew() {
+        // Since we use TSID (manually assigned), returning true bypasses the
+        // SELECT-before-INSERT check.
+        // This is safe because TSID collision is extremely unlikely.
+        return true;
+    }
 
     @Override
     public boolean equals(Object object) {

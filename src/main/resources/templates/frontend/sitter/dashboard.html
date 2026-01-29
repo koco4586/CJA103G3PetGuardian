@@ -104,7 +104,11 @@
                         <span><span
                                 style="display: inline-block; width: 12px; height: 12px; background: #4caf50; margin-right: 4px;"></span>可預約</span>
                         <span><span
+<<<<<<< HEAD
                                 style="display: inline-block; width: 12px; height: 12px; background: #ff9800; margin-right: 4px;"></span>已有預約</span>
+=======
+                                style="display: inline-block; width: 12px; height: 12px; background: #ff9800; margin-right: 4px;"></span>已被預約</span>
+>>>>>>> refs/remotes/origin/master
                     </div>
                 </div>
 
@@ -323,6 +327,16 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function () {
+
+            // [NEW] 檢查是否有待確認訂單並顯示通知
+            const pendingCount = /*[[${pendingCount}]]*/ 0;
+            if (pendingCount > 0) {
+                // 使用 setTimeout 確保頁面渲染完成後彈出
+                setTimeout(() => {
+                    alert(`親愛的保母您好：\n目前有 ${pendingCount} 筆新的預約等待您的確認！\n請前往「預約管理」查看。`);
+                }, 500);
+            }
+
             initCalendar();
 
             // 綁定按鈕事件

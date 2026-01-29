@@ -33,6 +33,7 @@
 			</div>
 
 			<nav>
+<<<<<<< HEAD
 				<a href="/member/profile" class="menu-link"><i
 					class="fas fa-user"></i> 個人資料</a> <a href="/member/pets"
 					class="menu-link"><i class="fas fa-paw"></i> 我的寵物</a> <a
@@ -45,6 +46,17 @@
 						style="color: #ef4444;"> <i class="fas fa-sign-out-alt"></i>
 						登出
 					</a>
+=======
+				<a href="#" class="menu-link"><i class="fas fa-user"></i> 個人資料</a> <a
+					href="#" class="menu-link"><i class="fas fa-paw"></i> 我的寵物</a> <a
+					href="/booking/memberOrders" class="menu-link active"><i
+					class="fas fa-calendar-check"></i> 保母預約紀錄</a> <a href="#"
+					class="menu-link"><i class="fas fa-heart"></i> 收藏列表</a>
+				<div
+					style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
+					<a href="#" class="menu-link" style="color: #ef4444;"><i
+						class="fas fa-sign-out-alt"></i> 登出</a>
+>>>>>>> refs/remotes/origin/master
 				</div>
 			</nav>
 		</aside>
@@ -85,6 +97,7 @@
 							<div class="d-flex align-center gap-sm mb-xs">
 								<h4 th:text="${order.sitterName}">保母姓名</h4>
 								<span th:if="${order.orderStatus == 0}"
+<<<<<<< HEAD
 									class="badge-pill status-upcoming">即將到來</span> <span
 									th:if="${order.orderStatus == 1}"
 									class="badge-pill status-ongoing">進行中</span> <span
@@ -99,6 +112,23 @@
 								<i class="far fa-clock"></i> <span
 									th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')} + ' ~ ' + ${#temporals.format(order.endTime, 'HH:mm')}">
 								</span>
+=======
+									class="badge-pill status-upcoming">即將到來</span> 
+									<span
+									th:if="${order.orderStatus == 1}"
+									class="badge-pill status-ongoing">進行中</span> 
+									<span
+									th:if="${order.orderStatus == 2}"
+									class="badge-pill status-completed">服務完成</span> 
+									<span
+									th:if="${order.orderStatus == 3}"
+									class="badge-pill status-cancelled">已取消</span>
+								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>	
+							</div>
+							<div style="color: #666; font-size: 0.9rem;">
+								<i class="far fa-clock"></i> <span
+									th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"></span>
+>>>>>>> refs/remotes/origin/master
 							</div>
 						</div>
 					</div>
@@ -112,6 +142,7 @@
 						</div>
 
 						<div class="d-flex gap-sm">
+<<<<<<< HEAD
 							<th:block
 								th:with="isPast=${order.startTime.isBefore(#temporals.createNow())}">
 								<th:block
@@ -122,7 +153,19 @@
 										onclick="openCancelModal(this)" class="btn btn-danger">
 										取消預約</button>
 								</th:block>
+=======
+							<th:block th:with="isPast=${order.startTime.isBefore(#temporals.createNow())}">
+							<th:block
+								th:if="${(order.orderStatus == 0 or order.orderStatus == 1) and !isPast}">
+								<button class="btn btn-primary btn-sm">聯絡保母</button>
+								<button type="button" th:data-id="${order.bookingOrderId}"
+									th:data-start="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"
+									onclick="openCancelModal(this)" class="btn btn-danger">
+									取消預約</button>
+							</th:block>
+>>>>>>> refs/remotes/origin/master
 
+<<<<<<< HEAD
 								<th:block
 									th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
 									<!--  	<button class="btn btn-outline btn-sm">查看照顧紀錄</button>     -->
@@ -150,6 +193,17 @@
 										</div>
 									</div>
 								</th:block>
+=======
+							<th:block th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
+								<button class="btn btn-outline btn-sm">查看照顧紀錄</button>
+								<button class="btn btn-outline btn-sm">評價保母</button>
+							</th:block>
+
+							<th:block th:if="${order.orderStatus == 3}">
+								<span
+									style="color: #ccc; font-size: 0.9rem; margin-right: 1rem;">訂單已結束</span>
+							</th:block>
+>>>>>>> refs/remotes/origin/master
 						</div>
 					</div>
 				</div>
@@ -182,6 +236,7 @@
 		style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script>
+<<<<<<< HEAD
 		let currentCancelId = null;
 
 		function openCancelModal(btn) {
@@ -243,6 +298,69 @@
 			}
 			closeCancelModal();
 		}
+=======
+	let currentCancelId = null;
+
+    function openCancelModal(btn) {
+    	const orderId = btn.getAttribute('data-id');
+        const startDateStr = btn.getAttribute('data-start');
+    	
+        currentCancelId = orderId;
+        const infoBox = document.getElementById('refundInfoBox');
+        
+        // 計算退費邏輯
+        const today = new Date();
+        const bookingDate = new Date(startDateStr);
+        const diffTime = bookingDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 7) {
+            infoBox.innerHTML = `
+                <p style="color:#2f9e44; font-weight:600; margin:0;">符合全額退費條件</p>
+                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務還有 ${diffDays} 天，取消將退還 100% 預約金。</p>`;
+        } else if (diffDays > 0) {
+            infoBox.innerHTML = `
+                <p style="color:#ea580c; font-weight:600; margin:0;">酌收手續費 (退還 50%)</p>
+                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務僅剩 ${diffDays} 天，取消將退還 50% 預約金。</p>`;
+        } else {
+            infoBox.innerHTML = `
+                <p style="color:#fa5252; font-weight:600; margin:0;">不可退費</p>
+                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>服務已開始或即將開始，目前取消不予退費。</p>`;
+        }
+
+        document.getElementById('cancelBookingModal').style.display = 'flex';
+        
+        // 綁定按鈕點擊事件 (確保只綁定一次)
+        document.getElementById('confirmCancelBtn').onclick = function() {
+            handleRefund(currentCancelId);
+        };
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelBookingModal').style.display = 'none';
+    }
+
+    async function handleRefund(orderId) {
+        try {
+            const response = await fetch(`/booking/refund/${orderId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                alert("取消成功！系統已自動處理退款審核。");
+                window.location.reload();
+            } else {
+                const errorMsg = await response.text();
+                alert("取消失敗：");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("系統錯誤，請稍後再試。");
+        }
+        closeCancelModal();
+    }
+>>>>>>> refs/remotes/origin/master
 	</script>
 </body>
 

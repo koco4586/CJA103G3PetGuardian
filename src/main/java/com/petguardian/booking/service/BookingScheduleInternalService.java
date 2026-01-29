@@ -82,6 +82,7 @@ public class BookingScheduleInternalService {
 
         String newStatus = scheduleService.updateStatusString(schedule.getBookingStatus(), startH, endH, targetStatus);
         schedule.setBookingStatus(newStatus);
+<<<<<<< HEAD
 
         if (targetStatus != '0') {
             schedule.setBookingOrderId(order.getBookingOrderId());
@@ -134,6 +135,55 @@ public class BookingScheduleInternalService {
             }
             // 如果是「進行中」(1) 且結束時間已過,改為「已完成」(2)
             else if (order.getOrderStatus() == 1 && order.getEndTime().isBefore(now)) {
+=======
+        
+        if (targetStatus != '0') {
+            schedule.setBookingOrderId(order.getBookingOrderId());
+        } else {
+            schedule.setBookingOrderId(null); // 釋放訂單關聯
+        }
+
+        scheduleRepository.save(schedule);
+    }
+
+    /**
+     * 獲取保母當天已佔用的位元整數
+     */
+    public int getSitterScheduleBits(Integer sitterId, LocalDate date) {
+        return scheduleRepository.findBySitterIdAndScheduleDate(sitterId, date)
+                .map(schedule -> convertStatusStringToBits(schedule.getBookingStatus()))
+                .orElse(0);
+    }
+
+    /**
+     * 計算特定時間範圍對應的位元
+     */
+    public int calculateBits(LocalDateTime start, LocalDateTime end) {
+        int bits = 0;
+        int startHour = start.getHour();
+        int endHour = end.getHour();
+        for (int i = startHour; i < endHour; i++) {
+            bits |= (1 << i);
+        }
+        return bits;
+    }
+
+    private int convertStatusStringToBits(String status) {
+        int bits = 0;
+        for (int i = 0; i < 24; i++) {
+            if (status.charAt(i) != '0') { // 只要不是 0 (空閒)，就視為佔用
+                bits |= (1 << i);
+            }
+        }
+        return bits;
+    }
+
+    public void autoUpdateExpiredOrders(List<BookingOrderVO> orders) {
+        LocalDateTime now = LocalDateTime.now();
+        for (BookingOrderVO order : orders) {
+            if ((order.getOrderStatus() == 0 || order.getOrderStatus() == 1) 
+                && order.getStartTime().isBefore(now)) {
+>>>>>>> refs/remotes/origin/master
                 order.setOrderStatus(2);
                 orderRepository.save(order);
             }

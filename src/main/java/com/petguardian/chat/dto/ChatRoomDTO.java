@@ -1,4 +1,4 @@
-package com.petguardian.chat.model;
+package com.petguardian.chat.dto;
 
 import java.time.LocalDateTime;
 import lombok.Data;

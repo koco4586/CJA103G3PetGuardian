@@ -38,6 +38,7 @@ public class SitterBookingController {
     public String listSitterOrders(@RequestParam(required = false) Integer status,
             HttpServletRequest request,
             Model model) {
+<<<<<<< HEAD
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) return "redirect:/front/loginpage";
 
@@ -78,6 +79,26 @@ public class SitterBookingController {
 
         model.addAttribute("bookingList", bookingList);
         model.addAttribute("sitter", dataService.getMemberInfo(memId));
+=======
+        Integer sitterId = authStrategyService.getCurrentUserId(request);
+        if (sitterId == null)
+            return "redirect:/front/loginpage";
+
+        List<BookingOrderVO> bookingList = (status != null)
+                ? bookingService.findBySitterAndStatus(sitterId, status)
+                : bookingService.getOrdersBySitterId(sitterId);
+
+        var member = dataService.getMemberInfo(sitterId);
+
+        // 加上本月收入計算邏輯
+        int income = bookingList.stream()
+                .filter(o -> o.getOrderStatus() != null && (o.getOrderStatus() == 2 || o.getOrderStatus() == 5))
+                .mapToInt(BookingOrderVO::getReservationFee)
+                .sum();
+
+        model.addAttribute("bookingList", bookingList);
+        model.addAttribute("sitter", member);
+>>>>>>> refs/remotes/origin/master
         model.addAttribute("currentStatus", status);
         model.addAttribute("monthlyIncome", income);
 

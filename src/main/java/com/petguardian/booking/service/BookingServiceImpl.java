@@ -70,6 +70,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status) {
+<<<<<<< HEAD
         // 先取得所有訂單
         List<BookingOrderVO> allOrders = orderRepository.findBySitterId(sitterId);
         // 自動更新過期訂單狀態
@@ -79,6 +80,22 @@ public class BookingServiceImpl implements BookingService {
                 .filter(o -> o.getOrderStatus().equals(status))
                 .toList();
 
+=======
+        List<BookingOrderVO> list = orderRepository.findBySitterId(sitterId).stream()
+                .filter(o -> o.getOrderStatus().equals(status))
+                .toList();
+
+        list.forEach(this::enrichOrderInfo);
+        return list;
+    }
+
+    // [New] 查詢某保母特定狀態的訂單 (Service層封裝)
+    @Override
+    public List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status) {
+        // 呼叫 Repository 進行查詢 (狀態: 0=待確認, 1=進行中...)
+        List<BookingOrderVO> list = orderRepository.findBySitterIdAndOrderStatus(sitterId, status);
+        // 補充訂單相關資訊 (如會員名稱、寵物名稱等)
+>>>>>>> refs/remotes/origin/master
         list.forEach(this::enrichOrderInfo);
         return list;
     }
@@ -165,9 +182,14 @@ public class BookingServiceImpl implements BookingService {
 
     // 核准退款
     @Override
+<<<<<<< HEAD
     public void approveRefund(Integer orderId, Double ratio) {
+=======
+    public void approveRefund(Integer orderId) {
+>>>>>>> refs/remotes/origin/master
         BookingOrderVO order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("找不到訂單"));
+<<<<<<< HEAD
         int refundAmount = (int) (order.getReservationFee() * ratio);
         if (refundAmount > 0) {
             dataService.processRefund(order.getMemId(), refundAmount);
@@ -175,6 +197,9 @@ public class BookingServiceImpl implements BookingService {
         order.setOrderStatus(4); // 4: 已退款
         String ratioText = (ratio >= 1.0) ? "全額退款" : (int)(ratio * 100) + "% 部分退款";
         order.setCancelReason(order.getCancelReason() + " [" + ratioText + " - 管理員核准]");
+=======
+        order.setOrderStatus(4); // 4: 已退款
+>>>>>>> refs/remotes/origin/master
         orderRepository.save(order);
         scheduleInternalService.updateSitterSchedule(order, '0');
     }
@@ -198,8 +223,13 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime now = LocalDateTime.now();
         if (!order.getEndTime().isAfter(order.getStartTime()))
             throw new IllegalArgumentException("結束時間錯誤");
+<<<<<<< HEAD
         if (order.getStartTime().isBefore(now.plusHours(2)))
             throw new IllegalArgumentException("需兩小時前預約");
+=======
+        // if (order.getStartTime().isBefore(now.plusHours(2))) throw new
+        // IllegalArgumentException("需兩小時前預約");
+>>>>>>> refs/remotes/origin/master
         if (!order.getStartTime().toLocalDate().isEqual(order.getEndTime().toLocalDate()))
             throw new IllegalArgumentException("不可跨日");
     }
