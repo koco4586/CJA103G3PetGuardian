@@ -67,12 +67,12 @@
 	
 	            <div class="input-group">
 	                <label class="input-label">貼文標題</label>
-	                <input type="text" th:field="*{postTitle}" class="input-title" placeholder="請給貼文一個吸引人的標題吧！" />
+	                <input type="text" th:field="*{postTitle}" class="input-title" placeholder="請輸入貼文標題..." />
 	            </div>
 	
 	            <div class="input-group">
 	                <label class="input-label">文章內容</label>
-	                <textarea th:field="*{postContent}" class="input-content" placeholder="分享毛小孩的日常心得（至少 30 字）..."></textarea>
+	                <textarea th:field="*{postContent}" class="input-content" placeholder="分享毛小孩的日常心得..."></textarea>
 	            </div>
 	
 	            <div class="upload-container">
@@ -156,7 +156,7 @@
         const errorEl = document.getElementById('errorData');
         if (errorEl) {
             const msg = errorEl.getAttribute('data-msgs');
-            Swal.fire({ icon: 'error', title: '上傳失敗', text: msg, confirmButtonColor: '#ff9800' });
+            Swal.fire({ icon: 'error', title: '失敗', text: msg, confirmButtonColor: '#ff9800' });
         }
     </script>
 </body>
