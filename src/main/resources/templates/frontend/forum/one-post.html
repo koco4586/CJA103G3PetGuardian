@@ -216,7 +216,7 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                             <a th:href="@{/forumpost/report-post(postId=${forumPostVO.postId})}">
 							    <i class="far fa-flag"></i> 檢舉文章
 							</a>
-                            <a th:href="@{/forumpost/update-post(postId=${forumPostVO.postId})}">
+                            <a th:href="@{/forumpost/update-post(postId=${forumPostVO.postId}, forumId=${forumId})}">
                                 <i class="far fa-edit"></i> 修改文章
                             </a>
                             <a th:href="@{/forumpost/delete-post(postId=${forumPostVO.postId}, forumId=${forumId})}" style="color: #e74c3c;">
