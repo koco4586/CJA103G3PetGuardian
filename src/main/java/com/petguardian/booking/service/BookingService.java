@@ -47,5 +47,8 @@ public interface BookingService {
 	void approveRefund(Integer orderId, Double ratio);
 
 	void completePayout(Integer orderId);
+	
+	//收藏
+	boolean toggleSitterFavorite(Integer memId, Integer sitterId);
 
 }

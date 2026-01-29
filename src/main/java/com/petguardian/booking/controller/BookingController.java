@@ -25,6 +25,7 @@ import com.petguardian.pet.model.PetVO;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * 前台預約流程控制器：處理預約建立、列表查詢與取消訂單等功能
@@ -41,6 +42,22 @@ public class BookingController {
 
     @Autowired
     private AuthStrategyService authStrategyService;
+    
+    //收藏
+    @PostMapping("/toggleFavorite/{sitterId}")
+    @ResponseBody
+    public ResponseEntity<String> toggleFavorite(@PathVariable Integer sitterId, HttpSession session) {
+        Integer memId = (Integer) session.getAttribute("memId");
+        if (memId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("請先登入");
+        }
+
+        // 呼叫 Service 執行「切換收藏」邏輯
+        // 如果已收藏則刪除，未收藏則新增
+        boolean isFavorited = bookingService.toggleSitterFavorite(memId, sitterId);
+        
+        return ResponseEntity.ok(isFavorited ? "added" : "removed");
+    }
 
     /**
      * 【1. 顯示預約表單頁面】

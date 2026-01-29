@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.petguardian.booking.model.BookingFavoriteRepository;
+import com.petguardian.booking.model.BookingFavoriteVO;
 import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
@@ -24,6 +26,9 @@ public class BookingServiceImpl implements BookingService {
 
     @Autowired
     private BookingDataIntegrationService dataService;
+    
+    @Autowired
+    private BookingFavoriteRepository sitterFavoriteRepository;
 
     // 會員端查詢
     @Override
@@ -214,5 +219,26 @@ public class BookingServiceImpl implements BookingService {
         long daysUntil = Duration.between(LocalDateTime.now(), order.getStartTime()).toDays();
         double rate = (daysUntil >= 7) ? 1.0 : (daysUntil >= 1 ? 0.5 : 0.0);
         return (int) (order.getReservationFee() * rate);
+    }
+    
+    @Override
+    public boolean toggleSitterFavorite(Integer memId, Integer sitterId) {
+        // 1. 查詢是否已經收藏 (注意：這裡要用你注入的變數名 sitterFavoriteRepository 或 bookingFavoriteRepository)
+        var existingFav = sitterFavoriteRepository.findByMemIdAndSitterId(memId, sitterId);
+
+        if (existingFav.isPresent()) {
+            // 2. 如果已存在，則移除收藏 (取消收藏)
+            sitterFavoriteRepository.delete(existingFav.get());
+            return false; 
+        } else {
+            // 3. 如果不存在，則新增收藏紀錄
+            // 修正點：new 的對象必須是 BookingFavoriteVO
+            BookingFavoriteVO newFav = new BookingFavoriteVO(); 
+            newFav.setMemId(memId);
+            newFav.setSitterId(sitterId);
+            
+            sitterFavoriteRepository.save(newFav);
+            return true; 
+        }
     }
 }

@@ -126,10 +126,12 @@
                     <div class="price-badge">
                         $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
                     </div>
-                    <button class="btn-like"
-                        style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
-                        <i class="far fa-heart"></i>
-                    </button>
+                    <button class="btn-like" 
+					        th:classappend="${sitter.isFavorited ? 'active' : ''}"
+					        th:onclick="'handleToggleFavorite(' + ${sitter.sitterId} + ', this)'"
+					        style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
+					    <i class="fa-heart" th:classappend="${sitter.isFavorited ? 'fa-solid text-danger' : 'fa-regular'}"></i>
+					</button>
                 </div>
                 <div class="content" style="padding: 1.5rem;">
                     <div class="d-flex justify-between align-center mb-1">
@@ -331,6 +333,53 @@
         function searchSitters() {
             const area = document.getElementById('searchArea').value;
             window.location.href = `/booking/search?area=${encodeURIComponent(area)}`;
+        }
+        
+        async function handleToggleFavorite(sitterId, btn) {
+            try {
+                const response = await fetch(`/booking/toggleFavorite/${sitterId}`, {
+                    method: 'POST'
+                });
+
+                if (response.status === 401) {
+                    alert("請先登入後再收藏保姆");
+                    window.location.href = "/member/login";
+                    return;
+                }
+
+                if (response.ok) {
+                    const result = await response.text();
+                    const icon = btn.querySelector('i');
+                    
+                    if (result === "added") {
+                        // 變為已收藏狀態 (紅色實心)
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid', 'text-danger');
+                        btn.classList.add('active');
+                        showFlashMessage("已加入收藏列表");
+                    } else {
+                        // 變為未收藏狀態 (灰色空心)
+                        icon.classList.remove('fa-solid', 'text-danger');
+                        icon.classList.add('fa-regular');
+                        btn.classList.remove('active');
+                        showFlashMessage("已從收藏移除");
+                    }
+                }
+            } catch (error) {
+                console.error("收藏操作失敗:", error);
+            }
+        }
+
+        // 借用你收藏頁面的提示訊息功能
+        function showFlashMessage(text) {
+            const msg = document.createElement('div');
+            msg.className = 'flash-message success';
+            msg.innerHTML = `<i class="fas fa-check-circle"></i> <span>${text}</span>`;
+            document.body.appendChild(msg);
+            setTimeout(() => {
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            }, 2000);
         }
     </script>
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
