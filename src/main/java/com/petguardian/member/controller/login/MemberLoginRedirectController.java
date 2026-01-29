@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class MemberLoginRedirectController {
 
     @GetMapping("/loginpage")
-    public String login() {
+    public String loginpage(){
 
-        return "frontend/member/login/login";
+        return "frontend/member/login/login_backup";
 
     }
 

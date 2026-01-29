@@ -86,10 +86,10 @@
 <body>
     <header id="main-header" class="header"></header>
 
-    <main class="container" style="padding-top: 5rem; padding-bottom: 5rem;">
+    <main class="container" style="padding-top: 2rem; padding-bottom: 5rem;">
         <!-- 搜尋區域 -->
         <div class="filter-section">
-            <h2 class="mb-2" style="font-weight: 700; color: #333;">找尋寵物保母</h2>
+            <h2 class="mb-2" style="font-weight: 700; color: #333;">找尋您的完美寵物保母</h2>
             <div class="d-flex gap-lg" style="flex-wrap: wrap;">
                 <div class="form-group mb-0" style="flex: 2; min-width: 250px;">
                     <label class="form-label">搜尋地區</label>
@@ -100,8 +100,7 @@
                             style="padding-left: 2.8rem;">
                     </div>
                 </div>
-                <div class="form-group mb-0" style="flex: 0.5; min-width: 150px;">
-                    <label class="form-label" style="visibility: hidden;">搜尋</label>
+                <div class="d-flex align-end" style="flex: 0.5;">
                     <button class="btn btn-primary" style="height: 48px; width: 100%; border-radius: 0.8rem;"
                         onclick="searchSitters()">
                         <i class="fa-solid fa-magnifying-glass mr-xs"></i> 搜尋
@@ -118,43 +117,39 @@
 
         <div class="sitter-grid" id="sitter-list">
             <!-- 動態迴圈渲染保母 -->
-            <div class="card-premium" th:each="sitter : ${sitters}"
-                th:onclick="|location.href='@{/frontend/public/sitter/detail/{id}(id=${sitter.sitterId})}'|"
-                style="cursor: pointer;">
-
+            <div class="card-premium" th:each="sitter : ${sitters}">
                 <div class="img-container">
-                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
-                        alt="保姆照片" class="sitter-img">
+                    <a th:href="@{/frontend/public/sitter/detail/{id}(id=${sitter.sitterId})}">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
+                            alt="保姆照片" class="sitter-img">
+                    </a>
                     <div class="price-badge">
                         $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
                     </div>
-                    <button class="btn-like" onclick="event.stopPropagation();"
+                    <button class="btn-like"
                         style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
                         <i class="far fa-heart"></i>
                     </button>
                 </div>
-
                 <div class="content" style="padding: 1.5rem;">
                     <div class="d-flex justify-between align-center mb-1">
                         <h4 th:text="${sitter.sitterName}" style="margin: 0; font-size: 1.2rem; font-weight: 700;">保母姓名
                         </h4>
                         <div style="color: #ffb800; font-size: 0.9rem;">
-                            <i class="fa-solid fa-star"></i> <span
-                                th:text="${sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitterStarCount * 1.0 / sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
+                            <i class="fa-solid fa-star"></i>
+                            <span
+                                th:text="${sitter.sitterRatingCount != null && sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitterStarCount * 1.0 / sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
                         </div>
                     </div>
                     <p style="color: #666; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.2rem;"
-                        th:text="${areaMap.get(sitter.sitterId) != null and !areaMap.get(sitter.sitterId).isEmpty() ? areaMap.get(sitter.sitterId) : '尚未設定服務地區'}">
-                        保母服務地區</p>
+                        th:text="${sitter.sitterAdd}">保母地址</p>
                     <div class="d-flex gap-xs mb-2">
-                        <span class="category-tag">貓 / 狗</span>
                         <span class="category-tag"
-                            th:text="${cityMap.get(sitter.sitterId) != null and !cityMap.get(sitter.sitterId).isEmpty() ? cityMap.get(sitter.sitterId) : '服務中'}">台北市</span>
+                            th:text="${sitter.sitterAdd != null and sitter.sitterAdd.length() >= 3 ? sitter.sitterAdd.substring(0,3) : '服務中'}">區域</span>
+                        <span class="category-tag">到府照顧</span>
                     </div>
-
                     <button class="btn btn-primary btn-booking-trigger" style="width: 100%; border-radius: 3rem;"
-                        th:data-name="${sitter.sitterName}" th:data-id="${sitter.sitterId}"
-                        onclick="event.stopPropagation(); openBookingModal(this.getAttribute('data-name'), this.getAttribute('data-id'));">
+                        th:data-name="${sitter.sitterName}" th:data-id="${sitter.sitterId}">
                         立即預約</button>
                 </div>
             </div>
@@ -231,7 +226,7 @@
 
             // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
             const now = new Date();
-            const minDate = new Date(now.getTime() + 1 * 60 * 60 * 1000);
+            const minDate = new Date(now.getTime());
             const maxDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
 
             function formatDT(date) {

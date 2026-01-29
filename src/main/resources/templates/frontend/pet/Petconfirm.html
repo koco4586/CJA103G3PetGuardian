@@ -62,7 +62,7 @@
 <body>
 
 
-<input type="hidden" name="petId" id="petId">
+<input type="hidden" name="petId" id="petId" th:value="${petId}">
 
     <div class="container">
         <div id="timer_container" class="timer-text">確認這張圖片嗎？ (<span id="timer">10</span>s)</div>
@@ -173,6 +173,10 @@
         
         if (!pendingData) { alert("找不到資料!"); return; }
         
+        console.log("=== 準備傳送資料檢查 ===");
+        console.log("合成圖長度:", pendingData.img_base64 ? pendingData.img_base64.length : "0 (空的)");
+        console.log("原圖長度:", pendingData.original_base64 ? pendingData.original_base64.length : "0 (空的)");
+        
         console.log("當前 Session 資料：", pendingData);
         
        
@@ -182,44 +186,60 @@
         btn.disabled = true;
         btn.innerText = "處理中...";
         
-        const params = new URLSearchParams();
+        const params = new FormData();
         
        
-        const finalId = pendingData.petId || pendingData.PetId;
-        if (finalId) {
-            // 使用 .set 確保這個 Key 在 params 裡是唯一的
-            params.set("petId", finalId.toString()); 
-        }
-        
-        
+        let finalId = document.getElementById("petId").value;
+
+     // 2. 如果 HTML 拿不到，才嘗試從 sessionStorage 拿
+     if (!finalId || finalId === "null") {
+         finalId = pendingData ? pendingData.petId : null;
+     }
+
+     const isUpdate = (finalId != null && String(finalId).trim() !== "" && String(finalId) !== "null");
+     let targetUrl = isUpdate ? "/pet/update" : "/pet/insertBase64";
+     
+     
+     if (pendingData.isUpdateMode && (!finalId || finalId === "null" || finalId === "")) {
+    	    alert("系統偵測到修改對象的編號遺失，請返回修改頁面重新操作。");
+    	    btn.disabled = false;
+    	    btn.innerText = "確認送出";
+    	    return;
+    	}
+     
+     
+     
+     
         let imgValue = pendingData.img_base64 || "";
+        let originalValue = pendingData.original_base64 || "";
+        
         if (imgValue.startsWith("/pet/img")) {
             imgValue = ""; 
         }
         
         
-      
+        const sendOriginal = pendingData.original_base64 || "";
         
-        params.set("petId", String(finalId).trim());
+        
+        params.set("petId", isUpdate ? String(finalId).trim() : "");
         params.append("action", "insert_base64");
-        params.append("petImageBase64", imgValue);
-        params.append("petName", pendingData.petName || "");
-        params.append("typeId", pendingData.typeId || pendingData.typeId);
-        params.append("petGender", pendingData.petGender || pendingData.petGender); // 確保抓得到值
-        params.append("petAge", pendingData.petAge || "0");
-        params.append("sizeId", pendingData.sizeId || "1");
-        params.append("petDescription", pendingData.petDescription || "");
-        params.append("lng", pendingData.lng || "");
-        params.append("lat", pendingData.lat || "");
+        params.append("petImageBase64", pendingData ? (imgValue || "") : "");
+        params.append("originalBase64", pendingData ? (originalValue || "") : "");
+        params.append("petName", pendingData ? (pendingData.petName || "") : "");
+        params.append("typeId", pendingData ? (pendingData.typeId || "") : "");
+        params.append("petGender", pendingData ? (pendingData.petGender || "") : "");
+        params.append("petAge", pendingData ? (pendingData.petAge || "0") : "0");
+        params.append("sizeId", pendingData ? (pendingData.sizeId || "1") : "1");
+        params.append("petDescription", pendingData ? (pendingData.petDescription || "") : "");
+        params.append("lng", pendingData ? (pendingData.lng || "") : "");
+        params.append("lat", pendingData ? (pendingData.lat || "") : "");
 
        
         
-        let targetUrl = pendingData.petId ? "/pet/update" : "/pet/insertBase64";
-        
         fetch(targetUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-            body: params.toString()
+            
+            body: params
         })
         .then(response => response.text())
         .then(text => {
