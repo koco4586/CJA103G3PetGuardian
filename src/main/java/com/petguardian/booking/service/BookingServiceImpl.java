@@ -69,7 +69,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status) {
+    public List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status) {
         // 先取得所有訂單
         List<BookingOrderVO> allOrders = orderRepository.findBySitterId(sitterId);
         // 自動更新過期訂單狀態
