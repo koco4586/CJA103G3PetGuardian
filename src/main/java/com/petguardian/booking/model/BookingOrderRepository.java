@@ -21,5 +21,7 @@ public interface BookingOrderRepository extends JpaRepository<BookingOrderVO, In
     // 查詢某保姆的所有歷史評價 (只查有評分的訂單), 排序: 依結束時間由新到舊
     List<BookingOrderVO> findBySitterIdAndSitterRatingNotNullOrderByEndTimeDesc(Integer sitterId);
 
-    
+    // [New] 支援根據保母 ID 與 訂單狀態 查詢
+    List<BookingOrderVO> findBySitterIdAndOrderStatus(Integer sitterId, Integer orderStatus);
+
 }

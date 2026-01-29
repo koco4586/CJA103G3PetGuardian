@@ -6,6 +6,9 @@
 	margin-bottom: 5rem;
 <<<<<<< HEAD
 	align-items: start;
+=======
+<<<<<<< HEAD
+	align-items: start;
 }
 
 .dashboard-sidebar {
@@ -264,6 +267,7 @@
 		justify-content: space-between;
 	}
 =======
+>>>>>>> refs/heads/master
 }
 
 .dashboard-sidebar {
@@ -284,6 +288,7 @@
 	color: #666;
 	transition: all 0.2s ease;
 	margin-bottom: 0.5rem;
+	text-decoration: none;
 }
 
 .menu-link:hover, .menu-link.active {
@@ -325,23 +330,10 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	width: 100%;
 	gap: 1rem;
-	overflow-x: auto; /* 啟動橫向捲軸 */
-	white-space: nowrap; /* 強制不換行 */
-	padding-bottom: 5px;
-	-webkit-overflow-scrolling: touch;
+	flex-wrap: wrap;
 }
-
-/* 隱藏捲軸但保留滾動功能 */
-.filter-tabs-wrapper::-webkit-scrollbar {
-	height: 4px;
-}
-
-.filter-tabs-wrapper::-webkit-scrollbar-thumb {
-	background: #e0e0e0;
-	border-radius: 4px;
-}
-
 .filter-group {
 	display: flex;
 	gap: 0.5rem;
@@ -358,6 +350,8 @@
 	transition: all 0.2s;
 	text-decoration: none;
 	display: inline-block;
+	min-width: 80px;
+	text-align: center;
 }
 
 .tab-btn:hover {
@@ -409,22 +403,130 @@
 	color: #9e9e9e;
 } /* 已取消 */
 #main-header {
-    min-height: 80px;
-    display: block;
+	min-height: 80px;
+	display: block;
 }
 /* 解決跳動的常用 CSS 技巧 */
 .dashboard-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 2rem;
-    align-items: start; /* 防止側邊欄被拉長 */
+	display: grid;
+	grid-template-columns: 280px 1fr;
+	gap: 2rem;
+	align-items: start; /* 防止側邊欄被拉長 */
 }
 
 /* 確保圖片或圓圈在載入前不坍陷 */
 .dashboard-sidebar .text-center div {
-    aspect-ratio: 1 / 1;
+	aspect-ratio: 1/1;
+}
+@media (max-width: 992px) {
+	.dashboard-layout {
+		grid-template-columns: 1fr;
+		gap: 1.5rem;
+	}
+	
+	/* 側邊欄變成橫向排列 */
+	.dashboard-sidebar {
+		padding: 1.5rem 1rem;
+		overflow: hidden;
+	}
+	
+	/* 導航變成橫向滾動 */
+	.dashboard-sidebar nav {
+		display: flex !important;
+		flex-direction: row !important;
+		flex-wrap: nowrap !important;
+		overflow-x: scroll !important;
+		overflow-y: hidden !important;
+		width: 100%;
+		gap: 10px;
+		padding: 10px 15px 15px 15px;
+		margin: 0 -0.5rem;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: thin !important;
+		scrollbar-color: #b68d64 #f0f0f0 !important;
+	}
+	.dashboard-sidebar nav::-webkit-scrollbar {
+		height: 10px !important;
+		display: block !important;
+	}
+	.dashboard-sidebar nav::-webkit-scrollbar-track {
+		background: #f0f0f0;
+		border-radius: 10px;
+		margin: 0 15px; /* 讓捲軸軌道有邊距 */
+	}
+	.dashboard-sidebar nav::-webkit-scrollbar-thumb {
+		background: #b68d64;
+		border-radius: 10px;
+		border: 2px solid #f0f0f0;
+	}
+	.dashboard-sidebar nav::-webkit-scrollbar-thumb:hover {
+		background: #9d7553;
+	}
+	/* 選單項目不換行 */
+	.menu-link {
+		flex: 0 0 auto !important; /* 禁止壓縮 */
+		min-width: 150px;
+		white-space: nowrap;
+		justify-content: center;
+		margin-bottom: 0;
+		padding: 0.8rem 1.2rem;
+	}
+	
+	/* 登出區域的分隔線改為橫向 */
+	.dashboard-sidebar nav > div {
+		display: flex !important;
+		flex: 0 0 auto !important;
+		align-items: center;
+		
+		margin: 0 !important;
+		padding: 0 0 0 15px !important;
+		
+		border-top: none !important;
+		border-left: 2px solid #eee !important;
+		height: 40px;
+	}
+	
+	/* 登出按鈕也要符合橫向排列 */
+	.dashboard-sidebar nav > div .menu-link {
+		margin: 0;
+	}
 }
 
+<<<<<<< HEAD
+@media (max-width: 768px) {
+	.container.dashboard-layout {
+		width: 100% !important;
+		max-width: 100% !important;
+		padding: 0 10px !important;
+	}
+	
+	.filter-tabs-wrapper {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	
+	.filter-group {
+		width: 100%;
+		overflow-x: auto;
+		flex-wrap: nowrap;
+		padding-bottom: 5px;
+	}
+	
+	.filter-tabs-wrapper .btn-primary.btn-sm {
+		width: 100% !important;
+	}
+	
+	.booking-card {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+	
+	.booking-card > div:last-child {
+		width: 100%;
+		justify-content: space-between;
+	}
+=======
 /* 讓 Tab 按鈕不會因為文字加粗而造成寬度微變 */
 .tab-btn {
     display: inline-block;
@@ -438,4 +540,5 @@
     border-radius: 4px;
     font-size: 0.8rem;
 >>>>>>> refs/remotes/origin/master
+>>>>>>> refs/heads/master
 }

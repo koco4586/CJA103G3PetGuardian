@@ -36,8 +36,8 @@ public interface BookingService {
 	// 保母端
 	List<BookingOrderVO> getOrdersBySitterId(Integer sitterId);
 	
-	List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status);
-
+	List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status);
+	
 	void updateOrderStatusBySitter(Integer orderId, Integer newStatus);
 
 	// 管理員端
@@ -45,5 +45,6 @@ public interface BookingService {
 	void completePayout(Integer orderId);
 	
 	void approveRefund(Integer orderId, Double ratio);
+	
 
 }

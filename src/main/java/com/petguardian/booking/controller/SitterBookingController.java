@@ -49,7 +49,7 @@ public class SitterBookingController {
         Integer actualSitterId = sitterVO.getSitterId();
         
         List<BookingOrderVO> bookingList = (status != null)
-                ? bookingService.findBySitterAndStatus(actualSitterId, status)
+                ? bookingService.findOrdersBySitterAndStatus(actualSitterId, status)
                 : bookingService.getOrdersBySitterId(actualSitterId);
         
         for (BookingOrderVO order : bookingList) {

@@ -324,12 +324,17 @@
         // 初始化
         document.addEventListener('DOMContentLoaded', function () {
 
-            // [NEW] 檢查是否有待確認訂單並顯示通知
+            // [NEW] 檢查是否有待確認訂單並顯示通知 (每 Session 只顯示一次)
             const pendingCount = /*[[${pendingCount}]]*/ 0;
-            if (pendingCount > 0) {
+            const notificationKey = 'hasBookingNotified_' + sitterId;
+            const hasNotified = sessionStorage.getItem(notificationKey);
+
+            if (pendingCount > 0 && !hasNotified) {
                 // 使用 setTimeout 確保頁面渲染完成後彈出
                 setTimeout(() => {
                     alert(`親愛的保母您好：\n目前有 ${pendingCount} 筆新的預約等待您的確認！\n請前往「預約管理」查看。`);
+                    // 設定已通知標記
+                    sessionStorage.setItem(notificationKey, 'true');
                 }, 500);
             }
 
