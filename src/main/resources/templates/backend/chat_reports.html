@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天檢舉管理 - PetGuardian 管理後台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/backend/style.css}">
+    <!-- Use inline style for specific report table adjustments if needed, or create chat_reports.css -->
+    <style>
+        /* Custom styles for chat report page */
+        .report-section {
+            background-color: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            font-size: 16px;
+            color: #666;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -13px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #2c3e50;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .report-reason {
+            display: inline-block;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+
+<body>
+    <script th:src="@{/js/backend/sidebar.js}"></script>
+
+    <div class="main-content">
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+            <div style="margin-left: 20px;">
+                <h1>聊天檢舉管理</h1>
+                <div class="sub">審核並處理用戶檢舉的聊天訊息</div>
+            </div>
+        </header>
+
+        <div class="report-section" style="margin-top: 20px;">
+            <div class="tab-buttons">
+                <a th:href="@{/admin/chat-reports(tab='pending')}" class="tab-btn"
+                    th:classappend="${currentTab == 'pending'} ? 'active' : ''">待審核</a>
+                <a th:href="@{/admin/chat-reports(tab='closed')}" class="tab-btn"
+                    th:classappend="${currentTab == 'closed'} ? 'active' : ''">已結案</a>
+            </div>
+
+            <div class="table-container">
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"
+                    style="color:red; margin-bottom:10px;"></div>
+                <div th:if="${message}" class="alert alert-success" th:text="${message}"
+                    style="color:green; margin-bottom:10px;"></div>
+
+                <table th:if="${!#lists.isEmpty(reports)}">
+                    <thead>
+                        <tr>
+                            <th style="white-space: nowrap;">檢舉人</th> <!-- Reporter -->
+                            <th>被檢舉人</th> <!-- Sender of the message (from message relation) -->
+                            <th>檢舉類型</th>
+                            <th>檢舉原因</th>
+                            <th style="min-width: 250px;">訊息內容</th>
+                            <th th:text="${currentTab == 'closed'} ? '狀態' : '操作'">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="report : ${reports}">
+                            <td style="white-space: nowrap;">
+                                <span
+                                    th:text="${memberNameMap[report.reporterId]} + ' (ID:' + ${report.reporterId} + ')'"></span>
+                            </td>
+                            <td>
+                                <!-- Accessing request sender via Message relation if lazy loaded properly or fetched -->
+                                <span th:if="${report.message != null}"
+                                    th:text="'User ID: ' + ${report.message.memberId}"></span>
+                                <span th:if="${report.message == null}">Unknown</span>
+                            </td>
+                            <td>
+                                <span th:switch="${report.reportType}">
+                                    <span th:case="0">騷擾</span>
+                                    <span th:case="1">垃圾訊息</span>
+                                    <span th:case="2">不當內容</span>
+                                    <span th:case="3">詐騙</span>
+                                    <span th:case="4">其他</span>
+                                    <span th:case="*">未知</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="report-reason" th:text="${report.reportReason}"
+                                    th:title="${report.reportReason}"></span>
+                            </td>
+                            <td>
+                                <div
+                                    style="font-style: italic; color: #444; max-width:300px; overflow:hidden; text-overflow:ellipsis;">
+                                    <span th:if="${report.message != null}"
+                                        th:text="'「' + ${report.message.message} + '」'"></span>
+                                    <span th:if="${report.message == null}" style="color:#999;">（訊息已刪除或無法讀取）</span>
+                                </div>
+                            </td>
+
+                            <!-- Pending actions -->
+                            <td th:if="${currentTab != 'closed'}">
+                                <form th:action="@{/admin/chat-reports/approve/{id}(id=${report.reportId})}"
+                                    method="post" style="display:inline;" th:id="'approveForm-' + ${report.reportId}">
+                                    <button type="button" class="btn" style="background:#d9534f;"
+                                        th:onclick="'showConfirmModal(\'approve\', ' + ${report.reportId} + ')'">處理
+                                        (隱藏)</button>
+                                </form>
+                                <form th:action="@{/admin/chat-reports/reject/{id}(id=${report.reportId})}"
+                                    method="post" style="display:inline;" th:id="'rejectForm-' + ${report.reportId}">
+                                    <button type="button" class="btn ghost"
+                                        th:onclick="'showConfirmModal(\'reject\', ' + ${report.reportId} + ')'">駁回</button>
+                                </form>
+                            </td>
+                            <!-- Closed status -->
+                            <td th:if="${currentTab == 'closed'}">
+                                <span th:if="${report.reportStatus == 2}" class="badge"
+                                    style="background:#d9534f;color:#fff;padding:3px 8px;border-radius:3px;">
+                                    <i class="fa-solid fa-check"></i> 已處理
+                                </span>
+                                <span th:if="${report.reportStatus == 3}" class="badge"
+                                    style="background:#5cb85c;color:#fff;padding:3px 8px;border-radius:3px;">
+                                    <i class="fa-solid fa-xmark"></i> 已駁回
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${#lists.isEmpty(reports)}" style="text-align: center; padding: 40px; color: #888;">
+                    <i class="fa-solid fa-box-open" style="font-size: 48px; margin-bottom: 16px;"></i>
+                    <p>目前沒有<span th:text="${currentTab == 'pending' ? '待審核' : '已結案'}"></span>的檢舉</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom confirmation modal -->
+    <div id="confirmModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-icon" id="modalIcon"></div>
+            <h3 id="modalTitle"></h3>
+            <p id="modalMessage"></p>
+            <div class="modal-buttons">
+                <button id="modalCancel" class="btn ghost">取消</button>
+                <button id="modalConfirm" class="btn"></button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Basic Modal Logic
+        const modal = document.getElementById('confirmModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const modalCancel = document.getElementById('modalCancel');
+
+        function showConfirmModal(action, reportId) {
+            modal.style.display = 'flex';
+
+            if (action === 'approve') {
+                modalTitle.innerText = "確認處理";
+                modalMessage.innerText = "確定要標記此檢舉為「已處理」嗎？";
+                modalConfirm.innerText = "確認處理";
+                modalConfirm.style.background = "#d9534f"; // Red for action
+                modalConfirm.onclick = () => document.getElementById('approveForm-' + reportId).submit();
+            } else {
+                modalTitle.innerText = "確認駁回";
+                modalMessage.innerText = "確定要駁回此檢舉嗎？";
+                modalConfirm.innerText = "確認駁回";
+                modalConfirm.style.background = "#5cb85c"; // Green for reject/keep
+                modalConfirm.onclick = () => document.getElementById('rejectForm-' + reportId).submit();
+            }
+        }
+
+        modalCancel.onclick = () => {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = (event) => {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

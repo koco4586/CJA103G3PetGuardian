@@ -1,12 +1,12 @@
 package com.petguardian.backend.service;
 
 import com.petguardian.backend.model.BackendMemberRepository;
+import com.petguardian.booking.model.BookingOrderRepository;
+import com.petguardian.orders.model.ReturnOrderRepository;
+import com.petguardian.sellerreview.model.SellerReviewReportRepository;
 import com.petguardian.sitter.model.SitterApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.petguardian.orders.model.ReturnOrderRepository;
-import com.petguardian.sellerreview.model.SellerReviewReportRepository;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +30,9 @@ public class DashboardServiceImpl implements DashboardService {
     @Autowired
     private SellerReviewReportRepository sellerReviewReportRepository;
 
+    @Autowired
+    private BookingOrderRepository bookingOrderRepository;
+
     /**
      * 取得儀表板統計數據
      */
@@ -41,17 +44,25 @@ public class DashboardServiceImpl implements DashboardService {
         long totalMembers = memberRepository.countByMemStatus(0);
         stats.put("totalMembers", totalMembers);
 
-        // 待審保母（狀態不是已通過，app_status != 1）
-        long pendingSitters = sitterApplicationRepository.countByAppStatusNot((byte) 1);
+        // 待審保母（狀態為 0:待審核）
+        long pendingSitters = sitterApplicationRepository.countByAppStatus((byte) 0);
         stats.put("pendingSitters", pendingSitters);
 
-        // 待處理退款（退貨狀態為審核中，return_status = 0）
-        long pendingRefunds = returnOrderRepository.countByReturnStatus(0);
-        stats.put("pendingRefunds", pendingRefunds);
+        // 預約待處理退款（預約訂單狀態為 3:申請退款中）
+        long bookingPendingRefunds = bookingOrderRepository.countByOrderStatus(3);
+        stats.put("bookingPendingRefunds", bookingPendingRefunds);
 
-        // 待處理評價（評價檢舉狀態為待審核，report_status = 0）
-        long pendingReviews = sellerReviewReportRepository.countByReportStatus(0);
-        stats.put("pendingReviews", pendingReviews);
+        // 商城待處理退款（退貨狀態為審核中，return_status = 0）
+        long storePendingRefunds = returnOrderRepository.countByReturnStatus(0);
+        stats.put("storePendingRefunds", storePendingRefunds);
+
+        // 預約待處理評價（預約訂單評價狀態為未評價，review_status = 0）
+        long bookingPendingReviews = 0;
+        stats.put("bookingPendingReviews", bookingPendingReviews);
+
+        // 商城待處理評價（評價檢舉狀態為待審核，report_status = 0）
+        long storePendingReviews = sellerReviewReportRepository.countByReportStatus(0);
+        stats.put("storePendingReviews", storePendingReviews);
 
         return stats;
     }

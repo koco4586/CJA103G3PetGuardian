@@ -67,6 +67,7 @@
           method: "PUT",
           credentials: "include"
         }).then(res => res.json()).then(data => {
+          alert("帳號已停用");
           console.log(data.status);
           document.write("停用成功");
         });
