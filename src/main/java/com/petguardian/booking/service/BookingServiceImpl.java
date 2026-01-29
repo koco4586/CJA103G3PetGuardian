@@ -121,6 +121,7 @@ public class BookingServiceImpl implements BookingService {
         bufferOrder.setStartTime(savedOrder.getStartTime());
         bufferOrder.setEndTime(savedOrder.getEndTime().plusHours(1));
 
+        scheduleInternalService.updateSitterSchedule(savedOrder, '2');
         scheduleInternalService.updateSitterSchedule(bufferOrder, '2');
 
         return savedOrder;
@@ -173,7 +174,7 @@ public class BookingServiceImpl implements BookingService {
             dataService.processRefund(order.getMemId(), refundAmount);
         }
         order.setOrderStatus(4); // 4: 已退款
-        String ratioText = (ratio >= 1.0) ? "全額退款" : (int)(ratio * 100) + "% 部分退款";
+        String ratioText = (ratio >= 1.0) ? "全額退款" : (int) (ratio * 100) + "% 部分退款";
         order.setCancelReason(order.getCancelReason() + " [" + ratioText + " - 管理員核准]");
         orderRepository.save(order);
         scheduleInternalService.updateSitterSchedule(order, '0');

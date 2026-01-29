@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.sitter.model.SitterApplicationVO;
+import com.petguardian.sitter.model.SitterMemberRepository;
+import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterApplicationService;
 import com.petguardian.sitter.service.SitterService;
@@ -25,6 +27,9 @@ public class SitterController {
 
     @Autowired
     private SitterApplicationService applicationService;
+
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
 
     @Autowired
     private SitterService sitterService;
@@ -80,10 +85,13 @@ public class SitterController {
             applicationService.reviewApplication(appId, (byte) 1, reviewNote);
 
             // 建立保母帳號
-            // TODO: 整合會員資料後，從 Member 取得真實姓名和地址
             Integer memId = application.getMemId();
-            String sitterName = "會員" + memId; // 暫時使用 memId
-            String sitterAdd = "待補充地址"; // 暫時方案
+
+            // [NEW] 查詢真實會員資料
+            com.petguardian.sitter.model.SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
+
+            String sitterName = (member != null && member.getMemName() != null) ? member.getMemName() : "未設定姓名";
+            String sitterAdd = (member != null && member.getMemAdd() != null) ? member.getMemAdd() : "未設定地址";
 
             sitterService.createSitter(memId, sitterName, sitterAdd);
 
