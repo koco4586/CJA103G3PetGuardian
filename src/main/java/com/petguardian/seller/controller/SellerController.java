@@ -54,7 +54,7 @@ public class SellerController {
     public String showDashboard(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         // 取得所有營運概況資料（一次呼叫）
@@ -121,15 +121,44 @@ public class SellerController {
             @RequestParam(required = false) String proDescription,
             @RequestParam Integer stockQuantity,
             @RequestParam Integer proState,
-            @RequestParam(required = false) List<MultipartFile> productImages,
-            @RequestParam(required = false) List<Integer> deleteImageIds,
+            @RequestParam(value = "productImages", required = false) List<MultipartFile> productImages,
+            @RequestParam(value = "deleteImageIds", required = false) List<Integer> deleteImageIds,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
+//         詳細記錄接收到的資料
+        System.out.println("=== saveProduct Controller 開始 ===");
+        System.out.println("商品ID: " + proId);
+        System.out.println("商品名稱: " + proName);
+        System.out.println("類別ID: " + proTypeId);
+        System.out.println("價格: " + proPrice);
+        System.out.println("庫存: " + stockQuantity);
+        System.out.println("狀態: " + proState);
+        System.out.println("待刪除圖片IDs: " + deleteImageIds);
+
+        // 詳細記錄圖片資訊
+        if (productImages == null) {
+            System.out.println("productImages 參數為 null");
+        } else {
+            System.out.println("productImages 數量: " + productImages.size());
+            for (int i = 0; i < productImages.size(); i++) {
+                MultipartFile file = productImages.get(i);
+                if (file == null) {
+                    System.out.println("  圖片[" + i + "]: null");
+                } else {
+                    System.out.println("  圖片[" + i + "]: name=" + file.getOriginalFilename()
+                            + ", size=" + file.getSize()
+                            + ", contentType=" + file.getContentType()
+                            + ", isEmpty=" + file.isEmpty());
+                }
+            }
+        }
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
+            System.out.println("錯誤: sellerId 為 null，重導向到 /store");
             return "redirect:/store";
         }
+        System.out.println("賣家ID: " + sellerId);
 
         try {
             productService.saveProductWithImages(sellerId, proId, proName, proTypeId,

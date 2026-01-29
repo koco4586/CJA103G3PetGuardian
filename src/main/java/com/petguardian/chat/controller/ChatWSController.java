@@ -5,7 +5,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import com.petguardian.chat.model.ChatMessageDTO;
+import com.petguardian.chat.dto.ChatMessageDTO;
 import com.petguardian.chat.service.ChatService;
 
 /**
@@ -57,5 +57,16 @@ public class ChatWSController {
         messagingTemplate.convertAndSend(
                 "/topic/messages." + dto.getSenderId(),
                 responseDto);
+    }
+
+    /**
+     * Exception Handler for Validation Errors.
+     * Captures IllegalArgumentException from Service layer (Fail Fast Strategy)
+     * and sends feedback to the user.
+     */
+    @org.springframework.messaging.handler.annotation.MessageExceptionHandler
+    @org.springframework.messaging.simp.annotation.SendToUser("/queue/errors")
+    public String handleException(IllegalArgumentException e) {
+        return "Error: " + e.getMessage();
     }
 }

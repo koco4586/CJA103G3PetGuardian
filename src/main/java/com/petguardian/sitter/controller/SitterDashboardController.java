@@ -1,21 +1,31 @@
 package com.petguardian.sitter.controller;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petguardian.booking.model.BookingScheduleVO;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.petsitter.service.PetSitterService;
 import com.petguardian.service.model.ServiceAreaVO;
 import com.petguardian.service.service.ServiceAreaService;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterService;
+import com.petguardian.booking.service.BookingService;
+import com.petguardian.booking.model.BookingOrderVO;
 
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 保姆主頁面控制器
@@ -38,6 +48,9 @@ public class SitterDashboardController {
     @Autowired
     private com.petguardian.common.service.AuthStrategyService authStrategyService;
 
+    @Autowired
+    private BookingService bookingService;
+
     /**
      * 保母主頁 (Dashboard)
      * URL: /sitter/dashboard
@@ -47,7 +60,10 @@ public class SitterDashboardController {
      * @return 儀表板頁面路徑 (frontend/sitter/dashboard) 或重導向至申請頁
      */
     @GetMapping("/dashboard")
-    public String dashboard(jakarta.servlet.http.HttpServletRequest request, Model model) {
+    // public String dashboard(jakarta.servlet.http.HttpServletRequest request,
+    // Model model) {
+    public String dashboard(HttpServletRequest request, Model model,
+            RedirectAttributes redirectAttributes) {
         // 1. 檢查登入
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
@@ -60,6 +76,12 @@ public class SitterDashboardController {
         // 如果還不是保母，導向申請頁
         if (sitter == null) {
             return "redirect:/sitter/apply";
+        }
+
+        // [New] 檢查停權狀態 (sitterStatus == 1, 停權)
+        if (sitter.getSitterStatus() != null && sitter.getSitterStatus() == 1) {
+            redirectAttributes.addFlashAttribute("errorMessage", "您的保姆權限已被停權，無法使用此服務。");
+            return "redirect:/";
         }
 
         // 3. 查詢重點數據
@@ -89,6 +111,11 @@ public class SitterDashboardController {
         model.addAttribute("areas", areas); // 新增詳細列表
         model.addAttribute("averageRating", averageRating); // 新增平均評分
 
+        // [New] 查詢待確認訂單數量 (狀態=0)
+        List<BookingOrderVO> pendingOrders = bookingService.findOrdersBySitterAndStatus(sitter.getSitterId(), 0);
+        int pendingCount = (pendingOrders != null) ? pendingOrders.size() : 0;
+        model.addAttribute("pendingCount", pendingCount);
+
         return "frontend/sitter/dashboard";
     }
 
@@ -97,11 +124,11 @@ public class SitterDashboardController {
      * URL: /sitter/api/schedule?year=2026&month=1
      */
     @GetMapping("/api/schedule")
-    @org.springframework.web.bind.annotation.ResponseBody
-    public List<com.petguardian.booking.model.BookingScheduleVO> getSchedule(
-            jakarta.servlet.http.HttpServletRequest request,
-            @org.springframework.web.bind.annotation.RequestParam int year,
-            @org.springframework.web.bind.annotation.RequestParam int month) {
+    @ResponseBody
+    public List<BookingScheduleVO> getSchedule(
+            HttpServletRequest request,
+            @RequestParam int year,
+            @RequestParam int month) {
 
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null)
@@ -115,11 +142,11 @@ public class SitterDashboardController {
      * URL: POST /sitter/api/schedule
      * Payload: { "date": "2026-01-01", "status": "00000..." }
      */
-    @org.springframework.web.bind.annotation.PostMapping("/api/schedule")
-    @org.springframework.web.bind.annotation.ResponseBody
+    @PostMapping("/api/schedule")
+    @ResponseBody
     public String saveSchedule(
-            jakarta.servlet.http.HttpServletRequest request,
-            @org.springframework.web.bind.annotation.RequestBody java.util.Map<String, String> payload) {
+            HttpServletRequest request,
+            @RequestBody Map<String, String> payload) {
 
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null)

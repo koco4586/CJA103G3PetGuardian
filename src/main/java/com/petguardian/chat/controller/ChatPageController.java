@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.petguardian.chat.model.ChatMemberDTO;
-import com.petguardian.chat.model.ChatRoomDTO;
+import com.petguardian.chat.dto.ChatMemberDTO;
+import com.petguardian.chat.dto.ChatRoomDTO;
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.chat.service.chatmessage.ChatPageService;
 import com.petguardian.chat.service.ChatService;
@@ -66,21 +66,20 @@ public class ChatPageController {
     @RequestMapping(value = "/chat", method = { RequestMethod.GET, RequestMethod.POST })
     public String chatMvpPage(HttpServletRequest request, Model model) {
         Integer userId = authStrategyService.getCurrentUserId(request);
-        String userName = authStrategyService.getCurrentUserName(request);
 
         // Security Check
         if (userId == null) {
             model.addAttribute("error", "請先登入");
-            return "frontend/chat/chat-mvp";
+            return "redirect:/front/loginpage";
         }
 
         // Context Preparation
 
-        // 1. Current User
+        // 1. Current User (Metadata Cache First)
         ChatMemberDTO currentUser = chatPageService.getMember(userId);
         if (currentUser == null) {
-            // Fallback for transient auth states
-            currentUser = new ChatMemberDTO(userId, userName != null ? userName : "User " + userId);
+            // Fallback for extreme cache misses - stay minimal to avoid DB if possible
+            currentUser = new ChatMemberDTO(userId, "User " + userId);
         }
 
         // 2. Chatroom List (Sidebar)
@@ -127,7 +126,7 @@ public class ChatPageController {
         }
 
         // Reuse existing creation/find logic (Service delegated)
-        com.petguardian.chat.model.ChatRoomDTO room = chatService.findOrCreateChatroom(currentUserId, targetUserId,
+        ChatRoomDTO room = chatService.findOrCreateChatroom(currentUserId, targetUserId,
                 chatroomType);
 
         redirectAttributes.addFlashAttribute("activeRoomId", room.getChatroomId());

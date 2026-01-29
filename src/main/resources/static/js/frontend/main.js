@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headerEl.innerHTML = `
             <div class="container nav">
                 <a href="/" class="logo" style="display: flex; align-items: center; text-decoration: none;">
-                    <img src="/images/frontend/logo.png" alt="PetGuardian" style="height: 40px; margin-right: 0.5rem;">
+                    <img src="https://down-tw.img.susercontent.com/file/5b5eff0f0184521f1e11cadfc32bdcee" alt="PetGuardian" style="height: 40px; margin-right: 0.5rem;">
                     <span style="font-family: 'Rubik', sans-serif; font-weight: 700; color: var(--text-color); font-size: 1.4rem;">PetGuardian</span>
                 </a>
                 <ul class="nav-links">
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a href="/login" class="dropdown-item">登入 / 註冊</a>
-                        <a href="/dashboard" class="dropdown-item">會員中心</a>
+                        <a href="/front/loginpage" class="dropdown-item">登入 / 註冊</a>
+                        <a href="/html/frontend/member/management/member_management_ai.html" class="dropdown-item">會員中心</a>
                         <a href="/sitter/hub" class="dropdown-item">保母專區</a>
                         <hr style="border:0; border-top:1px solid #eee; margin: 0.5rem 0;">
                         <a href="/logout" class="dropdown-item">登出</a>

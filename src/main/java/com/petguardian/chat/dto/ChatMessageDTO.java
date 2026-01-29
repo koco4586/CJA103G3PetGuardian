@@ -1,4 +1,4 @@
-package com.petguardian.chat.model;
+package com.petguardian.chat.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,5 +23,6 @@ public class ChatMessageDTO {
     private String replyToSenderName;
     private Integer chatroomId;
     private Boolean isRead;
+    private Integer reportStatus; // 0:None, 1:Pending, 2:Processed, 3:Rejected
     private LocalDateTime chatTime;
 }

@@ -7,34 +7,25 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.petguardian.chat.model.ChatMemberEntity;
-import com.petguardian.chat.model.ChatMessageDTO;
+import com.petguardian.chat.dto.MemberProfileDTO;
+import com.petguardian.chat.dto.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
 
 @Service
 public class ChatMessageMapperImpl implements ChatMessageMapper {
-
-    // ============================================================
-    // DEPENDENCIES
-    // ============================================================
-    // No dependencies! Core logic only.
-
-    // ============================================================
-    // PUBLIC OPERATIONS
-    // ============================================================
-
     @Override
-    public ChatMessageDTO toDto(ChatMessageEntity chatMessageEntity, ChatMemberEntity sender, String replyContent,
+    public ChatMessageDTO toDto(ChatMessageEntity chatMessageEntity, MemberProfileDTO sender, String replyContent,
             String replySenderName,
-            Integer currentUserId, Integer partnerId) {
+            Integer currentUserId, Integer partnerId, Integer reportStatus) {
         ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
         chatMessageDTO.setMessageId(chatMessageEntity.getMessageId());
         chatMessageDTO.setSenderId(chatMessageEntity.getMemberId());
         chatMessageDTO.setReceiverId(chatMessageEntity.getMemberId().equals(currentUserId) ? partnerId : currentUserId);
         chatMessageDTO.setContent(chatMessageEntity.getMessage());
-        chatMessageDTO.setSenderName(sender != null ? sender.getMemName() : "Unknown");
+        chatMessageDTO.setSenderName(sender != null ? sender.getMemberName() : "Unknown");
         chatMessageDTO.setChatroomId(chatMessageEntity.getChatroomId());
         chatMessageDTO.setChatTime(chatMessageEntity.getChatTime());
+        chatMessageDTO.setReportStatus(reportStatus != null ? reportStatus : 0);
 
         if (chatMessageEntity.getReplyToMessageId() != null) {
             chatMessageDTO.setReplyToId(chatMessageEntity.getReplyToMessageId());
@@ -45,20 +36,24 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         return chatMessageDTO;
     }
 
+    // ============================================================
+    // PUBLIC OPERATIONS
+    // ============================================================
     /**
      * Bulk converts messages to DTOs.
      */
     @Override
     public List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> chatMessageEntities, Integer currentUserId,
             Integer partnerId,
-            Map<Integer, ChatMemberEntity> memberMap,
-            Map<String, ChatMessageEntity> replyMap) {
+            Map<Integer, MemberProfileDTO> memberMap,
+            Map<String, ChatMessageEntity> replyMap,
+            Map<String, Integer> reportStatusMap) {
         if (chatMessageEntities.isEmpty()) {
             return Collections.emptyList();
         }
 
         return chatMessageEntities.stream()
-                .map(msg -> mapToDto(msg, memberMap, replyMap, currentUserId, partnerId))
+                .map(msg -> mapToDto(msg, memberMap, replyMap, reportStatusMap, currentUserId, partnerId))
                 .collect(Collectors.toList());
     }
 
@@ -70,12 +65,13 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
      * Maps a single entity to DTO using pre-resolved dependency maps.
      */
     private ChatMessageDTO mapToDto(ChatMessageEntity msg,
-            Map<Integer, ChatMemberEntity> memberMap,
+            Map<Integer, MemberProfileDTO> memberMap,
             Map<String, ChatMessageEntity> replyMap,
+            Map<String, Integer> reportStatusMap,
             Integer currentUserId,
             Integer partnerId) {
         // Resolve Sender
-        ChatMemberEntity sender = memberMap.get(msg.getMemberId());
+        MemberProfileDTO sender = memberMap.get(msg.getMemberId());
 
         // Resolve Reply Context
         String replyContent = null;
@@ -85,12 +81,15 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
             ChatMessageEntity replyMsg = replyMap.get(msg.getReplyToMessageId());
             if (replyMsg != null) {
                 replyContent = replyMsg.getMessage();
-                ChatMemberEntity replySender = memberMap.get(replyMsg.getMemberId());
-                replySenderName = (replySender != null) ? replySender.getMemName() : null;
+                MemberProfileDTO replySender = memberMap.get(replyMsg.getMemberId());
+                replySenderName = (replySender != null) ? replySender.getMemberName() : null;
             }
         }
 
+        // Resolve Report Status
+        Integer status = reportStatusMap != null ? reportStatusMap.getOrDefault(msg.getMessageId(), 0) : 0;
+
         // Delegate to base mapper
-        return toDto(msg, sender, replyContent, replySenderName, currentUserId, partnerId);
+        return toDto(msg, sender, replyContent, replySenderName, currentUserId, partnerId, status);
     }
 }

@@ -117,23 +117,11 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
 
             /*
              * =================================================================
-             * [PENDING INTEGRATION] 等待會員模組整合
+             * [INTEGRATION COMPLETED] 會員模組整合完成
              * =================================================================
              * 目標：當審核通過時，同步更新 Member 資料表的 mem_sitter_status 欄位
-             * 
-             * 啟用步驟：
-             * 1. 注入 MemberRepository (需由會員模組提供)
-             * 2. 解除以下程式碼的註解
-             * 
-             * 預期程式碼：
-             * Optional<Member> memberOpt = memberRepository.findById(memId);
-             * if (memberOpt.isPresent()) {
-             * Member member = memberOpt.get();
-             * member.setMemSitterStatus(1); // 1: 啟用保姆權限
-             * memberRepository.save(member);
-             * }
-             * =================================================================
              */
+            sitterMemberRepository.updateMemSitterStatus(memId, 1); // 1: 啟用保姆權限
         }
 
         return repository.save(vo);

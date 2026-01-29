@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatMemberEntity;
-import com.petguardian.chat.model.ChatRoomDTO;
+import com.petguardian.chat.dto.ChatRoomDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
+import com.petguardian.chat.dto.ChatRoomMetadataDTO;
+import com.petguardian.chat.dto.MemberProfileDTO;
 import java.util.Map;
 
 @Service
@@ -23,15 +25,61 @@ public class ChatRoomMapperImpl implements ChatRoomMapper {
     @Override
     public ChatRoomDTO toDto(ChatRoomEntity chatRoomEntity, Integer currentUserId,
             Map<Integer, ChatMemberEntity> preloadedMembers) {
-        if (chatRoomEntity == null) {
+        if (chatRoomEntity == null)
             return null;
-        }
 
         Integer partnerId = chatRoomEntity.getOtherMemberId(currentUserId);
         ChatMemberEntity partner = preloadedMembers.get(partnerId);
         String partnerName = (partner != null) ? partner.getMemName() : "Unknown User";
 
         return mapBaseFields(chatRoomEntity, currentUserId, partnerName);
+    }
+
+    @Override
+    public ChatRoomDTO toDtoFromMeta(ChatRoomMetadataDTO meta, Integer currentUserId,
+            Map<Integer, MemberProfileDTO> preloadedProfiles) {
+        if (meta == null)
+            return null;
+
+        Integer partnerId = meta.getMemberIds().get(0).equals(currentUserId)
+                ? meta.getMemberIds().get(1)
+                : meta.getMemberIds().get(0);
+
+        MemberProfileDTO partner = preloadedProfiles.get(partnerId);
+        String partnerName = (partner != null) ? partner.getMemberName() : "Unknown User";
+
+        ChatRoomDTO dto = new ChatRoomDTO();
+        dto.setChatroomId(meta.getChatroomId());
+        dto.setPartnerId(partnerId);
+        dto.setDisplayName(partnerName + " - " + resolveRoomTag(meta.getChatroomType(), meta.getChatroomName()));
+        dto.setLastMessage(meta.getLastMessagePreview());
+        dto.setLastMessageTime(meta.getLastMessageAt());
+
+        LocalDateTime myLastReadAt = meta.getMemberIds().get(0).equals(currentUserId)
+                ? meta.getMem1LastReadAt()
+                : meta.getMem2LastReadAt();
+
+        dto.setUnread(isUnread(meta.getLastMessageAt(), myLastReadAt));
+
+        return dto;
+    }
+
+    private String resolveRoomTag(Byte typeByte, String chatroomName) {
+        int type = typeByte != null ? typeByte.intValue() : 0;
+        switch (type) {
+            case 0:
+                return "寵物服務";
+            case 1:
+                return "寵物商品諮詢";
+            default:
+                return (chatroomName != null && !chatroomName.isEmpty()) ? chatroomName : "一般聊天";
+        }
+    }
+
+    private boolean isUnread(LocalDateTime lastMsgAt, LocalDateTime myLastReadAt) {
+        if (lastMsgAt == null)
+            return false;
+        return myLastReadAt == null || lastMsgAt.isAfter(myLastReadAt);
     }
 
     /**
@@ -44,45 +92,17 @@ public class ChatRoomMapperImpl implements ChatRoomMapper {
         Integer partnerId = chatRoomEntity.getOtherMemberId(currentUserId);
         dto.setPartnerId(partnerId);
 
-        String roomTag = resolveRoomTag(chatRoomEntity);
-        dto.setDisplayName(partnerName + " - " + roomTag);
+        dto.setDisplayName(partnerName + " - "
+                + resolveRoomTag(chatRoomEntity.getChatroomType(), chatRoomEntity.getChatroomName()));
 
         dto.setLastMessage(chatRoomEntity.getLastMessagePreview());
         dto.setLastMessageTime(chatRoomEntity.getLastMessageAt());
-        dto.setUnread(isUnread(chatRoomEntity, currentUserId));
+
+        LocalDateTime myLastReadAt = currentUserId.equals(chatRoomEntity.getMemId1())
+                ? chatRoomEntity.getMem1LastReadAt()
+                : chatRoomEntity.getMem2LastReadAt();
+        dto.setUnread(isUnread(chatRoomEntity.getLastMessageAt(), myLastReadAt));
 
         return dto;
-    }
-
-    private String resolveRoomTag(ChatRoomEntity chatRoomEntity) {
-        Byte typeByte = chatRoomEntity.getChatroomType();
-        int type = typeByte != null ? typeByte.intValue() : 0;
-
-        switch (type) {
-            case 0:
-                return "寵物服務";
-            case 1:
-                return "寵物商品諮詢";
-            default:
-                if (chatRoomEntity.getChatroomName() != null && !chatRoomEntity.getChatroomName().isEmpty()) {
-                    return chatRoomEntity.getChatroomName();
-                }
-                return "一般聊天";
-        }
-    }
-
-    private boolean isUnread(ChatRoomEntity chatRoomEntity, Integer currentUserId) {
-        if (chatRoomEntity.getLastMessageAt() == null) {
-            return false;
-        }
-
-        LocalDateTime myLastReadAt;
-        if (currentUserId.equals(chatRoomEntity.getMemId1())) {
-            myLastReadAt = chatRoomEntity.getMem1LastReadAt();
-        } else {
-            myLastReadAt = chatRoomEntity.getMem2LastReadAt();
-        }
-
-        return myLastReadAt == null || chatRoomEntity.getLastMessageAt().isAfter(myLastReadAt);
     }
 }

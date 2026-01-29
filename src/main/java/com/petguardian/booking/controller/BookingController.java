@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.booking.model.BookingOrderVO;
-import com.petguardian.booking.service.BookingExternalDataService;
+import com.petguardian.booking.service.BookingDataIntegrationService;
 import com.petguardian.booking.service.BookingService;
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.member.model.Member;
@@ -37,7 +37,7 @@ public class BookingController {
     private BookingService bookingService;
 
     @Autowired
-    private BookingExternalDataService externalDataService;
+    private BookingDataIntegrationService dataService;
 
     @Autowired
     private AuthStrategyService authStrategyService;
@@ -58,8 +58,8 @@ public class BookingController {
                 return "redirect:/member/login";
             }
 
-            Member member = externalDataService.getMemberInfo(memId);
-            PetVO pet = externalDataService.getPetInfo(petId);
+            Member member = dataService.getMemberInfo(memId);
+            PetVO pet = dataService.getPetInfo(petId);
 
             BookingOrderVO order = new BookingOrderVO();
             order.setSitterId(sitterId);
@@ -110,7 +110,7 @@ public class BookingController {
         List<BookingOrderVO> list = bookingService.getActiveOrdersByMemberId(memId);
         for (BookingOrderVO order : list) {
             try {
-                PetSitterServiceVO service = externalDataService.getSitterInfo(order.getSitterId(),
+                PetSitterServiceVO service = dataService.getSitterServiceInfo(order.getSitterId(),
                         order.getServiceItemId());
                 order.setSitterName(service.getSitter().getSitterName());
             } catch (Exception e) {
@@ -126,22 +126,20 @@ public class BookingController {
      * 【4. 會員中心預約管理】
      */
     @GetMapping("/memberOrders")
-    public String listMemberOrders(HttpServletRequest request, Model model) {
+    public String listMemberOrders(@RequestParam(required = false) Integer status, HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/login";
+            return "redirect:/loginpage";
         }
-
-        List<BookingOrderVO> allOrders = bookingService.getActiveOrdersByMemberId(memId);
-        List<BookingOrderVO> activeOrders = allOrders.stream()
-                .filter(order -> order.getOrderStatus() != 2 &&
-                        order.getOrderStatus() != 3 &&
-                        order.getOrderStatus() != 5)
-                .toList();
-
-        for (BookingOrderVO order : activeOrders) {
+        
+        List<BookingOrderVO> bookingList = (status != null) 
+            ? bookingService.findByMemberAndStatus(memId, status)
+            : bookingService.getOrdersByMemberId(memId);
+        
+     // 2. 統一為這些訂單填入保母姓名 (這段邏輯移到這，確保過濾後的訂單都有姓名)
+        for (BookingOrderVO order : bookingList) {
             try {
-                PetSitterServiceVO service = externalDataService.getSitterInfo(order.getSitterId(),
+                PetSitterServiceVO service = dataService.getSitterServiceInfo(order.getSitterId(),
                         order.getServiceItemId());
                 order.setSitterName(service.getSitter().getSitterName());
             } catch (Exception e) {
@@ -149,12 +147,20 @@ public class BookingController {
             }
         }
 
-        model.addAttribute("bookingList", activeOrders);
+        if (status != null) {
+            bookingList = bookingService.findByMemberAndStatus(memId, status);
+        } else {
+            bookingList = bookingService.getActiveOrdersByMemberId(memId);
+        }
+        
+        model.addAttribute("bookingList", bookingList);
+        model.addAttribute("currentStatus", status);
         model.addAttribute("memId", memId);
         model.addAttribute("memName", authStrategyService.getCurrentUserName(request));
 
         return "frontend/dashboard-bookings";
     }
+    
 
     /**
      * 【5. 取消預約】
@@ -171,12 +177,31 @@ public class BookingController {
     }
 
     /**
+     * 【6. AJAX 取消預約並處理退款】
+     * 對應前端 fetch("/booking/refund/{orderId}")
+     */
+    @PostMapping("/refund/{orderId}")
+    @ResponseBody
+    public ResponseEntity<String> handleRefund(@PathVariable Integer orderId) {
+        try {
+            // 呼叫 Service 執行取消邏輯（包含退款審核、更改訂單狀態、釋出保母排程）
+            // 建議在 Service 裡根據取消時間判斷退款比例
+            bookingService.cancelBooking(orderId, "會員自行取消");
+            
+            return ResponseEntity.ok("取消成功");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                 .body("取消失敗：" + e.getMessage());
+        }
+    }
+    
+    /**
      * 當表單提交失敗回原頁面時，重新加載顯示用的名稱資料。
      */
     private void reloadMemberPetData(BookingOrderVO order, Model model) {
         try {
-            Member member = externalDataService.getMemberInfo(order.getMemId());
-            PetVO pet = externalDataService.getPetInfo(order.getPetId());
+            Member member = dataService.getMemberInfo(order.getMemId());
+            PetVO pet = dataService.getPetInfo(order.getPetId());
             model.addAttribute("memberName", member != null ? member.getMemName() : "未知使用者");
             model.addAttribute("petName", pet != null ? pet.getPetName() : "未知寵物");
         } catch (Exception ex) {
