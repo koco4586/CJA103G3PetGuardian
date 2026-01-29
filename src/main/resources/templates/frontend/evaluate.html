@@ -1,390 +1,452 @@
 <!DOCTYPE html>
 <html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
 
-	<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+<head>
+    <meta charset="UTF-8">
+    <title>Insert title here</title>
+
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
     <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
-    
+
     <style>
         /* 針對評價頁面的微調，確保符合你想要的白框感 */
         .evaluate-container {
             padding: 20px;
         }
-        
+
         .eval-summary-card {
             background: #fff;
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 25px;
-            box-shadow: var(--card-shadow, 0 4px 12px rgba(0,0,0,0.05)); /* 嘗試套用你 components.css 的變數 */
+            box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+            /* 嘗試套用你 components.css 的變數 */
             display: flex;
             align-items: center;
             justify-content: space-around;
         }
 
-        .score-display { text-align: center; }
-        .score-number { font-size: 3.5rem; color: #f39c12; font-weight: bold; }
-        
+        .score-display {
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 3.5rem;
+            color: #f39c12;
+            font-weight: bold;
+        }
+
         .review-item {
             background: #fff;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 15px;
-            border-left: 5px solid #4db6ac; /* 保姆主題色 */
+            border-left: 5px solid #4db6ac;
+            /* 保姆主題色 */
             transition: transform 0.2s;
         }
-        
-        .review-item:hover { transform: translateX(5px); }
-        
+
+        .review-item:hover {
+            transform: translateX(5px);
+        }
+
         .review-header {
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
         }
-        
-        .star-rating { color: #f39c12; }
-        .order-id-tag { font-size: 0.8rem; color: #999; }
-        
+
+        .star-rating {
+            color: #f39c12;
+        }
+
+        .order-id-tag {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
         .more-options {
-    position: relative;
-    cursor: pointer;
-    padding: 5px;
-}
+            position: relative;
+            cursor: pointer;
+            padding: 5px;
+        }
 
-.opt-menu {
-    display: none; /* 預設隱藏 */
-    position: absolute;
-    right: 0;
-    top: 25px;
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    border-radius: 5px;
-    z-index: 100;
-}
+        .opt-menu {
+            display: none;
+            /* 預設隱藏 */
+            position: absolute;
+            right: 0;
+            top: 25px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            z-index: 100;
+        }
 
-.more-options:hover .opt-menu {
-    display: block; /* 移過去顯示 */
-}
+        .more-options:hover .opt-menu {
+            display: block;
+            /* 移過去顯示 */
+        }
 
-.report-btn {
-    border: none;
-    background: none;
-    color: #ff5252;
-    padding: 10px 15px;
-    white-space: nowrap;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
+        .report-btn {
+            border: none;
+            background: none;
+            color: #ff5252;
+            padding: 10px 15px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
 
-.report-btn:hover {
-    background: #fff5f5;
-}
+        .report-btn:hover {
+            background: #fff5f5;
+        }
 
-.rating-on-side {
-    background: #fff8e1;
-    color: #f39c12;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    margin-left: 10px;
-    font-weight: bold;
-}
-        
-      #main-footer {
-    background-color: #ffffff !important; /* 強制白色 */
-    margin-top: 4rem;
-    padding: 40px 0; /* 給它一點內距，不然會縮成一條線 */
-    border-top: 1px solid #eee; /* 加一條淡淡的線區隔 */
-    width: 100%;
-    display: block !important; /* 確保它是顯示的 */
-}
+        .rating-on-side {
+            background: #fff8e1;
+            color: #f39c12;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+            font-weight: bold;
+        }
 
-
+        #main-footer {
+            background-color: #ffffff !important;
+            /* 強制白色 */
+            margin-top: 4rem;
+            padding: 40px 0;
+            /* 給它一點內距，不然會縮成一條線 */
+            border-top: 1px solid #eee;
+            /* 加一條淡淡的線區隔 */
+            width: 100%;
+            display: block !important;
+            /* 確保它是顯示的 */
+        }
     </style>
 </head>
 
 <body>
 
-<header id="main-header" class="header"></header>
+    <header id="main-header" class="header"></header>
 
- 
 
 <h2 class="section-title"><i class="fas fa-star-half-alt"></i> 服務評價總覽</h2>
 
 <div id="reviewList" class="review-list">
-    <div id="noReviewMsg" th:if="${#lists.isEmpty(reviewGroups)}" style="text-align: center; padding: 40px; border: 1px dashed #ccc; margin-bottom: 20px; border-radius: 12px; background: #fff;">
+    <div id="noReviewMsg" th:if="${#lists.isEmpty(reviewGroups)}"
+        style="text-align: center; padding: 40px; border: 1px dashed #ccc; margin-bottom: 20px; border-radius: 12px; background: #fff;">
         <i class="fas fa-comment-slash" style="font-size: 2rem; color: #ddd;"></i>
         <p style="color: #999;">暫無評價紀錄</p>
     </div>
 
-    <div class="order-review-card" th:each="order : ${reviewGroups}" th:if="${order != null}" 
-    	
-         style="border: 1px solid #eee; padding: 25px; margin-bottom: 30px; border-radius: 15px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-         <input type="hidden" class="order-id" th:value="${order.bookingOrderId}">
-    <input type="hidden" class="receiver-id" value="123">
+    <div class="order-review-card" th:each="order : ${reviewGroups}"
+        th:if="${order != null and order.bookingOrderId != null}"
+        style="border: 1px solid #eee; padding: 25px; margin-bottom: 30px; border-radius: 15px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative;">
         
+        <input type="hidden" class="order-id" th:value="${order.bookingOrderId}">
+        <input type="hidden" class="receiver-id" th:value="${isSitter ? order.memberId : order.sitterId}">
+
         <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px; color: #888; font-size: 0.85rem;">
             <span>
-                <i class="fas fa-receipt"></i> 
-                <span th:text="${currentRole == 1 ? '收到會員的評價' : '剛剛送出的評價'}"></span> / 訂單 #<span th:text="${order.bookingOrderId}"></span>
+                <i class="fas fa-receipt"></i>
+                <span th:text="${isSitter ? '收到會員的評價' : '剛剛送出的評價'}"></span> / 訂單 #<span th:text="${order.bookingOrderId}"></span>
             </span>
             <div class="more-options">
-                <i class="fas fa-ellipsis-h opt-btn" style="cursor: pointer; padding: 5px;"></i>
-                <div class="opt-menu" style="display: none; position: absolute; right: 20px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 5px; z-index: 10;">
-                    <button class="report-btn" style="border:none; background:none; color:#ff5252; padding:10px; cursor:pointer;">檢舉此評論</button>
+                <i class="fas fa-ellipsis-h opt-btn"></i>
+                <div class="opt-menu">
+                    <button class="report-btn">檢舉此評論</button>
                 </div>
             </div>
         </div>
 
-        <div class="member-eval-container" style="border: 2px solid #2e7d32; padding: 20px; border-radius: 10px; background: #f9fff9; position: relative;">
+        <div class="member-eval-container" style="border: 2px solid #2e7d32; padding: 20px; border-radius: 10px; background: #f9fff9; width: 100%; box-sizing: border-box;">
             <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <div class="user-profile">
-                    <strong style="font-size: 1.2rem;" th:text="${order.memberName}">小張</strong>
-                    <span class="avg-stars" style="color: #2e7d32; margin-left: 8px; font-weight: bold; font-size: 0.9rem;">
-                        <i class="fas fa-star"></i> <span th:text="${order.memberAvgRating}">4.5</span>
+                    <strong style="font-size: 1.1rem;" th:text="${isSitter ? order.memberName : '您本人'}"></strong>
+                    <span class="avg-stars" style="color: #2e7d32; margin-left: 8px; font-weight: bold; font-size: 0.85rem;">
+                        <i class="fas fa-star"></i> <span th:text="${order.memberAvgRating}"></span>
                     </span>
                 </div>
-                <div class="current-rating" style="background: #fff; padding: 5px 12px; border: 1px solid #ddd; border-radius: 20px; font-size: 0.9rem;">
-                    給予星數：<span style="color: #f39c12; font-weight: bold;"><i class="fas fa-star"></i> <span th:text="${order.memberRating}">5</span></span>
+                <div class="current-rating" style="background: #fff; padding: 4px 10px; border: 1px solid #ddd; border-radius: 20px; font-size: 0.85rem;">
+                    給予星數：<span style="color: #f39c12; font-weight: bold;"><i class="fas fa-star"></i> <span th:text="${order.memberRating}"></span></span>
                 </div>
             </div>
 
-            <div class="content-body" style="margin: 15px 0; min-height: 40px; font-size: 1rem; color: #333;">
-                <p th:text="${order.memberContent}">保姆很專業！</p>
+            <div class="content-body" style="margin: 12px 0; font-size: 0.95rem; color: #333; line-height: 1.5;">
+                <p th:text="${order.memberContent}"></p>
             </div>
 
-            <div class="time-stamp" style="text-align: right; color: #888; font-size: 0.8rem;">
-                <i class="far fa-clock"></i> <span th:text="${order.memberCreateTime}">2026-01-28 20:00</span>
+            <div class="time-stamp" style="text-align: right; color: #888; font-size: 0.75rem;">
+                <i class="far fa-clock"></i> <span th:text="${order.memberCreateTime}"></span>
             </div>
 
-            <div th:if="${currentRole == 1 && order.sitterContent == null}" style="margin-top: 15px; text-align: right;">
-                <button class="reply-btn" style="background: #c62828; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;"
-                        th:onclick="'showSitterReplyForm(' + ${order.bookingOrderId} + ')'">
+            <div th:if="${isSitter && order.sitterContent == null}" style="margin-top: 15px; text-align: right;">
+                <button class="reply-btn" style="background: #c62828; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 0.85rem;"
+                    th:onclick="'showSitterReplyForm(' + ${order.bookingOrderId} + ')'">
                     <i class="fas fa-reply"></i> 回覆此評價
                 </button>
             </div>
 
-            <div class="sitter-reply-container" th:if="${order.sitterContent != null}" 
-                 style="border: 2px solid #c62828; padding: 15px; margin-top: 20px; margin-left: 40px; border-radius: 10px; background: #fff;">
-                <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <strong th:text="${order.sitterName}">保姆 S</strong>
-                    <span style="color: #f39c12; font-weight: bold;"><i class="fas fa-star"></i> <span th:text="${order.sitterRating}">4</span></span>
+            <div class="sitter-reply-container" th:if="${order.sitterContent != null}"
+                style="border: 2px solid #c62828; padding: 15px; margin-top: 15px; margin-left: auto; width: 85%; max-width: 500px; min-width: 250px; border-radius: 10px; background: #fff; box-sizing: border-box;">
+                <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                    <strong style="font-size: 0.95rem;" th:text="${isSitter ? '您的回覆' : '保姆回覆'}"></strong>
+                    <span style="color: #f39c12; font-weight: bold; font-size: 0.9rem;">
+                        <i class="fas fa-star"></i> <span th:text="${order.sitterRating}"></span>
+                    </span>
                 </div>
-                <p th:text="${order.sitterContent}" style="margin: 10px 0; color: #555;">小張是很準時的家長</p>
-                <div class="time-stamp" style="text-align: right; color: #888; font-size: 0.8rem;">
-                    <i class="far fa-clock"></i> <span th:text="${order.sitterCreateTime}">2026-01-28 20:30</span>
+                <p th:text="${order.sitterContent}" style="margin: 10px 0; color: #555; font-size: 0.9rem;"></p>
+                <div class="time-stamp" style="text-align: right; color: #888; font-size: 0.75rem;">
+                    <i class="far fa-clock"></i> <span th:text="${order.sitterCreateTime}"></span>
                 </div>
             </div>
 
-            <div th:id="'replyBox-' + ${order.bookingOrderId}" style="display: none; margin-top: 20px; padding: 20px; background: #fff; border: 1px dashed #c62828; border-radius: 10px; margin-left: 40px;">
-                <h4 style="color: #c62828; margin-top: 0;">您對這個會員的滿意度為？</h4>
-                <div class="rating-input reply-stars" style="font-size: 1.5rem; color: #ddd; margin-bottom: 10px; cursor: pointer;">
+            <div th:id="'replyBox-' + ${order.bookingOrderId}"
+                style="display: none; margin-top: 15px; margin-left: auto; width: 90%; max-width: 550px; padding: 15px; background: #fff; border: 2px solid #c62828; border-radius: 10px; box-sizing: border-box;">
+                <h4 style="color: #c62828; margin: 0 0 10px 0; font-size: 1rem;">您對顧客的滿意度為？</h4>
+                <div class="rating-input reply-stars" style="font-size: 1.2rem; color: #ddd; margin-bottom: 10px; cursor: pointer;">
                     <i class="fas fa-star star-btn" data-value="1"></i>
                     <i class="fas fa-star star-btn" data-value="2"></i>
                     <i class="fas fa-star star-btn" data-value="3"></i>
                     <i class="fas fa-star star-btn" data-value="4"></i>
                     <i class="fas fa-star star-btn" data-value="5"></i>
-                    <span class="rating-text" style="font-size: 0.9rem; color: #666; margin-left: 10px;">請點擊星等</span>
+                    <span class="rating-text" style="font-size: 0.8rem; color: #666; margin-left: 8px;">請點擊星數</span>
                 </div>
-                <textarea th:id="'replyText-' + ${order.bookingOrderId}" style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 10px; height: 80px;" placeholder="寫下對會員的回饋..."></textarea>
+                <label style="display: block; font-size: 0.9rem; margin-bottom: 5px; color: #444;">您有什麼想對顧客說的嗎？</label>
+                <textarea th:id="'replyText-' + ${order.bookingOrderId}"
+                    style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 8px; height: 70px; font-size: 0.9rem; box-sizing: border-box;"
+                    placeholder="輸入對會員的回饋..."></textarea>
                 <div style="text-align: right; margin-top: 10px;">
-                    <button style="background: #c62828; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer;"
-                            th:onclick="'submitSitterReply(' + ${order.bookingOrderId} + ')'">送出回覆</button>
+                    <button style="background: #c62828; color: white; border: none; padding: 6px 18px; border-radius: 5px; cursor: pointer; font-size: 0.9rem;"
+                        th:onclick="'submitSitterReply(' + ${order.bookingOrderId} + ')'">送出回覆</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <div th:if="${!isSitter}" id="dynamicInputCard" class="evaluate-input-card"
+        style="background: #fff; padding: 30px; border-radius: 15px; margin-top: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #eee;">
+        <input type="hidden" id="currentOrderId" th:value="${currentOrderId}">
+        <input type="hidden" id="currentSitterId" th:value="${sitterId}">
+
+        <h3 style="margin-top:0; color: #4db6ac;"><i class="fas fa-pen-fancy"></i> 您對保姆的滿意度為？</h3>
+        <div class="rating-input main-stars" style="font-size: 2rem; color: #ddd; cursor: pointer; margin-bottom: 20px;">
+            <i class="fas fa-star star-btn" data-value="1"></i>
+            <i class="fas fa-star star-btn" data-value="2"></i>
+            <i class="fas fa-star star-btn" data-value="3"></i>
+            <i class="fas fa-star star-btn" data-value="4"></i>
+            <i class="fas fa-star star-btn" data-value="5"></i>
+            <span class="rating-text" style="font-size: 1rem; color: #666; margin-left: 10px;">請點擊星號</span>
+        </div>
+        <div class="comment-input-group">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #555;">有什麼想對保姆說的嗎？</label>
+            <textarea id="reviewContent" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 15px; height: 100px; box-sizing: border-box;"
+                placeholder="分享您的服務體驗..."></textarea>
+        </div>
+        <button id="submitReview" style="margin-top: 20px; background: #4db6ac; color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1rem;">
+            送出評價 <i class="fas fa-paper-plane" style="margin-left: 5px;"></i>
+        </button>
+    </div>
 </div>
 
-<div th:if="${currentRole != 1}" id="dynamicInputCard" class="evaluate-input-card" style="background: #fff; padding: 30px; border-radius: 15px; margin-top: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #eee;">
-    <h3 style="margin-top:0; color: #4db6ac;"><i class="fas fa-pen-fancy"></i> 您對保姆的滿意度為？</h3>
-    <div class="rating-input main-stars" style="font-size: 2rem; color: #ddd; cursor: pointer; margin-bottom: 20px;">
-        <i class="fas fa-star star-btn" data-value="1"></i>
-        <i class="fas fa-star star-btn" data-value="2"></i>
-        <i class="fas fa-star star-btn" data-value="3"></i>
-        <i class="fas fa-star star-btn" data-value="4"></i>
-        <i class="fas fa-star star-btn" data-value="5"></i>
-        <span class="rating-text" style="font-size: 1rem; color: #666; margin-left: 10px;">請點擊星等</span>
-    </div>
-    <div class="comment-input-group">
-        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #555;">有什麼想對保姆說的嗎？</label>
-        <textarea id="reviewContent" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 15px; height: 100px;" placeholder="分享您的服務體驗..."></textarea>
-    </div>
-    <button id="submitReview" style="margin-top: 20px; background: #4db6ac; color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1rem;">
-        送出評價 <i class="fas fa-paper-plane" style="margin-left: 5px;"></i>
-    </button>
-</div>
+
+
+
+        <script type="text/javascript">
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // 1. 初始化最下方的主評論框
 
 
 
 
-<script type="text/javascript">
+                // --- 將你原本的功能封裝成這個 function ---
+                function initStarRating(container) {
+                    const stars = container.querySelectorAll('.star-btn');
+                    const ratingText = container.querySelector('.rating-text') || document.getElementById('rating-text');
+                    let selectedRating = 0;
 
-document.addEventListener('DOMContentLoaded', function() {
-	// 1. 初始化最下方的主評論框
-   
+                    stars.forEach(star => {
+                        // 點擊邏輯 (保留你原本的點擊/取消邏輯)
+                        star.addEventListener('click', function () {
+                            const clickedValue = parseInt(this.getAttribute('data-value'));
+                            if (selectedRating === clickedValue) {
+                                selectedRating = 0;
+                            } else {
+                                selectedRating = clickedValue;
+                            }
+                            updateStars(selectedRating);
+                            container.setAttribute('data-rating', selectedRating); // 存入分數供送出時讀取
+                        });
 
-    // --- 將你原本的功能封裝成這個 function ---
-    function initStarRating(container) {
-        const stars = container.querySelectorAll('.star-btn');
-        const ratingText = container.querySelector('.rating-text') || document.getElementById('rating-text');
-        let selectedRating = 0;
+                        // 移入預覽 (保留你原本的功能)
+                        star.addEventListener('mouseover', function () {
+                            updateStars(this.getAttribute('data-value'));
+                        });
+                    });
 
-        stars.forEach(star => {
-            // 點擊邏輯 (保留你原本的點擊/取消邏輯)
-            star.addEventListener('click', function() {
-                const clickedValue = parseInt(this.getAttribute('data-value'));
-                if (selectedRating === clickedValue) {
-                    selectedRating = 0;
-                } else {
-                    selectedRating = clickedValue;
+                    // 移出恢復 (保留你原本的功能)
+                    container.addEventListener('mouseleave', function () {
+                        updateStars(selectedRating);
+                    });
+
+                    function updateStars(val) {
+                        stars.forEach(s => {
+                            const v = parseInt(s.getAttribute('data-value'));
+                            s.style.color = v <= val ? '#f39c12' : '#ddd';
+                        });
+                        if (val > 0) {
+                            ratingText.innerText = val + ' 顆星';
+                        } else {
+                            ratingText.innerText = '請點擊星等';
+                        }
+                    }
                 }
-                updateStars(selectedRating);
-                container.setAttribute('data-rating', selectedRating); // 存入分數供送出時讀取
-            });
 
-            // 移入預覽 (保留你原本的功能)
-            star.addEventListener('mouseover', function() {
-                updateStars(this.getAttribute('data-value'));
-            });
-        });
+                const mainContainer = document.querySelector('#dynamicInputCard .rating-input');
+                if (mainContainer) initStarRating(mainContainer);
 
-        // 移出恢復 (保留你原本的功能)
-        container.addEventListener('mouseleave', function() {
-            updateStars(selectedRating);
-        });
+                // 2. 當保姆點擊「回覆」按鈕時，動態初始化該框的星星
+                window.showSitterReplyForm = function (orderId) {
+                    const box = document.getElementById('replyBox-' + orderId);
+                    if (box) {
+                        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+                        // 如果還沒初始化過星星，就初始化它
+                        const starContainer = box.querySelector('.rating-input');
+                        if (starContainer && !starContainer.classList.contains('initialized')) {
+                            initStarRating(starContainer);
+                            starContainer.classList.add('initialized');
+                        }
+                    }
+                };
 
-        function updateStars(val) {
-            stars.forEach(s => {
-                const v = parseInt(s.getAttribute('data-value'));
-                s.style.color = v <= val ? '#f39c12' : '#ddd';
-            });
-            if (val > 0) {
-                ratingText.innerText = val + ' 顆星';
-            } else {
-                ratingText.innerText = '請點擊星等';
-            }
-        }
-    }
+                window.showMemberReplyForm = function (orderId) {
+                    const box = document.getElementById('memberReplyBox-' + orderId);
+                    if (box) {
+                        box.style.display = box.style.display === 'none' ? 'block' : 'none';
 
-    const mainContainer = document.querySelector('#dynamicInputCard .rating-input');
-    if (mainContainer) initStarRating(mainContainer);
-	
-    // 2. 當保姆點擊「回覆」按鈕時，動態初始化該框的星星
-   window.showSitterReplyForm = function(orderId) {
-        const box = document.getElementById('replyBox-' + orderId);
-        if (box) {
-            box.style.display = box.style.display === 'none' ? 'block' : 'none';
-            // 如果還沒初始化過星星，就初始化它
-            const starContainer = box.querySelector('.rating-input');
-            if (starContainer && !starContainer.classList.contains('initialized')) {
-                initStarRating(starContainer);
-                starContainer.classList.add('initialized');
-            }
-        }
-    };
-    
-    window.showMemberReplyForm = function(orderId) {
-        const box = document.getElementById('memberReplyBox-' + orderId);
-        if (box) {
-            box.style.display = box.style.display === 'none' ? 'block' : 'none';
-            
-            // 初始化星星（只執行一次）
-            const starContainer = box.querySelector('.rating-input');
-            if (starContainer && !starContainer.classList.contains('initialized')) {
-                initStarRating(starContainer);
-                starContainer.classList.add('initialized');
-            }
-        }
-    };
+                        // 初始化星星（只執行一次）
+                        const starContainer = box.querySelector('.rating-input');
+                        if (starContainer && !starContainer.classList.contains('initialized')) {
+                            initStarRating(starContainer);
+                            starContainer.classList.add('initialized');
+                        }
+                    }
+                };
 
-    // 3. 修改原有的送出邏輯 (從 data-rating 拿分數)
-    window.submitSitterReply = function(orderId) {
-        const box = document.getElementById('replyBox-' + orderId);
-        const card = box.closest('.order-review-card'); // 往上找卡片容器
-        const receiverId = card.querySelector('.receiver-id').value; // 抓到接收者 ID
-        const rating = box.querySelector('.rating-input').getAttribute('data-rating') || 0;
-        const content = document.getElementById('replyText-' + orderId).value;
+                // 3. 修改原有的送出邏輯 (從 data-rating 拿分數)
+                window.submitSitterReply = function (orderId) {
+                    const box = document.getElementById('replyBox-' + orderId);
+                    const card = box.closest('.order-review-card'); // 往上找卡片容器
+                    const receiverIdInput = card.querySelector('.receiver-id');
 
-        if (rating == 0) return alert('❌ 請先評分！');
-        if (!content.trim()) return alert('❌ 請輸入內容！');
+                    const rating = box.querySelector('.rating-input').getAttribute('data-rating') || 0;
+                    const content = document.getElementById('replyText-' + orderId).value;
 
-        // ... 執行 fetch 送到後端 ...
-        sendReviewToBackend(orderId, receiverId, content, 'SITTER', rating);
-    };
+                    if (!receiverIdInput || !receiverIdInput.value) {
+                        return alert('❌ 找不到接收者 ID');
+                    }
+                    const receiverId = receiverIdInput.value;
+
+                    if (rating == 0) return alert('❌ 請先評分！');
+                    if (!content.trim()) return alert('❌ 請輸入內容！');
+
+                    // ... 執行 fetch 送到後端 ...
+                    sendReviewToBackend(orderId, receiverId, content, 'SITTER', rating);
+                };
 
 
 
-//============ 6. 送出會員的回覆 ============
-window.submitMemberReply = function(orderId, receiverId) {
-    const box = document.getElementById('memberReplyBox-' + orderId);
-    const rating = box.querySelector('.rating-input').getAttribute('data-rating') || 0;
-    const content = document.getElementById('memberReplyText-' + orderId).value;
+                //============ 6. 送出會員的回覆 ============
+                window.submitMemberReply = function (orderId, receiverId) {
+                    const box = document.getElementById('memberReplyBox-' + orderId);
+                    const rating = box.querySelector('.rating-input').getAttribute('data-rating') || 0;
+                    const content = document.getElementById('memberReplyText-' + orderId).value;
 
-    if (rating == 0) return alert('❌ 請先評分！');
-    if (!content.trim()) return alert('❌ 請輸入內容！');
+                    if (rating == 0) return alert('❌ 請先評分！');
+                    if (!content.trim()) return alert('❌ 請輸入內容！');
 
-    // 送到後端
-    sendReviewToBackend(orderId, receiverId, content, 'MEMBER', rating);
-};
-   
-		function sendReviewToBackend(orderId, receiverId, content, roleType, rating) {
-        const data = {
-            bookingOrderId: orderId,
-            receiverId: receiverId,
-            content: content,
-            roleType: roleType,
-            starRating: rating // 這裡假設你已經有星星選取的數值
-        };
+                    // 送到後端
+                    sendReviewToBackend(orderId, receiverId, content, 'MEMBER', rating);
+                };
 
-        fetch('/pet/evaluate/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(res => res.text())
-        .then(msg => {
-            if(msg === 'success') {
-                alert('評價已送出！');
-                location.reload(); // 重整網頁，內容就會從資料庫重新抓取，不會消失
-            }
-            else {
-                alert('❌ 送出失敗，請稍後再試');
-            }
-        })
-        .catch(err => {
-            console.error('錯誤:', err);
-            alert('❌ 發生錯誤');
-        });
-    }
-    
-		const submitBtn = document.getElementById('submitReview');
-	    if (submitBtn) {
-	        submitBtn.addEventListener('click', function() {
-	            const content = document.getElementById('reviewContent').value;
-	            const rating = mainContainer.getAttribute('data-rating') || 0;
+                function sendReviewToBackend(orderId, receiverId, content, roleType, rating) {
+                    console.log("========== 準備送出評價 ==========");
+                    console.log("送出的原始資料:", { orderId, receiverId, content, roleType, rating });
 
-	            if (rating == 0) return alert('❌ 請先評分！');
-	            if (!content.trim()) return alert('❌ 請輸入評論內容！');
+                    if (!orderId || orderId === "null" || orderId === "") {
+                        alert("❌ 偵測到訂單編號遺失，請重新整理頁面再試一次。");
+                        return;
+                    }
 
-	            // ✅ 生成時間字串
-	            const now = new Date();
-	            const timeStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+                    if (!receiverId || receiverId === "null" || receiverId === "") {
+                        alert("❌ 偵測到被評價者 ID 遺失，請重新整理頁面再試一次。");
+                        return;
+                    }
 
-	            // ✅ 隱藏「暫無評論」訊息
-	            const noMsg = document.getElementById('noReviewMsg');
-	            if(noMsg) noMsg.style.display = 'none';
+                    const data = {
 
-	            // ✅ 建立「框中框」新評價
-	            const newOrderCard = document.createElement('div');
-	            newOrderCard.className = 'order-review-card';
-	            newOrderCard.style.cssText = "background: #fff; border-radius: 15px; padding: 25px; margin-bottom: 30px; border: 1px solid #eee; opacity: 0;";
-	            
-	            newOrderCard.innerHTML = `
+                        bookingOrderId: parseInt(orderId),
+                        receiverId: parseInt(receiverId),  // 確保轉換為整數
+                        content: content,
+                        roleType: (roleType === 'SITTER' ? 0 : 1),
+                        starRating: parseInt(rating)
+                    };
+
+                    console.log("送出的 JSON 資料：", JSON.stringify(data));
+
+                    fetch('/pet/evaluate/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+                        .then(res => res.text())
+                        .then(msg => {
+                            console.log("後端回應：", msg);
+                            if (msg === 'success') {
+                                alert('✅ 評價已送出！');
+                                location.reload(); // 重整網頁，內容就會從資料庫重新抓取，不會消失
+                            }
+                            else {
+                                alert('❌ 送出失敗，後端回傳：' + msg);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('錯誤:', err);
+                            alert('❌ 發生錯誤：' + err.message);
+                        });
+                }
+
+
+                const submitBtn = document.getElementById('submitReview');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function () {
+                        const orderId = document.getElementById('currentOrderId').value;
+                        const receiverId = document.getElementById('currentSitterId').value;
+                        const content = document.getElementById('reviewContent').value;
+                        const rating = mainContainer.getAttribute('data-rating') || 0;
+
+                        if (rating == 0) return alert('❌ 請先評分！');
+                        if (!content.trim()) return alert('❌ 請輸入評論內容！');
+
+                        // ✅ 生成時間字串
+                        const now = new Date();
+                        const timeStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+
+                        // ✅ 隱藏「暫無評論」訊息
+                        const noMsg = document.getElementById('noReviewMsg');
+                        if (noMsg) noMsg.style.display = 'none';
+
+                        // ✅ 建立「框中框」新評價
+                        const newOrderCard = document.createElement('div');
+                        newOrderCard.className = 'order-review-card';
+                        newOrderCard.style.cssText = "background: #fff; border-radius: 15px; padding: 25px; margin-bottom: 30px; border: 1px solid #eee; opacity: 0;";
+
+                        newOrderCard.innerHTML = `
 	                <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px; color: #888; font-size: 0.85rem;">
 	                    <span><i class="fas fa-receipt"></i> 剛剛送出的評價</span>
 	                    <div class="more-options"><i class="fas fa-ellipsis-h opt-btn"></i></div>
@@ -401,51 +463,52 @@ window.submitMemberReply = function(orderId, receiverId) {
 	                </div>
 	            `;
 
-	            const list = document.getElementById('reviewList');
-	            list.insertBefore(newOrderCard, list.firstChild);
+                        const list = document.getElementById('reviewList');
+                        list.insertBefore(newOrderCard, list.firstChild);
 
-	            // ✅ 淡入動畫
-	            setTimeout(() => { 
-	                newOrderCard.style.transition = 'opacity 0.5s'; 
-	                newOrderCard.style.opacity = '1'; 
-	            }, 10);
-	            
-	            // ✅ 重置輸入框
-	            document.getElementById('reviewContent').value = '';
-	            mainContainer.setAttribute('data-rating', 0);
-	            const stars = mainContainer.querySelectorAll('.star-btn');
-	            stars.forEach(s => s.style.color = '#ddd');
-	            const ratingText = mainContainer.querySelector('.rating-text');
-	            if(ratingText) ratingText.innerText = '請點擊星等';
+                        // ✅ 淡入動畫
+                        setTimeout(() => {
+                            newOrderCard.style.transition = 'opacity 0.5s';
+                            newOrderCard.style.opacity = '1';
+                        }, 10);
 
-	            // 如果你要真的送到後端，取消下面這行的註解
-	            // const orderId = document.getElementById('currentOrderId').value;
-	            // const receiverId = document.getElementById('currentSitterId').value;
-	            // sendReviewToBackend(orderId, receiverId, content, 'MEMBER', rating);
-	        });
-	    }
+                        // ✅ 重置輸入框
+                        document.getElementById('reviewContent').value = '';
+                        mainContainer.setAttribute('data-rating', 0);
+                        const stars = mainContainer.querySelectorAll('.star-btn');
+                        stars.forEach(s => s.style.color = '#ddd');
+                        const ratingText = mainContainer.querySelector('.rating-text');
+                        if (ratingText) ratingText.innerText = '請點擊星等';
 
-	    // ============ 9. 檢舉按鈕（事件委託） ============
-	    const reviewList = document.getElementById('reviewList');
-	    if (reviewList) {
-	        reviewList.addEventListener('click', function(e) {
-	            const reportBtn = e.target.closest('.report-btn');
-	            if (reportBtn) {
-	                if(confirm('確定要檢舉這筆評論嗎？')) {
-	                    alert('已收到您的檢舉，管理員將進行審核。');
-	                    // 可以在這裡加上檢舉的 fetch 請求
-	                }
-	            }
-	        });
-	    }
-	    
-});
+                        // 如果你要真的送到後端，取消下面這行的註解
 
-</script>
+                        sendReviewToBackend(orderId, receiverId, content, 'MEMBER', rating);
+                        console.log("準備送出的 ID:", orderId);
+                    });
+                }
 
-<footer id="main-footer" style="margin-top: 4rem;"></footer>
+                // ============ 9. 檢舉按鈕（事件委託） ============
+                const reviewList = document.getElementById('reviewList');
+                if (reviewList) {
+                    reviewList.addEventListener('click', function (e) {
+                        const reportBtn = e.target.closest('.report-btn');
+                        if (reportBtn) {
+                            if (confirm('確定要檢舉這筆評論嗎？')) {
+                                alert('已收到您的檢舉，管理員將進行審核。');
+                                // 可以在這裡加上檢舉的 fetch 請求
+                            }
+                        }
+                    });
+                }
 
-    <script th:src="@{/js/frontend/main.js}">
-    </script>
+            });
+
+        </script>
+
+        <footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+        <script th:src="@{/js/frontend/main.js}">
+        </script>
 </body>
+
 </html>

@@ -11,6 +11,8 @@ public class EvaluateDTO implements Serializable {
     private Integer bookingOrderId; // 訂單編號 (用於大框標題)
 
     // --- 會員評價部分 (左側框) ---
+    private Integer memberId; // 👈 補上這個
+    private Integer sitterId; // 👈 建議也補上這個
     private String memberName;      // 會員名稱
     private Integer memberRating;   // 會員給的星等
     private String memberContent;   // 會員寫的評語
@@ -36,6 +38,12 @@ public class EvaluateDTO implements Serializable {
         this.bookingOrderId = bookingOrderId;
     }
 
+    public Integer getMemberId() { return memberId; }
+    public void setMemberId(Integer memberId) { this.memberId = memberId; }
+    
+    public Integer getSitterId() { return sitterId; }
+    public void setSitterId(Integer sitterId) { this.sitterId = sitterId; }
+    
     public String getMemberName() {
         return memberName;
     }
