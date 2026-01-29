@@ -311,9 +311,8 @@
                                 </td>
                                 <td th:text="${#dates.format(dto.handleTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
                                 <td>
-                                    <form method="post" th:action="@{/admin/forum/get-one-rejected-comment-to-display}">
-                                        <input type="hidden" name="reportId" th:value="${dto.reportId}">
-                                        <input type="hidden" name="postId" th:value="${dto.postId}">
+                                    <form method="post" th:action="@{/admin/forum/get-one-for-update}">
+                                        <input type="hidden" name="commentId" th:value="${dto.commentId}">
                                         <input class="btn-view-style" type="submit" value="查看">
                                     </form>
                                 </td>

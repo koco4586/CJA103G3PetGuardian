@@ -85,7 +85,7 @@ body {
 </head>
 <body>
 
-<header id="main-header" class="header"></header>
+
 
 	<article class="info">
 		<form action="#" method="#" id="the_form">
@@ -187,7 +187,7 @@ body {
   var p_file_el = document.getElementById("p_file");
   var canvas = document.createElement("canvas");
   var ctx = canvas.getContext("2d");
-  var original_base64_temp = "";
+
 
 
 // --- 初始化預覽圖區域的 HTML ---
@@ -202,8 +202,6 @@ body {
           var reader = new FileReader();
           reader.addEventListener("load", function(e) {
             // 需求 1 & 3：呈現預覽圖並加上 preview_img class
-            
-            original_base64_temp = e.target.result;
             preview_el.innerHTML = '<img src="' + e.target.result + '" class="preview_img">';
           });
           reader.readAsDataURL(file);
@@ -211,7 +209,6 @@ body {
       } else {
         // 需求 2：如果按取消（files長度為0），回到原介面
         preview_el.innerHTML = preview_default_html;
-        original_base64_temp = "";
       }
     };
 
@@ -224,7 +221,7 @@ body {
 
   preview_el.innerHTML = preview_default_html;
       // 清空資料時，將預覽圖回到原介面
-      sessionStorage.removeItem("pending_data");
+      sessionStorage.removeItem("form_data");
       setTimeout(function(){
         check_geolocation_enabled_el();
       }, 0);
@@ -239,7 +236,7 @@ body {
      // 詢問使用者，避免誤點導致資料消失
      if (confirm("確定要離開並回到首頁嗎？未儲存的資料將會消失。")) {
          // 清除這一次的暫存資料（選選：如果你希望回首頁後下次進來是乾淨的）
-         sessionStorage.removeItem("pending_data"); 
+         // sessionStorage.removeItem("pending_data"); 
          
          window.location.href = "/pet/dashboard"; // 這裡填入你首頁的網址，例如 "/" 或 "/index"
      }
@@ -435,13 +432,12 @@ preview_el.addEventListener("click", function(){
     const final_img_base64 = canvas.toDataURL("image/jpeg", 0.7);
     const form_data = {
             img_base64: final_img_base64,
-            original_base64: original_base64_temp,
             petName: p_name_el.value,          // ← 改名
-            typeId: p_type_el.value,          // ← 新增
+            petType: p_type_el.value,          // ← 新增
             petGender: p_Gender_el.value,            // ← 改名
             petAge: p_age_el.value,            // ← 改名
-            sizeId: p_size_el.value,          // ← 新增
-            petDescription: p_desc_el.value,          // ← 新增
+            petSize: p_size_el.value,          // ← 新增
+            petDesc: p_desc_el.value,          // ← 新增
             lng: lng_el.value,                 // ← 改用這樣比較清楚
             lat: lat_el.value
         };
@@ -466,19 +462,15 @@ preview_el.addEventListener("click", function(){
 
     // 2. 回填文字欄位 (使用 data 物件中的屬性名稱)
     if(p_name_el) p_name_el.value = data.petName || "";
-    if(p_type_el) p_type_el.value = data.typeId || "";
+    if(p_type_el) p_type_el.value = data.petType || "";
     if(p_Gender_el)  p_Gender_el.value  = data.petSex || "";
     if(p_age_el)  p_age_el.value  = data.petAge || "";
-    if(p_size_el) p_size_el.value = data.sizeId || "1";
-    if(p_desc_el) p_desc_el.value = data.petDescription || "";
+    if(p_size_el) p_size_el.value = data.petSize || "1";
+    if(p_desc_el) p_desc_el.value = data.petDesc || "";
     if(lng_el)    lng_el.value    = data.lng || "";
     if(lat_el)    lat_el.value    = data.lat || "";
 
     // 3. 圖片部分：依你的要求「保留資料，圖片不要」，所以強制回到預覽圖狀態
-    
-    if (data.original_base64) {
-        original_base64_temp = data.original_base64;
-    }
    if (data.img_base64 && data.img_base64.length > 100) { 
         // 判斷長度是因為 Base64 很長，如果只是空字串或太短就不要顯示
         preview_el.innerHTML = '<img src="' + data.img_base64 + '" class="preview_img">';
@@ -504,8 +496,7 @@ preview_el.addEventListener("click", function(){
   </script>
 
 
-<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
- <script th:src="@{/js/frontend/main.js}"></script>
+
 
 
 </body>

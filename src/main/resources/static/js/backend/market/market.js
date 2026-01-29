@@ -37,6 +37,9 @@ function switchOrderTab(tabName) {
     }
 }
 
+<<<<<<< HEAD
+// 顯示退貨詳情 Modal
+=======
 // ==========================================
 // 2. 類別 Modal 相關 (Category)
 // ==========================================
@@ -73,6 +76,7 @@ function formatDateTime(dateTimeStr) {
 }
 
 // 顯示退貨詳情
+>>>>>>> refs/remotes/origin/master
 function showReturnDetail(returnId) {
     fetch('/admin/store/return/' + returnId)
         .then(response => response.json())
@@ -83,7 +87,11 @@ function showReturnDetail(returnId) {
                 document.getElementById('modal-buyerName').textContent = data.buyerName || '-';
                 document.getElementById('modal-sellerName').textContent = data.sellerName || '-';
                 document.getElementById('modal-refundAmount').textContent = '$' + (data.refundAmount || 0);
+<<<<<<< HEAD
+                document.getElementById('modal-applyTime').textContent = data.applyTime || '-';
+=======
                 document.getElementById('modal-applyTime').textContent = formatDateTime(data.applyTime);
+>>>>>>> refs/remotes/origin/master
                 document.getElementById('modal-returnReason').textContent = data.returnReason || '-';
 
                 const imagesContainer = document.getElementById('modal-images-container');

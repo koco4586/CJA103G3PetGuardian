@@ -156,22 +156,27 @@
                 <p style="color: #999; font-size: 0.9rem;">一般會員</p>
             </div>
             <nav>
-                <a href="dashboard.html" class="menu-item active">
+                <a href="/html/frontend/member/management/member_management_ai.html" class="menu-item"
+                    th:classappend="${activePage == 'profile'} ? ' active' : ''">
                     <i class="fas fa-user"></i> 個人資料
                 </a>
-                <a href="dashboard-pets.html" class="menu-item">
+                <a href="/pet/dashboard" class="menu-item" th:classappend="${activePage == 'pets'} ? ' active' : ''">
                     <i class="fas fa-paw"></i> 我的寵物
                 </a>
-                <a href="dashboard-orders.html" class="menu-item">
+                <a href="/dashboard/orders" class="menu-item"
+                    th:classappend="${activePage == 'orders'} ? ' active' : ''">
                     <i class="fas fa-receipt"></i> 商城訂單紀錄
                 </a>
-                <a href="dashboard-bookings.html" class="menu-item">
+                <a href="/booking/memberOrders" class="menu-item"
+                    th:classappend="${activePage == 'bookings'} ? ' active' : ''">
                     <i class="fas fa-calendar-check"></i> 保母預約紀錄
                 </a>
-                <a href="dashboard-favorites.html" class="menu-item">
+                <a href="/dashboard/favorites" class="menu-item"
+                    th:classappend="${activePage == 'favorites'} ? ' active' : ''">
                     <i class="fas fa-heart"></i> 收藏列表
                 </a>
-                <a href="dashboard-sitter-registration.html" class="menu-item"
+                <a href="/sitter/apply" class="menu-item"
+                    th:classappend="${activePage == 'sitter-registration'} ? ' active' : ''"
                     style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
                     <i class="fas fa-user-plus"></i> 成為保母
                 </a>

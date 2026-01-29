@@ -5,11 +5,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/back")
 public class AdminInsertRedirectController {
 
     @GetMapping("/admininsertpage")
-    public String admininsertpage(){
+    public String admininsert(){
         return "redirect:/html/backend/admin/admin_insert.html";
     }
 }

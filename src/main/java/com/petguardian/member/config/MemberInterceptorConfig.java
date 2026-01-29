@@ -27,7 +27,6 @@ public class MemberInterceptorConfig implements WebMvcConfigurer{
 						"/js/**",
 						"/images/**",
 						"/sitter/*"
-
                 );
     }
 }

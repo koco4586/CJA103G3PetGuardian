@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class MemberManagementDeactivateRedirectController {
 
     @GetMapping("/deactivatepage")
-    public String deactivatepage(){
-        return "redirect:/html/frontend/member/management/member_management_deactivate.html";
+    public String deactivate(){
+        return "redirect:/html/member/management/member_management_deactivate.html";
     }
 
 }

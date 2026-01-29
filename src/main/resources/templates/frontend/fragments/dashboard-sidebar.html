@@ -2,32 +2,32 @@
 <html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 
 <!-- Dashboard Sidebar Fragment -->
-<!-- 使用方式: <div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='orders')}"></div> -->
+<!-- 使用方式: <div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='profile')}"></div> -->
 <!-- activePage 參數: 'profile', 'pets', 'orders', 'bookings', 'favorites', 'sitter-registration' -->
 
 <div th:fragment="sidebar(activePage)" class="sidebar">
     <div class="text-center mb-2">
         <div class="avatar-wrapper">
-            <img th:src="${memberAvatar} ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack'" class="avatar">
+            <img src="https://cdn01.pinkoi.com/product/aZgvB9di/3/640x530.jpg" class="avatar">
         </div>
-        <h4 th:text="${memberName} ?: '會員'">會員名稱</h4>
-        <p style="color: #999; font-size: 0.9rem;" th:text="${memberLevel} ?: '一般會員'">一般會員</p>
+        <h4>會員中心</h4>
+        <p style="color: #999; font-size: 0.9rem;">一般會員</p>
     </div>
     <nav>
-        <a href="/dashboard" class="menu-item" th:classappend="${activePage == 'profile'} ? ' active' : ''">
+        <a href="/html/frontend/member/management/member_management_ai.html" class="menu-item"
+            th:classappend="${activePage == 'profile'} ? ' active' : ''">
             <i class="fas fa-user"></i> 個人資料
         </a>
-        <a href="/dashboard/pets" class="menu-item" th:classappend="${activePage == 'pets'} ? ' active' : ''">
+        <a href="/pet/dashboard" class="menu-item" th:classappend="${activePage == 'pets'} ? ' active' : ''">
             <i class="fas fa-paw"></i> 我的寵物
         </a>
-        <a th:href="@{/dashboard/orders}" class="menu-item" th:classappend="${activePage == 'orders'} ? ' active' : ''">
+        <a href="/dashboard/orders" class="menu-item" th:classappend="${activePage == 'orders'} ? ' active' : ''">
             <i class="fas fa-receipt"></i> 商城訂單紀錄
         </a>
-        <a href="/dashboard/bookings" class="menu-item" th:classappend="${activePage == 'bookings'} ? ' active' : ''">
+        <a href="/booking/memberOrders" class="menu-item" th:classappend="${activePage == 'bookings'} ? ' active' : ''">
             <i class="fas fa-calendar-check"></i> 保母預約紀錄
         </a>
-        <a th:href="@{/dashboard/favorites}" class="menu-item"
-            th:classappend="${activePage == 'favorites'} ? ' active' : ''">
+        <a href="/dashboard/favorites" class="menu-item" th:classappend="${activePage == 'favorites'} ? ' active' : ''">
             <i class="fas fa-heart"></i> 收藏列表
         </a>
         <a href="/sitter/apply" class="menu-item"
@@ -35,9 +35,10 @@
             style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
             <i class="fas fa-user-plus"></i> 成為保母
         </a>
-        <a href="/logout" class="menu-item" style="color: var(--danger);">
+        <div class="menu-item" style="color: var(--danger); cursor: pointer;"
+            onclick="alert('已登出'); window.location.href='index.html'">
             <i class="fas fa-sign-out-alt"></i> 登出
-        </a>
+        </div>
     </nav>
 </div>
 

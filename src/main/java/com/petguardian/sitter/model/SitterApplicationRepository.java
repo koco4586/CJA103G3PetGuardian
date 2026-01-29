@@ -1,9 +1,9 @@
 package com.petguardian.sitter.model;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * 保姆申請 Repository
@@ -31,8 +31,8 @@ public interface SitterApplicationRepository extends JpaRepository<SitterApplica
     List<SitterApplicationVO> findByAppStatus(Byte appStatus);
 
     /**
-     * 計算指定申請狀態的申請數量
-     * 用於統計待審核的保母申請數量（appStatus = 0 表示待審核）
+     * 計算申請狀態不是指定值的申請數量
+     * 用於統計待審保母數量（排除已通過的申請）
      */
-    long countByAppStatus(Byte appStatus);
+    long countByAppStatusNot(Byte appStatus);
 }

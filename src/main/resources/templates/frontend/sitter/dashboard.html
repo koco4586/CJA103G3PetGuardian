@@ -13,7 +13,7 @@
 
 <body>
 
-    <header id="main-header"></header>
+    <header id="main-header" class="header"></header>
 
 
     <div class="container dashboard-container">
@@ -100,7 +100,7 @@
                     <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務行事曆 (月檢視)</h3>
                     <div style="display: flex; gap: 1rem; font-size: 0.85rem;">
                         <span><span
-                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border:1px solid #ccc; margin-right: 4px;"></span>休息</span>
+                                style="display: inline-block; width: 12px; height: 12px; background: #e0e0e0; border:1px solid #ccc; margin-right: 4px;"></span>未排班</span>
                         <span><span
                                 style="display: inline-block; width: 12px; height: 12px; background: #4caf50; margin-right: 4px;"></span>可預約</span>
                         <span><span
@@ -223,10 +223,6 @@
                     background-color: #4caf50;
                 }
 
-                .small-hour-dot.booked {
-                    background-color: #ff9800;
-                }
-
                 /* Modal Styles */
                 .hour-cell {
                     border: 1px solid #ddd;
@@ -249,14 +245,6 @@
 
                 .hour-cell:hover {
                     filter: brightness(0.95);
-                }
-
-                .hour-cell.booked {
-                    background-color: #fff3e0;
-                    color: #e65100;
-                    border-color: #ffe0b2;
-                    font-weight: bold;
-                    cursor: not-allowed;
                 }
             </style>
 
@@ -336,12 +324,17 @@
         // 初始化
         document.addEventListener('DOMContentLoaded', function () {
 
-            // [NEW] 檢查是否有待確認訂單並顯示通知
+            // [NEW] 檢查是否有待確認訂單並顯示通知 (每 Session 只顯示一次)
             const pendingCount = /*[[${pendingCount}]]*/ 0;
-            if (pendingCount > 0) {
+            const notificationKey = 'hasBookingNotified_' + sitterId;
+            const hasNotified = sessionStorage.getItem(notificationKey);
+
+            if (pendingCount > 0 && !hasNotified) {
                 // 使用 setTimeout 確保頁面渲染完成後彈出
                 setTimeout(() => {
                     alert(`親愛的保母您好：\n目前有 ${pendingCount} 筆新的預約等待您的確認！\n請前往「預約管理」查看。`);
+                    // 設定已通知標記
+                    sessionStorage.setItem(notificationKey, 'true');
                 }, 500);
             }
 
@@ -466,8 +459,6 @@
                     // '1' = 已預約 → 灰色 (不加 active class)
                     if (status.charAt(h) === '0') {
                         dot.classList.add('active');  // 綠色
-                    } else if (status.charAt(h) === '2') {
-                        dot.classList.add('booked');  // 橘色
                     }
                     summary.appendChild(dot);
                 }
@@ -512,41 +503,23 @@
                 cell.className = 'hour-cell';
                 cell.textContent = `${String(i).padStart(2, '0')}:00`;
 
-                // 0=Available, 1=Resting, 2=Booked
+                // 0=Available, 1=Busy
                 if (modalCurrentStatus[i] === '0') {
                     cell.classList.add('available');
                     cell.title = "可預約";
-                    cell.onclick = () => toggleStatus(i);
-                } else if (modalCurrentStatus[i] === '2') {
-                    cell.classList.add('booked');
-                    cell.title = "已預約 (不可修改)";
-                    cell.onclick = null; // 禁止點擊
                 } else {
                     cell.classList.add('busy');
-                    cell.title = "休息中";
-                    cell.onclick = () => toggleStatus(i);
+                    cell.title = "休息/已預約";
                 }
 
-                /*
                 cell.onclick = () => {
                     // Toggle '0' <-> '1'
                     modalCurrentStatus[i] = (modalCurrentStatus[i] === '0') ? '1' : '0';
                     renderModalGrid(); // Re-render to update style
                 };
-                */
 
                 container.appendChild(cell);
             }
-        }
-
-        function toggleStatus(i) {
-            // 僅允許 0(空閒) 與 1(休息) 互換，不處理 2
-            if (modalCurrentStatus[i] === '0') {
-                modalCurrentStatus[i] = '1';
-            } else if (modalCurrentStatus[i] === '1') {
-                modalCurrentStatus[i] = '0';
-            }
-            renderModalGrid();
         }
 
         // 儲存設定

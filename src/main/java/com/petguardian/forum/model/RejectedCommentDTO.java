@@ -10,14 +10,13 @@ public class RejectedCommentDTO {
 	private Integer postId;
 	private Integer reportType;
 	private Timestamp handleTime;
-	private Integer reportId;
 	
 	public RejectedCommentDTO() {
 		super();
 	}
 
 	public RejectedCommentDTO(Integer commentId, String commentContent, Integer memId, Integer postId,
-			Integer reportType, Timestamp handleTime, Integer reportId) {
+			Integer reportType, Timestamp handleTime) {
 		super();
 		this.commentId = commentId;
 		this.commentContent = commentContent;
@@ -25,7 +24,6 @@ public class RejectedCommentDTO {
 		this.postId = postId;
 		this.reportType = reportType;
 		this.handleTime = handleTime;
-		this.reportId = reportId;
 	}
 
 	public Integer getCommentId() {
@@ -74,14 +72,6 @@ public class RejectedCommentDTO {
 
 	public void setHandleTime(Timestamp handleTime) {
 		this.handleTime = handleTime;
-	}
-
-	public Integer getReportId() {
-		return reportId;
-	}
-
-	public void setReportId(Integer reportId) {
-		this.reportId = reportId;
 	}
 	
 }

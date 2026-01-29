@@ -185,6 +185,8 @@
                                     <form th:if="${sitter.sitterStatus == 0}"
                                         th:action="@{/admin/sitter/suspend/{id}(id=${sitter.sitterId})}" method="post"
                                         style="display:inline;">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                            th:value="${_csrf.token}" />
                                         <button type="submit" class="btn ghost"
                                             style="color:red; border-color:red;">停權</button>
                                     </form>
@@ -192,6 +194,8 @@
                                     <form th:if="${sitter.sitterStatus == 1}"
                                         th:action="@{/admin/sitter/restore/{id}(id=${sitter.sitterId})}" method="post"
                                         style="display:inline;">
+                                        <input type="hidden" th:name="${_csrf.parameterName}"
+                                            th:value="${_csrf.token}" />
                                         <button type="submit" class="btn" style="background:#4CAF50;">恢復權限</button>
                                     </form>
                                 </td>

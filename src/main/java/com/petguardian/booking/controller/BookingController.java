@@ -129,28 +129,30 @@ public class BookingController {
     public String listMemberOrders(@RequestParam(required = false) Integer status, HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/loginpage";
+            return "redirect:/front/loginpage";
         }
         
-        List<BookingOrderVO> bookingList = (status != null) 
-            ? bookingService.findByMemberAndStatus(memId, status)
-            : bookingService.getOrdersByMemberId(memId);
-        
-     // 2. 統一為這些訂單填入保母姓名 (這段邏輯移到這，確保過濾後的訂單都有姓名)
-        for (BookingOrderVO order : bookingList) {
-            try {
-                PetSitterServiceVO service = dataService.getSitterServiceInfo(order.getSitterId(),
-                        order.getServiceItemId());
-                order.setSitterName(service.getSitter().getSitterName());
-            } catch (Exception e) {
-                order.setSitterName("未知保母");
-            }
-        }
-
+     // 1. 先根據狀態抓出原始資料 (只抓一次)
+        List<BookingOrderVO> bookingList;
         if (status != null) {
             bookingList = bookingService.findByMemberAndStatus(memId, status);
         } else {
+            // 建議這裡使用 getOrdersByMemberId(memId) 以顯示完整歷史，或照你的邏輯用 getActiveOrdersByMemberId
             bookingList = bookingService.getActiveOrdersByMemberId(memId);
+        }
+        
+        // 2. 統一處理保母姓名填入
+        for (BookingOrderVO order : bookingList) {
+            try {
+                PetSitterServiceVO service = dataService.getSitterServiceInfo(order.getSitterId(), order.getServiceItemId());
+                if (service != null && service.getSitter() != null) {
+                    order.setSitterName(service.getSitter().getSitterName());
+                } else {
+                    order.setSitterName("未知保母");
+                }
+            } catch (Exception e) {
+                order.setSitterName("未知保母");
+            }
         }
         
         model.addAttribute("bookingList", bookingList);

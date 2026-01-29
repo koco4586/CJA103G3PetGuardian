@@ -69,21 +69,16 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status) {
-        List<BookingOrderVO> list = orderRepository.findBySitterId(sitterId).stream()
+    public List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status) {
+        // 先取得所有訂單
+        List<BookingOrderVO> allOrders = orderRepository.findBySitterId(sitterId);
+        // 自動更新過期訂單狀態
+        scheduleInternalService.autoUpdateExpiredOrders(allOrders);
+        // 過濾出指定狀態的訂單
+        List<BookingOrderVO> list = allOrders.stream()
                 .filter(o -> o.getOrderStatus().equals(status))
                 .toList();
 
-        list.forEach(this::enrichOrderInfo);
-        return list;
-    }
-
-    // [New] 查詢某保母特定狀態的訂單 (Service層封裝)
-    @Override
-    public List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status) {
-        // 呼叫 Repository 進行查詢 (狀態: 0=待確認, 1=進行中...)
-        List<BookingOrderVO> list = orderRepository.findBySitterIdAndOrderStatus(sitterId, status);
-        // 補充訂單相關資訊 (如會員名稱、寵物名稱等)
         list.forEach(this::enrichOrderInfo);
         return list;
     }
@@ -170,10 +165,16 @@ public class BookingServiceImpl implements BookingService {
 
     // 核准退款
     @Override
-    public void approveRefund(Integer orderId) {
+    public void approveRefund(Integer orderId, Double ratio) {
         BookingOrderVO order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("找不到訂單"));
+        int refundAmount = (int) (order.getReservationFee() * ratio);
+        if (refundAmount > 0) {
+            dataService.processRefund(order.getMemId(), refundAmount);
+        }
         order.setOrderStatus(4); // 4: 已退款
+        String ratioText = (ratio >= 1.0) ? "全額退款" : (int)(ratio * 100) + "% 部分退款";
+        order.setCancelReason(order.getCancelReason() + " [" + ratioText + " - 管理員核准]");
         orderRepository.save(order);
         scheduleInternalService.updateSitterSchedule(order, '0');
     }
@@ -197,8 +198,8 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime now = LocalDateTime.now();
         if (!order.getEndTime().isAfter(order.getStartTime()))
             throw new IllegalArgumentException("結束時間錯誤");
-        // if (order.getStartTime().isBefore(now.plusHours(2))) throw new
-        // IllegalArgumentException("需兩小時前預約");
+        if (order.getStartTime().isBefore(now.plusHours(2)))
+            throw new IllegalArgumentException("需兩小時前預約");
         if (!order.getStartTime().toLocalDate().isEqual(order.getEndTime().toLocalDate()))
             throw new IllegalArgumentException("不可跨日");
     }
