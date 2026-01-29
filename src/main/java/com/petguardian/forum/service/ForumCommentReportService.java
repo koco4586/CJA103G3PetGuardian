@@ -12,6 +12,8 @@ import com.petguardian.forum.model.ForumCommentReportRepository;
 import com.petguardian.forum.model.ForumCommentReportVO;
 import com.petguardian.forum.model.ForumCommentRepository;
 import com.petguardian.forum.model.ForumCommentVO;
+import com.petguardian.forum.model.ForumPostRepository;
+import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.HandledCommentDTO;
 import com.petguardian.forum.model.PendingCommentDTO;
 import com.petguardian.forum.model.RejectedCommentDTO;
@@ -24,6 +26,16 @@ public class ForumCommentReportService {
 	
 	@Autowired
 	ForumCommentRepository commentRepo;
+	
+	@Transactional
+	public void addReport(ForumCommentReportVO forumCommentReportVO, Integer commentId) {
+		ForumCommentVO forumCommentVO = commentRepo.findById(commentId)
+				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
+		
+		forumCommentReportVO.setForumComment(forumCommentVO);
+		repo.save(forumCommentReportVO);
+		
+	}
 	
 	public List<HandledCommentDTO> getAllHandledComments() {
 		return repo.findAllHandledComments();

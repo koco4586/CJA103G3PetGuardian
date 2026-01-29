@@ -45,7 +45,6 @@ public class ForumCommentReportVO implements Serializable{
 	
 	@Column(name = "report_reason")
 	@NotBlank(message = "檢舉原因請勿空白")
-	@Size(min = 10, max = 800, message = "檢舉原因必需在{min}到{max}字之間")
 	private String reportReason;
 	
 	@Column(name = "report_status", insertable = false)

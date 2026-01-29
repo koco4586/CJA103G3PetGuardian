@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petguardian.forum.service.ForumCommentReportService;
 import com.petguardian.forum.service.ForumCommentService;
 import com.petguardian.forum.service.ForumPostPicsService;
+import com.petguardian.forum.service.ForumPostReportService;
 import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
 import com.petguardian.member.model.Member;
@@ -25,8 +27,10 @@ import com.petguardian.member.model.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
+import com.petguardian.forum.model.ForumCommentReportVO;
 import com.petguardian.forum.model.ForumCommentVO;
 import com.petguardian.forum.model.ForumPostPicsVO;
+import com.petguardian.forum.model.ForumPostReportVO;
 import com.petguardian.forum.model.ForumPostVO;
 import com.petguardian.forum.model.ForumVO;
 
@@ -46,10 +50,16 @@ public class ForumPostController {
 	ForumPostService forumPostService;
 
 	@Autowired
-	ForumPostPicsService forumPostPicsService;
-
-	@Autowired
 	ForumCommentService forumCommentService;
+	
+	@Autowired
+	ForumPostPicsService forumPostPicsService;
+	
+	@Autowired
+	ForumPostReportService forumPostReportService;
+	
+	@Autowired
+	ForumCommentReportService forumCommentReportService;
 
 	@GetMapping("get-forum-id-for-posts")
 	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, ModelMap model) {
@@ -221,9 +231,10 @@ public class ForumPostController {
 
 			ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
 			List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
-
+			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
 			model.addAttribute("forumPostVO", forumPostVO);
 			model.addAttribute("commentList", commentList);
+			model.addAttribute("picsId", picsId);
 
 			return "frontend/forum/one-post";
 		}
@@ -280,7 +291,67 @@ public class ForumPostController {
 		model.addAttribute("postList", postList);
 		return "frontend/forum/list-all-active-posts";
 	}
+	
+	@GetMapping("report-post")
+	public String reportPost(@RequestParam("postId") Integer postId, ModelMap model) {
+		
+		model.addAttribute("postId", postId);
+		model.addAttribute("forumPostReportVO", new ForumPostReportVO());
+				
+		return "frontend/forum/report-post";
+	
+	}
 
+	@PostMapping("report-post-submit")
+	public String reportPostSubmit(@Valid ForumPostReportVO forumPostReportVO, BindingResult result, 
+								   @RequestParam("postId") Integer postId, RedirectAttributes ra, ModelMap model) {
+									
+		if(result.hasErrors()) {
+			model.addAttribute("postId", postId);
+			return "frontend/forum/report-post";
+		}
+		
+		Member member = new Member();
+		member.setMemId(1005);
+		forumPostReportVO.setMember(member);
+		
+		forumPostReportService.addReport(forumPostReportVO, postId);
+		ra.addFlashAttribute("successMsgs", "檢舉成功，感謝您的回報");
+		Integer forumId = forumPostReportVO.getForumPost().getForum().getForumId();
+		
+		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
+	}
+	
+	@GetMapping("report-comment")
+	public String reportComment(@RequestParam("commentId") Integer commentId, ModelMap model) {
+		
+		model.addAttribute("forumCommentReportVO", new ForumCommentReportVO());
+		model.addAttribute("commentId", commentId);
+				
+		return "frontend/forum/report-comment";
+	
+	}
+	
+	@PostMapping("report-comment-submit")
+	public String reportCommentSubmit(@Valid ForumCommentReportVO forumCommentReportVO, BindingResult result, 
+								      @RequestParam("commentId") Integer commentId, RedirectAttributes ra, ModelMap model) {
+									
+		if(result.hasErrors()) {
+			model.addAttribute("commentId", commentId);
+			return "frontend/forum/report-comment";
+		}
+		
+		Member member = new Member();
+		member.setMemId(1005);
+		forumCommentReportVO.setMember(member);
+		
+		forumCommentReportService.addReport(forumCommentReportVO, commentId);
+		ra.addFlashAttribute("successMsgs", "檢舉成功，感謝您的回報");
+		Integer forumId = forumCommentReportVO.getForumComment().getForumPost().getForum().getForumId();
+		
+		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
+	}
+	
 	@ModelAttribute
 	public void addAttribute(@RequestParam(value = "forumId", required = false) Integer forumId,
 			@RequestParam(value = "forumName", required = false) String forumName, ModelMap model) {
