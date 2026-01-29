@@ -223,7 +223,7 @@
                     background-color: #4caf50;
                 }
 
-                .small-hour-dot.booked {
+                .small-hour-dot.reserved {
                     background-color: #ff9800;
                 }
 
@@ -251,12 +251,11 @@
                     filter: brightness(0.95);
                 }
 
-                .hour-cell.booked {
-                    background-color: #fff3e0;
+                .hour-cell.reserved {
+                    background-color: #ffe0b2;
                     color: #e65100;
-                    border-color: #ffe0b2;
+                    border-color: #ffb74d;
                     font-weight: bold;
-                    cursor: not-allowed;
                 }
             </style>
 
@@ -467,7 +466,7 @@
                     if (status.charAt(h) === '0') {
                         dot.classList.add('active');  // 綠色
                     } else if (status.charAt(h) === '2') {
-                        dot.classList.add('booked');  // 橘色
+                        dot.classList.add('reserved'); // 橘色 (Status 2 = Booked)
                     }
                     summary.appendChild(dot);
                 }
@@ -512,31 +511,42 @@
                 cell.className = 'hour-cell';
                 cell.textContent = `${String(i).padStart(2, '0')}:00`;
 
-                // 0=Available, 1=Resting, 2=Booked
-                if (modalCurrentStatus[i] === '0') {
+                // 2=Booked/Buffer (Orange) -> LINK TO BOOKING PAGE
+                if (modalCurrentStatus[i] === '2') {
+                    cell.classList.add('reserved');
+                    cell.title = "點擊前往預約管理 (查看/接受/取消)";
+                    cell.style.cursor = "pointer";
+
+                    cell.onclick = () => {
+                        // 跳轉到預約管理頁面 (帶上日期參數方便篩選，需後續實作 frontend 支援參數)
+                        // 目前先單純跳轉
+                        window.location.href = '/sitter/bookings';
+                    };
+                }
+                // 0=Available (Green)
+                else if (modalCurrentStatus[i] === '0') {
                     cell.classList.add('available');
                     cell.title = "可預約";
-                    cell.onclick = () => toggleStatus(i);
-                } else if (modalCurrentStatus[i] === '2') {
-                    cell.classList.add('booked');
-                    cell.title = "已預約 (不可修改)";
-                    cell.onclick = null; // 禁止點擊
-                } else {
+
+                    cell.onclick = () => {
+                        modalCurrentStatus[i] = '1'; // 0->1
+                        renderModalGrid();
+                    };
+                }
+                // 1=Resting (Gray)
+                else {
                     cell.classList.add('busy');
                     cell.title = "休息中";
-                    cell.onclick = () => toggleStatus(i);
-                }
 
-                /*
-                cell.onclick = () => {
-                    // Toggle '0' <-> '1'
-                    modalCurrentStatus[i] = (modalCurrentStatus[i] === '0') ? '1' : '0';
-                    renderModalGrid(); // Re-render to update style
-                };
-                */
+                    cell.onclick = () => {
+                        modalCurrentStatus[i] = '0'; // 1->0
+                        renderModalGrid();
+                    };
+                }
 
                 container.appendChild(cell);
             }
+
         }
 
         function toggleStatus(i) {

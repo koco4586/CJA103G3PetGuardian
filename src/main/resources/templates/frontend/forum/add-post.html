@@ -5,116 +5,174 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>撰寫貼文 | PetGuardian</title>
-    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
-    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root {
-            --primary-orange: #ff9800;
-            --deep-brown: #5d4037;
-            --light-bg: #fdfbf7;
-        }
-
-        body { background-color: #f8f9fa; }
-        .container { max-width: 850px; margin: 40px auto; padding: 0 20px; }
-        .form-section { background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        :root { --primary-orange: #ff9800; --deep-brown: #5d4037; --bg-light: #fdfcf8; }
+        body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 20px; }
         
-        /* 錯誤區塊：亮紅色強化 */
+        .update-container {
+            max-width: 800px; margin: 40px auto; background: #fff;
+            border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden;
+        }
+        
+        .update-header {
+            background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
+            padding: 30px; border-bottom: 1px solid #eee; text-align: center;
+        }
+        .update-header h2 { margin: 0; color: var(--deep-brown); font-weight: 900; }
+        
+        .update-body { padding: 40px; }
+        
+        .form-group { margin-bottom: 25px; }
+        .form-label { display: block; font-weight: 800; color: var(--deep-brown); margin-bottom: 10px; font-size: 1.1rem; }
+        
+        .form-control {
+            width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px;
+            font-size: 1rem; transition: 0.3s; box-sizing: border-box; font-family: inherit;
+        }
+        .form-control:focus { border-color: var(--primary-orange); outline: none; box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1); }
+        
+        textarea.form-control { height: 300px; resize: vertical; line-height: 1.6; }
+
+        /* 圖片管理區樣式 (與編輯頁統一) */
+        .current-pics-section {
+            margin-bottom: 25px; padding: 15px; background: var(--bg-light);
+            border-radius: 12px; border: 1px dashed #ddd;
+        }
+        .pics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+        .pic-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .pic-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        .file-input-wrapper {
+            position: relative; padding: 20px; border: 2px dashed #ccc;
+            border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s;
+        }
+        .file-input-wrapper:hover { border-color: var(--primary-orange); background: #fffcf5; }
+        
+        /* 頁尾按鈕區 */
+        .update-footer {
+            padding: 25px 40px; background: #fcfcfc; border-top: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .btn-save {
+            background: var(--primary-orange); color: white; border: none;
+            padding: 12px 35px; border-radius: 50px; font-weight: 800;
+            font-size: 1.1rem; cursor: pointer; transition: 0.3s;
+        }
+        .btn-save:hover { background: #f57c00; transform: translateY(-2px); }
+        
+        .btn-cancel {
+		    text-decoration: none;
+		    color: var(--deep-brown); /* 改用深棕色，更有整體感 */
+		    font-weight: 800;
+		    padding: 12px 30px;
+		    border: 2px solid #eee; /* 給它一個淡淡的邊框 */
+		    border-radius: 50px;    /* 跟確認按鈕一樣的膠囊造型 */
+		    background: transparent;
+		    transition: all 0.3s ease;
+		    display: inline-flex;
+		    align-items: center;
+		    justify-content: center;
+		}
+		
+		.btn-cancel:hover {
+		    background-color: #f5f5f5; /* 懸停時淡淡的灰色 */
+		    color: #333;
+		    border-color: #ddd;
+		    transform: translateY(-2px); /* 輕微上浮感 */
+		    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+		}
+		
+		.btn-cancel:active {
+		    transform: translateY(0); /* 點擊時下壓感 */
+		}
+        
+        /* 錯誤區塊 */
         .error-box { background-color: #fff5f5; border: 2px solid #ff0000; padding: 15px; margin-bottom: 25px; border-radius: 8px; }
         .error-box p { color: #cf1322; margin: 0 0 10px 0; font-weight: 900; }
         .error-list { margin: 0; padding-left: 20px; color: #ff0000; font-weight: 600; }
 
-        .input-group { margin-bottom: 25px; }
-        .input-label { display: block; font-weight: 800; color: var(--deep-brown); margin-bottom: 10px; font-size: 1.05rem; }
-        .input-title, .input-content { width: 100%; border-radius: 12px; border: 2px solid #eee; padding: 18px; box-sizing: border-box; transition: 0.3s; }
-        .input-title:focus, .input-content:focus { outline: none; border-color: var(--primary-orange); background: var(--light-bg); }
-        .input-content { min-height: 250px; resize: vertical; }
-        
-        /* 圖片預覽區樣式 */
-        .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; min-height: 50px; }
-        .preview-wrapper { position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; animation: fadeIn 0.3s ease; }
-        .preview-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-
-        /* 圖片上傳區塊 */
-        .upload-container { display: flex; gap: 20px; margin-top: 10px; }
-        .upload-card { flex: 1; padding: 25px 15px; border: 2px dashed #ddd; border-radius: 15px; background: #fafafa; text-align: center; transition: 0.3s; }
-        .upload-card:hover { border-color: var(--primary-orange); background: var(--light-bg); }
-        .upload-card i { font-size: 1.5rem; color: #aaa; margin-bottom: 10px; display: block; }
-        
-        .submit-area { display: flex; justify-content: flex-end; gap: 15px; margin-top: 40px; padding-top: 25px; border-top: 1px solid #eee; }
-        .btn-cancel { background: #eee; color: #666; padding: 12px 30px; border-radius: 12px; font-weight: 800; border:none; cursor: pointer; }
-        .btn-submit { background: var(--primary-orange); color: white; padding: 12px 40px; border-radius: 12px; font-weight: 800; border:none; cursor: pointer; }
+        .file-input-wrapper.drag-over {
+            background-color: #fffcf5;
+            border: 2px dashed var(--primary-orange) !important;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
-	    <div class="form-section">
-	        <h2 style="color: var(--deep-brown); font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-edit" style="color: var(--primary-orange);"></i> 發布新貼文
-            </h2>
-	
-	        <form th:action="@{insert-post}" method="post" th:object="${forumPostVO}" enctype="multipart/form-data" id="postForm">
-	            
-                <div th:if="${#fields.hasAnyErrors()}" class="error-box">
-	                <p><i class="fas fa-exclamation-circle"></i> 錯誤訊息：</p>
-	                <ul class="error-list">
-	                    <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
-	                </ul>
-	            </div>
-	
-	            <div class="input-group">
-	                <label class="input-label">貼文標題</label>
-	                <input type="text" th:field="*{postTitle}" class="input-title" placeholder="請給貼文一個吸引人的標題吧！" />
-	            </div>
-	
-	            <div class="input-group">
-	                <label class="input-label">文章內容</label>
-	                <textarea th:field="*{postContent}" class="input-content" placeholder="分享毛小孩的日常心得（至少 30 字）..."></textarea>
-	            </div>
-	
-	            <div class="upload-container">
-	                <div class="upload-card">
-	                    <i class="fas fa-camera"></i>
-                        <span style="font-weight: 800; color: #555;">主頁封面圖片</span>
-                        <input type="file" th:field="*{upFile}" id="mainPicInput" accept="image/*" />
-                        <div id="mainPreview" class="preview-container"></div>
-	                </div>
-	
-	                <div class="upload-card">
-	                    <i class="fas fa-images"></i>
-                        <span style="font-weight: 800; color: #555;">貼文附件照片</span>
-                        <p style="font-size: 0.75rem; color: #999; margin: 5px 0;">最多 6 張照片</p>
-	                    <input type="file" name="upFiles" id="multiPicInput" multiple accept="image/*" />
-                        <div id="multiPreview" class="preview-container"></div>
-	                </div>
-	            </div>
-	
-	            <div class="submit-area">
-                    <button type="button" class="btn-cancel" onclick="cancelPost()">取消離開</button>
-                    <button type="submit" class="btn-submit">確認發佈 <i class="fas fa-paper-plane" style="margin-left: 5px;"></i></button>
-	            </div>
-	            
-	            <div>
-	                <input type="hidden" th:field="*{forum.forumId}" id="forumId" >
-	            	<input type="hidden" name="forumName" th:value="${forumName}" id="forumName" >
-	            </div>
-	        </form>
-	        <div id="errorData" th:if="${errorMsgs}" th:data-msgs="${errorMsgs}" style="display: none;"></div>
-	    </div>
-	</div>
+    <div class="update-container">
+        <div class="update-header">
+            <h2>🐾 發布新貼文</h2>
+        </div>
+
+        <form class="update-body" th:action="@{insert-post}" method="post" th:object="${forumPostVO}" enctype="multipart/form-data" id="postForm">
+            
+            <div th:if="${#fields.hasAnyErrors()}" class="error-box">
+                <p><i class="fas fa-exclamation-circle"></i> 錯誤訊息：</p>
+                <ul class="error-list">
+                    <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                </ul>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">貼文標題</label>
+                <input type="text" th:field="*{postTitle}" class="form-control" placeholder="請輸入貼文標題..." />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">文章內容</label>
+                <textarea th:field="*{postContent}" class="form-control" placeholder="分享毛小孩的日常心得..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">主頁封面圖片</label>
+                <div class="current-pics-section">
+                    <div id="mainPreview" class="pics-grid">
+                        </div>
+                    
+                    <div class="file-input-wrapper" style="margin-top: 15px; padding: 15px;" 
+                         onclick="document.getElementById('mainPicInput').click()">
+                        <span style="font-weight: 700; color: var(--primary-orange);">
+                            <i class="fas fa-camera"></i> 選擇封面照片
+                        </span>
+                        <input type="file" th:field="*{upFile}" id="mainPicInput" accept="image/*" style="display: none;" onchange="previewMainPic(this)"/>
+                    </div>
+                    <div id="main-pic-name" style="margin-top: 5px; font-size: 0.85rem; color: #666; text-align: center;"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">貼文附件照片 (最多 6 張)</label>
+                <div id="multiPreview" class="pics-grid" style="margin-bottom: 15px;"></div>
+
+                <div class="file-input-wrapper" id="multi-drop-zone" onclick="document.getElementById('multiPicInput').click()">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #aaa; margin-bottom: 10px;"></i>
+                    <p style="margin: 0; color: #666; font-weight: 600;">點擊或拖曳多張照片至此</p>
+                    <input type="file" name="upFiles" id="multiPicInput" multiple accept="image/*" style="display: none;" onchange="updateFileName(this)"/>
+                    <div id="file-list" style="margin-top: 10px; font-size: 0.9rem; color: var(--primary-orange);"></div>
+                </div>
+            </div>
+
+            <div class="update-footer">
+                <button type="button" class="btn-cancel" onclick="cancelPost()">取消離開</button>
+                <button type="submit" class="btn-save">確認發布 <i class="fas fa-paper-plane" style="margin-left: 5px;"></i></button>
+            </div>
+            
+            <input type="hidden" th:field="*{forum.forumId}" id="forumId" >
+            <input type="hidden" name="forumName" th:value="${forumName}" id="forumName" >
+            
+            <div id="errorData" th:if="${errorMsgs}" th:data-msgs="${errorMsgs}" style="display: none;"></div>
+        </form>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script th:src="@{/js/frontend/main.js}"></script>
-
     <script th:inline="javascript">
-        // 取得參數
         const forumId = document.getElementById('forumId').value;
-		const forumName = document.getElementById('forumName').value;
+        const forumName = document.getElementById('forumName').value;
         
-        // 1. 取消按鈕重導向
+        // 1. 取消按鈕邏輯
         function cancelPost() {
             Swal.fire({
                 title: '確定要離開嗎？',
@@ -127,36 +185,88 @@
                 cancelButtonText: '繼續撰寫'
             }).then((result) => {
                 if (result.isConfirmed) {
-                	window.location.href = `/forumpost/get-forum-id-for-posts?forumId=${forumId}&forumName=${encodeURIComponent(forumName)}`;
+                    window.location.href = `/forumpost/get-forum-id-for-posts?forumId=${forumId}&forumName=${encodeURIComponent(forumName)}`;
                 }
             });
         }
 
-        // 2. 圖片預覽
-        function handlePreview(input, previewId) {
-            const previewContainer = document.getElementById(previewId);
-            input.addEventListener('change', function() {
-                previewContainer.innerHTML = ''; 
-                Array.from(this.files).forEach(file => {
+        // 2. 預覽主頁封面圖
+        function previewMainPic(input) {
+            const previewContainer = document.getElementById('mainPreview');
+            const fileNameDisplay = document.getElementById('main-pic-name');
+            previewContainer.innerHTML = '';
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'pic-item';
+                    div.style.width = '200px'; div.style.height = '150px'; div.style.margin = '0 auto';
+                    div.innerHTML = `<img src="${e.target.result}" alt="封面預覽">`;
+                    previewContainer.appendChild(div);
+                    fileNameDisplay.innerHTML = `已選取：${input.files[0].name}`;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // 3. 處理多圖預覽與提醒
+        function updateFileName(input) {
+            const fileList = document.getElementById('file-list');
+            const previewContainer = document.getElementById('multiPreview');
+            previewContainer.innerHTML = '';
+
+            if (input.files && input.files.length > 0) {
+                fileList.innerHTML = `✅ 已選擇 ${input.files.length} 張照片 <br> 
+                    <small style="color: #ff5252;">(提醒：最多僅能上傳 6 張照片喔！)</small>`;
+                
+                Array.from(input.files).forEach(file => {
                     const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'preview-wrapper';
-                        wrapper.innerHTML = `<img src="${e.target.result}">`;
-                        previewContainer.appendChild(wrapper);
-                    }
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'pic-item';
+                        div.innerHTML = `<img src="${e.target.result}" alt="預覽">`;
+                        previewContainer.appendChild(div);
+                    };
                     reader.readAsDataURL(file);
                 });
-            });
+            } else {
+                fileList.innerHTML = '';
+            }
         }
-        handlePreview(document.getElementById('mainPicInput'), 'mainPreview');
-        handlePreview(document.getElementById('multiPicInput'), 'multiPreview');
 
-        // 3. 處理圖片大小/張數等錯誤 (Controller 傳來的 errorMsgs)
+        // 4. 拖曳功能實作
+        const multiDropZone = document.getElementById('multi-drop-zone');
+        const multiFileInput = document.getElementById('multiPicInput');
+
+        if (multiDropZone) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                multiDropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                multiDropZone.addEventListener(eventName, () => multiDropZone.classList.add('drag-over'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                multiDropZone.addEventListener(eventName, () => multiDropZone.classList.remove('drag-over'), false);
+            });
+
+            multiDropZone.addEventListener('drop', e => {
+                const dt = e.dataTransfer;
+                multiFileInput.files = dt.files;
+                updateFileName(multiFileInput);
+            }, false);
+        }
+
+        // 5. 錯誤處理
         const errorEl = document.getElementById('errorData');
         if (errorEl) {
             const msg = errorEl.getAttribute('data-msgs');
-            Swal.fire({ icon: 'error', title: '上傳失敗', text: msg, confirmButtonColor: '#ff9800' });
+            Swal.fire({ icon: 'error', title: '失敗', text: msg, confirmButtonColor: '#ff9800' });
         }
     </script>
 </body>
