@@ -20,6 +20,14 @@ window.toggleSubmenu = function (e) {
     parent.classList.toggle('open');
 };
 
+// 管理員登出功能
+window.adminLogout = function() {
+    if (confirm('確定要登出嗎?')) {
+        // 清除 session 並導向登入頁
+        window.location.href = '/admin/logout';
+    }
+};
+
 document.addEventListener("DOMContentLoaded", function () {
     // 定義側邊欄的 HTML 結構
     const sidebarHTML = `
@@ -59,8 +67,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     </ul>
                 </li>
                 <li data-page="forum"><a href="/admin/forum/list-all-forum"><i class="fa-solid fa-message"></i> 討論區管理</a></li>
-                 <li data-page="accounts"><a href="/html/backend/admin/admin_admin_management.html"><i class="fa-solid fa-user-lock"></i> 管理員帳號</a></li>
+                <li data-page="accounts"><a href="/html/backend/admin/admin_admin_management.html"><i class="fa-solid fa-user-lock"></i> 管理員帳號</a></li>
             </ul>
+            
+            <div class="sidebar-footer">
+                <div class="admin-info">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span id="adminName">管理員</span>
+                </div>
+                <button class="logout-btn" onclick="adminLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> 登出
+                </button>
+            </div>
         </nav>
     `;
 
@@ -107,7 +125,25 @@ document.addEventListener("DOMContentLoaded", function () {
             parentSubmenu.classList.add("open");
         }
     }
+
+    // 載入管理員名稱
+    loadAdminName();
 });
+
+// 載入管理員名稱的函數
+function loadAdminName() {
+    // 從後端取得當前登入的管理員資訊
+    fetch('/admin/current-admin')
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.name) {
+                document.getElementById('adminName').textContent = data.name;
+            }
+        })
+        .catch(error => {
+            console.log('無法載入管理員資訊');
+        });
+}
 
 // 監聽視窗縮放，當視窗變大時自動關閉手機版開啟狀態
 window.addEventListener('resize', () => {

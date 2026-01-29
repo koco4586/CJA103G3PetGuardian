@@ -2,6 +2,7 @@ package com.petguardian.backend.service;
 
 import com.petguardian.backend.model.BackendMemberRepository;
 import com.petguardian.booking.model.BookingOrderRepository;
+import com.petguardian.complaint.model.Complaintrepository;
 import com.petguardian.orders.model.ReturnOrderRepository;
 import com.petguardian.sellerreview.model.SellerReviewReportRepository;
 import com.petguardian.sitter.model.SitterApplicationRepository;
@@ -13,7 +14,6 @@ import java.util.Map;
 
 /**
  * 後台儀表板統計 Service 實作
- * 整合各模組的統計數據
  */
 @Service
 public class DashboardServiceImpl implements DashboardService {
@@ -33,6 +33,9 @@ public class DashboardServiceImpl implements DashboardService {
     @Autowired
     private BookingOrderRepository bookingOrderRepository;
 
+    @Autowired
+    private Complaintrepository complaintRepository;
+
     /**
      * 取得儀表板統計數據
      */
@@ -40,11 +43,11 @@ public class DashboardServiceImpl implements DashboardService {
     public Map<String, Object> getDashboardStatistics() {
         Map<String, Object> stats = new HashMap<>();
 
-        // 會員總數（排除已停權的會員，mem_status = 0 表示正常）
-        long totalMembers = memberRepository.countByMemStatus(0);
+        // 會員總數（mem_status = 1 表示啟用）
+        long totalMembers = memberRepository.countByMemStatus(1);
         stats.put("totalMembers", totalMembers);
 
-        // 待審保母（狀態為 0:待審核）
+        // 待審保母（app_status = 0 表示待審核）
         long pendingSitters = sitterApplicationRepository.countByAppStatus((byte) 0);
         stats.put("pendingSitters", pendingSitters);
 
@@ -52,15 +55,15 @@ public class DashboardServiceImpl implements DashboardService {
         long bookingPendingRefunds = bookingOrderRepository.countByOrderStatus(3);
         stats.put("bookingPendingRefunds", bookingPendingRefunds);
 
-        // 商城待處理退款（退貨狀態為審核中，return_status = 0）
+        // 商城待處理退款（return_status = 0 表示審核中）
         long storePendingRefunds = returnOrderRepository.countByReturnStatus(0);
         stats.put("storePendingRefunds", storePendingRefunds);
 
-        // 預約待處理評價（預約訂單評價狀態為未評價，review_status = 0）
-        long bookingPendingReviews = 0;
+        // 預約待處理評價（booking_order_report 的 report_status = 0 表示未處理）
+        long bookingPendingReviews = complaintRepository.countByReportStatus(0);
         stats.put("bookingPendingReviews", bookingPendingReviews);
 
-        // 商城待處理評價（評價檢舉狀態為待審核，report_status = 0）
+        // 商城待處理評價（seller_review_report 的 report_status = 0 表示待審核）
         long storePendingReviews = sellerReviewReportRepository.countByReportStatus(0);
         stats.put("storePendingReviews", storePendingReviews);
 
