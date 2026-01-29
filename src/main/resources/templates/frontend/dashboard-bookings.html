@@ -7,6 +7,7 @@
 <title>保母預約紀錄 | PetGuardian</title>
 <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
 <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+<link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
 <link rel="stylesheet"
 	th:href="@{/css/frontend/booking/dashboard-bookings.css}">
 <link
@@ -20,31 +21,9 @@
 <body>
 	<header id="main-header" class="header"></header>
 
-	<div class="container dashboard-layout">
+	<div class="container dashboard-container">
 		<!-- 側邊欄 -->
-		<aside class="dashboard-sidebar">
-			<div class="text-center mb-3">
-				<div
-					style="width: 80px; height: 80px; background: #e0f2f1; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem;">
-					<i class="fas fa-user-circle"></i>
-				</div>
-				<h4 th:text="${memName}" style="font-weight: 700; margin: 0;">會員姓名</h4>
-				<p style="color: #999; font-size: 0.85rem;">優質寵物主人</p>
-			</div>
-
-			<nav>
-				<a href="#" class="menu-link"><i class="fas fa-user"></i> 個人資料</a> <a
-					href="#" class="menu-link"><i class="fas fa-paw"></i> 我的寵物</a> <a
-					href="/booking/memberOrders" class="menu-link active"><i
-					class="fas fa-calendar-check"></i> 保母預約紀錄</a> <a href="#"
-					class="menu-link"><i class="fas fa-heart"></i> 收藏列表</a>
-				<div
-					style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
-					<a href="#" class="menu-link" style="color: #ef4444;"><i
-						class="fas fa-sign-out-alt"></i> 登出</a>
-				</div>
-			</nav>
-		</aside>
+		<div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='bookings')}"></div>
 
 		<!-- 主要內容 -->
 		<main class="dashboard-content">
@@ -128,6 +107,7 @@
 							<th:block th:if="${order.orderStatus == 3}">
 								<span
 									style="color: #ccc; font-size: 0.9rem; margin-right: 1rem;">訂單已結束</span>
+							</th:block>
 							</th:block>
 						</div>
 					</div>

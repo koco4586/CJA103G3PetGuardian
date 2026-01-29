@@ -17,40 +17,7 @@
 
     <div class="container dashboard-container">
         <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="text-center mb-2">
-                <div class="avatar-wrapper">
-                    <!-- <img th:src="${avatarUrl}" class="avatar"> -->
-                </div>
-                <h4 th:text="${memName}">會員姓名</h4>
-                <p style="color: #999; font-size: 0.9rem;">一般會員</p>
-            </div>
-            <nav>
-                <a href="dashboard.html" class="menu-item">
-                    <i class="fas fa-user"></i> 個人資料
-                </a>
-                <a href="dashboard-pets.html" class="menu-item">
-                    <i class="fas fa-paw"></i> 我的寵物
-                </a>
-                <a href="dashboard-orders.html" class="menu-item">
-                    <i class="fas fa-receipt"></i> 商城訂單紀錄
-                </a>
-                <a href="dashboard-bookings.html" class="menu-item">
-                    <i class="fas fa-calendar-check"></i> 保母預約紀錄
-                </a>
-                <a href="dashboard-favorites.html" class="menu-item">
-                    <i class="fas fa-heart"></i> 收藏列表
-                </a>
-                <a th:href="@{/sitter/apply}" class="menu-item active"
-                    style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
-                    <i class="fas fa-user-plus"></i> 成為保母
-                </a>
-                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
-                    onclick="alert('已登出'); window.location.href='index.html'">
-                    <i class="fas fa-sign-out-alt"></i> 登出
-                </div>
-            </nav>
-        </div>
+        <div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='sitter-registration')}"></div>
 
         <!-- Main Content -->
         <div class="main-content">
