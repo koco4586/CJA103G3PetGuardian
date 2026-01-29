@@ -44,7 +44,7 @@ public interface BookingService {
 	void updateOrderStatusBySitter(Integer orderId, Integer newStatus);
 
 	// 管理員端
-	void approveRefund(Integer orderId);
+	void approveRefund(Integer orderId, Double ratio);
 
 	void completePayout(Integer orderId);
 
