@@ -21,18 +21,10 @@ public class ForumCommentService {
 	@Autowired
 	ForumPostRepository postRepo;
 
-	public ForumCommentVO getOneComment(Integer commentId) {
-		return repo.findById(commentId).orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
-	}
-	
 	public List<ForumCommentVO> getCommentsByPostId(Integer postId) {
 		return repo.findCommentsByPostId(postId);
 	}
 
-	public List<ForumCommentVO> getAllCommentsByPostId(Integer postId) {
-		return repo.findAllCommentsByPostId(postId);
-	}
-	
 	public void addCommentByPostId(String commentContent, Integer postId, Integer memberId) {
 
 		// ForumPostVO forumPostVO = new ForumPostVO();

@@ -38,16 +38,38 @@ public class SitterBookingController {
     public String listSitterOrders(@RequestParam(required = false) Integer status,
             HttpServletRequest request,
             Model model) {
-        Integer sitterId = authStrategyService.getCurrentUserId(request);
-        if (sitterId == null)
-            return "redirect:/front/loginpage";
+        Integer memId = authStrategyService.getCurrentUserId(request);
+        if (memId == null) return "redirect:/front/loginpage";
 
+        var sitterVO = dataService.getSitterInfoByMemId(memId); 
+        if (sitterVO == null) {
+            return "redirect:/"; // 不是保母就踢掉
+        }
+        
+        Integer actualSitterId = sitterVO.getSitterId();
+        
         List<BookingOrderVO> bookingList = (status != null)
-                ? bookingService.findBySitterAndStatus(sitterId, status)
-                : bookingService.getOrdersBySitterId(sitterId);
-
-        var member = dataService.getMemberInfo(sitterId);
-
+                ? bookingService.findBySitterAndStatus(actualSitterId, status)
+                : bookingService.getOrdersBySitterId(actualSitterId);
+        
+        for (BookingOrderVO order : bookingList) {
+            try {
+                // 抓取下單的飼主資料
+                var clientMember = dataService.getMemberInfo(order.getMemId());
+                if (clientMember != null) {
+                    order.setMemName(clientMember.getMemName());
+                }
+                // 抓取寵物資料
+                var pet = dataService.getPetInfo(order.getPetId());
+                if (pet != null) {
+                    order.setPetName(pet.getPetName());
+                }
+            } catch (Exception e) {
+                order.setMemName("未知飼主");
+                order.setPetName("未知寵物");
+            }
+        }
+        
         // 加上本月收入計算邏輯
         int income = bookingList.stream()
                 .filter(o -> o.getOrderStatus() != null && (o.getOrderStatus() == 2 || o.getOrderStatus() == 5))
@@ -55,7 +77,7 @@ public class SitterBookingController {
                 .sum();
 
         model.addAttribute("bookingList", bookingList);
-        model.addAttribute("sitter", member);
+        model.addAttribute("sitter", dataService.getMemberInfo(memId));
         model.addAttribute("currentStatus", status);
         model.addAttribute("monthlyIncome", income);
 
