@@ -50,7 +50,7 @@ public class ProductFavoriteListController {
         // 檢查是否已登入
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         List<Map<String, Object>> favorites = favoriteService.getFavoritesWithProductInfo(memId);
@@ -73,7 +73,7 @@ public class ProductFavoriteListController {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
             redirectAttr.addFlashAttribute("error", "請先登入");
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         try {
@@ -98,7 +98,7 @@ public class ProductFavoriteListController {
             HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         try {
