@@ -10,8 +10,7 @@ import com.petguardian.chat.dto.ChatMemberDTO;
 import com.petguardian.chat.dto.ChatRoomDTO;
 import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 import com.petguardian.chat.dto.MemberProfileDTO;
-import com.petguardian.chat.service.chatroom.ChatRoomMetadataReader;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
 import com.petguardian.chat.service.mapper.ChatRoomMapper;
 
 /**
@@ -29,12 +28,12 @@ public class ChatPageServiceImpl implements ChatPageService {
     // DEPENDENCIES
     // ============================================================
 
-    private final ChatRoomMetadataReader metadataReader;
+    private final ChatRoomMetadataService metadataService;
     private final ChatRoomMapper chatRoomMapper;
 
-    public ChatPageServiceImpl(@Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
+    public ChatPageServiceImpl(ChatRoomMetadataService metadataService,
             ChatRoomMapper chatRoomMapper) {
-        this.metadataReader = metadataReader;
+        this.metadataService = metadataService;
         this.chatRoomMapper = chatRoomMapper;
     }
 
@@ -44,7 +43,7 @@ public class ChatPageServiceImpl implements ChatPageService {
 
     @Override
     public ChatMemberDTO getMember(Integer memId) {
-        MemberProfileDTO profile = metadataReader.getMemberProfile(memId);
+        MemberProfileDTO profile = metadataService.getMemberProfile(memId);
         if (profile == null)
             return null;
 
@@ -66,7 +65,7 @@ public class ChatPageServiceImpl implements ChatPageService {
     @Override
     public List<ChatRoomDTO> getMyChatrooms(Integer currentUserId) {
         // 1. Fetch all chatrooms for user via metadata service (Cache First)
-        List<ChatRoomMetadataDTO> metadataList = metadataReader.getUserChatrooms(currentUserId);
+        List<ChatRoomMetadataDTO> metadataList = metadataService.getUserChatrooms(currentUserId);
         if (metadataList == null || metadataList.isEmpty()) {
             return java.util.Collections.emptyList();
         }
@@ -77,7 +76,7 @@ public class ChatPageServiceImpl implements ChatPageService {
                 .filter(id -> !id.equals(currentUserId))
                 .collect(Collectors.toSet());
 
-        Map<Integer, MemberProfileDTO> memberMap = metadataReader
+        Map<Integer, MemberProfileDTO> memberMap = metadataService
                 .getMemberProfiles(new java.util.ArrayList<>(partnerIds));
 
         // 3. Map to DTOs and sort by latest activity
