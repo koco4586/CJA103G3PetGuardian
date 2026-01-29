@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.booking.service.BookingService;
 import com.petguardian.common.service.AuthStrategyService;
+import com.petguardian.sitter.service.SitterService;
+import com.petguardian.sitter.model.SitterVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -24,6 +26,9 @@ public class SitterBookingController {
 
     @Autowired
     private BookingService bookingService;
+
+    @Autowired
+    private SitterService sitterService;
 
     @Autowired
     private AuthStrategyService authStrategyService;
@@ -38,21 +43,22 @@ public class SitterBookingController {
     public String listSitterOrders(@RequestParam(required = false) Integer status,
             HttpServletRequest request,
             Model model) {
-        Integer sitterId = authStrategyService.getCurrentUserId(request);
-        if (sitterId == null)
+        Integer memId = authStrategyService.getCurrentUserId(request);
+        if (memId == null)
             return "redirect:/front/loginpage";
+
+        // [Fix] 用 MemId 查 SitterId
+        SitterVO sitter = sitterService.getSitterByMemId(memId);
+        if (sitter == null) {
+            return "redirect:/sitter/apply";
+        }
+        Integer sitterId = sitter.getSitterId();
 
         List<BookingOrderVO> bookingList = (status != null)
                 ? bookingService.findBySitterAndStatus(sitterId, status)
                 : bookingService.getOrdersBySitterId(sitterId);
 
-        // [Debug Log] 追蹤查詢結果
-        System.out.println("DEBUG: SitterBookingController - listSitterOrders");
-        System.out.println("DEBUG: Current Sitter ID: " + sitterId);
-        System.out.println("DEBUG: Query Status: " + status);
-        System.out.println("DEBUG: Found Orders Count: " + (bookingList != null ? bookingList.size() : "null"));
-
-        var member = dataService.getMemberInfo(sitterId);
+        var member = dataService.getMemberInfo(memId);
 
         // 加上本月收入計算邏輯
         int income = bookingList.stream()
