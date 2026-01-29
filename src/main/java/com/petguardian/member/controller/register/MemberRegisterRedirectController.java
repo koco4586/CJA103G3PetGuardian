@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class MemberRegisterRedirectController {
 
     @GetMapping("/registerpage")
-    public String registerpage(){
+    public String register(){
     return "frontend/member/register/register";
     }
 }

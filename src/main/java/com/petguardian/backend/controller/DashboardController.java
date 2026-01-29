@@ -12,6 +12,7 @@ import java.util.Map;
 
 /**
  * 後台首頁 Controller
+ * 負責顯示後台儀表板統計數據
  */
 @Controller
 @RequestMapping("/admin")
@@ -28,23 +29,10 @@ public class DashboardController {
     public String showDashboard(Model model) {
         Map<String, Object> stats = dashboardService.getDashboardStatistics();
 
-        // 會員總數
         model.addAttribute("totalMembers", stats.get("totalMembers"));
-
-        // 待審保母
         model.addAttribute("pendingSitters", stats.get("pendingSitters"));
-
-        // 預約待處理退款
-        model.addAttribute("bookingPendingRefunds", stats.get("bookingPendingRefunds"));
-
-        // 商城待處理退款
-        model.addAttribute("storePendingRefunds", stats.get("storePendingRefunds"));
-
-        // 預約待處理評價
-        model.addAttribute("bookingPendingReviews", stats.get("bookingPendingReviews"));
-
-        // 商城待處理評價
-        model.addAttribute("storePendingReviews", stats.get("storePendingReviews"));
+        model.addAttribute("pendingRefunds", stats.get("pendingRefunds"));
+        model.addAttribute("pendingReviews", stats.get("pendingReviews"));
 
         return "backend/index";
     }

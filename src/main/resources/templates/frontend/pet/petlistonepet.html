@@ -58,8 +58,6 @@
 
 <body>
 
-<header id="main-header" class="header"></header>
-
 <table id="table-1">
   <tr>
     <td>
@@ -103,19 +101,19 @@
   </tr>
 </table>
 
-<div class="btn-group" th:if="${session.memId != null and session.memId == pet.memId}">
-  <form th:action="@{/pet/getOne_For_Update}" method="get"> <input type="hidden" name="petId" th:value="${pet.petId}">
-    <button type="submit">修改</button>
-  </form>
-
-  <form th:action="@{/pet/delete}" method="post" onsubmit="return confirm('確定要刪除嗎？');">
+<div class="btn-group">
+  <form th:action="@{/pet/getOne_For_Update}" method="post">
     <input type="hidden" name="petId" th:value="${pet.petId}">
-    <button type="submit" style="background-color: red; color: white;">刪除</button>
+    <input type="hidden" name="action" value="getOne_For_Update">
+    <button type="submit" name="action" value="update">修改</button>
   </form>
-</div>
 
-<div class="nav-group" th:if="${session.memId != pet.memId}" style="color: #666;">
-  <span>( 您正在以保姆身分查看受託寵物資料，無修改權限 )</span>
+  <form th:action="@{/pet/delete}" method="post"
+        onsubmit="return confirm('確定要刪除嗎？');">
+    <input type="hidden" name="petId" th:value="${pet.petId}">
+    <input type="hidden" name="action" value="delete">
+    <button type="submit" name="action" value="delete">刪除</button>
+  </form>
 </div>
 
 <div class="nav-group">

@@ -12,7 +12,7 @@
 	<!-- 後台樣式 -->
 	<link rel="stylesheet" th:href="@{/css/backend/style.css}">
 
-		<style>
+	<style>
 		table {
 			width: 100%;
 			border-collapse: collapse;
@@ -68,6 +68,7 @@
 		/* =========================
 	   DataTables 分頁樣式
 	   ========================= */
+<<<<<<< HEAD
 
 		/* 分頁整體容器 */
 		.dataTables_paginate {
@@ -157,150 +158,160 @@
 			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 			transform: translateY(-2px);
 		}
-	
-		/* 分頁整體容器 */
-		.dataTables_paginate {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			gap: 6px;
-			margin-top: 20px;
-			flex-wrap: wrap;
-		}
-		
-		/* 分頁按鈕（上一頁 / 下一頁 / 頁碼） */
-		.dataTables_paginate .paginate_button {
-			padding: 6px 12px;
-			border-radius: 8px;
-			cursor: pointer;
-			font-size: 0.95rem;
-			color: #666 !important;
-			background-color: #f5f5f5;
-			border: none !important;
-			transition: all 0.3s ease;
-		}
-		
-		/* hover 效果 */
-		.dataTables_paginate .paginate_button:hover {
-			background-color: #eaeaea;
-			color: #333 !important;
-		}
-		
-		/* 目前頁碼 */
-		.dataTables_paginate .paginate_button.current {
-			background-color: var(--orange) !important;
-			color: #fff !important;
-			font-weight: 600;
-		}
-		
-		/* disabled（例如第一頁的上一頁） */
-		.dataTables_paginate .paginate_button.disabled {
-			opacity: 0.4;
-			cursor: not-allowed;
-		}
-		
-		/* 移除 DataTables 預設藍色框線 */
-		.dataTables_paginate .paginate_button:focus {
-			outline: none;
-			box-shadow: none;
-		}
-		
-		/* 標題與按鈕的容器佈局 */
-		.card-header-flex {
-		    display: flex;
-		    justify-content: space-between; /* 標題靠左，按鈕靠右 */
-		    align-items: center;           /* 垂直居中 */
-		    margin-bottom: 20px;           /* 與下方表格的間距 */
-		    padding-bottom: 10px;
-		    border-bottom: 1px solid #eee; /* 可選：加一條淺色分隔線 */
-		}
-		
-		/* 移除標題預設的 margin 避免錯位 */
-		.card-header-flex h3 {
-		    margin: 0;
-		}
-		
-		/* 修正按鈕樣式 */
-		.btn-add-forum {
-		    background-color: #2e7d32;    /* 改為深綠色，比較符合新增語意 */
-		    color: white !important;      
-		    font-weight: bold;            
-		    text-decoration: none;        
-		    padding: 10px 20px;            
-		    border-radius: 8px;           
-		    transition: all 0.3s ease;    
-		    display: inline-flex;         /* 使用 inline-flex 確保不會寬度撐開 */
-		    align-items: center;
-		    gap: 8px;                     
-		}
-		
-		.btn-add-forum:hover {
-		    background-color: #1b5e20;    /* 滑鼠移入變更深的綠 */
-		    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-		    transform: translateY(-2px);
-		}
-		
-		/* 標頭按鈕容器 */
-		.header-action-btns {
-		    display: flex;
-		    gap: 12px;
-		}
-		
-		/* 已處理貼文按鈕 - 使用深褐色 (符合 deep-brown 語意) */
-		.btn-manage-posts {
-		    background-color: #5d4037;
-		    color: white !important;
-		    font-weight: bold;
-		    text-decoration: none;
-		    padding: 8px 16px;
-		    border-radius: 8px;
-		    transition: all 0.3s ease;
-		    display: inline-flex;
-		    align-items: center;
-		    gap: 8px;
-		    font-size: 0.9rem;
-		}
-		
-		/* 已處理留言按鈕 - 使用深藍灰色 */
-		.btn-manage-comments {
-		    background-color: #455a64;
-		    color: white !important;
-		    font-weight: bold;
-		    text-decoration: none;
-		    padding: 8px 16px;
-		    border-radius: 8px;
-		    transition: all 0.3s ease;
-		    display: inline-flex;
-		    align-items: center;
-		    gap: 8px;
-		    font-size: 0.9rem;
-		}
-		
-		.btn-manage-posts:hover, .btn-manage-comments:hover {
-		    opacity: 0.9;
-		    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-		    transform: translateY(-2px);
-		}
-		
-		/* 確保在手機版時標頭不會擠爆 */
-		@media (max-width: 768px) {
-		    header div {
-		        flex-direction: column;
-		        align-items: flex-start !important;
-		        gap: 10px;
-		    }
-		    .header-action-btns {
-		        width: 100%;
-		    }
-		}
 	</style>
-
+=======
+	
+	/* 分頁整體容器 */
+	.dataTables_paginate {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 6px;
+		margin-top: 20px;
+		flex-wrap: wrap;
+	}
+	
+	/* 分頁按鈕（上一頁 / 下一頁 / 頁碼） */
+	.dataTables_paginate .paginate_button {
+		padding: 6px 12px;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 0.95rem;
+		color: #666 !important;
+		background-color: #f5f5f5;
+		border: none !important;
+		transition: all 0.3s ease;
+	}
+	
+	/* hover 效果 */
+	.dataTables_paginate .paginate_button:hover {
+		background-color: #eaeaea;
+		color: #333 !important;
+	}
+	
+	/* 目前頁碼 */
+	.dataTables_paginate .paginate_button.current {
+		background-color: var(--orange) !important;
+		color: #fff !important;
+		font-weight: 600;
+	}
+	
+	/* disabled（例如第一頁的上一頁） */
+	.dataTables_paginate .paginate_button.disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+	
+	/* 移除 DataTables 預設藍色框線 */
+	.dataTables_paginate .paginate_button:focus {
+		outline: none;
+		box-shadow: none;
+	}
+	
+	/* 標題與按鈕的容器佈局 */
+	.card-header-flex {
+	    display: flex;
+	    justify-content: space-between; /* 標題靠左，按鈕靠右 */
+	    align-items: center;           /* 垂直居中 */
+	    margin-bottom: 20px;           /* 與下方表格的間距 */
+	    padding-bottom: 10px;
+	    border-bottom: 1px solid #eee; /* 可選：加一條淺色分隔線 */
+	}
+	
+	/* 移除標題預設的 margin 避免錯位 */
+	.card-header-flex h3 {
+	    margin: 0;
+	}
+	
+	/* 修正按鈕樣式 */
+	.btn-add-forum {
+	    background-color: #2e7d32;    /* 改為深綠色，比較符合新增語意 */
+	    color: white !important;      
+	    font-weight: bold;            
+	    text-decoration: none;        
+	    padding: 10px 20px;            
+	    border-radius: 8px;           
+	    transition: all 0.3s ease;    
+	    display: inline-flex;         /* 使用 inline-flex 確保不會寬度撐開 */
+	    align-items: center;
+	    gap: 8px;                     
+	}
+	
+	.btn-add-forum:hover {
+	    background-color: #1b5e20;    /* 滑鼠移入變更深的綠 */
+	    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+	    transform: translateY(-2px);
+	}
+	
+	/* 標頭按鈕容器 */
+	.header-action-btns {
+	    display: flex;
+	    gap: 12px;
+	}
+	
+	/* 已處理貼文按鈕 - 使用深褐色 (符合 deep-brown 語意) */
+	.btn-manage-posts {
+	    background-color: #5d4037;
+	    color: white !important;
+	    font-weight: bold;
+	    text-decoration: none;
+	    padding: 8px 16px;
+	    border-radius: 8px;
+	    transition: all 0.3s ease;
+	    display: inline-flex;
+	    align-items: center;
+	    gap: 8px;
+	    font-size: 0.9rem;
+	}
+	
+	/* 已處理留言按鈕 - 使用深藍灰色 */
+	.btn-manage-comments {
+	    background-color: #455a64;
+	    color: white !important;
+	    font-weight: bold;
+	    text-decoration: none;
+	    padding: 8px 16px;
+	    border-radius: 8px;
+	    transition: all 0.3s ease;
+	    display: inline-flex;
+	    align-items: center;
+	    gap: 8px;
+	    font-size: 0.9rem;
+	}
+	
+	.btn-manage-posts:hover, .btn-manage-comments:hover {
+	    opacity: 0.9;
+	    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+	    transform: translateY(-2px);
+	}
+	
+	/* 確保在手機版時標頭不會擠爆 */
+	@media (max-width: 768px) {
+	    header div {
+	        flex-direction: column;
+	        align-items: flex-start !important;
+	        gap: 10px;
+	    }
+	    .header-action-btns {
+	        width: 100%;
+	    }
+	}
+</style>
+>>>>>>> refs/remotes/origin/master
 </head>
 
 <body>
 	<div class="main-content">
 		<header>
+<<<<<<< HEAD
+			<button class="menu-btn" onclick="toggleSidebar()">☰</button>
 
+			<img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+				alt="logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
+			<div>
+				<h1>討論區管理</h1>
+			</div>
+=======
 		    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
 		
 		    <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
@@ -318,7 +329,7 @@
 		            </a>
 		        </div>
 		    </div>
-
+>>>>>>> refs/remotes/origin/master
 		</header>
 
 		<section>

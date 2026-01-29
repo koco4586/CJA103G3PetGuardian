@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class MemberManagementRedirectController {
 
     @GetMapping("/managementpage")
-    public String managementpage(){
+    public String management(){
 
         return "redirect:/html/frontend/member/management/member_management_ai.html";//記得要改回來
 

@@ -19,7 +19,6 @@ public class PetVO implements Serializable {
     private String petDescription;   // 寵物描述
     private Timestamp createdTime;   // 建立時間
     private byte[] petImage;         // 寵物照片 (Blob)
-    private byte[] petImageOriginal;
 
     public PetVO() {}
 
@@ -53,14 +52,4 @@ public class PetVO implements Serializable {
 
     public byte[] getPetImage() { return petImage; }
     public void setPetImage(byte[] petImage) { this.petImage = petImage; }
-
-    public byte[] getPetImageOriginal() {
-        return petImageOriginal;
-    }
-
-    public void setPetImageOriginal(byte[] petImageOriginal) {
-        this.petImageOriginal = petImageOriginal;
-    }
-
 }
-

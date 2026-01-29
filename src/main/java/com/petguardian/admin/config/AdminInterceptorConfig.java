@@ -27,8 +27,8 @@ public class AdminInterceptorConfig implements WebMvcConfigurer{
 						"/css/**",
 						"/js/**",
 						"/images/**",
-						"/admin/sitter/*"
-
+						"/admin/sitter/*",
+						"/admin/bookings/**"
                 );
     }
 }

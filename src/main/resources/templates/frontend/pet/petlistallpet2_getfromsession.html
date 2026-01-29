@@ -7,91 +7,40 @@
     <style>
       /* 1. 設定背景底圖 */
   body {
-            background-image: url("/images/pet/dog_and_cat_by_fukidesign.jpg");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            margin: 0;
-            padding-top: 100px; /* 預留給 Header 的空間 */
-        }
+    background-image: url("/images/pet/dog_and_cat_by_fukidesign.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: Arial, sans-serif;
+  }
 
-        /* 3. 將表格容器美化為「卡片」風格 (與 pet1 統一) */
-        .content-container {
-            max-width: 1200px;
-            margin: 0 auto 50px auto;
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
+  /* 2. 讓表格與標題全部置中 */
+  table {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9); /* 加上半透明白色背景，確保文字清晰 */
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+  }
 
-        .page-title {
-            text-align: center;
-            color: #444;
-            margin-bottom: 25px;
-            font-size: 1.8rem;
-            font-weight: bold;
-        }
+  th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+  }
 
-        /* 4. 表格美化：使用 components.css 的風格 */
-        .standard-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-top: 10px;
-        }
-
-        .standard-table th {
-            background-color: #f8f9fa;
-            color: #555;
-            font-weight: 600;
-            padding: 15px;
-            border-bottom: 2px solid #eee;
-        }
-
-        .standard-table td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        .standard-table tr:hover {
-            background-color: rgba(240, 240, 240, 0.5); /* 滑鼠經過時變色 */
-        }
-
-        /* 5. 標籤與按鈕美化 */
-        .badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 50px;
-            font-weight: bold;
-        }
-        .badge-mine { color: #2d6a4f; border: 1px solid #2d6a4f; background: #d8f3dc; }
-        .badge-other { color: #d68c45; border: 1px solid #d68c45; background: #fefae0; }
-
-        .btn-action {
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: 0.3s;
-            font-size: 0.9rem;
-        }
-        .btn-view { color: #007bff; }
-        .btn-edit { color: #28a745; }
-        .btn-delete { color: #dc3545; }
-
-        .pagination-links {
-            text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-        }
+  th {
+    background-color: #f8f9fa;
+  }
   </style>
 </head>
 
 <body>
-
-
 
 <table id="table-1">
     <tr>
@@ -129,47 +78,44 @@
             <img th:src="@{/pet/img/{id}(id=${pet.petId})}" 
                  style="max-width: 100px; min-height: 50px; background-color: #eee;" 
          alt="無圖片"
-         onerror="this.style.display='none'; this.parentElement.innerHTML='暫無圖片';">
+         onerror="this.style.display='none'; this.parentElement.innerHTML='暫無圖片';">>
         </td>
 
         <td th:text="${pet.petGenderText}"></td>
         <td th:text="${pet.petDescription}"></td>
         
-       <td>
-    <a th:href="@{/pet/one(petId=${pet.petId})}" style="color: blue;">查看</a>
-
-    <span style="margin-left: 5px;">
-        <small th:if="${session.memId == pet.memId}" style="color: green; border: 1px solid green; border-radius: 3px; padding: 0 2px;">我的</small>
-        <small th:if="${session.memId != pet.memId}" style="color: orange; border: 1px solid orange; border-radius: 3px; padding: 0 2px;">受託</small>
-    </span>
-
-    <span th:if="${session.memId != null and session.memId == pet.memId}">
-        | 
-        <a th:href="@{/pet/getOne_For_Update(petId=${pet.petId})}">修改</a>
-        | 
-        <a href="javascript:void(0);" 
-           th:onclick="'deletePet(' + ${pet.petId} + ')'" 
-           style="color:red; cursor:pointer;">
-            刪除
-        </a>
-    </span>
-
-    <span th:if="${session.memId != null and session.memId != pet.memId}" style="color: #999;">
-        | (唯讀)
-    </span>
-</td>
+        <td>
+            <a th:href="@{/pet/one(petId=${pet.petId})}" style="color: blue;">查看</a> | 
+            <a th:href="@{/pet/getOne_For_Update(petId=${pet.petId})}">修改</a> | 
+            <form th:action="@{/pet/delete}" method="post" style="display:inline;" onsubmit="return confirm('確定刪除？');">
+                <input type="hidden" name="petId" th:value="${pet.petId}">
+                <button type="submit" style="color:red; background:none; border:none; cursor:pointer; padding:0;">刪除</button>
+            </form>
+        </td>
         
+<!--         <td> -->
+<!--             <a th:href="@{/pet/one(petId=${pet.petId})}" style="color: blue;">查看詳情</a> -->
 
+<!--             <span th:if="${#session.memId != null and session.memId == pet.memId}"> -->
+<!--                 |  -->
+<!--                 <a th:href="@{/pet/edit(petId=${pet.petId})}">修改</a> | -->
+<!--                 <form th:action="@{/pet/delete}" method="post" style="display:inline;" onsubmit="return confirm('確定刪除？');"> -->
+<!--                     <input type="hidden" name="petId" th:value="${pet.petId}"> -->
+<!--                     <button type="submit" style="color:red; background:none; border:none; cursor:pointer; padding:0;">刪除</button> -->
+<!--                 </form> -->
+<!--             </span> -->
+
+<!--             <span th:if="${#session.memId == null or session.memId != pet.memId}" style="color: #999; font-style: italic;"> -->
+<!--                 (唯讀) -->
+<!--             </span> -->
+<!--         </td> -->
 
 </tr>
     </tbody>
     
     
 </table>
-<!-- 在頁面底部加入隱藏的表單 -->
-<form id="deleteForm" th:action="@{/pet/delete}" method="post" style="display:none;">
-    <input type="hidden" id="deletePetId" name="petId">
-</form>
+
 
 <div class="pagination-links" th:if="${pageNumber > 1}">
     <span th:if="${whichPage > 1}">
@@ -185,27 +131,6 @@
     </span>
 </div>
 
-<script>
-
-function deletePet(petId) {
-	if (!confirm("確定要刪除嗎？")) return;
-
-    fetch(`/pet/delete?petId=${petId}`, { method: 'POST' })
-        .then(res => res.text())
-        .then(text => {
-            if (text === "success") {
-                alert("刪除成功！");
-                
-                // --- 在這裡做跳轉判斷 ---
-                if (window.location.pathname.includes("all")) {
-                    location.href = "/pet/all";       // 留在列表頁
-                } else {
-                    location.href = "/pet/dashboard"; // 回到儀表板
-                }
-            }
-        });
-}
-</script>
 
 
 </body>

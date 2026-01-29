@@ -14,7 +14,9 @@
         background-attachment: fixed;
         margin: 0;
         padding: 0;
-        display: block;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         min-height: 100vh;
         font-family: Arial, sans-serif;
       }
@@ -72,8 +74,6 @@
 
 <body>
 
-
-
 <div class="container">
 
     <div class="header-area">
@@ -92,16 +92,9 @@
 
     <ul>
         <li>
-            <a th:href="@{/pet/all}">
-        <th:block th:if="${session.isSitter}">
-            <b>列出我的及受託管理寵物</b>
-        </th:block>
-        <th:block th:unless="${session.isSitter}">
-            <b>列出我的所有寵物</b>
-        </th:block>
-    </a>
-    <h4>(MVC 分頁模式)</h4>
-</li>
+            <a th:href="@{/pet/all}">列出所有寵物</a>
+            <h4>(MVC 分頁模式)</h4>
+        </li>
 
         <li>
             <form method="get" th:action="@{/pet/one}">

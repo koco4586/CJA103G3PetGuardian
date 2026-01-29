@@ -10,115 +10,55 @@
     <style>
         .news-detail-container {
             max-width: 800px;
-            margin: 60px auto;
-            padding: 0 20px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-
-        .news-header {
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 25px;
-            margin-bottom: 35px;
-        }
-
         .news-meta {
             display: flex;
-            gap: 15px;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 2rem;
         }
-
-        .badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: white;
-        }
-
-        .badge-primary { background-color: #4a90e2; }
-        .badge-accent { background-color: #e85d75; }
-        .badge-secondary { background-color: #50c878; }
-        .badge-warning { background-color: #f39c12; }
-
-        .news-title {
-            font-size: 2rem;
-            color: var(--text-color);
-            margin: 0;
-            line-height: 1.4;
-        }
-
         .news-content {
-            font-size: 1.1rem;
             line-height: 1.8;
             color: #333;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            font-size: 1.05rem;
+            white-space: pre-wrap; /* 保留換行 */
         }
-
         .back-btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background-color: var(--primary-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-bottom: 30px;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            transition: all 0.3s;
         }
-
         .back-btn:hover {
-            background-color: var(--primary-dark);
-            transform: translateX(-3px);
-        }
-
-        .news-article {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-
-        @media (max-width: 768px) {
-            .news-article {
-                padding: 25px;
-            }
-
-            .news-title {
-                font-size: 1.5rem;
-            }
-
-            .news-content {
-                font-size: 1rem;
-            }
+            transform: translateX(-5px);
         }
     </style>
 </head>
+
 <body>
-
 <!-- 動態載入 Header -->
-<header id="main-header"></header>
+<header id="main-header" class="header"></header>
 
-<!-- 主要內容 -->
-<div class="news-detail-container">
+<!-- 主要內容區 -->
+<div class="container" style="padding: 0 1rem;">
+    <div class="news-detail-container">
 
-    <!-- 返回按鈕 -->
-    <a th:href="@{/news/list}" class="back-btn">
-        <i class="fa-solid fa-arrow-left"></i>
-        返回列表
-    </a>
+        <!-- 返回按鈕 -->
+        <a th:href="@{/news/list}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
 
-    <!-- 文章內容 -->
-    <article class="news-article">
-
-        <!-- 文章標頭 -->
-        <header class="news-header">
-            <!-- Meta 資訊 -->
-            <div class="news-meta">
-                <!-- 分類標籤 -->
+        <!-- Meta 資訊區 -->
+        <div class="news-meta">
                 <span class="badge"
                       th:classappend="${news.newsType.newsTypeId == 1 ? 'badge-primary' :
                                       (news.newsType.newsTypeId == 2 ? 'badge-accent' :
@@ -127,25 +67,23 @@
                     平台公告
                 </span>
 
-                <!-- 日期 -->
-                <span style="color: #999;">
+            <span style="color: #999; font-size: 0.9rem;">
                     <i class="far fa-calendar"></i>
                     <span th:text="${#temporals.format(news.publishDate, 'yyyy年MM月dd日')}">2023年12月28日</span>
                 </span>
-            </div>
+        </div>
 
-            <!-- 標題 -->
-            <h1 class="news-title" th:text="${news.title}">
-                標題範例
-            </h1>
-        </header>
+        <!-- 標題 -->
+        <h1 th:text="${news.title}" style="margin-bottom: 1.5rem; color: var(--text-color);">
+            標題範例
+        </h1>
 
-        <!-- 文章內容 -->
+        <!-- 內容 -->
         <div class="news-content" th:text="${news.content}">
             這裡是文章的完整內容...
         </div>
 
-    </article>
+    </div>
 </div>
 
 <!-- 動態載入 Footer -->

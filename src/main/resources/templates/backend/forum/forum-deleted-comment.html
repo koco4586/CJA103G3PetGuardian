@@ -301,7 +301,7 @@
                                 <td th:text="${dto.postId}"></td>
                                 <td th:text="${#dates.format(dto.lastEditedAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
                                 <td>
-                                    <form method="post" th:action="@{/admin/forum/get-one-deleted-comment-to-display}">
+                                    <form method="post" th:action="@{/admin/forum/get-one-for-update}">
                                         <input type="hidden" name="commentId" th:value="${dto.commentId}">
                                         <input class="btn-view-style" type="submit" value="查看">
                                     </form>
@@ -317,8 +317,8 @@
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
     <script th:src="@{/js/backend/sidebar.js}"></script>
-	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script th:inline="javascript">
+
+    <script>
         $(document).ready(function() {
             $('#example').DataTable({
                 "lengthChange": false,
@@ -349,18 +349,6 @@
                 }
             });
         });
-        
-     	// 取得 Flash Attribute 傳來的訊息
-		const successMsgs = [[${successMsgs}]];
-        if (successMsgs) {
-            Swal.fire({
-                icon: 'success',
-                title: '處理完成',
-                text: successMsgs,
-                confirmButtonColor: '#ce875be8',
-                timer: 2000
-            });
-        }
     </script>
 </body>
 </html>
