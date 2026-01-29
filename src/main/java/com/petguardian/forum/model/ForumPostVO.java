@@ -46,7 +46,7 @@ public class ForumPostVO implements Serializable{
 //	private Integer memId;
 	
 	@ManyToOne
-	@JoinColumn(name = "forum_id", referencedColumnName = "forum_id")
+	@JoinColumn(name = "forum_id", referencedColumnName = "forum_id", updatable = false)
 	private ForumVO forum;
 	
 //	@Column(name = "forum_id", updatable = false)

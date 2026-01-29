@@ -216,9 +216,12 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                             <a th:href="@{/forumpost/report-post(postId=${forumPostVO.postId})}">
 							    <i class="far fa-flag"></i> 檢舉文章
 							</a>
-                            <a th:href="@{/forumpost/edit(postId=${forumPostVO.postId})}">
+                            <a th:href="@{/forumpost/update-post(postId=${forumPostVO.postId})}">
                                 <i class="far fa-edit"></i> 修改文章
                             </a>
+                            <a th:href="@{/forumpost/delete-post(postId=${forumPostVO.postId}, forumId=${forumId})}" style="color: #e74c3c;">
+							    <i class="far fa-trash-alt"></i> 刪除文章
+							</a>
                         </div>
                     </div>
                 </div>
@@ -260,7 +263,10 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                                             </a> 
                                             <a th:href="@{/forumpost/report-comment(commentId=${forumPostCommentVO.commentId})}">
                                                 <i class="fas fa-exclamation-circle"></i> 檢舉留言
-                                            </a> 
+                                            </a>
+                                            <a th:href="@{/forumpost/delete-comment(commentId=${forumPostCommentVO.commentId}, postId=${forumPostVO.postId}, forumId=${forumId})}" style="color: #e74c3c;">
+											    <i class="far fa-trash-alt"></i> 刪除留言
+											</a>
                                         </div>
                                     </div>
                                 </div>
@@ -318,6 +324,22 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                     confirmButtonColor: '#ff9800' 
                 });
             }
+            
+         	// 取得 Flash Attribute 傳來的訊息
+    		const successMsgs = [[${successMsgs}]];
+    		
+    		if (successMsgs) {
+    			
+    		    Swal.fire({
+    		        icon: 'success',
+    		        title: '太棒了！',
+    		        text: successMsgs,
+    		        timer: 2000, // 2秒後自動消失
+    		        showConfirmButton: false,
+    		        background: '#fffcf9',
+    		   });
+    	   }
+            
         });
 
         // 通用選單切換
