@@ -179,15 +179,15 @@ public class ForumPostController {
 		}
 		
 		// 使用 AuthStrategyService 取得當前使用者
-		Integer userId = authStrategyService.getCurrentUserId(request);
-		if (userId == null) {
-			model.addAttribute("errorMsgs", "請先登入後再發表文章");
-			return "frontend/forum/add-post";
-			
-		}
+//		Integer userId = authStrategyService.getCurrentUserId(request);
+//		if (userId == null) {
+//			model.addAttribute("errorMsgs", "請先登入後再發表文章");
+//			return "frontend/forum/add-post";
+//			
+//		}
 
 		Member member = new Member();
-		member.setMemId(userId);
+		member.setMemId(1005);
 		forumPostVO.setMember(member);
 
 		// 沒圖片時 -> 新增資料

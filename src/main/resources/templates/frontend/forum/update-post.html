@@ -106,7 +106,7 @@
                 <div class="error-msg" th:if="${#fields.hasErrors('postContent')}" th:errors="*{postContent}" style="display: none;"></div>
             </div>
 			<div class="form-group">
-			    <label class="form-label">目前的封面圖</label>
+			    <label class="form-label">主頁封面圖片</label>
 			    <div class="current-pics-section">
 			        <div class="pics-grid">
 			            <div class="pic-item" style="width: 200px; height: 150px;">
@@ -128,7 +128,7 @@
 			    </div>
 			</div>
             <div class="form-group" th:if="${not #lists.isEmpty(picsId)}" id="old-pics-section">
-			    <label class="form-label">目前的照片</label>
+			    <label class="form-label">貼文附件照片</label>
 			    <div class="current-pics-section">
 			        <div class="pics-grid">
 			            <div class="pic-item" th:each="picId : ${picsId}">
