@@ -70,7 +70,7 @@ public class ChatPageController {
         // Security Check
         if (userId == null) {
             model.addAttribute("error", "請先登入");
-            return "frontend/chat/chat-mvp";
+            return "redirect:/front/loginpage";
         }
 
         // Context Preparation
