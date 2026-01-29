@@ -233,11 +233,7 @@
 
             // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
             const now = new Date();
-<<<<<<< HEAD
             const minDate = new Date(now.getTime() + 1 * 60 * 60 * 1000);
-=======
-            const minDate = new Date(now.getTime());
->>>>>>> refs/remotes/origin/master
             const maxDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
 
             function formatDT(date) {

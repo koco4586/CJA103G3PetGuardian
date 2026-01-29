@@ -232,7 +232,7 @@ public class StoreController {
             HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         // 取得商品資訊
@@ -270,7 +270,7 @@ public class StoreController {
     public String checkoutPage(Model model, HttpSession session, HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         // 取得購物車資料
@@ -370,7 +370,7 @@ public class StoreController {
         // 檢查是否已登入
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         List<Map<String, Object>> orders = ordersService.getBuyerOrdersWithItems(memId);
@@ -438,7 +438,7 @@ public class StoreController {
             HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         List<CartItem> cart = getOrCreateCart(session);
@@ -497,7 +497,7 @@ public class StoreController {
             HttpServletRequest request) {
         Integer memId = authService.getCurrentUserId(request);
         if (memId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         List<CartItem> cart = getOrCreateCart(session);

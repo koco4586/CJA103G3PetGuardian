@@ -9,19 +9,31 @@
     <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Hero Section */
         .hero {
             background: linear-gradient(135deg, #fffcf5 0%, #faedcd 100%);
             padding: 4rem 0;
-            border-bottom-left-radius: var(--radius-lg);
-            border-bottom-right-radius: var(--radius-lg);
             position: relative;
             overflow: hidden;
         }
 
         .hero-content {
-            max-width: 600px;
+            max-width: 550px;
             position: relative;
             z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 2.8rem;
+            color: var(--primary-color);
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            line-height: 1.7;
         }
 
         .hero-img {
@@ -29,7 +41,7 @@
             right: 5%;
             top: 50%;
             transform: translateY(-50%);
-            width: 400px;
+            width: 380px;
             height: auto;
             border-radius: var(--radius-lg);
             display: none;
@@ -41,47 +53,279 @@
             }
         }
 
-        .search-box {
-            background: var(--white);
+        /* Section Styles */
+        .section-title {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title h2 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title p {
+            color: #888;
+            font-size: 1rem;
+        }
+
+        /* About & Services Combined Section */
+        .intro-section {
+            background: linear-gradient(135deg, #fdfbf7 0%, #f7f3ed 100%);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            margin: 3rem 0;
+            text-align: center;
+        }
+
+        .intro-section h2 {
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .intro-description {
+            color: #555;
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            font-size: 1rem;
+        }
+
+        .intro-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .intro-features {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .intro-feature {
+            text-align: center;
             padding: 1rem;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
-            margin-top: 2rem;
+        }
+
+        .intro-feature i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .intro-feature h4 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .intro-feature p {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        /* Service Buttons */
+        .service-buttons {
             display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .service-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: white;
+            border-radius: 1rem;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .service-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-btn .icon {
+            font-size: 1.5rem;
+        }
+
+        .service-btn span {
+            font-size: 1rem;
+        }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+                max-width: 320px;
+            }
+        }
+
+        /* Display Card (no click) */
+        .display-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        .display-card .card-img {
+            height: 160px;
+            overflow: hidden;
+        }
+
+        .display-card .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .display-card .card-body {
+            padding: 1rem;
+        }
+
+        .display-card .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .display-card .card-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        .display-card .card-rating {
+            color: #ffb800;
+            font-size: 0.85rem;
+        }
+
+        .display-card .card-price {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .display-card .card-stock {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .display-card .card-tags {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .display-card .tag {
+            background: #fef3e2;
+            color: #c4956a;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+        }
+
+        /* Section Action Button */
+        .section-action {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 2rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #c4956a;
+            transform: translateY(-2px);
+        }
+
+        /* Pet Decoration Images */
+        .pet-deco {
+            position: absolute;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        /* Featured Section */
+        .featured-section {
+            padding: 3rem 0;
+            position: relative;
+        }
+
+        .featured-section:nth-child(odd) {
+            background: #fafafa;
+        }
+
+        /* Pet Gallery Strip */
+        .pet-gallery {
+            display: flex;
+            justify-content: center;
             gap: 1rem;
+            margin: 2rem 0;
             flex-wrap: wrap;
         }
 
-        .search-box input,
-        .search-box select {
-            flex: 1;
-            padding: 0.8rem;
-            border: 1px solid #eee;
-            border-radius: var(--radius-sm);
+        .pet-gallery img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .section-title {
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
             text-align: center;
-            margin: 4rem 0 2rem;
+            padding: 3rem;
+            color: #999;
         }
 
-        .category-card {
-            background: var(--white);
-            padding: 2rem;
-            border-radius: var(--radius-md);
-            text-align: center;
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-        .category-card:hover {
-            transform: translateY(-10px);
-            background-color: var(--secondary-color);
-        }
-
-        .category-icon {
+        .empty-state i {
             font-size: 3rem;
             margin-bottom: 1rem;
+            opacity: 0.3;
         }
     </style>
 </head>
@@ -90,36 +334,15 @@
 
     <header id="main-header" class="header"></header>
 
-    <!-- 顯示後端傳回的 Flash Attribute 錯誤訊息 被停權保母身分的會員-->
-    <div th:if="${errorMessage}" class="alert alert-danger"
-        style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 15px; background: #f8d7da; color: #721c24; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <i class="fas fa-exclamation-circle"></i>
-        <span th:text="${errorMessage}"></span>
-        <button type="button" onclick="this.parentElement.style.display='none'"
-            style="margin-left: 10px; border: none; background: none; cursor: pointer;">&times;</button>
-    </div>
-
+    <!-- Hero Section -->
     <section class="hero">
-        <div class="container d-flex align-center" style="min-height: 400px; position: relative;">
-            <div class="hero-content fade-in">
-                <h1 style="font-size: 3rem; color: var(--primary-color);">給毛小孩<br>最溫暖的守護 ❤️</h1>
-                <p class="mt-1" style="font-size: 1.2rem; color: #666;">
-                    專業保母、到府照護、散步遛狗。<br>
-                    讓您出差旅遊無後顧之憂，隨時掌握寶貝動態。
+        <div class="container d-flex align-center" style="min-height: 380px; position: relative;">
+            <div class="hero-content">
+                <h1 class="hero-title">給毛小孩<br>最溫暖的守護</h1>
+                <p class="hero-subtitle">
+                    專業保母、到府照護、散步遛狗<br>
+                    讓您出差旅遊無後顧之憂，隨時掌握寶貝動態
                 </p>
-
-                <div class="search-box">
-                    <select>
-                        <option>選擇服務 (如: 散步、餵食)</option>
-                        <option>🐶 散步遛狗</option>
-                        <option>🐱 到府餵食</option>
-                        <option>🛁 寵物洗澡</option>
-                    </select>
-                    <input type="text" placeholder="輸入地區 (如: 台北市大安區)">
-                    <button class="btn btn-primary" onclick="window.location.href='/services'">
-                        🔍 搜尋保母
-                    </button>
-                </div>
             </div>
             <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80&w=800"
                 alt="Happy Dog" class="hero-img">
@@ -127,134 +350,146 @@
     </section>
 
     <div class="container">
-        <div class="section-title">
-            <h2>我們的服務</h2>
-            <p style="color: #666;">滿足您與毛小孩的所有需求</p>
-        </div>
 
-        <div class="grid-list-view">
-            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/services?type=walk'"
-                style="text-align: left; padding: 1.5rem;">
-                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🐕‍🦺</div>
-                <div>
-                    <h3 class="mb-0">散步遛狗</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin:0;">專業保母陪跑，記錄路線</p>
-                </div>
-            </div>
-            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/services?type=care'"
-                style="text-align: left; padding: 1.5rem;">
-                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🏠</div>
-                <div>
-                    <h3 class="mb-0">到府照顧</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin:0;">餵食、陪玩、維持習慣</p>
-                </div>
-            </div>
-            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/services?type=bath'"
-                style="text-align: left; padding: 1.5rem;">
-                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🛁</div>
-                <div>
-                    <h3 class="mb-0">到府洗澡</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin:0;">免出門，專業美容師服務</p>
-                </div>
-            </div>
-            <div class="category-card d-flex align-center gap-md" onclick="window.location.href='/store'"
-                style="text-align: left; padding: 1.5rem;">
-                <div class="category-icon" style="margin-bottom:0; font-size: 2.5rem;">🛍️</div>
-                <div>
-                    <h3 class="mb-0">二手商城</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin:0;">環保愛地球，好物便宜淘</p>
-                </div>
-            </div>
-        </div>
+        <!-- About & Services Combined Section -->
+        <div class="intro-section">
+            <h2><i class="fas fa-paw"></i> 關於 PetGuardian 寵護家</h2>
+            <p class="intro-description">
+                我們是專為寵物飼主打造的一站式照護平台，深知毛小孩是家庭中不可或缺的一份子。
+                無論您是需要外出工作、旅遊或有其他事務，都能放心將您的毛孩交給我們認證的專業保母照顧。
+            </p>
 
-        <div class="section-title">
-            <h2>熱門保母</h2>
-            <p style="color: #666;">經過嚴格認證的愛心夥伴</p>
-        </div>
-
-        <div class="grid-list-view" id="featured-sitters">
-            <div class="card card-horizontal">
-                <div class="img-wrapper">
-                    <img
-                        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400">
-                    <button class="btn-like" onclick="toggleFavorite(this)"><i class="far fa-heart"></i></button>
+            <div class="intro-features">
+                <div class="intro-feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>嚴格認證</h4>
+                    <p>保母皆經過專業訓練</p>
                 </div>
-                <div class="content-wrapper">
-                    <div>
-                        <div class="d-flex justify-between align-center mb-1">
-                            <h3 class="card-title" style="margin:0;">王小美</h3>
-                            <span class="badge badge-primary">⭐️ 4.9</span>
-                        </div>
-                        <p class="card-text mb-1" style="font-size: 0.9rem;">📍 台北市大安區</p>
-                        <div class="d-flex gap-xs mb-1">
-                            <span class="badge badge-accent">散步</span>
-                            <span class="badge badge-accent">洗澡</span>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-between align-center">
-                        <span style="color: var(--primary-color); font-weight: 700;">$300起</span>
-                        <a href="/services" class="btn btn-outline btn-sm">預約</a>
-                    </div>
+                <div class="intro-feature">
+                    <i class="fas fa-camera"></i>
+                    <h4>即時回報</h4>
+                    <p>隨時掌握毛孩動態</p>
+                </div>
+                <div class="intro-feature">
+                    <i class="fas fa-heart"></i>
+                    <h4>愛心服務</h4>
+                    <p>用愛對待如同家人</p>
+                </div>
+                <div class="intro-feature">
+                    <i class="fas fa-comments"></i>
+                    <h4>即時溝通</h4>
+                    <p>與保母聯繫無障礙</p>
                 </div>
             </div>
 
-            <div class="card card-horizontal">
-                <div class="img-wrapper">
-                    <img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400">
-                    <button class="btn-like" onclick="toggleFavorite(this)"><i class="far fa-heart"></i></button>
-                </div>
-                <div class="content-wrapper">
-                    <div>
-                        <div class="d-flex justify-between align-center mb-1">
-                            <h3 class="card-title" style="margin:0;">陳大山</h3>
-                            <span class="badge badge-primary">⭐️ 4.8</span>
-                        </div>
-                        <p class="card-text mb-1" style="font-size: 0.9rem;">📍 新北市板橋區</p>
-                        <div class="d-flex gap-xs mb-1">
-                            <span class="badge badge-accent">美容</span>
-                            <span class="badge badge-accent">清潔</span>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-between align-center">
-                        <span style="color: var(--primary-color); font-weight: 700;">$500起</span>
-                        <a href="/services" class="btn btn-outline btn-sm">預約</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card card-horizontal">
-                <div class="img-wrapper">
-                    <img
-                        src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400">
-                    <button class="btn-like" onclick="toggleFavorite(this)"><i class="far fa-heart"></i></button>
-                </div>
-                <div class="content-wrapper">
-                    <div>
-                        <div class="d-flex justify-between align-center mb-1">
-                            <h3 class="card-title" style="margin:0;">林沐沐</h3>
-                            <span class="badge badge-primary">⭐️ 5.0</span>
-                        </div>
-                        <p class="card-text mb-1" style="font-size: 0.9rem;">📍 台北市信義區</p>
-                        <div class="d-flex gap-xs mb-1">
-                            <span class="badge badge-accent">陪玩</span>
-                            <span class="badge badge-accent">更多</span>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-between align-center">
-                        <span style="color: var(--primary-color); font-weight: 700;">$250起</span>
-                        <a href="/services" class="btn btn-outline btn-sm">預約</a>
-                    </div>
-                </div>
+            <!-- Pet Gallery -->
+            <div class="pet-gallery">
+                <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&q=80&w=200"
+                    alt="Dog">
+                <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=200"
+                    alt="Cat">
+                <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=200"
+                    alt="Dogs">
+                <img src="https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&q=80&w=200"
+                    alt="Cat">
+                <img src="https://images.unsplash.com/photo-1560807707-8cc77767d783?auto=format&fit=crop&q=80&w=200"
+                    alt="Dog">
             </div>
         </div>
 
-        <div class="text-center mt-3 mb-2">
-            <a href="/services" class="btn btn-secondary">查看更多保母 -></a>
+        <!-- Featured Sitters Section -->
+        <div class="featured-section">
+            <div class="section-title">
+                <h2>熱門保母推薦</h2>
+                <p>經過嚴格認證的愛心夥伴</p>
+            </div>
+
+            <div class="card-grid">
+                <!-- Sitter Cards (Display Only) -->
+                <div class="display-card" th:each="sitter : ${featuredSitters}">
+                    <div class="card-img">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
+                            th:alt="${sitter.sitterName}">
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-between align-center">
+                            <h4 class="card-title" th:text="${sitter.sitterName}">保母姓名</h4>
+                            <span class="card-rating">
+                                <i class="fas fa-star"></i>
+                                <span th:text="${sitter.averageRating > 0 ? sitter.averageRating : '5.0'}">5.0</span>
+                            </span>
+                        </div>
+                        <p class="card-subtitle">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span th:text="${sitter.sitterAdd} ?: '服務區域'">服務區域</span>
+                        </p>
+                        <div class="card-tags">
+                            <span class="tag">散步</span>
+                            <span class="tag">餵食</span>
+                            <span class="tag">美容</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fallback when no sitters -->
+                <div th:if="${#lists.isEmpty(featuredSitters)}" class="empty-state">
+                    <i class="fas fa-user-friends"></i>
+                    <p>目前暫無保母資料</p>
+                </div>
+            </div>
+
+            <div class="section-action">
+                <a href="/booking/services" class="action-btn">
+                    前往預約 <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
         </div>
+
+        <!-- Featured Products Section -->
+        <div class="featured-section" style="background: white;">
+            <div class="section-title">
+                <h2>熱門商品推薦</h2>
+                <p>精選二手好物，為毛孩省荷包</p>
+            </div>
+
+            <div class="card-grid">
+                <!-- Product Cards (Display Only) -->
+                <div class="display-card" th:each="product : ${featuredProducts}">
+                    <div class="card-img">
+                        <img th:src="@{/api/product/{id}/image(id=${product.proId})}" th:alt="${product.proName}">
+                    </div>
+                    <div class="card-body">
+                        <h4 class="card-title" th:text="${product.proName}">商品名稱</h4>
+                        <div class="d-flex justify-between align-center">
+                            <span class="card-price"
+                                th:text="'$' + ${#numbers.formatInteger(product.proPrice, 1, 'COMMA')}">$0</span>
+                            <span class="card-stock"
+                                th:if="${product.stockQuantity != null and product.stockQuantity > 0}"
+                                th:text="'剩餘 ' + ${product.stockQuantity} + ' 件'">剩餘 X 件</span>
+                            <span class="card-stock"
+                                th:unless="${product.stockQuantity != null and product.stockQuantity > 0}"
+                                style="color: #e74c3c;">已售完</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fallback when no products -->
+                <div th:if="${#lists.isEmpty(featuredProducts)}" class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <p>目前暫無商品</p>
+                </div>
+            </div>
+
+            <div class="section-action">
+                <a href="/store" class="action-btn">
+                    前往商城 <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
     </div>
 
-    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+    <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 0;"></footer>
 
     <script src="/js/frontend/main.js"></script>
 </body>

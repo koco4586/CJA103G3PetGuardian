@@ -261,20 +261,9 @@
                 <i class="fas fa-arrow-left"></i> 返回
             </a>
             <!-- 連結到預約頁面，帶上 sitterId -->
-<<<<<<< HEAD
-            <!-- 連結到預約頁面，帶上 sitterId -->
-            <!-- [修改] 改為觸發預約彈窗 -->
-            <button type="button" class="btn btn-primary btn-booking-trigger" style="min-width: 150px;"
-                th:data-name="${sitter.sitterName}" th:data-id="${sitter.sitterId}"
-                onclick="openBookingModal(this.getAttribute('data-name'), this.getAttribute('data-id'))">
-=======
             <!-- <a th:href="@{/booking/create(sitterId=${sitter.sitterId})}" class="btn btn-primary"
                 style="min-width: 150px;">
->>>>>>> refs/remotes/origin/master
                 <i class="fas fa-calendar-check"></i> 立即預約
-<<<<<<< HEAD
-            </button>
-=======
             </a> -->
 
             <button class="btn btn-primary" style="min-width: 150px;"
@@ -329,7 +318,6 @@
                     style="width: 100%; border-radius: 3rem; margin-top: 1rem; height: 50px; font-size: 1.1rem;"
                     onclick="submitBooking()">確認送出</button>
             </form>
->>>>>>> refs/remotes/origin/master
         </div>
     </div>
 
@@ -339,162 +327,6 @@
     <!-- JS -->
     <script src="/js/frontend/main.js"></script>
 
-<<<<<<< HEAD
-    <!-- [新增] 預約彈窗 HTML -->
-    <div id="bookingModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
-        <div
-            style="background: white; padding: 2.5rem; border-radius: 2rem; width: 95%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-            <button onclick="closeModal()"
-                style="position: absolute; right: 1.5rem; top: 1.5rem; background: #f0f0f0; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
-            <h3 style="font-weight: 700; font-size: 1.5rem;">
-                預約 <span id="sitterName" style="color: var(--primary-color);"></span>
-            </h3>
-
-            <form id="realBookingForm" class="mt-2">
-                <input type="hidden" id="modalSitterId">
-                <div class="form-group">
-                    <label class="form-label">選擇小毛孩</label> <select class="form-control" id="petId">
-                        <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
-
-                        <option th:each="pet : ${myPets}" th:value="${pet.petId}"
-                            th:text="${pet.petName} + ' (種類ID: ' + ${pet.typeId} + ')'">
-                        </option>
-                    </select>
-                </div>
-                <!-- 這裡可以選擇服務項目，預設帶入第一個或讓使用者選 -->
-                <div class="form-group">
-                    <label class="form-label">服務項目</label> <select class="form-control" id="serviceItemId">
-                        <option th:each="svc : ${services}" th:value="${svc.serviceItemId}"
-                            th:text="${serviceNameMap.get(svc.serviceItemId) != null ? serviceNameMap.get(svc.serviceItemId) : '項目 ' + svc.serviceItemId} + ' ($' + ${svc.defaultPrice} + ')'">
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">開始時間</label> <input type="datetime-local" id="startTime"
-                        class="form-control">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">結束時間</label> <input type="datetime-local" id="endTime"
-                        class="form-control">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">特別需求</label>
-                    <textarea class="form-control" id="bookingNotes" rows="2" placeholder="有什麼想告訴保母的嗎？"></textarea>
-                </div>
-                <button type="button" class="btn btn-primary"
-                    style="width: 100%; border-radius: 3rem; margin-top: 1rem; height: 50px; font-size: 1.1rem;"
-                    onclick="submitBooking()">確認送出</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- [新增] 預約彈窗腳本 -->
-    <script>
-        function openBookingModal(name, id) {
-            console.log("正在開啟預約彈窗 (Global):", name, id);
-            const modal = document.getElementById('bookingModal');
-            const sitterNameSpan = document.getElementById('sitterName');
-            const sitterIdInput = document.getElementById('modalSitterId');
-            const startInput = document.getElementById('startTime');
-            const endInput = document.getElementById('endTime');
-
-            if (!modal || !sitterNameSpan || !sitterIdInput) {
-                console.error("找不到必要的彈窗元件");
-                return;
-            }
-
-            sitterNameSpan.innerText = name;
-            sitterIdInput.value = id;
-
-            // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
-            const now = new Date();
-            const minDate = new Date(now.getTime() + 1 * 60 * 60 * 1000);
-            const maxDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-
-            function formatDT(date) {
-                const y = date.getFullYear();
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const d = String(date.getDate()).padStart(2, '0');
-                const h = String(date.getHours()).padStart(2, '0');
-                const min = String(date.getMinutes()).padStart(2, '0');
-                return `${y}-${m}-${d}T${h}:${min}`;
-            }
-
-            const minStr = formatDT(minDate);
-            const maxStr = formatDT(maxDate);
-
-            if (startInput) {
-                startInput.min = minStr;
-                startInput.max = maxStr;
-                startInput.value = minStr; // 預設帶入最早可選時間
-            }
-            if (endInput) {
-                endInput.min = minStr;
-                endInput.max = maxStr;
-            }
-
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('bookingModal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        async function submitBooking() {
-            const petId = document.getElementById('petId').value;
-            if (!petId) {
-                alert("目前尚無寵物資料，請先新增寵物！");
-                return;
-            }
-
-            const startVal = document.getElementById('startTime').value;
-            const endVal = document.getElementById('endTime').value;
-
-            if (!startVal || !endVal) {
-                alert("請填寫時間！");
-                return;
-            }
-
-            if (new Date(startVal) >= new Date(endVal)) {
-                alert("結束時間需晚於開始時間！");
-                return;
-            }
-
-            const formData = new URLSearchParams();
-            formData.append('sitterId', document.getElementById('modalSitterId').value);
-            formData.append('petId', petId);
-            formData.append('serviceItemId', document.getElementById('serviceItemId').value);
-            formData.append('startTime', startVal);
-            formData.append('endTime', endVal);
-            formData.append('bookingNotes', document.getElementById('bookingNotes').value);
-
-            try {
-                const response = await fetch('/booking/submit', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    alert("預約成功！");
-                    window.location.href = "/booking/memberOrders";
-                } else {
-                    const msg = await response.text();
-                    alert("預約失敗：" + msg);
-                }
-            } catch (err) {
-                console.error(err);
-                alert("發生系統錯誤");
-            }
-        }
-
-        // 點擊背景關閉
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('bookingModal');
-            if (e.target === modal) closeModal();
-        });
-=======
     <script>
         // 1. 開啟預約彈窗
         function openBookingModal(name, id) {
@@ -602,7 +434,6 @@
                 alert("發生系統錯誤");
             }
         }
->>>>>>> refs/remotes/origin/master
     </script>
 
 </body>

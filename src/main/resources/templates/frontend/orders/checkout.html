@@ -142,7 +142,7 @@
                                         評論內容</p>
 
                                     <!-- 檢舉按鈕 -->
-                                    <div class="d-flex justify-end">
+                                    <div class="btn-report-wrapper">
                                         <button type="button" class="btn-report" th:data-review-id="${review.reviewId}"
                                             onclick="toggleReportForm(this)">
                                             <i class="fas fa-flag"></i> 檢舉
@@ -154,8 +154,33 @@
                                         th:id="'report-form-' + ${review.reviewId}">
                                         <input type="hidden" name="reviewId" th:value="${review.reviewId}">
                                         <input type="hidden" name="redirectUrl" value="/store/checkout">
-                                        <textarea name="reportReason" placeholder="請說明檢舉原因..." rows="2" required
-                                            maxlength="200"></textarea>
+
+                                        <!-- 檢舉原因選項 -->
+                                        <div class="report-reasons">
+                                            <label class="report-reason-label">請選擇檢舉原因：</label>
+                                            <div class="report-reason-options">
+                                                <label class="report-option">
+                                                    <input type="radio" name="reportType" value="不實評價" th:name="'reportType-' + ${review.reviewId}" onchange="updateReportReason(this)">
+                                                    <span><i class="fas fa-comment-slash"></i> 不實評價</span>
+                                                </label>
+                                                <label class="report-option">
+                                                    <input type="radio" name="reportType" value="惡意攻擊/人身攻擊" th:name="'reportType-' + ${review.reviewId}" onchange="updateReportReason(this)">
+                                                    <span><i class="fas fa-user-slash"></i> 惡意攻擊</span>
+                                                </label>
+                                                <label class="report-option">
+                                                    <input type="radio" name="reportType" value="垃圾訊息/廣告" th:name="'reportType-' + ${review.reviewId}" onchange="updateReportReason(this)">
+                                                    <span><i class="fas fa-ad"></i> 垃圾訊息</span>
+                                                </label>
+                                                <label class="report-option">
+                                                    <input type="radio" name="reportType" value="其他" th:name="'reportType-' + ${review.reviewId}" onchange="updateReportReason(this)">
+                                                    <span><i class="fas fa-ellipsis-h"></i> 其他</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <textarea name="reportReason" placeholder="補充說明（選填）..." rows="2"
+                                            maxlength="200" class="report-textarea"></textarea>
+                                        <input type="hidden" name="finalReportReason" class="final-report-reason">
                                         <div class="d-flex gap-sm justify-end">
                                             <button type="button" class="btn btn-outline btn-sm"
                                                 onclick="toggleReportForm(this)">取消</button>
@@ -645,8 +670,50 @@
             const form = document.getElementById('report-form-' + reviewId);
             if (form) {
                 form.classList.toggle('show');
+                // 重置表單
+                if (!form.classList.contains('show')) {
+                    form.reset();
+                }
             }
         }
+
+        // 更新檢舉原因
+        function updateReportReason(radio) {
+            const form = radio.closest('form');
+            const textarea = form.querySelector('.report-textarea');
+
+            // 如果選擇「其他」，讓使用者自行填寫
+            if (radio.value === '其他') {
+                textarea.placeholder = '請說明檢舉原因...';
+                textarea.required = true;
+            } else {
+                textarea.placeholder = '補充說明（選填）...';
+                textarea.required = false;
+            }
+        }
+
+        // 檢舉表單提交處理
+        document.querySelectorAll('.report-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const selectedRadio = form.querySelector('input[type="radio"]:checked');
+                const textarea = form.querySelector('.report-textarea');
+
+                if (!selectedRadio) {
+                    e.preventDefault();
+                    alert('請選擇檢舉原因');
+                    return;
+                }
+
+                // 組合最終檢舉原因
+                let finalReason = selectedRadio.value;
+                if (textarea.value.trim()) {
+                    finalReason += '：' + textarea.value.trim();
+                }
+
+                // 設定到 reportReason 欄位
+                textarea.value = finalReason;
+            });
+        });
 
         // 移除商品確認對話框
         let currentRemoveProId = null;

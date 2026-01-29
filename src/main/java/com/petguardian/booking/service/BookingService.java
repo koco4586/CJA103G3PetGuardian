@@ -37,8 +37,6 @@ public interface BookingService {
 	List<BookingOrderVO> getOrdersBySitterId(Integer sitterId);
 	
 	List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status);
-	
-	List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status);
 
 	void updateOrderStatusBySitter(Integer orderId, Integer newStatus);
 

@@ -87,13 +87,6 @@ public class BookingServiceImpl implements BookingService {
     public void updateOrderStatusBySitter(Integer orderId, Integer newStatus) {
         scheduleInternalService.updateOrderStatusBySitter(orderId, newStatus);
     }
-    
-    // 在 BookingServiceImpl.java 補上這一段
-    @Override
-    public List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status) {
-        // 為了保持邏輯統一，直接呼叫你已經寫好的方法即可
-        return this.findBySitterAndStatus(sitterId, status);
-    }
 
     // 建立預約
     @Override
