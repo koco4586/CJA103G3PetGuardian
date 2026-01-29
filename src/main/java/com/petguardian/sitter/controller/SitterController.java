@@ -88,7 +88,7 @@ public class SitterController {
             Integer memId = application.getMemId();
 
             // [NEW] 查詢真實會員資料
-            com.petguardian.sitter.model.SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
+            SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
 
             String sitterName = (member != null && member.getMemName() != null) ? member.getMemName() : "未設定姓名";
             String sitterAdd = (member != null && member.getMemAdd() != null) ? member.getMemAdd() : "未設定地址";
