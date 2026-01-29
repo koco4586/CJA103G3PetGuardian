@@ -1,6 +1,7 @@
 package com.petguardian.sitter.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,9 +16,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.petguardian.sitter.model.SitterApplicationDTO;
 import com.petguardian.sitter.model.SitterApplicationVO;
 import com.petguardian.sitter.service.SitterApplicationService;
-// [NEW] Import SitterMemberVO/Repository
-import com.petguardian.sitter.model.SitterMemberVO;
-import com.petguardian.sitter.model.SitterMemberRepository;
 
 import com.petguardian.common.service.AuthStrategyService;
 
@@ -41,10 +39,6 @@ public class SitterApplicationController {
     @Autowired
     private SitterApplicationService service;
 
-    // [NEW] 注入 SitterMemberRepository 用於查詢會員資料
-    @Autowired
-    private SitterMemberRepository sitterMemberRepository;
-
     /**
      * 導向申請表格頁面
      * URL: GET /sitter/apply
@@ -64,25 +58,13 @@ public class SitterApplicationController {
             return "redirect:/front/loginpage";
         }
 
-        // [NEW] 預先檢查：是否已有申請中或已通過的紀錄
-        // 只有當沒有成功訊息時（非剛提交完），才顯示警告
         if (!model.containsAttribute("successMessage")) {
-            List<SitterApplicationVO> existingApps = service.getApplicationsByMember(memId);
-            for (SitterApplicationVO app : existingApps) {
-                if (app.getAppStatus() == 0) {
-                    model.addAttribute("errorMessage", "您已有待審核的申請，請耐心等候結果");
-
-                    model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
-
-                    // (測試註解)可以考慮在此處 return 轉導或讓前端隱藏按鈕
-                } // else if (app.getAppStatus() == 1) {
-                  // model.addAttribute("errorMessage", "您已通過審核成為保姆，無需重複申請");
-
-                // model.addAttribute("isDisableSubmit", true);// 新增 用於前端的按鈕
-                // }
-
+            // [Refactor] 改用 Service 檢查狀態
+            String statusMsg = service.checkApplicationStatus(memId);
+            if (statusMsg != null) {
+                model.addAttribute("errorMessage", statusMsg);
+                model.addAttribute("isDisableSubmit", true);
             }
-
         }
         // [NEW] 檢查是否已通過審核 (改用 Service 方法)
         if (service.isSitter(memId)) {
@@ -95,38 +77,11 @@ public class SitterApplicationController {
         dto.setMemId(memId); // 預填 memId
         model.addAttribute("sitterApplication", dto);
 
-        // 2. 從 AuthStrategy/Session 取得會員資訊
-
-        // ========== [OLD] 舊版邏輯 (註解保留) ==========
-        /*
-         * String memName = authStrategyService.getCurrentUserName(request);
-         * String memPhone = (String) session.getAttribute("memPhone");
-         * String avatarUrl = (String) session.getAttribute("avatarUrl");
-         */
-        // ==============================================
-
-        // ========== [NEW] 新版邏輯 (查詢資料庫) ==========
-        String memName = "會員姓名";
-        String memPhone = "未設定";
-        String avatarUrl = (String) session.getAttribute("avatarUrl"); // 頭像暫時仍從 Session 拿，或依需求調整
-
-        if (memId != null) {
-            SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
-            if (member != null) {
-                memName = member.getMemName();
-                memPhone = member.getMemTel(); // 從 DB 取得真實電話
-            }
-        }
-        // ===============================================
-
-        model.addAttribute("memName", memName != null ? memName : "會員姓名");
-        model.addAttribute("memPhone", memPhone != null ? memPhone : "未設定");
-        model.addAttribute("avatarUrl", avatarUrl);
-        model.addAttribute("memberRole", "一般會員");
-
-        // 3. 預留的預設值（可選）
-        model.addAttribute("defaultCity", "台北市");
-        model.addAttribute("defaultDistrict", "大安區");
+        // 2. [Refactor] 改用 Service 取得初始資料
+        // 2. [Refactor] 改用 Service 取得初始資料
+        String avatarUrl = (String) session.getAttribute("avatarUrl");
+        Map<String, Object> initData = service.getApplyFormInitData(memId, avatarUrl);
+        model.addAllAttributes(initData);
 
         return "frontend/sitter/dashboard-sitter-registration";
     }
