@@ -70,7 +70,7 @@
 									<button th:if="${order.orderStatus == 2}" class="btn"
 										style="background: green;"
 										th:onclick="'executePayout(' + ${order.bookingOrderId} + ')'">執行撥款</button>
-								<!-- 	<button th:if="${order.orderStatus == 0}" class="btn ghost">催促保母</button>  -->
+									<button th:if="${order.orderStatus == 0}" class="btn ghost">催促保母</button>
 								</td>
 							</tr>
 						</tbody>
@@ -83,87 +83,36 @@
 					<h3>
 						<i class="fa-solid fa-triangle-exclamation"></i> 退款申請待處理
 					</h3>
-					<table style="width: 100%; table-layout: fixed; border-collapse: collapse;">
+					<table>
 						<thead>
 							<tr>
-								<th style="width: 10%;">編號</th>
-			                    <th style="width: 15%;">申請人</th>
-			                    <th style="width: 20%;">服務時間 / 金額</th> <th style="width: 15%;">申請時間</th>
-			                    <th style="width: 15%;">原因</th>
-			                    <th style="width: 25%;">操作</th>
+								<th>編號</th>
+								<th>申請人</th>
+								<th>原因</th>
+								<th>預約金額</th>
+								<th>操作</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr th:each="order : ${refundRequests}">
 								<td th:text="'#BK-' + ${order.bookingOrderId}"></td>
 								<td th:text="'會員ID: ' + ${order.memId}"></td>
-			                    <td>
-			                        <div style="font-weight: 600; color: #1e293b;" 
-			                             th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd')}"></div>
-			                        <div style="font-size: 0.8rem; color: #64748b;" 
-			                             th:text="${#temporals.format(order.startTime, 'HH:mm')} + ' ~ ' + ${#temporals.format(order.endTime, 'HH:mm')}"></div>
-			                        <div style="color: #ea580c; font-weight: 700; margin-top: 4px;" 
-			                             th:text="'$ ' + ${order.reservationFee}"></div>
-			                    </td>
-			                    
-			                    <td>
-			                        <small th:text="${order.cancelTime != null ? #temporals.format(order.cancelTime, 'MM-dd HH:mm') : '無紀錄'}"></small>
-			                    </td>
-			                    
-			                    <td>
-			                        <div style="font-size: 0.85rem; max-height: 4.5em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3;" 
-			                             th:title="${order.cancelReason}" 
-			                             th:text="${order.cancelReason}"></div>
-			                    </td>
-			                    
-			                    <td>
-								    <th:block th:with="
-								        now=${#temporals.createNow()},
-								        startTime=${order.startTime},
-								        cancelTime=${order.cancelTime ?: now},
-								        diffDays=${startTime != null ? T(java.time.temporal.ChronoUnit).DAYS.between(cancelTime, startTime) : 0},
-								        isExpired=${order.endTime != null and order.endTime.plusDays(7).isBefore(now)}">
-								
-								        <div th:if="${isExpired}">
-								            <div style="color: #ef4444; font-size: 0.75rem; margin-bottom: 5px;">
-								                <i class="fa-solid fa-clock-rotate-left"></i> 已逾期 7 天
-								            </div>
-								            <button class="btn" style="background: #6366f1; width: 100%;"
-								                th:onclick="'forceComplete(' + ${order.bookingOrderId} + ')'">轉為完成(撥款)</button>
-								        </div>
-								
-								        <div th:unless="${isExpired}" style="display: flex; flex-direction: column; gap: 5px;">
-								            
-								            <th:block th:if="${diffDays >= 7}">
-								                <div style="color: #2f9e44; font-size: 0.75rem; font-weight: 600;">符合全額退費</div>
-								                <button class="btn btn-sm" style="background: #2f9e44; width: 100%;"
-								                    th:onclick="'approveRefund(' + ${order.bookingOrderId} + ', 1.0)'">核准全額退款</button>
-								            </th:block>
-								
-								            <th:block th:if="${diffDays > 0 and diffDays < 7}">
-								                <div style="color: #ea580c; font-size: 0.75rem; font-weight: 600;">酌收手續費 (退 50%)</div>
-								                <button class="btn btn-sm" style="background: #ea580c; width: 100%;"
-								                    th:onclick="'approveRefund(' + ${order.bookingOrderId} + ', 0.5)'">核准 50% 退款</button>
-								            </th:block>
-								
-								            <th:block th:if="${diffDays <= 0}">
-								                <div style="color: #fa5252; font-size: 0.75rem; font-weight: 600;">條件不符 (不予退費)</div>
-								                <button class="btn btn-sm" style="background: #fa5252; width: 100%;"
-								                    th:onclick="'rejectRefund(' + ${order.bookingOrderId} + ')'">駁回退款申請</button>
-								            </th:block>
-								
-								            <button th:if="${diffDays > 0}" class="btn ghost btn-sm" style="width: 100%; color: #666; border-color: #ccc;"
-								                th:onclick="'rejectRefund(' + ${order.bookingOrderId} + ')'">理由不當駁回</button>
-								        </div>
-								    </th:block>
+								<td th:text="${order.cancelReason}"></td>
+								<td th:text="'$' + ${order.reservationFee}"></td>
+								<td>
+									<button class="btn"
+										th:onclick="'approveRefund(' + ${order.bookingOrderId} + ')'">核准退款</button>
+									<button class="btn ghost"
+										style="color: red; border-color: red;"
+										th:onclick="'rejectRefund(' + ${order.bookingOrderId} + ')'">駁回</button>
 								</td>
-			                </tr>
-			            </tbody>
-			        </table>
-			    </div>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
-	</section>
-</div>
+		</section>
+	</div>
 	<script th:inline="javascript">
 		// 切換頁籤邏輯
         function switchTab(tabName) {
@@ -195,10 +144,9 @@
                 alert('連線異常，請稍後再試');
             }
         }
-        function approveRefund(orderId, ratio) {
-        	const percent = ratio * 100;
-            if (confirm(`確定要「核准」此申請嗎？\n系統將會退還 ${percent}% 的預約金給會員。`)) {
-                handleApiCall('/admin/bookings/approveRefund?ratio='+ ratio, orderId, `退款已核准 (${percent}%)。`);
+        function approveRefund(orderId) {
+            if (confirm('確定要「核准」退款嗎？\n核准後訂單將結案，且保母的預約時段將會釋出。')) {
+                handleApiCall('/admin/bookings/approveRefund', orderId, '退款已核准，時段已釋出。');
             }
         }
 
@@ -211,11 +159,6 @@
         function executePayout(orderId) {
             if (confirm('確定要「執行撥款」給保母嗎？\n一旦撥款，該筆訂單將標記為已結案。')) {
                 handleApiCall('/admin/bookings/payout', orderId, '撥款成功，訂單已結案。');
-            }
-        }
-        function forceComplete(orderId) {
-            if (confirm('該申請已超過退款期限（7天），確定要將其轉為「服務完成」以便撥款嗎？')) {
-                handleApiCall('/admin/bookings/forceComplete', orderId, '已轉為服務完成狀態。');
             }
         }
     </script>

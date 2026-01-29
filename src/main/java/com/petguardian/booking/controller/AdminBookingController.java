@@ -41,9 +41,10 @@ public class AdminBookingController {
     }
     @PostMapping("/approveRefund")
     @ResponseBody // 代表回傳的是純文字或 JSON，而不是跳轉頁面
-    public String approveRefund(@RequestParam Integer orderId, @RequestParam(defaultValue = "1.0") Double ratio) {
+    public String approveRefund(@RequestParam Integer orderId) {
         try {
-            bookingService.approveRefund(orderId, ratio);
+            // 1. 呼叫 Service 執行狀態修改與時段釋出
+            bookingService.approveRefund(orderId);
             return "success";
         } catch (Exception e) {
             return "error: " + e.getMessage();
@@ -71,27 +72,5 @@ public class AdminBookingController {
             orderRepository.save(order);
             return "success";
         } catch (Exception e) { return "error"; }
-    }
-    @PostMapping("/forceComplete")
-    @ResponseBody
-    public String forceComplete(@RequestParam Integer orderId) {
-        try {
-            BookingOrderVO order = orderRepository.findById(orderId).orElseThrow();
-            // 將狀態從 3 (取消/退款中) 強制改回 2 (服務完成)
-            order.setOrderStatus(2);
-            // 清除取消原因，避免混淆（選配）
-            order.setCancelReason(order.getCancelReason() + " (逾期退款，管理員強制完成)");
-            orderRepository.save(order);
-            return "success";
-        } catch (Exception e) {
-            return "error: " + e.getMessage();
-        }
-    }
-    
-    @GetMapping("/api/refund-count")
-    @ResponseBody
-    public Long getRefundRequestCount() {
-    	//計算待處理退款的訂單總數
-        return (long) orderRepository.findByOrderStatus(3).size();
     }
 }
