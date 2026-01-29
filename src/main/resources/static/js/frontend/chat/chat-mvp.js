@@ -40,7 +40,10 @@ const ChatState = {
     // Partner context for sending messages
     currentPartnerId: null,
     // Read receipt subscription
-    readSubscription: null
+    readSubscription: null,
+    // Context Menu State
+    contextMenuTargetId: null, // Message TSID
+    contextMenuTargetStatus: 0 // 0: None, 1: Pending, 2: Processed
 };
 
 // ============================================================
@@ -55,6 +58,12 @@ const DOM = {
     replyPreviewBar: null,
     replyToName: null,
     replyToText: null,
+    // Report Elements
+    reportModal: null,
+    reportReasonType: null,
+    reportReasonText: null,
+    contextMenu: null,
+    ctxReportBtn: null,
 
     init() {
         this.messageList = document.getElementById('message-list');
@@ -66,9 +75,26 @@ const DOM = {
         this.replyToName = document.getElementById('reply-to-name');
         this.replyToText = document.getElementById('reply-to-text');
 
-        // Event Listeners
+        // Report DOM initialization
+        this.reportModal = document.getElementById('reportModal');
+        this.reportReasonType = document.getElementById('reportReasonType');
+        this.reportReasonText = document.getElementById('reportReasonText');
+        this.contextMenu = document.getElementById('contextMenu');
+        this.ctxReportBtn = document.getElementById('ctx-report-btn');
+
+        // Global Event Listeners
         if (this.msgInput) {
             this.msgInput.addEventListener('input', updateSendButton);
+        }
+
+        // Hide context menu on global click
+        document.addEventListener('click', (e) => {
+            if (this.contextMenu) this.contextMenu.style.display = 'none';
+        });
+
+        // Prevent default context menu on custom menu
+        if (this.contextMenu) {
+            this.contextMenu.addEventListener('contextmenu', e => e.preventDefault());
         }
     }
 };
@@ -456,7 +482,8 @@ function renderMessagesBatch(messages, container, scrollToBottom) {
         if (msg.messageId) ChatState.messageIds.add(msg.messageId);
 
         const isSentByMe = (msg.senderId === ChatState.currentUserId);
-        const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName, msg.isRead);
+        const reportStatus = msg.reportStatus || 0;
+        const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName, msg.isRead, reportStatus);
         fragment.appendChild(msgEl);
     });
 
@@ -475,22 +502,48 @@ function renderMessagesBatch(messages, container, scrollToBottom) {
 /**
  * Create message DOM element (XSS-safe via createTextNode).
  */
-function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead) {
+function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus = 0) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isSent ? 'sent' : 'received');
 
     if (messageId) {
         msgDiv.dataset.messageId = messageId;
+        msgDiv.dataset.reportStatus = reportStatus; // Store status
         msgDiv.style.cursor = 'pointer';
+
+        // Left click: Toggle Reply
         msgDiv.addEventListener('click', function () {
             // Ignore if user is selecting text
             if (window.getSelection().toString().length > 0) return;
             toggleReply(msgDiv, messageId, content, senderName);
         });
+
+        // Right click: Context Menu
+        msgDiv.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            showContextMenu(e, messageId, reportStatus);
+        });
+
+        // Add visual indicator if reported (Status 1: Pending, 3: Rejected)
+        // Status 2 is Hidden, so handling it separately below
+        if (reportStatus == 1 || reportStatus == 3) {
+            const reportIcon = document.createElement('i');
+            reportIcon.className = 'fas fa-flag';
+            reportIcon.style.cssText = 'font-size: 10px; color: #e74c3c; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+            msgDiv.appendChild(reportIcon);
+        }
+    }
+
+    // Handle Hidden Message (Status 2: Processed)
+    if (reportStatus == 2) {
+        msgDiv.classList.add('hidden-message');
+        msgDiv.style.fontStyle = 'italic';
+        msgDiv.style.color = '#888';
+        content = "此訊息因違反社群規範已被隱藏";
     }
 
     // Reply context (if this message is a reply)
-    if (replyToContent) {
+    if (replyToContent && reportStatus !== 2) { // Hide reply context if message is hidden
         const contextDiv = document.createElement('div');
         contextDiv.className = 'reply-context';
 
@@ -645,6 +698,111 @@ function filterContacts(query) {
 }
 
 // ============================================================
+// REPORTING LOGIC
+// ============================================================
+function showContextMenu(e, messageId, status) {
+    if (!DOM.contextMenu) return;
+
+    ChatState.contextMenuTargetId = messageId;
+    ChatState.contextMenuTargetStatus = parseInt(status, 10);
+
+    // Position menu
+    DOM.contextMenu.style.display = 'block';
+    DOM.contextMenu.style.left = e.pageX + 'px';
+    DOM.contextMenu.style.top = e.pageY + 'px';
+
+    // Update Menu Option State
+    const btn = DOM.ctxReportBtn;
+    if (ChatState.contextMenuTargetStatus === 1) {
+        btn.innerHTML = '<i class="fas fa-clock"></i> 已檢舉 (待審核)';
+        btn.classList.add('disabled');
+        btn.onclick = null;
+    } else if (ChatState.contextMenuTargetStatus === 2) {
+        btn.innerHTML = '<i class="fas fa-ban"></i> 此訊息已隱藏';
+        btn.classList.add('disabled');
+        btn.onclick = null;
+    } else if (ChatState.contextMenuTargetStatus === 3) {
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> 檢舉已駁回 (已結案)';
+        btn.classList.add('disabled'); // Prevent re-report if rejected? User request says "cannot report second time"
+        btn.onclick = null;
+    } else {
+        btn.innerHTML = '<i class="fas fa-flag"></i> 檢舉此訊息';
+        btn.classList.remove('disabled');
+        btn.onclick = () => openReportModal();
+    }
+}
+
+function openReportModal() {
+    if (DOM.reportModal) {
+        DOM.reportModal.style.display = 'flex';
+        // Reset form
+        DOM.reportReasonType.value = "0";
+        DOM.reportReasonText.value = "";
+    }
+    // Context menu auto-hides via global click, but force hide here
+    if (DOM.contextMenu) DOM.contextMenu.style.display = 'none';
+}
+
+function closeReportModal() {
+    if (DOM.reportModal) DOM.reportModal.style.display = 'none';
+}
+
+function submitReport() {
+    const messageId = ChatState.contextMenuTargetId;
+    const type = parseInt(DOM.reportReasonType.value, 10);
+    const reason = DOM.reportReasonText.value.trim();
+
+    if (!messageId) return;
+    if (!reason) {
+        alert("請填寫檢舉說明");
+        return;
+    }
+
+    fetch('/api/chatrooms/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            messageId: messageId,
+            type: type,
+            reason: reason
+        })
+    })
+        .then(response => {
+            if (response.ok) {
+                alert("檢舉已送出，我們將盡快處理。");
+                closeReportModal();
+                // Optimistically update UI
+                updateMessageReportStatus(messageId, 1); // 1 = Pending
+            } else if (response.status === 409) {
+                alert("您已檢舉過此訊息。");
+                closeReportModal();
+                updateMessageReportStatus(messageId, 1);
+            } else {
+                alert("檢舉失敗，請稍後再試。");
+            }
+        })
+        .catch(err => {
+            console.error("Report error:", err);
+            alert("網路錯誤");
+        });
+}
+
+function updateMessageReportStatus(messageId, status) {
+    const msgDiv = document.querySelector(`.message[data-message-id="${messageId}"]`);
+    if (msgDiv) {
+        msgDiv.dataset.reportStatus = status;
+
+        // Add icon if not exists
+        if (!msgDiv.querySelector('.fa-flag')) {
+            const reportIcon = document.createElement('i');
+            reportIcon.className = 'fas fa-flag';
+            reportIcon.style.cssText = 'font-size: 10px; color: #e74c3c; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+            msgDiv.appendChild(reportIcon);
+        }
+    }
+}
+
+// ============================================================
 // UTILITIES
 // ============================================================
 function debounce(func, wait) {
@@ -667,7 +825,11 @@ window.ChatApp = {
     selectRoom,
     sendMessage,
     cancelReply,
-    updateSendButton
+    updateSendButton,
+    // Report public access
+    openReportModal,
+    closeReportModal,
+    submitReport
 };
 
 document.addEventListener('DOMContentLoaded', initChat);

@@ -29,6 +29,7 @@ import com.petguardian.chat.service.chatroom.ChatVerificationService;
 import com.petguardian.chat.service.mapper.ChatMessageMapper;
 import com.petguardian.chat.service.mapper.ChatRoomMapper;
 import com.petguardian.chat.service.status.ChatReadStatusService;
+import com.petguardian.chat.service.chatmessage.report.ReportStrategyService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.petguardian.chat.service.chatmessage.MessageCreationContext;
@@ -65,6 +66,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatVerificationService verificationService;
     private final SimpMessagingTemplate messagingTemplate;
     private final TSID.Factory tsidFactory;
+    private final ReportStrategyService reportStrategy;
 
     public ChatServiceImpl(
             @Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
@@ -76,7 +78,8 @@ public class ChatServiceImpl implements ChatService {
             ChatReadStatusService readStatusService,
             ChatVerificationService verificationService,
             SimpMessagingTemplate messagingTemplate,
-            TSID.Factory tsidFactory) {
+            TSID.Factory tsidFactory,
+            ReportStrategyService reportStrategy) {
         this.metadataReader = metadataReader;
         this.messageReader = messageReader;
         this.messageWriter = messageWriter;
@@ -87,6 +90,7 @@ public class ChatServiceImpl implements ChatService {
         this.verificationService = verificationService;
         this.messagingTemplate = messagingTemplate;
         this.tsidFactory = tsidFactory;
+        this.reportStrategy = reportStrategy;
     }
 
     // ============================================================
@@ -159,13 +163,15 @@ public class ChatServiceImpl implements ChatService {
         // Prepare Batch Data
         Map<String, ChatMessageEntity> replyMap = resolveReplyMap(messages);
         Map<Integer, MemberProfileDTO> memberMap = resolveMemberMap(messages, replyMap);
+        Map<String, Integer> reportStatusMap = resolveReportStatusMap(currentUserId, messages);
 
         // Delegate DTO conversion to mapper
         Integer partnerId = chatroom.getMemberIds().stream()
                 .filter(id -> !id.equals(currentUserId))
                 .findFirst()
                 .orElse(null);
-        List<ChatMessageDTO> dtos = messageMapper.toDtoList(messages, currentUserId, partnerId, memberMap, replyMap);
+        List<ChatMessageDTO> dtos = messageMapper.toDtoList(messages, currentUserId, partnerId, memberMap, replyMap,
+                reportStatusMap);
 
         // Mark last sent message as read if partner has read (only for first page)
         markLatestSelfMessageAsRead(dtos, chatroom, currentUserId, page);
@@ -248,7 +254,12 @@ public class ChatServiceImpl implements ChatService {
             }
         }
 
-        return messageMapper.toDto(saved, sender, replyContent, replySenderName, saved.getMemberId(), receiverId);
+        return messageMapper.toDto(saved, sender, replyContent, replySenderName, saved.getMemberId(), receiverId, 0); // New
+                                                                                                                      // messages
+                                                                                                                      // are
+                                                                                                                      // not
+                                                                                                                      // reported
+                                                                                                                      // yet
     }
 
     private List<ChatMessageEntity> fetchMessagesAsc(Integer chatroomId, Pageable pageable) {
@@ -334,5 +345,23 @@ public class ChatServiceImpl implements ChatService {
                 .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity())));
 
         return results;
+    }
+
+    private Map<String, Integer> resolveReportStatusMap(Integer currentUserId, List<ChatMessageEntity> messages) {
+        // Resolve report status for the current user to display in the UI (e.g.,
+        // "Reported" flag).
+        // Delegates to ReportStrategyService for efficient Batch Retrieval.
+        // Schema: Cache-Aside (Redis Batch Get -> MySQL Fallback).
+
+        if (messages.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<String> messageIds = messages.stream()
+                .map(ChatMessageEntity::getMessageId)
+                .collect(Collectors.toList());
+
+        // Use Strategy for efficient Batch Retrieval (Cache-Aside Zero SQL)
+        return reportStrategy.getBatchStatus(currentUserId, messageIds);
     }
 }
