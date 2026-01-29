@@ -86,7 +86,7 @@ public class AdminBookingController {
     @GetMapping("/api/refund-count")
     @ResponseBody
     public Long getRefundRequestCount() {
-        //計算待處理退款的訂單總數
+        //計算待處理退款的訂單總數 後台dashboard
         return (long) orderRepository.findByOrderStatus(3).size();
     }
 }
