@@ -70,7 +70,7 @@
 									<button th:if="${order.orderStatus == 2}" class="btn"
 										style="background: green;"
 										th:onclick="'executePayout(' + ${order.bookingOrderId} + ')'">執行撥款</button>
-									<button th:if="${order.orderStatus == 0}" class="btn ghost">催促保母</button>
+								<!-- 	<button th:if="${order.orderStatus == 0}" class="btn ghost">催促保母</button>  -->
 								</td>
 							</tr>
 						</tbody>

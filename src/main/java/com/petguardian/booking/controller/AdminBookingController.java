@@ -87,4 +87,11 @@ public class AdminBookingController {
             return "error: " + e.getMessage();
         }
     }
+    
+    @GetMapping("/api/refund-count")
+    @ResponseBody
+    public Long getRefundRequestCount() {
+    	//計算待處理退款的訂單總數
+        return (long) orderRepository.findByOrderStatus(3).size();
+    }
 }
