@@ -80,8 +80,8 @@ public class SitterDashboardController {
 
         // [New] 檢查停權狀態 (sitterStatus == 1, 停權)
         if (sitter.getSitterStatus() != null && sitter.getSitterStatus() == 1) {
-            redirectAttributes.addFlashAttribute("errorMessage", "您的保姆權限已被停權，無法使用此服務。");
-            return "redirect:/";
+            redirectAttributes.addFlashAttribute("errorMessage", "您已經被停權,無法使用保姆的服務,如有疑問請聯繫管理員處理");
+            return "redirect:/front/managementpage";
         }
 
         // 3. 查詢重點數據
