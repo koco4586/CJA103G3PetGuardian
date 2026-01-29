@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/back")
+@RequestMapping("/admin")
 public class AdminInsertController {
 
     @Autowired

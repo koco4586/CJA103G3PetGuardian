@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>寵物保姆服務介紹 | PetGuardian</title>
+
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+
+    <style>
+        /* 頁面專屬打底樣式 */
+        .page-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 橫幅樣式 */
+        .banner {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                        url('/images/pet/banner.jpg') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            border-radius: 0 0 20px 20px;
+        }
+
+        /* 右側主要內容區塊 */
+        .main-content {
+            flex: 1;
+            padding-left: 30px;
+        }
+
+        /* 類似圖片中的卡片樣式 */
+        .sitter-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+        }
+
+        .sitter-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 20px;
+            border: 3px solid #fdf2e9;
+        }
+
+        .sitter-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sitter-info h3 {
+            margin: 0;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #e1f5fe;
+            color: #0288d1;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .btn-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-outline {
+            border: 1px solid #dcdcdc;
+            padding: 8px 20px;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-outline:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <main class="main-content">
+    <section class="filter-section">
+        <div class="search-box">
+            <input type="text" id="serviceSearch" placeholder="想找什麼？例如：散步、安親、洗澡...">
+            <button id="btnSearch"><i class="fas fa-search"></i> 搜尋</button>
+        </div>
+        <div class="tags-group">
+            <span>熱門關鍵字：</span>
+            <button class="tag">#到府餵食</button>
+            <button class="tag">#狗狗散步</button>
+            <button class="tag">#貓咪美容</button>
+        </div>
+    </section>
+
+    <section class="service-list">
+        <h3>推薦服務項目</h3>
+        
+        <div class="service-item-card">
+            <div class="service-main-info">
+                <h4><i class="fas fa-paw"></i> 專業狗狗散步服務</h4>
+                <p class="service-desc">包含 30 分鐘戶外活動、基本的足部清潔，並會回傳狗狗運動時的照片與路徑軌跡。</p>
+                <div class="service-meta">
+                    <span class="price">NT$ 350 / 次</span>
+                    <span class="provider">提供者：堅果保姆</span>
+                </div>
+            </div>
+            <div class="service-action">
+                <button class="btn-select-service" onclick="goToSitterBooking(1)">查看保姆詳情</button>
+            </div>
+        </div>
+        
+        </section>
+</main>
+    </div>
+
+    <footer id="main-footer" class="footer"></footer>
+
+    <script th:src="@{/js/frontend/main.js}"></script>
+</body>
+</html>

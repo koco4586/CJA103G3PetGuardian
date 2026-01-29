@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員登入｜Petguardian</title>
+
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/member/login.css">
+
+    <style>
+        .auth-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f0f0f0;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 700;
+            color: #999;
+            transition: var(--transition);
+        }
+
+        .auth-tab.active {
+            background: var(--white);
+            color: var(--primary-color);
+        }
+
+        .auth-body {
+            padding: 2rem;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .social-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .social-btn:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        /* 錯誤訊息樣式 */
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .error-message.show {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error-message i {
+            font-size: 1.1rem;
+        }
+
+        /* 載入中效果 */
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .btn-primary.loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: 8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spinner 0.6s linear infinite;
+        }
+
+        @keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 輸入框焦點效果 */
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* 已登入狀態顯示 */
+        .logged-in-info {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .logged-in-info.show {
+            display: block;
+        }
+
+        .logged-in-info .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .logged-in-info h3 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .logged-in-info p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* 登入表單隱藏狀態 */
+        .login-form-container.hide {
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <header id="main-header" class="header"></header>
+
+    <div class="auth-container">
+        <div class="auth-card fade-in" id="authCard">
+            <div class="auth-tabs">
+                <div class="auth-tab active">PetGuardian寵護家</div>
+            </div>
+
+            <!-- 登入表單區域 -->
+            <div class="login-form-container" id="loginFormContainer">
+                <div id="login-form" class="auth-body">
+                    <h2 class="text-center mb-2">會員登入</h2>
+
+                    <form>
+
+                        <div class="form-group">
+                            <span class="form-label">使用者帳號</span><br>
+                            <input type="text" id="loginAcc" placeholder="請輸入使用者帳號" class="loginacc form-control"
+                                autocomplete="username" required><br>
+                        </div>
+
+                        <div class="form-group">
+                            <span class="form-label">使用者密碼</span><br>
+                            <input type="password" id="loginPw" placeholder="請輸入使用者密碼" class="loginpw form-control"
+                                autocomplete="current-password" required><br>
+                            <button type="button" class="submit" id="loginBtn">立即登入</button>
+                            <button type="reset">清除重填</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../../../../static/js/frontend/main.js"></script>
+
+    <script>
+
+        function init() {
+
+            function login(e) {
+
+                e.preventDefault();
+
+                let loginaccount = $(".loginacc").val();
+                let loginpassword = $(".loginpw").val();
+
+                let loginobject = {
+                    "memAcc": loginaccount,
+                    "memPw": loginpassword
+                }
+
+
+                let fetch_url = "http://localhost:8080/front/login";
+
+                fetch(fetch_url, {
+                    method: "POST",
+                    credentials: "include",
+                    body: JSON.stringify(loginobject),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }).then(res => res.json()).then(data => {
+                    console.log(data);
+                    if (data.result === "登入成功") {  // 後端返回 {result: true}
+                        // window.location.href = "/frontend/index.html";//要小心，配置 Spring Boot 的靜態資源路徑,在 application.properties中添加，此行設定告訴 Spring Boot：「請把這些目錄當作靜態資源目錄」
+                        alert("登入成功");
+                    }
+                });
+
+            };
+
+            $(".submit").on("click", login)
+
+        };
+
+        $(window).on("load", init);
+
+    </script>
+
+</body>
+
+</html>

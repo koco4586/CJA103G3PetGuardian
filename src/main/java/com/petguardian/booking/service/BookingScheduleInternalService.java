@@ -82,7 +82,7 @@ public class BookingScheduleInternalService {
 
         String newStatus = scheduleService.updateStatusString(schedule.getBookingStatus(), startH, endH, targetStatus);
         schedule.setBookingStatus(newStatus);
-
+        
         if (targetStatus != '0') {
             schedule.setBookingOrderId(order.getBookingOrderId());
         } else {
@@ -127,13 +127,8 @@ public class BookingScheduleInternalService {
     public void autoUpdateExpiredOrders(List<BookingOrderVO> orders) {
         LocalDateTime now = LocalDateTime.now();
         for (BookingOrderVO order : orders) {
-            // 如果是「待確認」(0) 且開始時間已過,改為「進行中」(1)
-            if (order.getOrderStatus() == 0 && order.getStartTime().isBefore(now)) {
-                order.setOrderStatus(1);
-                orderRepository.save(order);
-            }
-            // 如果是「進行中」(1) 且結束時間已過,改為「已完成」(2)
-            else if (order.getOrderStatus() == 1 && order.getEndTime().isBefore(now)) {
+            if ((order.getOrderStatus() == 0 || order.getOrderStatus() == 1) 
+                && order.getStartTime().isBefore(now)) {
                 order.setOrderStatus(2);
                 orderRepository.save(order);
             }

@@ -6,17 +6,17 @@
     <title>Pet Guardian - 消息管理</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" th:href="@{/css/backend/style.css}">
-    <link rel="stylesheet" th:href="@{/css/backend/news.css}">
-
 </head>
 
 <body>
-<!-- 側邊欄（由 sidebar.js 自動生成） -->
+<!-- 側邊欄，由 sidebar.js 自動生成 -->
 <script th:src="@{/js/backend/sidebar.js}"></script>
 
 <div class="main-content">
     <header>
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+             alt="admin-avatar" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
         <div>
             <h1>消息管理</h1>
             <div class="sub">發布與編輯站內最新消息</div>
@@ -25,152 +25,409 @@
 
     <section>
         <!-- 成功訊息提示 -->
-        <div th:if="${successMessage}" class="alert-success">
+        <div th:if="${successMessage}" class="alert-success"
+             style="background:#d4edda; border:1px solid #c3e6cb; padding:12px; border-radius:8px; margin-bottom:16px; color:#155724;">
             <i class="fas fa-check-circle"></i>
             <span th:text="${successMessage}">操作成功</span>
         </div>
 
-        <!-- 新增按鈕 -->
-        <div style="margin-bottom:16px;">
-            <button class="btn" onclick="openModal()">
-                <i class="fa-solid fa-plus"></i> 新增消息
+        <!-- 錯誤訊息提示 -->
+        <div th:if="${error}" class="alert-error"
+             style="background:#f8d7da; border:1px solid #f5c6cb; padding:12px; border-radius:8px; margin-bottom:16px; color:#721c24;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${error}">操作失敗</span>
+        </div>
+
+        <!-- 分頁標籤 -->
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchTab('news')">
+                <i class="fa-solid fa-newspaper"></i> 消息管理
+            </button>
+            <button class="tab-btn" onclick="switchTab('types')">
+                <i class="fa-solid fa-tags"></i> 類別管理
             </button>
         </div>
 
-        <!-- 消息列表 -->
-        <div class="card">
-            <h3>消息列表</h3>
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>標題</th>
-                    <th>分類</th>
-                    <th>發布日期</th>
-                    <th>狀態</th>
-                    <th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="news : ${newsList}">
-                    <td th:text="${news.newsId}">301</td>
-                    <td th:text="${news.title}">標題</td>
-                    <td>
-                        <span th:text="${news.newsType != null ? news.newsType.newsTypeName : '未分類'}">分類</span>
-                    </td>
-                    <td th:text="${#temporals.format(news.publishDate, 'yyyy-MM-dd HH:mm')}">2026-01-01</td>
-                    <td>
-                        <span th:if="${news.isPublished == 1}" style="color:green">已發布</span>
-                        <span th:if="${news.isPublished == 0}" style="color:#999">草稿</span>
-                    </td>
-                    <td>
-                        <!-- 編輯按鈕 -->
-                        <button class="btn"
-                                th:data-id="${news.newsId}"
-                                th:data-title="${news.title}"
-                                th:data-type="${news.newsType != null ? news.newsType.newsTypeId : ''}"
-                                th:data-content="${news.content}"
-                                th:data-date="${news.publishDate}"
-                                th:data-published="${news.isPublished}"
-                                onclick="editNews(this)">編輯
-                        </button>
+        <!-- ========== 消息管理面板 ========== -->
+        <div id="panel-news" class="panel active" style="display:block;">
 
-                        <!-- 刪除按鈕 -->
-                        <form th:action="@{/admin/news/delete}" method="post" style="display:inline"
-                              onsubmit="return confirm('確定要刪除嗎？');">
-                            <input type="hidden" name="id" th:value="${news.newsId}">
-                            <button type="submit" class="btn ghost">刪除</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <!-- 新增消息按鈕 -->
+            <div style="margin-bottom:16px;">
+                <button class="btn" onclick="openNewsModal()"
+                        style="background:var(--orange); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer;">
+                    <i class="fa-solid fa-plus"></i> 新增消息
+                </button>
+            </div>
+
+            <!-- 消息列表 -->
+            <div class="card" style="background:white; padding:24px; border-radius:var(--radius); box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                <h3 style="margin:0 0 16px 0;">消息列表</h3>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                        <tr style="border-bottom:2px solid #eee;">
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555;">ID</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555;">標題</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555;">分類</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555;">發布日期</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555;">狀態</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="news : ${newsList}" style="border-bottom:1px solid #eee;">
+                            <td style="padding:12px;" th:text="${news.newsId}">1</td>
+                            <td style="padding:12px;" th:text="${news.title}">標題</td>
+                            <td style="padding:12px;">
+                                <span th:text="${news.newsType != null ? news.newsType.newsTypeName : '未分類'}">分類</span>
+                            </td>
+                            <td style="padding:12px;" th:text="${#temporals.format(news.publishDate, 'yyyy-MM-dd HH:mm')}">2026-01-01</td>
+                            <td style="padding:12px;">
+                                <span th:if="${news.isPublished == 1}" style="color:#28a745; font-weight:600;">已發布</span>
+                                <span th:if="${news.isPublished == 0}" style="color:#999; font-weight:600;">草稿</span>
+                            </td>
+                            <td style="padding:12px;">
+                                <button class="btn" onclick="editNews(this)"
+                                        th:data-id="${news.newsId}"
+                                        th:data-title="${news.title}"
+                                        th:data-type="${news.newsType != null ? news.newsType.newsTypeId : ''}"
+                                        th:data-content="${news.content}"
+                                        th:data-created="${news.createdTime}"
+                                        th:data-updated="${news.updatedTime}"
+                                        th:data-publish="${news.publishDate}"
+                                        th:data-published="${news.isPublished}"
+                                        style="background:var(--orange); color:white; padding:6px 12px; border:none; border-radius:6px; cursor:pointer; margin-right:8px;">
+                                    編輯
+                                </button>
+                                <form th:action="@{/admin/news/delete}" method="post" style="display:inline;"
+                                      onsubmit="return confirm('確定要刪除這則消息嗎？');">
+                                    <input type="hidden" name="id" th:value="${news.newsId}">
+                                    <button type="submit" class="btn ghost"
+                                            style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:6px; cursor:pointer;">
+                                        刪除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(newsList)}">
+                            <td colspan="6" style="padding:40px; text-align:center; color:#999;">
+                                目前沒有任何消息
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        <!-- ========== 類別管理面板 ========== -->
+        <div id="panel-types" class="panel" style="display:none;">
+
+            <!-- 新增類別按鈕 -->
+            <div style="margin-bottom:16px;">
+                <button class="btn" onclick="openTypeModal()"
+                        style="background:var(--orange); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer;">
+                    <i class="fa-solid fa-plus"></i> 新增類別
+                </button>
+            </div>
+
+            <!-- 類別列表 -->
+            <div class="card" style="background:white; padding:24px; border-radius:var(--radius); box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                <h3 style="margin:0 0 16px 0;">消息類別列表</h3>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                        <tr style="border-bottom:2px solid #eee;">
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555; width:100px;">ID</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555;">類別名稱</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#555; width:200px;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="type : ${newsTypeList}" style="border-bottom:1px solid #eee;">
+                            <td style="padding:12px;" th:text="${type.newsTypeId}">1</td>
+                            <td style="padding:12px;" th:text="${type.newsTypeName}">平台公告</td>
+                            <td style="padding:12px;">
+                                <button class="btn" onclick="editType(this)"
+                                        th:data-id="${type.newsTypeId}"
+                                        th:data-name="${type.newsTypeName}"
+                                        style="background:var(--orange); color:white; padding:6px 12px; border:none; border-radius:6px; cursor:pointer; margin-right:8px;">
+                                    編輯
+                                </button>
+                                <form th:action="@{/admin/news/type/delete}" method="post" style="display:inline;"
+                                      onsubmit="return confirm('確定要刪除這個類別嗎？如果此類別下有消息將無法刪除。');">
+                                    <input type="hidden" name="id" th:value="${type.newsTypeId}">
+                                    <button type="submit" class="btn ghost"
+                                            style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:6px; cursor:pointer;">
+                                        刪除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(newsTypeList)}">
+                            <td colspan="3" style="padding:40px; text-align:center; color:#999;">
+                                目前沒有任何類別
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </section>
 </div>
 
-<!-- 新增/編輯 Modal -->
-<div id="newsModal" class="modal">
-    <div class="modal-content">
-        <h3 id="modalTitle">新增消息</h3>
-        <form th:action="@{/admin/news/save}" method="post">
+<!-- 新增/編輯消息 Modal -->
+<div id="newsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:12px; width:90%; max-width:700px; max-height:90vh; overflow-y:auto;">
+        <h3 id="newsModalTitle" style="margin:0 0 20px 0;">新增消息</h3>
+        <form th:action="@{/admin/news/save}" method="post" onsubmit="return handleSubmit(event)">
             <input type="hidden" id="newsId" name="newsId">
 
-            <div class="form-group">
-                <label>標題</label>
-                <input type="text" id="title" name="title" class="form-control" required>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600;">標題 <span style="color:red;">*</span></label>
+                <input type="text" id="title" name="title" required
+                       placeholder="請輸入消息標題"
+                       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; outline:none;">
             </div>
 
-            <div class="form-group">
-                <label>分類</label>
-                <select id="newsTypeId" name="newsTypeId" class="form-control">
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600;">分類 <span style="color:red;">*</span></label>
+                <select id="newsTypeId" name="newsTypeId" required
+                        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; outline:none;">
+                    <option value="">請選擇分類</option>
                     <option th:each="type : ${newsTypeList}"
                             th:value="${type.newsTypeId}"
-                            th:text="${type.newsTypeName}">分類
-                    </option>
+                            th:text="${type.newsTypeName}">分類</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>發布日期</label>
-                <input type="datetime-local" id="publishDate" name="publishDate" class="form-control" required>
+            <!-- 時間欄位區塊 -->
+            <div style="background:#f8f9fa; padding:16px; border-radius:8px; margin-bottom:16px;">
+                <h4 style="margin:0 0 12px 0; font-size:14px; color:#666;">
+                    <i class="fa-solid fa-clock"></i> 時間資訊
+                </h4>
+
+                <!-- 建立時間，唯讀 -->
+                <div id="createdTimeGroup" style="margin-bottom:12px; display:none;">
+                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:#666;">
+                        建立時間 <span style="color:#999; font-weight:400;">(系統自動記錄)</span>
+                    </label>
+                    <input type="text" id="createdTimeDisplay" readonly
+                           style="width:100%; padding:8px; border:1px solid #e0e0e0; border-radius:6px; background:#f5f5f5; color:#666; cursor:not-allowed; font-size:13px;">
+                </div>
+
+                <!-- 最後修改時間，唯讀 -->
+                <div id="updatedTimeGroup" style="margin-bottom:12px; display:none;">
+                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:#666;">
+                        最後修改時間 <span style="color:#999; font-weight:400;">(系統自動更新)</span>
+                    </label>
+                    <input type="text" id="updatedTimeDisplay" readonly
+                           style="width:100%; padding:8px; border:1px solid #e0e0e0; border-radius:6px; background:#f5f5f5; color:#666; cursor:not-allowed; font-size:13px;">
+                </div>
+
+                <!-- 發布時間，可編輯 -->
+                <div style="margin-bottom:0;">
+                    <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px;">
+                        發布時間 <span style="color:#999; font-weight:400;">(可手動設定)</span>
+                    </label>
+                    <input type="datetime-local" id="publishDate" name="publishDate"
+                           style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; outline:none; font-size:13px;">
+                    <small style="color:#999; font-size:12px;">若不填寫，將自動使用當前時間</small>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>內容</label>
-                <textarea id="content" name="content" class="form-control" rows="8" required></textarea>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600;">內容 <span style="color:red;">*</span></label>
+                <textarea id="content" name="content" rows="10" required
+                          placeholder="請輸入消息內容（支援換行）"
+                          style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; outline:none; resize:vertical;"></textarea>
             </div>
 
-            <div class="form-group">
-                <label>狀態</label>
-                <select id="isPublished" name="isPublished" class="form-control">
-                    <option value="1">發布</option>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600;">狀態</label>
+                <select id="isPublished" name="isPublished"
+                        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; outline:none;">
+                    <option value="1">發布至前台</option>
                     <option value="0">草稿</option>
                 </select>
             </div>
 
-            <div style="text-align: right; margin-top: 10px;">
-                <button type="button" class="btn ghost" onclick="closeModal()">取消</button>
-                <button type="submit" class="btn">儲存</button>
+            <div style="text-align:right;">
+                <button type="button" onclick="closeNewsModal()"
+                        style="background:#6c757d; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; margin-right:10px;">
+                    取消
+                </button>
+                <button type="submit"
+                        style="background:var(--orange); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer;">
+                    儲存
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 新增/編輯類別 Modal -->
+<div id="typeModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:12px; width:90%; max-width:400px;">
+        <h3 id="typeModalTitle" style="margin:0 0 20px 0;">新增類別</h3>
+        <form th:action="@{/admin/news/type/save}" method="post">
+            <input type="hidden" id="newsTypeIdEdit" name="newsTypeId">
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600;">類別名稱 <span style="color:red;">*</span></label>
+                <input type="text" id="newsTypeName" name="newsTypeName" required
+                       placeholder="例如：平台公告、系統維護"
+                       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; outline:none;">
+            </div>
+
+            <div style="text-align:right;">
+                <button type="button" onclick="closeTypeModal()"
+                        style="background:#6c757d; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; margin-right:10px;">
+                    取消
+                </button>
+                <button type="submit"
+                        style="background:var(--orange); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer;">
+                    儲存
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    // 開啟新增 Modal
-    function openModal() {
-        document.getElementById('newsModal').classList.add('active');
-        document.getElementById('modalTitle').innerText = '新增消息';
+    // ========== 分頁切換 ==========
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(panel => panel.style.display = 'none');
+
+        if (tab === 'news') {
+            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+            document.getElementById('panel-news').style.display = 'block';
+        } else if (tab === 'types') {
+            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+            document.getElementById('panel-types').style.display = 'block';
+        }
+    }
+
+    // ========== 格式化日期時間顯示 ==========
+    function formatDateTime(dateTimeStr) {
+        if (!dateTimeStr) return '';
+
+        // 將 ISO 格式轉換為易讀格式
+        const date = new Date(dateTimeStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
+    // ========== 表單提交處理 ==========
+    function handleSubmit(event) {
+        // 如果發布日期為空，設定為當前時間
+        const publishDateInput = document.getElementById('publishDate');
+        if (!publishDateInput.value) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            publishDateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        return true;
+    }
+
+    // ========== 消息 Modal 操作 ==========
+    function openNewsModal() {
+        document.getElementById('newsModalTitle').textContent = '新增消息';
         document.getElementById('newsId').value = '';
         document.getElementById('title').value = '';
+        document.getElementById('newsTypeId').value = '';
         document.getElementById('content').value = '';
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('publishDate').value = now.toISOString().slice(0, 16);
+        document.getElementById('publishDate').value = '';
+        document.getElementById('isPublished').value = '1';
+
+        // 隱藏建立時間和修改時間，因為是新增
+        document.getElementById('createdTimeGroup').style.display = 'none';
+        document.getElementById('updatedTimeGroup').style.display = 'none';
+
+        document.getElementById('newsModal').style.display = 'flex';
     }
 
-    // 關閉 Modal
-    function closeModal() {
-        document.getElementById('newsModal').classList.remove('active');
-    }
-
-    // 編輯消息
     function editNews(btn) {
-        document.getElementById('newsModal').classList.add('active');
-        document.getElementById('modalTitle').innerText = '編輯消息';
-
+        document.getElementById('newsModalTitle').textContent = '編輯消息';
         document.getElementById('newsId').value = btn.getAttribute('data-id');
         document.getElementById('title').value = btn.getAttribute('data-title');
         document.getElementById('newsTypeId').value = btn.getAttribute('data-type');
         document.getElementById('content').value = btn.getAttribute('data-content');
         document.getElementById('isPublished').value = btn.getAttribute('data-published');
 
-        let dateStr = btn.getAttribute('data-date');
-        if (dateStr) {
-            document.getElementById('publishDate').value = dateStr.slice(0, 16);
+        // 顯示建立時間和修改時間
+        const createdTime = btn.getAttribute('data-created');
+        const updatedTime = btn.getAttribute('data-updated');
+
+        if (createdTime) {
+            document.getElementById('createdTimeDisplay').value = formatDateTime(createdTime);
+            document.getElementById('createdTimeGroup').style.display = 'block';
+        }
+
+        if (updatedTime) {
+            document.getElementById('updatedTimeDisplay').value = formatDateTime(updatedTime);
+            document.getElementById('updatedTimeGroup').style.display = 'block';
+        }
+
+        // 設定發布時間
+        const publishDate = btn.getAttribute('data-publish');
+        if (publishDate) {
+            document.getElementById('publishDate').value = publishDate.substring(0, 16);
+        }
+
+        document.getElementById('newsModal').style.display = 'flex';
+    }
+
+    function closeNewsModal() {
+        document.getElementById('newsModal').style.display = 'none';
+    }
+
+    // ========== 類別 Modal 操作 ==========
+    function openTypeModal() {
+        document.getElementById('typeModalTitle').textContent = '新增類別';
+        document.getElementById('newsTypeIdEdit').value = '';
+        document.getElementById('newsTypeName').value = '';
+        document.getElementById('typeModal').style.display = 'flex';
+    }
+
+    function editType(btn) {
+        document.getElementById('typeModalTitle').textContent = '編輯類別';
+        document.getElementById('newsTypeIdEdit').value = btn.getAttribute('data-id');
+        document.getElementById('newsTypeName').value = btn.getAttribute('data-name');
+        document.getElementById('typeModal').style.display = 'flex';
+    }
+
+    function closeTypeModal() {
+        document.getElementById('typeModal').style.display = 'none';
+    }
+
+    // 點擊 Modal 外部關閉
+    window.onclick = function(event) {
+        const newsModal = document.getElementById('newsModal');
+        const typeModal = document.getElementById('typeModal');
+        if (event.target === newsModal) {
+            closeNewsModal();
+        }
+        if (event.target === typeModal) {
+            closeTypeModal();
         }
     }
 </script>
+
 </body>
 </html>
