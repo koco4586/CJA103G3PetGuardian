@@ -46,6 +46,12 @@ public class SitterBookingController {
                 ? bookingService.findBySitterAndStatus(sitterId, status)
                 : bookingService.getOrdersBySitterId(sitterId);
 
+        // [Debug Log] 追蹤查詢結果
+        System.out.println("DEBUG: SitterBookingController - listSitterOrders");
+        System.out.println("DEBUG: Current Sitter ID: " + sitterId);
+        System.out.println("DEBUG: Query Status: " + status);
+        System.out.println("DEBUG: Found Orders Count: " + (bookingList != null ? bookingList.size() : "null"));
+
         var member = dataService.getMemberInfo(sitterId);
 
         // 加上本月收入計算邏輯
