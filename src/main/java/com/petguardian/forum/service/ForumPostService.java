@@ -48,9 +48,18 @@ public class ForumPostService {
 		repo.save(forumPostVO);
 	}
 	
+	@Transactional
+	public void deletePost(Integer postId) {
+		ForumPostVO forumPostVO = repo.findById(postId)
+				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+		forumPostVO.setPostStatus(2);
+		repo.save(forumPostVO);
+	}
+	
 	public ForumPostVO getOnePost(Integer postId) {
-		Optional<ForumPostVO> optional = repo.findById(postId);
-		return optional.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+		ForumPostVO forumPostVO = repo.findById(postId)
+				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+		return forumPostVO;
 	}
 	
 	public List<ForumPostVO> getAllActiveByForumId(Integer forumId){
