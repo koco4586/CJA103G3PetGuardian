@@ -24,38 +24,26 @@ public class BookingFrontendController {
 
     @Autowired
     private SitterRepository sitterRepository;
-    
+
     @Autowired
     private PetRepository petRepository;
 
     @Autowired
     private AuthStrategyService authStrategyService;
-    
+
     private void addCommonAttributes(HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
-//        if (memId != null) {
-//            List<PetVO> myPets = petRepository.findByMemId(memId);
-//            model.addAttribute("myPets", myPets);
-//        }
-     // --- 測試用代碼：手動加入一隻假寵物 ---
-        PetVO dummyPet = new PetVO();
-        dummyPet.setPetId(999); // 假 ID
-        dummyPet.setPetName("測試小黑");
-        
-        // 獲取原本的寵物清單
-        List<PetVO> myPets = (memId != null) ? petRepository.findByMemId(memId) : new java.util.ArrayList<>();
-        
-        // 把假寵物塞進去
-        myPets.add(dummyPet);
-        
-        model.addAttribute("myPets", myPets);
+        if (memId != null) {
+            List<PetVO> myPets = petRepository.findByMemId(memId);
+            model.addAttribute("myPets", myPets);
+        }
     }
 
     @GetMapping("/services")
     public String showServicesPage(HttpServletRequest request, Model model) {
         // 先撈出所有啟用中的保母，讓頁面有資料顯示
         List<SitterVO> allSitters = sitterRepository.findBySitterStatus((byte) 0);
-        
+
         // [New] 排除自己 (若登入者同時也是保姆，不該在列表看到自己)
         Integer currentMemId = authStrategyService.getCurrentUserId(request);
         if (currentMemId != null) {
@@ -63,7 +51,7 @@ public class BookingFrontendController {
                     .filter(s -> !s.getMemId().equals(currentMemId))
                     .toList();
         }
-        
+
         model.addAttribute("sitters", allSitters);
         addCommonAttributes(request, model);
         return "frontend/services";

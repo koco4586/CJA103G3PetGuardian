@@ -1,5 +1,6 @@
 package com.petguardian.sitter.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,14 +23,15 @@ import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterMemberDTO;
 import com.petguardian.sitter.service.SitterService;
+import com.petguardian.sitter.service.SitterSearchService;
 
 import com.petguardian.petsitter.service.PetSitterService;
 import com.petguardian.service.service.ServiceAreaService;
-import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.service.model.ServiceAreaVO;
-import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.common.service.AuthStrategyService;
+
+import com.petguardian.petsitter.model.ServiceType;
 
 // [Refactored] Use Service interfaces instead of Repositories
 import com.petguardian.area.service.AreaService;
@@ -37,6 +39,7 @@ import com.petguardian.petsitter.service.PetSitterServicePetTypeService;
 import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
 import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
+import com.petguardian.area.model.AreaVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -52,6 +55,9 @@ public class SitterPublicController {
     private SitterService sitterService;
 
     @Autowired
+    private SitterSearchService sitterSearchService;
+
+    @Autowired
     private AuthStrategyService authStrategyService;
 
     @Autowired
@@ -59,9 +65,6 @@ public class SitterPublicController {
 
     @Autowired
     private ServiceAreaService serviceAreaService;
-
-    @Autowired
-    private BookingOrderRepository bookingOrderRepository;
 
     @Autowired
     private AreaService areaService;
@@ -118,9 +121,9 @@ public class SitterPublicController {
             List<SitterSearchDTO> results;
 
             if (!criteria.hasFilters()) {
-                results = sitterService.getAllActiveSitters();
+                results = sitterSearchService.getAllActiveSitters();
             } else {
-                results = sitterService.searchSitters(criteria);
+                results = sitterSearchService.searchSitters(criteria);
             }
 
             return ResponseEntity.ok(results);
@@ -140,7 +143,7 @@ public class SitterPublicController {
     @ResponseBody
     public ResponseEntity<List<SitterSearchDTO>> getAllSitters() {
         try {
-            List<SitterSearchDTO> results = sitterService.getAllActiveSitters();
+            List<SitterSearchDTO> results = sitterSearchService.getAllActiveSitters();
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             e.printStackTrace();
@@ -176,14 +179,14 @@ public class SitterPublicController {
      */
     @GetMapping("/districts")
     @ResponseBody
-    public ResponseEntity<List<java.util.Map<String, Object>>> getDistrictsByCity(
+    public ResponseEntity<List<Map<String, Object>>> getDistrictsByCity(
             @org.springframework.web.bind.annotation.RequestParam String city) {
         try {
-            List<com.petguardian.area.model.AreaVO> areas = areaService.getDistrictsByCity(city);
-            List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+            List<AreaVO> areas = areaService.getDistrictsByCity(city);
+            List<Map<String, Object>> result = new ArrayList<>();
 
-            for (com.petguardian.area.model.AreaVO area : areas) {
-                java.util.Map<String, Object> map = new java.util.HashMap<>();
+            for (AreaVO area : areas) {
+                Map<String, Object> map = new HashMap<>();
                 map.put("areaId", area.getAreaId());
                 map.put("district", area.getDistrict());
                 result.add(map);
@@ -220,12 +223,12 @@ public class SitterPublicController {
             List<PetSitterServicePetTypeVO> petTypes = petSitterServicePetTypeService
                     .getServicePetTypesBySitter(sitterId);
 
-            // [NEW] 建立服務項目名稱對照表 (模擬資料庫)
-            // 對應前端 profile-settings.html: 1=散步, 2=餵食, 3=洗澡
+            // [NEW] 建立服務項目名稱對照表 (使用 Enum 動態產生)
             Map<Integer, String> serviceNameMap = new HashMap<>();
-            serviceNameMap.put(1, "散步");
-            serviceNameMap.put(2, "餵食");
-            serviceNameMap.put(3, "洗澡");
+            for (ServiceType type : ServiceType
+                    .values()) {
+                serviceNameMap.put(type.getId(), type.getLabel());
+            }
 
             // [NEW] 建立服務價格對照表 (Service ID -> Price)
             Map<Integer, Integer> servicePriceMap = new HashMap<>();
@@ -250,7 +253,7 @@ public class SitterPublicController {
 
             // 3. 處理會員登入資訊 (保留原有邏輯)
             Integer memId = authStrategyService.getCurrentUserId(request);
-            List<PetVO> myPets = new java.util.ArrayList<>();
+            List<PetVO> myPets = new ArrayList<>();
 
             if (memId != null) {
                 SitterMemberVO memberVO = sitterService.getSitterMemberById(memId);

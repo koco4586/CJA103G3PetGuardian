@@ -1,6 +1,7 @@
 package com.petguardian.sitter.service;
 
 import java.util.List;
+import java.util.Map;
 import com.petguardian.sitter.model.SitterApplicationVO;
 
 public interface SitterApplicationService {
@@ -63,4 +64,21 @@ public interface SitterApplicationService {
      * @return true 若已是保姆
      */
     boolean isSitter(Integer memId);
+
+    /**
+     * [Refactor] 檢查會員申請狀態，回傳對應的提示訊息
+     * 
+     * @param memId 會員編號
+     * @return 提示訊息 (若無問題則回傳 null)
+     */
+    String checkApplicationStatus(Integer memId);
+
+    /**
+     * [Refactor] 取得申請頁面所需的初始資料 (會員名稱、電話、頭像等)
+     * 
+     * @param memId     會員編號
+     * @param avatarUrl Session 中的頭像 URL
+     * @return 包含資料的 Map
+     */
+    Map<String, Object> getApplyFormInitData(Integer memId, String avatarUrl);
 }
