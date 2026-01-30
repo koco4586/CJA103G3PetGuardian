@@ -1,6 +1,7 @@
 package com.petguardian.booking.model;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +24,16 @@ public interface BookingScheduleRepository extends JpaRepository<BookingSchedule
 
     Optional<BookingScheduleVO> findBySitterIdAndScheduleDate(@Param("sitterId") Integer sitterId,
             @Param("date") LocalDate Date);
+
+    /**
+     * [NEW] 依據保姆ID與日期區間查詢排程
+     * 用於優化月曆顯示效能，直接撈取特定月份的資料，避免全表掃描
+     * 
+     * @param sitterId  保姆編號
+     * @param startDate 開始日期 (通常是當月1號)
+     * @param endDate   結束日期 (通常是當月最後一天)
+     * @return 該區間內的排程列表
+     */
+    List<BookingScheduleVO> findBySitterIdAndScheduleDateBetween(Integer sitterId, LocalDate startDate,
+            LocalDate endDate);
 }

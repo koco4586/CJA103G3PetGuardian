@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,16 +65,11 @@ public class SitterScheduleServiceImpl implements SitterScheduleService {
         }
         Integer sitterId = sitter.getSitterId();
 
-        // 由於 BookingScheduleRepository 只有 findAll，暫時用 Java filter
-        List<BookingScheduleVO> allSchedules = bookingScheduleRepository.findAll();
+        // [Optimized] 使用資料庫直接查詢該月份資料
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        return allSchedules.stream()
-                .filter(s -> s.getSitterId().equals(sitterId))
-                .filter(s -> {
-                    LocalDate d = s.getScheduleDate();
-                    return d.getYear() == year && d.getMonthValue() == month;
-                })
-                .collect(Collectors.toList());
+        return bookingScheduleRepository.findBySitterIdAndScheduleDateBetween(sitterId, startDate, endDate);
     }
 
     @Override
