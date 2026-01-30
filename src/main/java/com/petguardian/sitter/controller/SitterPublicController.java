@@ -1,5 +1,6 @@
 package com.petguardian.sitter.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import com.petguardian.petsitter.service.PetSitterServicePetTypeService;
 import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
 import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
+import com.petguardian.area.model.AreaVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -177,14 +179,14 @@ public class SitterPublicController {
      */
     @GetMapping("/districts")
     @ResponseBody
-    public ResponseEntity<List<java.util.Map<String, Object>>> getDistrictsByCity(
+    public ResponseEntity<List<Map<String, Object>>> getDistrictsByCity(
             @org.springframework.web.bind.annotation.RequestParam String city) {
         try {
-            List<com.petguardian.area.model.AreaVO> areas = areaService.getDistrictsByCity(city);
-            List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+            List<AreaVO> areas = areaService.getDistrictsByCity(city);
+            List<Map<String, Object>> result = new ArrayList<>();
 
-            for (com.petguardian.area.model.AreaVO area : areas) {
-                java.util.Map<String, Object> map = new java.util.HashMap<>();
+            for (AreaVO area : areas) {
+                Map<String, Object> map = new HashMap<>();
                 map.put("areaId", area.getAreaId());
                 map.put("district", area.getDistrict());
                 result.add(map);
@@ -251,7 +253,7 @@ public class SitterPublicController {
 
             // 3. 處理會員登入資訊 (保留原有邏輯)
             Integer memId = authStrategyService.getCurrentUserId(request);
-            List<PetVO> myPets = new java.util.ArrayList<>();
+            List<PetVO> myPets = new ArrayList<>();
 
             if (memId != null) {
                 SitterMemberVO memberVO = sitterService.getSitterMemberById(memId);

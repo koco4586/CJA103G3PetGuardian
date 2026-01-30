@@ -26,7 +26,8 @@ import com.petguardian.service.service.ServiceAreaService;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterService;
 
-import jakarta.servlet.http.HttpSession;
+import com.petguardian.common.service.AuthStrategyService;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 保母個人設定 Controller
@@ -39,7 +40,7 @@ import jakarta.servlet.http.HttpSession;
 public class SitterProfileController {
 
     @Autowired
-    private com.petguardian.common.service.AuthStrategyService authStrategyService;
+    private AuthStrategyService authStrategyService;
 
     @Autowired
     private SitterService sitterService;
@@ -134,7 +135,7 @@ public class SitterProfileController {
     @PostMapping("/update-name")
     public String updateSitterName(
             @RequestParam String sitterName,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -177,7 +178,7 @@ public class SitterProfileController {
     public String setServicePrice(
             @RequestParam Integer serviceItemId,
             @RequestParam Integer price,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -222,7 +223,7 @@ public class SitterProfileController {
     @PostMapping("/service/delete")
     public String deleteService(
             @RequestParam Integer serviceItemId,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -265,7 +266,7 @@ public class SitterProfileController {
             @RequestParam Integer serviceItemId,
             @RequestParam Integer typeId,
             @RequestParam Integer sizeId,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -303,7 +304,7 @@ public class SitterProfileController {
     @PostMapping("/service/pet-type/delete")
     public String deleteServicePetType(
             @RequestParam Integer servicePetId,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -335,7 +336,7 @@ public class SitterProfileController {
     @PostMapping("/area/add")
     public String addServiceArea(
             @RequestParam Integer areaId,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -368,7 +369,7 @@ public class SitterProfileController {
     @PostMapping("/area/delete")
     public String deleteServiceArea(
             @RequestParam Integer areaId,
-            jakarta.servlet.http.HttpServletRequest request,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -400,7 +401,7 @@ public class SitterProfileController {
     @PostMapping("/update-schedule")
     @ResponseBody
     public Map<String, Object> updateSchedule(@RequestBody Map<String, Object> requestData,
-            jakarta.servlet.http.HttpServletRequest request) {
+            HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
 
         try {
