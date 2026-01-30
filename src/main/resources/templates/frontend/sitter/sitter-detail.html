@@ -221,13 +221,14 @@
                     </div>
                 </div>
 
-                <!-- F. 歷史評價 (暫時隱藏) -->
-                <!-- <div class="section-card">
+                <!-- F. 歷史評價 -->
+                <div class="section-card">
                     <h3 class="section-title"><i class="fas fa-comments"></i> 歷史評價</h3>
 
                     <div th:if="${reviews != null and !reviews.isEmpty()}">
                         <div class="review-card" th:each="review : ${reviews}">
                             <div class="review-header">
+                                <!-- 顯示評價者 (會員 ID 或 名稱，這裡暫用 ID) -->
                                 <strong>會員 <span th:text="${review.memId}">ID</span></strong>
                                 <div class="text-warning" th:if="${review.sitterRating != null}">
                                     <i class="fas fa-star"
@@ -244,7 +245,7 @@
                         <i class="far fa-comment-dots fa-2x mb-2"></i>
                         <p>目前尚無評價紀錄</p>
                     </div>
-                </div> -->
+                </div>
 
             </div>
         </div>

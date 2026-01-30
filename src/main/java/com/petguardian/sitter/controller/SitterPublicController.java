@@ -40,6 +40,7 @@ import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
 import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
 import com.petguardian.area.model.AreaVO;
+import com.petguardian.booking.model.BookingOrderVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -247,9 +248,8 @@ public class SitterPublicController {
              * }
              */
 
-            // 歷史評價 (僅查詢有評分的訂單)
-            // List<BookingOrderVO> reviews = bookingOrderRepository
-            // .findBySitterIdAndSitterRatingNotNullOrderByEndTimeDesc(sitterId);
+            // 歷史評價 (僅查詢有文字評論的訂單)
+            List<BookingOrderVO> reviews = sitterService.getSitterReviews(sitterId);
 
             // 3. 處理會員登入資訊 (保留原有邏輯)
             Integer memId = authStrategyService.getCurrentUserId(request);
@@ -281,7 +281,7 @@ public class SitterPublicController {
             model.addAttribute("serviceNameMap", serviceNameMap); // [NEW] 傳遞服務名稱對照表
             model.addAttribute("servicePriceMap", servicePriceMap); // [NEW] 傳遞服務價格對照表
             model.addAttribute("myPets", myPets); // [NEW] 傳遞寵物列表
-            // model.addAttribute("reviews", reviews);
+            model.addAttribute("reviews", reviews);
 
             return "frontend/sitter/sitter-detail";
 
