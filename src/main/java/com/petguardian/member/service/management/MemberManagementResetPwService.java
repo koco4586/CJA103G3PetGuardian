@@ -18,17 +18,19 @@ public class MemberManagementResetPwService {
     
     public String resetpw(MemberManagementResetPwDTO memberManagementResetPwDTO,Integer memId){
 
-        String memPw = memberManagementResetPwDTO.getMemPw();
+        String memPw = memberManagementResetPwDTO.getMemPw();//明碼
 
         String memPwCheck = memberManagementResetPwDTO.getMemPwCheck();
 
         if(!memPw.equals(memPwCheck)){
             return "密碼輸入不一致，請再次確認是否輸入正確。";
         }
-
+        
         Member member = memberManagementResetPwRepository.findById(memId).orElse(null);
 
-        member.setMemPw(passwordEncoder.encode(memPw));
+        String updatePw = passwordEncoder.encode(memPw);
+        
+        member.setMemPw(updatePw);
 
         memberManagementResetPwRepository.save(member);
 

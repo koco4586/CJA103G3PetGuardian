@@ -43,6 +43,9 @@
                 <div class="menu-item" onclick="showSection('profile')">
                     <i class="fas fa-user-md"></i> 服務設定
                 </div>
+                <div class="menu-item" onclick="showSection('reviews')">
+                    <i class="fas fa-comments"></i> 歷史評價
+                </div>
             </nav>
         </div>
 
@@ -293,9 +296,43 @@
                         <button type="submit" class="btn btn-primary btn-block mt-2">儲存所有設定</button>
                     </form>
                 </div>
-            </div>
 
+                <!-- Reviews Tab -->
+                <div id="reviews" class="tab-content">
+                    <h2 class="mb-2">歷史評價</h2>
+                    <div class="card">
+                        <div th:if="${reviews != null and !reviews.isEmpty()}">
+                            <div th:each="review : ${reviews}"
+                                style="border-bottom: 1px solid #eee; padding: 1.5rem 0; display: flex; flex-direction: column; gap: 0.5rem;">
+
+                                <div class="d-flex justify-between align-center">
+                                    <div class="d-flex align-center gap-sm">
+                                        <strong>會員 <span th:text="${review.memId}">ID</span></strong>
+                                        <span class="text-warning" th:if="${review.sitterRating != null}">
+                                            <i class="fas fa-star"
+                                                th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
+                                        </span>
+                                    </div>
+                                    <small style="color: #999;"
+                                        th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
+                                </div>
+
+                                <p class="mb-0" style="color: #555; line-height: 1.6;" th:text="${review.sitterReview}">
+                                    評價內容...
+                                </p>
+                            </div>
+                        </div>
+
+                        <div th:if="${reviews == null or reviews.isEmpty()}" class="text-center text-muted py-3">
+                            <i class="far fa-comment-dots fa-2x mb-2" style="color: #ccc;"></i>
+                            <p>目前尚無評價紀錄</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+    </div>
     </div>
 
     <!-- Cancellation Modal -->

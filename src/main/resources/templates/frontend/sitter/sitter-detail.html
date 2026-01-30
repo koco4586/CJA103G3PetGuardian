@@ -221,15 +221,23 @@
                     </div>
                 </div>
 
-                <!-- F. 歷史評價 (暫時隱藏) -->
-                <!-- <div class="section-card">
+                <!-- F. 歷史評價 -->
+                <div class="section-card">
                     <h3 class="section-title"><i class="fas fa-comments"></i> 歷史評價</h3>
 
                     <div th:if="${reviews != null and !reviews.isEmpty()}">
                         <div class="review-card" th:each="review : ${reviews}">
                             <div class="review-header">
-                                <strong>會員 <span th:text="${review.memId}">ID</span></strong>
-                                <div class="text-warning" th:if="${review.sitterRating != null}">
+                                <!-- 顯示評價者 (會員 ID 或 名稱，這裡暫用 ID) -->
+                                <div>
+                                    <strong>會員 <span th:text="${review.memId}">ID</span></strong>
+                                    <button class="btn btn-sm btn-outline-danger ms-2"
+                                        style="padding: 0px 6px; font-size: 0.8rem;"
+                                        th:onclick="'reportReview(' + ${review.bookingOrderId} + ')'">
+                                        <i class="fas fa-flag"></i> 檢舉
+                                    </button>
+                                </div>
+                                <div style="color: #ffc107;" th:if="${review.sitterRating != null}">
                                     <i class="fas fa-star"
                                         th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
                                 </div>
@@ -244,7 +252,7 @@
                         <i class="far fa-comment-dots fa-2x mb-2"></i>
                         <p>目前尚無評價紀錄</p>
                     </div>
-                </div> -->
+                </div>
 
             </div>
         </div>
@@ -432,6 +440,14 @@
             } catch (err) {
                 console.error(err);
                 alert("發生系統錯誤");
+            }
+        }
+
+        // 4. 檢舉評價 (暫時實作)
+        function reportReview(orderId) {
+            if (confirm("確定要檢舉這則評論嗎？")) {
+                alert("已收到您的檢舉 (Order ID: " + orderId + ")，管理員將進行審核。");
+                // TODO: 串接後端檢舉 API
             }
         }
     </script>

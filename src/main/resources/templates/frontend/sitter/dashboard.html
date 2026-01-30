@@ -36,6 +36,9 @@
                 <a href="/sitter/bookings" class="menu-item">
                     <i class="fas fa-calendar-check"></i> 預約管理
                 </a>
+                <a href="#reviews-card" class="menu-item">
+                    <i class="fas fa-comments"></i> 歷史評價
+                </a>
                 <div class="menu-item" style="color: var(--danger); cursor: pointer;"
                     onclick="alert('已登出'); window.location.href='/member/login'">
                     <i class="fas fa-sign-out-alt"></i> 登出
@@ -94,7 +97,9 @@
                 </div> -->
             </div>
 
-            <!-- 月曆行程表 -->
+
+
+            <!-- 月曆行程表 (Review card moved to bottom) -->
             <div class="card" id="calendar-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h3 style="font-size: 1.2rem; color: var(--primary-color);">服務行事曆 (月檢視)</h3>
@@ -315,6 +320,46 @@
 
             </div>
 
+            <!-- 歷史評價卡片 (Moved to Bottom) -->
+            <div class="card" id="reviews-card" style="margin-bottom: 2rem; margin-top: 2rem;">
+                <h3 style="font-size: 1.2rem; color: var(--primary-color); margin-bottom: 1rem;">
+                    <i class="fas fa-comments"></i> 歷史評價
+                </h3>
+
+                <div th:if="${reviews != null and !reviews.isEmpty()}">
+                    <div th:each="review : ${reviews}"
+                        style="border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;">
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <strong>會員 <span th:text="${review.memId}">ID</span></strong>
+                                <button class="btn btn-sm btn-outline-danger"
+                                    style="padding: 0px 6px; font-size: 0.8rem;"
+                                    th:onclick="'reportReview(' + ${review.bookingOrderId} + ')'">
+                                    <i class="fas fa-flag"></i> 檢舉
+                                </button>
+                                <span style="color: #ffc107;" th:if="${review.sitterRating != null}">
+                                    <i class="fas fa-star"
+                                        th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
+                                </span>
+                            </div>
+                            <small style="color: #999;"
+                                th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
+                        </div>
+
+                        <p style="margin: 0; color: #555; line-height: 1.6;" th:text="${review.sitterReview}">
+                            評價內容...
+                        </p>
+                    </div>
+                </div>
+
+                <div th:if="${reviews == null or reviews.isEmpty()}"
+                    style="text-align: center; color: #999; padding: 2rem;">
+                    <i class="far fa-comment-dots fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
+                    <p>目前尚無評價紀錄</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -337,10 +382,15 @@
 
             // [NEW] 檢查是否有待確認訂單並顯示通知
             const pendingCount = /*[[${pendingCount}]]*/ 0;
-            if (pendingCount > 0) {
+            // 檢查 sessionStorage 是否已經通知過
+            const hasNotified = sessionStorage.getItem('pendingOrderNotified');
+
+            if (pendingCount > 0 && !hasNotified) {
                 // 使用 setTimeout 確保頁面渲染完成後彈出
                 setTimeout(() => {
                     alert(`親愛的保母您好：\n目前有 ${pendingCount} 筆新的預約等待您的確認！\n請前往「預約管理」查看。`);
+                    // 設定已通知標記，避免重複彈出
+                    sessionStorage.setItem('pendingOrderNotified', 'true');
                 }, 500);
             }
 
@@ -589,6 +639,14 @@
                     alert('系統錯誤');
                     console.error(err);
                 });
+        }
+
+        // [New] 檢舉評價
+        function reportReview(orderId) {
+            if (confirm("確定要檢舉這則評論嗎？(訂單編號: " + orderId + ")")) {
+                alert("已收到您的檢舉，管理員將進行審核。");
+                // TODO: 串接後端檢舉 API
+            }
         }
     </script>
 
