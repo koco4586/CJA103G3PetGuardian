@@ -44,8 +44,8 @@ public class SitterBookingController {
             HttpServletRequest request,
             Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
-        if (memId == null)
-            return "redirect:/front/loginpage";
+//        if (memId == null)
+//            return "redirect:/front/loginpage";
 
         // [Fix] 用 MemId 查 SitterId
         SitterVO sitter = sitterService.getSitterByMemId(memId);

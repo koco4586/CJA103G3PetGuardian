@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface BookingFavoriteRepository extends JpaRepository<BookingFavoriteVO, Integer> {
+@Repository
+public interface BookingFavoriteRepository extends JpaRepository<BookingFavoriteVO, BookingFavoriteId> {
     // 檢查特定會員是否收藏過特定保母
     Optional<BookingFavoriteVO> findByMemIdAndSitterId(Integer memId, Integer sitterId);
     

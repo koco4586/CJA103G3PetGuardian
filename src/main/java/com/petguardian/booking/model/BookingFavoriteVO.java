@@ -5,58 +5,70 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
-@Table(name = "sitter_favorite") // 建議資料庫表名
+@Table(name = "pet_sitter_favorites") // 建議資料庫表名
+@IdClass(BookingFavoriteId.class)
 public class BookingFavoriteVO implements Serializable {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "sitter_fav_id")
-    private Integer sitterFavId;
 
-    @Column(name = "mem_id")
-    private Integer memId;
+	@Id
+	@Column(name = "mem_id")
+	private Integer memId;
 
-    @Column(name = "sitter_id")
-    private Integer sitterId;
+	@Id
+	@Column(name = "sitter_id")
+	private Integer sitterId;
 
-    @Column(name = "fav_time", insertable = false, updatable = false)
-    private LocalDateTime favTime;
+	@Column(name = "created_at", insertable = false, updatable = false)
+	private LocalDateTime createdAt; // 抓取收藏時間
 
-    public Integer getMemId() {
-        return memId;
-    }
+	@Transient // 不儲存到資料庫
+	private String sitterName;
 
-    public void setMemId(Integer memId) {
-        this.memId = memId;
-    }
+	@Transient
+	private Integer basePrice;
 
-    public Integer getSitterId() {
-        return sitterId;
-    }
+	public Integer getMemId() {
+		return memId;
+	}
 
-    public void setSitterId(Integer sitterId) {
-        this.sitterId = sitterId;
-    }
+	public void setMemId(Integer memId) {
+		this.memId = memId;
+	}
 
-    public Integer getSitterFavId() {
-        return sitterFavId;
-    }
+	public Integer getSitterId() {
+		return sitterId;
+	}
 
-    public void setSitterFavId(Integer sitterFavId) {
-        this.sitterFavId = sitterFavId;
-    }
+	public void setSitterId(Integer sitterId) {
+		this.sitterId = sitterId;
+	}
 
-    public LocalDateTime getFavTime() {
-        return favTime;
-    }
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
 
-    public void setFavTime(LocalDateTime favTime) {
-        this.favTime = favTime;
-    }
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public String getSitterName() {
+		return sitterName;
+	}
+
+	public void setSitterName(String sitterName) {
+		this.sitterName = sitterName;
+	}
+
+	public Integer getBasePrice() {
+		return basePrice;
+	}
+
+	public void setBasePrice(Integer basePrice) {
+		this.basePrice = basePrice;
+	}
 }

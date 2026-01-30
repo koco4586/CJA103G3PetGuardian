@@ -51,4 +51,6 @@ public interface BookingService {
 	//收藏
 	boolean toggleSitterFavorite(Integer memId, Integer sitterId);
 
+	
+	List<com.petguardian.booking.model.BookingFavoriteVO> getSitterFavoritesByMember(Integer memId);
 }

@@ -26,9 +26,15 @@ public class BookingServiceImpl implements BookingService {
 
     @Autowired
     private BookingDataIntegrationService dataService;
-    
+
     @Autowired
     private BookingFavoriteRepository sitterFavoriteRepository;
+
+    @Autowired
+    private com.petguardian.sitter.model.SitterRepository sitterRepository;
+
+    @Autowired
+    private com.petguardian.petsitter.model.PetSitterServiceRepository petSitterServiceRepository;
 
     // 會員端查詢
     @Override
@@ -216,29 +222,63 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private int calculateRefund(BookingOrderVO order) {
+
         long daysUntil = Duration.between(LocalDateTime.now(), order.getStartTime()).toDays();
         double rate = (daysUntil >= 7) ? 1.0 : (daysUntil >= 1 ? 0.5 : 0.0);
         return (int) (order.getReservationFee() * rate);
     }
-    
+
+    public List<BookingFavoriteVO> getSitterFavoritesByMember(Integer memId) {
+        List<BookingFavoriteVO> favorites = sitterFavoriteRepository.findByMemId(memId);
+
+        // 補充每個收藏的保母資料
+        for (BookingFavoriteVO fav : favorites) {
+            try {
+                // 使用 SitterRepository 查詢保母資料
+                var sitter = sitterRepository.findById(fav.getSitterId()).orElse(null);
+                if (sitter != null) {
+                    fav.setSitterName(sitter.getSitterName());
+
+                    // 查詢保母的服務價格 (取第一個服務的價格作為基礎價格)
+                    var services = petSitterServiceRepository.findBySitter_SitterId(fav.getSitterId());
+                    if (services != null && !services.isEmpty()) {
+                        fav.setBasePrice(services.get(0).getDefaultPrice());
+                    } else {
+                        fav.setBasePrice(0);
+                    }
+                } else {
+                    fav.setSitterName("未知保母");
+                    fav.setBasePrice(0);
+                }
+            } catch (Exception e) {
+                // 如果查詢失敗,設定預設值
+                fav.setSitterName("未知保母");
+                fav.setBasePrice(0);
+            }
+        }
+
+        return favorites;
+    }
+
     @Override
     public boolean toggleSitterFavorite(Integer memId, Integer sitterId) {
-        // 1. 查詢是否已經收藏 (注意：這裡要用你注入的變數名 sitterFavoriteRepository 或 bookingFavoriteRepository)
+        // 1. 查詢是否已經收藏 (注意:這裡要用你注入的變數名 sitterFavoriteRepository 或
+        // bookingFavoriteRepository)
         var existingFav = sitterFavoriteRepository.findByMemIdAndSitterId(memId, sitterId);
 
         if (existingFav.isPresent()) {
             // 2. 如果已存在，則移除收藏 (取消收藏)
             sitterFavoriteRepository.delete(existingFav.get());
-            return false; 
+            return false;
         } else {
-            // 3. 如果不存在，則新增收藏紀錄
-            // 修正點：new 的對象必須是 BookingFavoriteVO
-            BookingFavoriteVO newFav = new BookingFavoriteVO(); 
+            // 3. 如果不存在,則新增收藏紀錄
+            // 修正點:new 的對象必須是 BookingFavoriteVO
+            BookingFavoriteVO newFav = new BookingFavoriteVO();
             newFav.setMemId(memId);
             newFav.setSitterId(sitterId);
-            
+
             sitterFavoriteRepository.save(newFav);
-            return true; 
+            return true;
         }
     }
 }
