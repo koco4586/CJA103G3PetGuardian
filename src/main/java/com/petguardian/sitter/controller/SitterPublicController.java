@@ -21,17 +21,16 @@ import com.petguardian.sitter.model.SitterSearchDTO;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterMemberDTO;
-import com.petguardian.sitter.model.SitterMemberDTO;
 import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.service.SitterSearchService;
 
 import com.petguardian.petsitter.service.PetSitterService;
 import com.petguardian.service.service.ServiceAreaService;
-import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.service.model.ServiceAreaVO;
-import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.common.service.AuthStrategyService;
+
+import com.petguardian.petsitter.model.ServiceType;
 
 // [Refactored] Use Service interfaces instead of Repositories
 import com.petguardian.area.service.AreaService;
@@ -64,9 +63,6 @@ public class SitterPublicController {
 
     @Autowired
     private ServiceAreaService serviceAreaService;
-
-    @Autowired
-    private BookingOrderRepository bookingOrderRepository;
 
     @Autowired
     private AreaService areaService;
@@ -225,12 +221,12 @@ public class SitterPublicController {
             List<PetSitterServicePetTypeVO> petTypes = petSitterServicePetTypeService
                     .getServicePetTypesBySitter(sitterId);
 
-            // [NEW] 建立服務項目名稱對照表 (模擬資料庫)
-            // 對應前端 profile-settings.html: 1=散步, 2=餵食, 3=洗澡
+            // [NEW] 建立服務項目名稱對照表 (使用 Enum 動態產生)
             Map<Integer, String> serviceNameMap = new HashMap<>();
-            serviceNameMap.put(1, "散步");
-            serviceNameMap.put(2, "餵食");
-            serviceNameMap.put(3, "洗澡");
+            for (ServiceType type : ServiceType
+                    .values()) {
+                serviceNameMap.put(type.getId(), type.getLabel());
+            }
 
             // [NEW] 建立服務價格對照表 (Service ID -> Price)
             Map<Integer, Integer> servicePriceMap = new HashMap<>();

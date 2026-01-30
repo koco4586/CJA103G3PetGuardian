@@ -272,63 +272,35 @@ public class SitterSearchServiceImpl implements SitterSearchService {
 
     // [New] Hardcoded Helper Methods (To Replace Missing Tables)
 
+    // [Refactored] Use Enums instead of Hardcoded Helpers
+
     private Integer getServiceIdByName(String serviceName) {
         if (serviceName == null)
             return null;
-        switch (serviceName) {
-            case "到府照顧":
-                return 1;
-            case "到府遛狗":
-                return 2;
-            case "寵物寄宿":
-                return 3;
-            case "寵物安親":
-                return 4;
-            default:
-                return null;
-        }
+        return java.util.Arrays.stream(com.petguardian.petsitter.model.ServiceType.values())
+                .filter(s -> s.getLabel().equals(serviceName))
+                .findFirst()
+                .map(com.petguardian.petsitter.model.ServiceType::getId)
+                .orElse(null);
     }
 
     private String getServiceNameById(Integer id) {
-        if (id == null)
-            return null;
-        switch (id) {
-            case 1:
-                return "到府照顧";
-            case 2:
-                return "到府遛狗";
-            case 3:
-                return "寵物寄宿";
-            case 4:
-                return "寵物安親";
-            default:
-                return null;
-        }
+        com.petguardian.petsitter.model.ServiceType type = com.petguardian.petsitter.model.ServiceType.fromId(id);
+        return (type != null) ? type.getLabel() : null;
     }
 
     private Integer getPetTypeIdByName(String petTypeName) {
         if (petTypeName == null)
             return null;
-        switch (petTypeName) {
-            case "貓":
-                return 1;
-            case "狗":
-                return 2;
-            default:
-                return null;
-        }
+        return java.util.Arrays.stream(com.petguardian.petsitter.model.PetType.values())
+                .filter(t -> t.getLabel().equals(petTypeName))
+                .findFirst()
+                .map(com.petguardian.petsitter.model.PetType::getId)
+                .orElse(null);
     }
 
     private String getPetTypeNameById(Integer id) {
-        if (id == null)
-            return null;
-        switch (id) {
-            case 1:
-                return "貓";
-            case 2:
-                return "狗";
-            default:
-                return null;
-        }
+        com.petguardian.petsitter.model.PetType type = com.petguardian.petsitter.model.PetType.fromId(id);
+        return (type != null) ? type.getLabel() : null;
     }
 }
