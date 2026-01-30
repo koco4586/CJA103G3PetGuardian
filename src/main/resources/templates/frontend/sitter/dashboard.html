@@ -330,36 +330,32 @@
                     <div th:each="review : ${reviews}"
                         style="border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;">
 
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <strong>會員 <span th:text="${review.memId}">ID</span></strong>
-                            <!-- 檢舉按鈕 -->
-                            <button class="btn btn-sm btn-outline-danger ms-2"
-                                style="padding: 0px 6px; font-size: 0.8rem;"
-                                th:onclick="'reportReview(' + ${review.bookingOrderId} + ')'">
-                                <i class="fas fa-flag"></i> 檢舉
-                            </button>
-                            <span style="color: #ffc107;" th:if="${review.sitterRating != null}">
-                                <i class="fas fa-star" th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
-                            </span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <strong>會員 <span th:text="${review.memId}">ID</span></strong>
+                                <span style="color: #ffc107;" th:if="${review.sitterRating != null}">
+                                    <i class="fas fa-star"
+                                        th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
+                                </span>
+                            </div>
+                            <small style="color: #999;"
+                                th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
                         </div>
-                        <small style="color: #999;"
-                            th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
-                    </div>
 
-                    <p style="margin: 0; color: #555; line-height: 1.6;" th:text="${review.sitterReview}">
-                        評價內容...
-                    </p>
+                        <p style="margin: 0; color: #555; line-height: 1.6;" th:text="${review.sitterReview}">
+                            評價內容...
+                        </p>
+                    </div>
+                </div>
+
+                <div th:if="${reviews == null or reviews.isEmpty()}"
+                    style="text-align: center; color: #999; padding: 2rem;">
+                    <i class="far fa-comment-dots fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
+                    <p>目前尚無評價紀錄</p>
                 </div>
             </div>
 
-            <div th:if="${reviews == null or reviews.isEmpty()}"
-                style="text-align: center; color: #999; padding: 2rem;">
-                <i class="far fa-comment-dots fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
-                <p>目前尚無評價紀錄</p>
-            </div>
         </div>
-
-    </div>
     </div>
 
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
@@ -638,14 +634,6 @@
                     alert('系統錯誤');
                     console.error(err);
                 });
-        }
-
-        // 檢舉評價
-        function reportReview(orderId) {
-            if (confirm("確定要檢舉這則評論嗎？")) {
-                alert("已收到您的檢舉 (Order ID: " + orderId + ")，管理員將進行審核。");
-                // TODO: 串接後端檢舉 API
-            }
         }
     </script>
 
