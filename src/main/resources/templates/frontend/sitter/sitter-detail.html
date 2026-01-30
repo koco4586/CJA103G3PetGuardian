@@ -237,7 +237,7 @@
                                         <i class="fas fa-flag"></i> 檢舉
                                     </button>
                                 </div>
-                                <div class="text-warning" th:if="${review.sitterRating != null}">
+                                <div style="color: #ffc107;" th:if="${review.sitterRating != null}">
                                     <i class="fas fa-star"
                                         th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
                                 </div>
