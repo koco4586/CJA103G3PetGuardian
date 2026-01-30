@@ -1,7 +1,11 @@
 package com.petguardian.sitter.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import com.petguardian.petsitter.model.ServiceType;
+import com.petguardian.petsitter.model.PetType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -277,30 +281,30 @@ public class SitterSearchServiceImpl implements SitterSearchService {
     private Integer getServiceIdByName(String serviceName) {
         if (serviceName == null)
             return null;
-        return java.util.Arrays.stream(com.petguardian.petsitter.model.ServiceType.values())
+        return Arrays.stream(ServiceType.values())
                 .filter(s -> s.getLabel().equals(serviceName))
                 .findFirst()
-                .map(com.petguardian.petsitter.model.ServiceType::getId)
+                .map(ServiceType::getId)
                 .orElse(null);
     }
 
     private String getServiceNameById(Integer id) {
-        com.petguardian.petsitter.model.ServiceType type = com.petguardian.petsitter.model.ServiceType.fromId(id);
+        ServiceType type = ServiceType.fromId(id);
         return (type != null) ? type.getLabel() : null;
     }
 
     private Integer getPetTypeIdByName(String petTypeName) {
         if (petTypeName == null)
             return null;
-        return java.util.Arrays.stream(com.petguardian.petsitter.model.PetType.values())
+        return Arrays.stream(PetType.values())
                 .filter(t -> t.getLabel().equals(petTypeName))
                 .findFirst()
-                .map(com.petguardian.petsitter.model.PetType::getId)
+                .map(PetType::getId)
                 .orElse(null);
     }
 
     private String getPetTypeNameById(Integer id) {
-        com.petguardian.petsitter.model.PetType type = com.petguardian.petsitter.model.PetType.fromId(id);
+        PetType type = PetType.fromId(id);
         return (type != null) ? type.getLabel() : null;
     }
 }
