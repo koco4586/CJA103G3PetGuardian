@@ -62,7 +62,17 @@
     
     .btn-cancel { text-decoration: none; color: #888; font-weight: 700; }
     
-    .error-msg { color: #ff5252; font-size: 0.9rem; margin-top: 5px; font-weight: 600; }
+    /* 錯誤區塊：亮紅色強化 */
+    .error-box { background-color: #fff5f5; border: 2px solid #ff0000; padding: 15px; margin-bottom: 25px; border-radius: 8px; }
+    .error-box p { color: #cf1322; margin: 0 0 10px 0; font-weight: 900; }
+    .error-list { margin: 0; padding-left: 20px; color: #ff0000; font-weight: 600; }
+
+	/* 當檔案拖到上方時變色 */
+	.file-input-wrapper.drag-over {
+	    background-color: #fffcf5;
+	    border: 2px dashed var(--primary-orange) !important;
+	}
+
 </style>
 </head>
 <body>
@@ -72,23 +82,31 @@
             <h2>🐾 編輯您的貼文</h2>
         </div>
 
-        <form class="update-body" th:action="@{/forumpost/update}" th:object="${forumPostVO}" method="post" enctype="multipart/form-data">
+        <form class="update-body" th:action="@{/forumpost/update-post-submit}" th:object="${forumPostVO}" method="post" enctype="multipart/form-data">
             
             <input type="hidden" th:field="*{postId}">
+            <input type="hidden" th:field="*{postStatus}">
+           
+            <div th:if="${#fields.hasAnyErrors()}" class="error-box">
+                <p><i class="fas fa-exclamation-circle"></i> 錯誤訊息：</p>
+                <ul class="error-list">
+                    <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                </ul>
+            </div>
            
             <div class="form-group">
                 <label class="form-label">貼文標題</label>
                 <input type="text" th:field="*{postTitle}" class="form-control" placeholder="請輸入標題...">
-                <div class="error-msg" th:if="${#fields.hasErrors('postTitle')}" th:errors="*{postTitle}"></div>
+                <div class="error-msg" th:if="${#fields.hasErrors('postTitle')}" th:errors="*{postTitle}" style="display: none;"></div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">內容描述</label>
+                <label class="form-label">文章內容</label>
                 <textarea th:field="*{postContent}" class="form-control" placeholder="分享您的寵物趣事..."></textarea>
-                <div class="error-msg" th:if="${#fields.hasErrors('postContent')}" th:errors="*{postContent}"></div>
+                <div class="error-msg" th:if="${#fields.hasErrors('postContent')}" th:errors="*{postContent}" style="display: none;"></div>
             </div>
 			<div class="form-group">
-			    <label class="form-label">目前的封面圖</label>
+			    <label class="form-label">主頁封面圖片</label>
 			    <div class="current-pics-section">
 			        <div class="pics-grid">
 			            <div class="pic-item" style="width: 200px; height: 150px;">
@@ -102,38 +120,48 @@
 			            <span style="font-weight: 700; color: var(--primary-orange);">
 			                <i class="fas fa-image"></i> 更換封面圖
 			            </span>
-			            <input type="file" id="main-pic-input" name="mainPicFile" 
+			            <input type="file" id="main-pic-input" th:field="*{upFile}" 
 			                   style="display: none;" onchange="previewMainPic(this)">
+			            <div class="error-msg" th:if="${#fields.hasErrors('upFile')}" th:errors="*{upFile}" style="display: none;"></div>
 			        </div>
 			        <div id="main-pic-name" style="margin-top: 5px; font-size: 0.85rem; color: #666;"></div>
 			    </div>
 			</div>
-            <div class="form-group" th:if="${not #lists.isEmpty(picsId)}">
-                <label class="form-label">目前的照片</label>
-                <div class="current-pics-section">
-                    <div class="pics-grid">
-                        <div class="pic-item" th:each="picId : ${picsId}">
-                            <img th:src="@{/forum/get-pic-id-for-pic(picId=${picId})}" alt="貼文圖片">
-                        </div>
-                    </div>
-                    <small style="display: block; margin-top: 10px; color: #888;">* 若需修改照片，請在下方重新上傳（將覆蓋舊照片）</small>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">重新上傳照片 (可選)</label>
-                <div class="file-input-wrapper" onclick="document.getElementById('file-input').click()">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #aaa; margin-bottom: 10px;"></i>
-                    <p style="margin: 0; color: #666; font-weight: 600;">點擊或拖曳圖片至此處</p>
-                    <input type="file" id="file-input" name="upFiles" multiple style="display: none;" onchange="updateFileName(this)">
-                    <div id="file-list" style="margin-top: 10px; font-size: 0.9rem; color: var(--primary-orange);"></div>
-                </div>
-            </div>
+            <div class="form-group" th:if="${not #lists.isEmpty(picsId)}" id="old-pics-section">
+			    <label class="form-label">貼文附件照片</label>
+			    <div class="current-pics-section">
+			        <div class="pics-grid">
+			            <div class="pic-item" th:each="picId : ${picsId}">
+			                <img th:src="@{/forum/get-pic-id-for-pic(picId=${picId})}" alt="貼文圖片">
+			            </div>
+			        </div>
+			        <small style="display: block; margin-top: 10px; color: #888;">* 若需修改照片，請在下方重新上傳（將覆蓋舊照片）</small>
+			    </div>
+			</div>
+			
+			<div class="form-group">
+			    <label class="form-label">重新上傳照片 (可選)</label>
+			    
+			    <div id="new-pics-preview" class="pics-grid" style="margin-bottom: 15px;"></div>
+			
+			    <div class="file-input-wrapper" id="multi-drop-zone" onclick="document.getElementById('file-input').click()">
+			        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #aaa; margin-bottom: 10px;"></i>
+			        <p style="margin: 0; color: #666; font-weight: 600;">點擊或拖曳圖片至此處</p>
+			        <input type="file" id="file-input" name="upFiles" multiple style="display: none;" onchange="updateFileName(this)">
+			        <div id="file-list" style="margin-top: 10px; font-size: 0.9rem; color: var(--primary-orange);"></div>
+			    </div>
+			</div>
 
             <div class="update-footer">
                 <a href="javascript:history.back()" class="btn-cancel">取消</a>
                 <button type="submit" class="btn-save">儲存更新</button>
             </div>
+            
+            <div>
+                <input type="hidden" name="forumId" th:value="${forumId}" id="forumId" >
+	            <input type="hidden" name="forumName" th:value="${forumName}" id="forumName" >
+            </div>
+            <div id="errorData" th:if="${errorMsgs}" th:data-msgs="${errorMsgs}" style="display: none;"></div>
         </form>
     </div>
 
@@ -157,25 +185,90 @@
 	        }
 	    }
     	
-        function updateFileName(input) {
-            const fileList = document.getElementById('file-list');
-            if (input.files.length > 0) {
-                fileList.innerHTML = `已選擇 ${input.files.length} 張照片`;
-            }
-        }
+	    function updateFileName(input) {
+	        const fileList = document.getElementById('file-list');
+	        const oldSection = document.getElementById('old-pics-section');
+	        const newPreview = document.getElementById('new-pics-preview');
+	        
+	        // 清空之前的新預覽內容
+	        newPreview.innerHTML = '';
 
-        
-        window.onload = function() {
-            const errors = document.querySelectorAll('.error-msg');
-            if (errors.length > 0) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '格式錯誤',
-                    text: '請檢查輸入內容是否符合規範',
-                    confirmButtonColor: '#ff9800'
-                });
-            }
-        };
+	        if (input.files && input.files.length > 0) {
+	        	fileList.innerHTML = `✅ 已選擇 ${input.files.length} 張新照片 <br> 
+                    <small style="color: #ff5252;">(提醒：最多僅能上傳 6 張照片喔！)</small>`;
+	            
+	            // ✨ 隱藏舊圖區塊
+	            if (oldSection) {
+	                oldSection.style.display = 'none';
+	            }
+
+	            // ✨ 產生新圖預覽
+	            Array.from(input.files).forEach(file => {
+	                const reader = new FileReader();
+	                reader.onload = function(e) {
+	                    const div = document.createElement('div');
+	                    div.className = 'pic-item';
+	                    div.innerHTML = `<img src="${e.target.result}" alt="新圖片預覽">`;
+	                    newPreview.appendChild(div);
+	                };
+	                reader.readAsDataURL(file);
+	            });
+	        } else {
+	            // 如果使用者取消選擇，顯示回舊圖
+	            fileList.innerHTML = '';
+	            if (oldSection) {
+	                oldSection.style.display = 'block';
+	            }
+	        }
+	    }
+	    
+	 	// ✨ 修正：改用 ID 抓取特定的多圖拖曳區域
+	    const multiDropZone = document.getElementById('multi-drop-zone');
+	    const multiFileInput = document.getElementById('file-input');
+
+	    if (multiDropZone) {
+	        // 1. 防止瀏覽器預設行為
+	        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+	            multiDropZone.addEventListener(eventName, e => {
+	                e.preventDefault();
+	                e.stopPropagation();
+	            }, false);
+	        });
+
+	        // 2. 拖曳進入效果
+	        ['dragenter', 'dragover'].forEach(eventName => {
+	            multiDropZone.addEventListener(eventName, () => {
+	                multiDropZone.classList.add('drag-over');
+	            }, false);
+	        });
+
+	        // 3. 拖曳離開/放下效果
+	        ['dragleave', 'drop'].forEach(eventName => {
+	            multiDropZone.addEventListener(eventName, () => {
+	                multiDropZone.classList.remove('drag-over');
+	            }, false);
+	        });
+
+	        // 4. ✨ 核心邏輯：處理放下檔案
+	        multiDropZone.addEventListener('drop', e => {
+	            const dt = e.dataTransfer;
+	            const files = dt.files;
+
+	            if (files.length > 0) {
+	                // 將檔案塞入 input
+	                multiFileInput.files = files;
+	                // 手動觸發渲染
+	                updateFileName(multiFileInput);
+	            }
+	        }, false);
+	    }
+   
+     	// 處理圖片大小/張數等錯誤 (Controller 傳來的 errorMsgs)
+        const errorEl = document.getElementById('errorData');
+        if (errorEl) {
+            const msg = errorEl.getAttribute('data-msgs');
+            Swal.fire({ icon: 'error', title: '失敗', text: msg, confirmButtonColor: '#ff9800' });
+        }
     </script>
 </body>
 </html>

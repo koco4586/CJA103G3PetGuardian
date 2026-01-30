@@ -58,6 +58,42 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-icon {
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
     </style>
 </head>
 
@@ -125,12 +161,22 @@
                                     th:title="${report.reportReason}"></span>
                             </td>
                             <td>
+                                <!-- Truncated Preview -->
                                 <div
-                                    style="font-style: italic; color: #444; max-width:300px; overflow:hidden; text-overflow:ellipsis;">
+                                    style="font-style: italic; color: #444; max-width:300px; white-space: nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <span th:if="${report.message != null}"
                                         th:text="'「' + ${report.message.message} + '」'"></span>
                                     <span th:if="${report.message == null}" style="color:#999;">（訊息已刪除或無法讀取）</span>
                                 </div>
+                                <!-- Hidden Full Content -->
+                                <div th:if="${report.message != null}" th:id="'full-msg-' + ${report.reportId}"
+                                    style="display:none;" th:text="${report.message.message}"></div>
+
+                                <button th:if="${report.message != null}" type="button" class="btn ghost"
+                                    style="padding: 2px 6px; font-size: 12px; margin-top: 4px;"
+                                    th:onclick="'showContentModal(' + ${report.reportId} + ')'">
+                                    <i class="fa-solid fa-eye"></i> 查看全文
+                                </button>
                             </td>
 
                             <!-- Pending actions -->
@@ -182,6 +228,24 @@
         </div>
     </div>
 
+    <!-- Content View Modal -->
+    <div id="contentModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box" style="max-width: 600px;">
+            <div style="text-align: right; margin-bottom: -20px;">
+                <button onclick="document.getElementById('contentModal').style.display='none'"
+                    style="border:none; background:none; font-size:20px; cursor:pointer; color:#666;">&times;</button>
+            </div>
+            <h3 style="margin-bottom: 16px; color:#2c3e50;"><i class="fa-regular fa-comment-dots"></i> 訊息完整內容</h3>
+            <div id="fullContentDisplay"
+                style="background:#f8f9fa; padding:15px; border-radius:6px; text-align:left; 
+                        max-height:400px; overflow-y:auto; white-space: pre-wrap; word-break: break-all; color:#333; line-height: 1.5;">
+            </div>
+            <div class="modal-buttons" style="justify-content: center;">
+                <button onclick="document.getElementById('contentModal').style.display='none'" class="btn">關閉</button>
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
         // Basic Modal Logic
         const modal = document.getElementById('confirmModal');
@@ -189,6 +253,9 @@
         const modalMessage = document.getElementById('modalMessage');
         const modalConfirm = document.getElementById('modalConfirm');
         const modalCancel = document.getElementById('modalCancel');
+
+        const contentModal = document.getElementById('contentModal');
+        const fullContentDisplay = document.getElementById('fullContentDisplay');
 
         function showConfirmModal(action, reportId) {
             modal.style.display = 'flex';
@@ -208,6 +275,12 @@
             }
         }
 
+        function showContentModal(reportId) {
+            const content = document.getElementById('full-msg-' + reportId).innerText;
+            fullContentDisplay.innerText = content;
+            contentModal.style.display = 'flex';
+        }
+
         modalCancel.onclick = () => {
             modal.style.display = 'none';
         }
@@ -215,6 +288,9 @@
         window.onclick = (event) => {
             if (event.target == modal) {
                 modal.style.display = 'none';
+            }
+            if (event.target == contentModal) {
+                contentModal.style.display = 'none';
             }
         }
     </script>
