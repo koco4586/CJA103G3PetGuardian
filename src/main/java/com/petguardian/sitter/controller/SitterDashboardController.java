@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.booking.model.BookingScheduleVO;
+import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.model.SitterDashboardDTO;
@@ -81,6 +82,10 @@ public class SitterDashboardController {
         model.addAttribute("services", dashboardData.getServices());
         model.addAttribute("areas", dashboardData.getAreas());
         model.addAttribute("averageRating", dashboardData.getAverageRating());
+
+        // [New] 取得歷史評價
+        List<BookingOrderVO> reviews = sitterService.getSitterReviews(sitter.getSitterId());
+        model.addAttribute("reviews", reviews);
 
         // 待確認訂單數量
         model.addAttribute("pendingCount", dashboardData.getPendingOrderCount());

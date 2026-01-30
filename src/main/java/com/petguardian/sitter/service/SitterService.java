@@ -7,6 +7,7 @@ import com.petguardian.sitter.model.SitterSearchCriteria;
 import com.petguardian.sitter.model.SitterSearchDTO;
 import com.petguardian.sitter.model.SitterDashboardDTO;
 import com.petguardian.booking.model.BookingScheduleVO;
+import com.petguardian.booking.model.BookingOrderVO;
 import java.time.LocalDate;
 
 public interface SitterService {
@@ -142,4 +143,12 @@ public interface SitterService {
      * @return SitterDashboardDTO 整合後的資料物件 (若非保姆則回傳 null)
      */
     SitterDashboardDTO getDashboardData(Integer memId);
+
+    /**
+     * 取得保姆的歷史評價 (僅包含有文字評論的訂單)
+     * 
+     * @param sitterId 保姆編號
+     * @return List&lt;BookingOrderVO&gt; 評價列表
+     */
+    List<BookingOrderVO> getSitterReviews(Integer sitterId);
 }

@@ -292,4 +292,12 @@ public class SitterServiceImpl implements SitterService {
 
         return dto;
     }
+
+    /**
+     * 取得保姆的歷史評價 (僅包含有文字評論的訂單)
+     */
+    @Override
+    public List<BookingOrderVO> getSitterReviews(Integer sitterId) {
+        return bookingOrderRepository.findBySitterIdAndSitterReviewIsNotNullOrderByEndTimeDesc(sitterId);
+    }
 }
