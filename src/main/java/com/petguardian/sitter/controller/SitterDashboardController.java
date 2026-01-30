@@ -3,6 +3,7 @@ package com.petguardian.sitter.controller;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.ResponseEntity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -109,33 +110,39 @@ public class SitterDashboardController {
      * API: 儲存單日排程
      * URL: POST /sitter/api/schedule
      * Payload: { "date": "2026-01-01", "status": "00000..." }
+     * 
+     * [Refactor Note]
+     * 改寫用途：標準化 API 回傳格式
+     * 改寫方法：將回傳型別從 String 改為 ResponseEntity<?>，並以 JSON 格式回傳訊息。
+     * 這樣前端 AJAX 可以根據 HTTP 狀態碼 (200, 400, 401, 500) 進行更精確的錯誤處理。
      */
     @PostMapping("/api/schedule")
     @ResponseBody
-    public String saveSchedule(
+    public ResponseEntity<?> saveSchedule(
             HttpServletRequest request,
             @RequestBody Map<String, String> payload) {
 
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null)
-            return "fail: not authorized";
+            return ResponseEntity.status(401).body(Map.of("message", "請先登入"));
 
         try {
             String dateStr = payload.get("date");
             String status = payload.get("status");
 
             if (dateStr == null || status == null || status.length() != 24) {
-                return "fail: invalid data";
+                return ResponseEntity.badRequest().body(Map.of("message", "資料格式錯誤"));
             }
 
             java.time.LocalDate date = java.time.LocalDate.parse(dateStr);
 
             sitterService.updateScheduleForMember(memId, date, status);
 
-            return "success";
+            return ResponseEntity.ok(Map.of("message", "儲存成功"));
 
         } catch (Exception e) {
-            return "fail: " + e.getMessage();
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "儲存失敗: " + e.getMessage()));
         }
     }
 }
