@@ -1,46 +1,72 @@
+<!-- 恩臨 -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PetGuardian｜後台中心</title>
+    <title>PetGuardian｜會員管理</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/backend/style.css">
+
     <style>
-        * {
+        /* * {
             box-sizing: border-box;
-        }
+        } */
     </style>
 </head>
 
 <body>
 
-    <h1>會員帳號管理</h1>
-    <h3>會員資料查詢</h3>
-    <span>會員編號：</span>
-    <form>
-        <input type="text" placeholder="請輸入會員編號" class="searchmemid" required>
-        <button type="submit" class="selectsubmit">點擊查詢</button>
-    </form>
+    <div class="main-content">
 
-    <h3>會員列表</h3>
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>會員管理</h1>
+                <div class="sub">檢視與管理會員狀態</div>
+            </div>
+        </header>
 
-    <table>
-        <thead>
-            <tr>
-                <th>會員編號</th>
-                <th>會員姓名</th>
-                <th>電子信箱</th>
-                <th>會員狀態</th>
-                <th>註冊時間</th>
-                <th>會員頭像</th>
-            </tr>
-        </thead>
-        <tbody class="tbody"></tbody>
+        <section>
+            <div class="card">
+                <div style="margin-bottom:16px; display:flex; gap:10px;">
+                    <form style="display:flex; gap:10px; align-items:center;">
+                        <input type="text" placeholder="搜尋會員 (請輸入會員編號)" class="searchmemid" style="max-width:300px;"
+                            required>
+                        <button type="submit" class="selectsubmit btn">點擊查詢</button>
+                    </form>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>會員編號</th>
+                            <th>會員姓名</th>
+                            <th>電子信箱</th>
+                            <th>會員狀態</th>
+                            <th>註冊時間</th>
+                            <th>會員頭像</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tbody"></tbody>
 
 
-    </table>
+                </table>
+
+            </div>
+
+        </section>
+
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="/js/backend/sidebar.js"></script>
+
     <script>
 
         function init() {
@@ -70,7 +96,7 @@
                             <td>${data[i].memEmail}</td>
                             <td>
                                 <form>
-                                    <button type="submit" class="statussubmit" data-memid="${data[i].memId}">${memchinesestatus}</button>
+                                    <button type="submit" class="btn statussubmit" data-memid="${data[i].memId}">${memchinesestatus}</button>
                                  </form>  
                             </td>
                             <td>${data[i].memCreatedAt}</td>
@@ -111,7 +137,7 @@
                             <td>${data.memEmail}</td>
                             <td>
                                 <form>
-                                    <button type="submit" class="statussubmit" data-memid="${data[i].memId}">${memchinesestatus}</button>
+                                    <button type="submit" class="statussubmit" data-memid="${data.memId}">${memchinesestatus}</button>
                                  </form>  
                             </td>
                             <td>${data.memCreatedAt}</td>

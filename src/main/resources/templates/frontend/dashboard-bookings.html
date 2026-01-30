@@ -26,7 +26,7 @@
 		<div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='bookings')}"></div>
 
 		<!-- 主要內容 -->
-		<main class="dashboard-content">
+		<div class="main-content">
 			<h2 class="mb-3" style="font-weight: 700;">會員預約列表</h2>
 
 			<div class="filter-tabs-container">
@@ -119,7 +119,7 @@
 					<p style="color: #999;">目前沒有進行中的預約</p>
 				</div>
 			</div>
-		</main>
+		</div>
 	</div>
 	<div id="cancelBookingModal"
 		style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; align-items: center; justify-content: center;">

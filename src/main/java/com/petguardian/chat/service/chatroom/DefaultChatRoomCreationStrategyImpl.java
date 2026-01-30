@@ -1,8 +1,6 @@
 package com.petguardian.chat.service.chatroom;
 
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Qualifier;
-
 import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatRoomRepository;
@@ -16,15 +14,12 @@ import com.petguardian.chat.model.ChatRoomEntity;
 public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStrategy {
 
     private final ChatRoomRepository chatroomRepository;
-    private final ChatRoomMetadataReader metadataReader;
-    private final ChatRoomMetadataWriter metadataWriter;
+    private final ChatRoomMetadataService metadataService;
 
     public DefaultChatRoomCreationStrategyImpl(ChatRoomRepository chatroomRepository,
-            @Qualifier("metadataReaderProxy") ChatRoomMetadataReader metadataReader,
-            @Qualifier("metadataWriterProxy") ChatRoomMetadataWriter metadataWriter) {
+            ChatRoomMetadataService metadataService) {
         this.chatroomRepository = chatroomRepository;
-        this.metadataReader = metadataReader;
-        this.metadataWriter = metadataWriter;
+        this.metadataService = metadataService;
     }
 
     @Override
@@ -35,7 +30,7 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
         Integer type = chatroomType != null ? chatroomType : 0;
 
         // High-Performance Lookup: Cache First via Metadata Service
-        java.util.Optional<com.petguardian.chat.dto.ChatRoomMetadataDTO> cachedRoom = metadataReader
+        java.util.Optional<com.petguardian.chat.dto.ChatRoomMetadataDTO> cachedRoom = metadataService
                 .findRoomByMembers(memId1, memId2);
         if (cachedRoom.isPresent()) {
             com.petguardian.chat.dto.ChatRoomMetadataDTO meta = cachedRoom.get();
@@ -68,8 +63,8 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
         ChatRoomEntity saved = chatroomRepository.save(newRoom);
 
         // Push to Cache List
-        metadataWriter.addUserToRoom(saved.getMemId1(), saved.getChatroomId());
-        metadataWriter.addUserToRoom(saved.getMemId2(), saved.getChatroomId());
+        metadataService.addUserToRoom(saved.getMemId1(), saved.getChatroomId());
+        metadataService.addUserToRoom(saved.getMemId2(), saved.getChatroomId());
 
         return saved;
     }

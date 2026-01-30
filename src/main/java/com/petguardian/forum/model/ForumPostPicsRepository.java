@@ -3,8 +3,10 @@ package com.petguardian.forum.model;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface ForumPostPicsRepository extends JpaRepository<ForumPostPicsVO, Integer> {
 
@@ -16,4 +18,9 @@ public interface ForumPostPicsRepository extends JpaRepository<ForumPostPicsVO, 
 	@Query(value = "select p.pic from ForumPostPicsVO p where p.picId = :picId")
 	public byte[] findPicByPicId(@Param("picId") Integer picId);
 	
+	//	更新貼文時先刪除所有照片
+	@Modifying
+	@Transactional
+	@Query(value = "delete from ForumPostPicsVO p where p.forumPost.postId = :postId")
+	public void deletePicsByPostId(@Param("postId") Integer postId);
 }
