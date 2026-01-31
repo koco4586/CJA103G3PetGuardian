@@ -34,7 +34,8 @@ public class EvaluateServiceImpl implements EvaluateService {
     public List<EvaluateDTO> getByBookingOrderId(Integer bookingOrderId) {
         List<EvaluateVO> vos = repo.findByBookingOrderId(bookingOrderId);
         List<EvaluateDTO> result = new ArrayList<>();
-        if (vos == null || vos.isEmpty()) return result;
+        if (vos == null || vos.isEmpty())
+            return result;
 
         EvaluateDTO dto = new EvaluateDTO();
         dto.setBookingOrderId(bookingOrderId);
@@ -53,7 +54,8 @@ public class EvaluateServiceImpl implements EvaluateService {
     @Override
     public List<EvaluateDTO> getGroupedReviews() {
         List<EvaluateVO> allReviews = repo.findAll();
-        if (allReviews == null) return new ArrayList<>();
+        if (allReviews == null)
+            return new ArrayList<>();
 
         // 分組並過濾 null 的 OrderId
         Map<Integer, List<EvaluateVO>> grouped = allReviews.stream()
@@ -97,8 +99,9 @@ public class EvaluateServiceImpl implements EvaluateService {
         dto.setSitterContent(vo.getContent());
         dto.setSitterCreateTime(vo.getCreateTimeText());
     }
+
+    @Override
+    public List<EvaluateVO> getReviewsBySitterId(Integer sitterId) {
+        return repo.findByReceiverId(sitterId);
+    }
 }
-
-		
-	
-

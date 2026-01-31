@@ -366,6 +366,8 @@
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
     <script src="/js/frontend/main.js"></script>
+    <script src="/js/frontend/evaluate-functions.js"></script>
+    <script src="/js/frontend/complaint-functions.js"></script>
 
     <script th:inline="javascript">
         // 全域變數
@@ -647,6 +649,12 @@
                 alert("已收到您的檢舉，管理員將進行審核。");
                 // TODO: 串接後端檢舉 API
             }
+        }
+
+        // 載入評價資料（保母主頁專用佈局）
+        // 使用上面已經宣告的 sitterId 變數（第 372 行）
+        if (sitterId) {
+            loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList');
         }
     </script>
 

@@ -482,13 +482,29 @@ public class PetController {
             // 1. 執行刪除
             petService.deletePet(petId);
 
-            // 2. 直接回傳成功訊息
-            redirectAttributes.addFlashAttribute("message", "寵物資料已成功刪除！");
-
             // 3. 刪除後返回原本的列表頁面 (Dashboard)
             return "redirect:/pet/dashboard";
         } catch (Exception e) {
             return "error: 刪除失敗";
+        }
+    }
+
+    /**
+     * API 端點：根據保姆 ID 撈取所有評價資料
+     * URL: /pet/evaluate/list/{sitterId}
+     * 
+     * @param sitterId 保姆 ID
+     * @return 該保姆的所有評價列表 (JSON 格式)
+     */
+    @GetMapping("/evaluate/list/{sitterId}")
+    @ResponseBody
+    public ResponseEntity<List<EvaluateVO>> getReviewsBySitterId(@PathVariable Integer sitterId) {
+        try {
+            List<EvaluateVO> reviews = evaluateService.getReviewsBySitterId(sitterId);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
         }
     }
 
@@ -506,9 +522,9 @@ public class PetController {
         BookingOrderVO order = bookingOrderSvc.getOrderById(orderId);
 
         if (order != null) {
-        	boolean isSitterOfOrder = memId.equals(order.getSitterId());
+            boolean isSitterOfOrder = memId.equals(order.getSitterId());
             model.addAttribute("isSitter", isSitterOfOrder);
-        	model.addAttribute("currentOrderId", order.getBookingOrderId());
+            model.addAttribute("currentOrderId", order.getBookingOrderId());
             model.addAttribute("sitterId", order.getSitterId());
             model.addAttribute("orderInfo", order);
 
