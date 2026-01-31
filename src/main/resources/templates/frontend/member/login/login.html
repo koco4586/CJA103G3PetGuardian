@@ -6,10 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>會員登入｜Petguardian</title>
 
-    <link rel="stylesheet" href="/css/frontend/style.css">
-    <link rel="stylesheet" href="/css/frontend/components.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
         * {
             box-sizing: border-box;
@@ -19,56 +15,20 @@
 </head>
 
 <body>
-
-    <h1>PetGuardian寵護家</h1>
+    <div>PetGuardian寵護家</div>
 
     <h2>會員登入</h2>
 
     <form>
-
         <span>使用者帳號</span><br>
         <input type="text" placeholder="請輸入使用者帳號" class="loginacc" required><br><br>
         <span>使用者密碼</span><br>
         <input type="password" placeholder="請輸入使用者密碼" class="loginpw" required><br><br>
         <button type="submit" class="submit">立即登入</button>
         <button type="reset">清除重填</button>
-
-    <header id="main-header" class="header"></header>
-
-    <div class="auth-container">
-        <div class="auth-card fade-in" id="authCard">
-            <div class="auth-tabs">
-                <div class="auth-tab active">PetGuardian寵護家</div>
-            </div>
-
-            <!-- 登入表單區域 -->
-            <div class="login-form-container" id="loginFormContainer">
-                <div id="login-form" class="auth-body">
-                    <h2 class="text-center mb-2">會員登入</h2>
-
-                    <form id="loginForm">
-
-                        <div class="form-group">
-                            <span class="form-label">使用者帳號</span><br>
-                            <input type="text" id="loginAcc" placeholder="請輸入使用者帳號" class="loginacc form-control"
-                                autocomplete="username" required><br><br>
-                        </div>
-
-                        <div class="form-group">
-                            <span class="form-label">使用者密碼</span><br>
-                            <input type="password" id="loginPw" placeholder="請輸入使用者密碼" class="loginpw form-control"
-                                autocomplete="current-password" required><br><br>
-                            <button type="button" id="loginBtn" class="submit btn btn-primary" style="width: 100%;">立即登入</button>
-                            <button type="reset">清除重填</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    </form>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/js/frontend/main.js"></script>
 
     <script>
 
@@ -98,9 +58,9 @@
                     }
                 }).then(res => res.json()).then(data => {
                     console.log(data);
-                    if (data.result === "登入成功") {  // 後端返回 {result: true}
+                    if (data.result === "登入成功") {  
                         // window.location.href = "/frontend/index.html";//要小心，配置 Spring Boot 的靜態資源路徑,在 application.properties中添加，此行設定告訴 Spring Boot：「請把這些目錄當作靜態資源目錄」
-                    alert("登入成功，PetGuardian寵護家歡迎您～");
+                        alert("登入成功，PetGuardian寵護家歡迎您～");
                     }
                 });
 
