@@ -92,6 +92,10 @@ public class ForumPostService {
 		return repo.findAllDeletedPosts();
 	}
 	
+	public List<ForumPostVO> getAllPostCollectionsByMemId(Integer memId){
+		return repo.findAllPostCollectionsByMemId(memId);
+	}
+	
 	public byte[] getPostPic(Integer postId) {
 		return repo.getPicture(postId);
 	}

@@ -226,7 +226,7 @@
                     <div class="sub-tabs" style="margin-bottom: 0;">
                         <div class="sub-tab" onclick="filterFavorites('sitters', this)">保母</div>
                         <div class="sub-tab active" onclick="filterFavorites('store', this)">二手商品</div>
-                        <div class="sub-tab" onclick="filterFavorites('articles', this)">文章</div>
+                        <a class="sub-tab" th:href="@{/forumpost/post-collection}">文章</a>
                     </div>
                     <span style="color: #999; font-size: 0.9rem;"
                         th:text="${favorites != null} ? '共 ' + ${#lists.size(favorites)} + ' 件商品' : '共 0 件商品'">

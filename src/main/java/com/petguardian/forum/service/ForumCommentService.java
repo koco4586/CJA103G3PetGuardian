@@ -44,17 +44,12 @@ public class ForumCommentService {
 		return repo.findAllCommentsByPostId(postId);
 	}
 	
+	public List<DeletedCommentDTO> getAllDeletedComments() {
+		return repo.findAllDeletedComments();
+	}
+	
 	@Transactional
 	public void addCommentByPostId(String commentContent, Integer postId, Integer memberId) {
-
-		// ForumPostVO forumPostVO = new ForumPostVO();
-		// ForumPostCommentVO forumPostCommentVO = new ForumPostCommentVO();
-		//
-		// forumPostVO.setPostId(postId);
-		// forumPostCommentVO.setCommentContent(commentContent);
-		// forumPostCommentVO.setForumPost(forumPostVO);
-		//
-		// repo.save(forumPostCommentVO);
 
 		ForumPostVO forumPostVO = postRepo.findById(postId)
 				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
@@ -72,8 +67,21 @@ public class ForumCommentService {
 
 	}
 	
-	public List<DeletedCommentDTO> getAllDeletedComments() {
-		return repo.findAllDeletedComments();
+	@Transactional
+	public void updateCommentByPostId(String commentContent, Integer commentId, Integer memberId) {
+		
+		ForumCommentVO forumCommentVO = repo.findById(commentId)
+				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
+		
+		forumCommentVO.setCommentContent(commentContent);
+		
+		// 使用傳入的 memberId
+		Member member = new Member();
+		member.setMemId(memberId);
+		forumCommentVO.setMember(member);
+
+		repo.save(forumCommentVO);
+		
 	}
 	
 }

@@ -95,6 +95,25 @@ public class Member {
     private Set<ForumCommentReportVO> forumCommentReports;
     
     // 羽澈
+    @ManyToMany
+	@JoinTable(
+			   name = "forumpostcollection",
+			   joinColumns = { @JoinColumn( name = "mem_id", referencedColumnName = "mem_id" ) },
+			   inverseJoinColumns = { @JoinColumn( name = "post_id", referencedColumnName = "post_id") }
+			  )
+    private Set<ForumPostVO> postCollections;
+    
+    // 羽澈
+    public Set<ForumPostVO> getPostCollections() {
+		return postCollections;
+	}
+    
+    // 羽澈
+	public void setPostCollections(Set<ForumPostVO> postCollections) {
+		this.postCollections = postCollections;
+	}
+
+	// 羽澈
     public Set<ForumCommentReportVO> getForumCommentReports() {
 		return forumCommentReports;
 	}

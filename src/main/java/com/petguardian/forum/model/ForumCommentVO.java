@@ -33,9 +33,6 @@ public class ForumCommentVO implements Serializable{
 	@Column(name = "comment_id", updatable = false)
 	private Integer commentId;
 	
-//	@Column(name = "mem_id", updatable = false)
-//	private Integer memId;
-	
 	@ManyToOne
 	@JoinColumn(name = "mem_id", referencedColumnName = "mem_id")
 	private Member member;
@@ -43,9 +40,6 @@ public class ForumCommentVO implements Serializable{
 	@ManyToOne
 	@JoinColumn(name = "post_id", referencedColumnName = "post_id")
 	private ForumPostVO forumPost;
-	
-//	@Column(name = "post_id", updatable = false)
-//	private Integer postId;
 	
 	@OneToMany(mappedBy = "forumComment")
 	@OrderBy("reportId asc")
@@ -115,22 +109,6 @@ public class ForumCommentVO implements Serializable{
 	public void setCommentId(Integer commentId) {
 		this.commentId = commentId;
 	}
-
-//	public Integer getMemId() {
-//		return memId;
-//	}
-//
-//	public void setMemId(Integer memId) {
-//		this.memId = memId;
-//	}
-
-//	public Integer getPostId() {
-//		return postId;
-//	}
-//
-//	public void setPostId(Integer postId) {
-//		this.postId = postId;
-//	}
 
 	public String getCommentContent() {
 		return commentContent;
