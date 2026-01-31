@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 | PetGuardian</title>
+    <link rel="stylesheet" href="/css/frontend/style.css">
+    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/frontend/dashboard.css">
+    <link rel="stylesheet" href="/css/frontend/store.css">
+
+
+</head>
+<body>
+	
+	
+
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/4.0.2/timeago.full.min.js"></script>
+	<script src="/js/frontend/main.js"></script>
+	<script th:inline="javascript">
+ 		// Timeago 初始化
+        const nodes = document.querySelectorAll('.need-timeago');
+        if (nodes.length) timeago.render(nodes, 'zh_TW');
+        
+    </script>
+</body>
+</html>

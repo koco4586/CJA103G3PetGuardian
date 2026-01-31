@@ -35,6 +35,10 @@ public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer>
 	""")
 	public List<DeletedPostDTO> findAllDeletedPosts();
 	
+	//	拿該會員所有收藏中的貼文
+	@Query(value = "select distinct p from ForumPostVO p join fetch p.members m where m.memId = :memId order by p.createdAt desc")
+	public List<ForumPostVO> findAllPostCollectionsByMemId(@Param("memId") Integer memId);
+	
 	//	只拿主頁圖片方法
 	@Query(value = "select p.postPic from ForumPostVO p where p.postId = :postId")
 	public byte[] getPicture(@Param("postId") Integer postId);

@@ -14,7 +14,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.validation.constraints.AssertTrue;
 
 @Entity
 @Table(name = "forumpostpicture")
@@ -28,9 +27,6 @@ public class ForumPostPicsVO implements Serializable{
 	@ManyToOne
 	@JoinColumn(name = "post_id", referencedColumnName = "post_id")
 	private ForumPostVO forumPost;
-	
-//	@Column(name = "post_id", updatable = false)
-//	private Integer postId;
 	
 	@Lob
 	@Column(name = "pic", nullable = true, columnDefinition = "longblob")
@@ -67,14 +63,6 @@ public class ForumPostPicsVO implements Serializable{
 		this.picId = picId;
 	}
 
-//	public Integer getPostId() {
-//		return postId;
-//	}
-//
-//	public void setPostId(Integer postId) {
-//		this.postId = postId;
-//	}
-
 	public byte[] getPic() {
 		return pic;
 	}
@@ -83,7 +71,7 @@ public class ForumPostPicsVO implements Serializable{
 		this.pic = pic;
 	}
 	
-	//	驗證上傳檔案是否為圖片檔
+//	驗證上傳檔案是否為圖片檔
 //	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
 //	public boolean isImage() {
 //	
@@ -105,7 +93,7 @@ public class ForumPostPicsVO implements Serializable{
 //		return true;
 //	}
 	
-	//	驗證單張圖片大小跟總上傳檔案大小
+//	驗證單張圖片大小跟總上傳檔案大小
 //	@AssertTrue(message = "單張圖片大小不得超過 1MB，且總上傳檔案不得超過 5MB")
 //	public boolean isSize() {
 //		if (upFiles == null || upFiles.length == 0) {
