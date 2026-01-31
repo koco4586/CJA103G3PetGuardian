@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetGuardian｜管理員修改個人資料</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .outer {
+            border: 1px solid lightgray;
+            background-color: lightcyan;
+            border-radius: 30px;
+            padding: 20px;
+        }
+
+        .mustbe {
+            color: red;
+        }
+
+        .rightword {
+            color: rgb(57, 191, 236);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="outer">
+        <h1>Petguardian寵護家</h1>
+        <h3>管理員基本資料管理</h3>
+
+        <form>
+            <input type="file" class="adm_image">
+            <div class="show_image"></div>
+            <br><br><!-- 管理員頭像 -->
+
+            <span class="mustbe">*必填</span>
+            <span>姓名</span><br>
+            <input type="text" class="adm_name" placeholder="請輸入管理員姓名" required><br><br>
+
+            <span class="mustbe">*必填</span>
+            <span>帳號</span><br>
+            <input type="text" class="adm_acc" placeholder="請輸入管理員帳號" required><br><br>
+
+            <span>密碼</span><br>
+            <input type="password" class="adm_pw" placeholder="********" disabled>
+            <a href="./admin_resetpw.html">變更密碼</a><br><br>
+
+            <span class="mustbe">*必填</span>
+            <span>電子信箱</span><br>
+            <input type="email" class="adm_email" placeholder="請輸入管理員電子信箱" required><br><br>
+
+            <span>手機號碼</span><br>
+            <input type="tel" class="adm_tel" placeholder="請輸入管理員手機號碼">
+            <span class="rightword">範例：0912345678</span><br><br>
+
+            <button type="submit" class="submit">儲存變更</button>
+            <button type="reset">清除重填</button><br><br>
+        </form>
+        <a href="#">返回首頁</a>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+
+        function init() {
+
+            function adminupdateinfo(e) {
+
+                e.preventDefault();
+
+                let admImage = $(".adm_image")[0].files[0]
+                let admName = $(".adm_name").val();
+                let admAccount = $(".adm_acc").val();
+                let admEmail = $(".adm_email").val();
+                let admTel = $(".adm_tel").val();
+
+                let formData = new FormData();
+
+                formData.append("admImage", admImage);
+                formData.append("admName", admName);
+                formData.append("admAccount", admAccount);
+                formData.append("admEmail", admEmail);
+                formData.append("admTel", admTel);
+
+                fetch("http://localhost:8080/admin/adminupdateinfo", {
+                    method: "PUT",
+                    credentials: "include",
+                    body: formData         //FormData 是瀏覽器提供的「表單資料物件」,瀏覽器會自動Content-Type: multipart/form-data
+                }).then(res => res.json()).then(data => {
+                    console.log(data);
+                    $(".show_image").append(`<img src="${data.admImage}" style="width: 200px;">`);
+                    alert("變更成功");
+                });
+
+            }
+
+            $(".submit").on("click", adminupdateinfo);
+
+        };
+
+        $(window).on("load", init);
+
+    </script>
+
+</body>
+
+</html>

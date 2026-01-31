@@ -232,11 +232,20 @@
 
                         <!-- 收件人資訊 -->
                         <div class="card">
-                            <h3 class="mb-2">
-                                <i class="fas fa-user-circle"
-                                    style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                                收件人資訊
-                            </h3>
+                            <div class="d-flex justify-between align-center mb-2">
+                                <h3 style="margin: 0;">
+                                    <i class="fas fa-user-circle"
+                                        style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                                    收件人資訊
+                                </h3>
+                                <button type="button" class="btn btn-outline btn-sm" id="fill-member-info-btn"
+                                    th:data-name="${currentMember != null ? currentMember.memName : ''}"
+                                    th:data-tel="${currentMember != null ? currentMember.memTel : ''}"
+                                    th:data-add="${currentMember != null ? currentMember.memAdd : ''}"
+                                    onclick="fillMemberInfo(this)">
+                                    <i class="fas fa-user-check"></i> 帶入會員資料
+                                </button>
+                            </div>
 
                             <div class="form-group">
                                 <label class="form-label required">收件人姓名</label>
@@ -535,6 +544,50 @@
 
     <!-- JavaScript：表單驗證與訊息處理 -->
     <script>
+        // 帶入會員資料功能
+        function fillMemberInfo(btn) {
+            const name = btn.dataset.name || '';
+            const tel = btn.dataset.tel || '';
+            const add = btn.dataset.add || '';
+
+            // 檢查是否有會員資料
+            if (!name && !tel && !add) {
+                alert('目前沒有可帶入的會員資料，請先至會員中心完善個人資料。');
+                return;
+            }
+
+            // 填入表單欄位
+            if (name) {
+                document.getElementById('receiverName').value = name;
+                clearError('receiverName');
+            }
+            if (tel) {
+                document.getElementById('receiverPhone').value = tel;
+                clearError('receiverPhone');
+            }
+            if (add) {
+                document.getElementById('receiverAddress').value = add;
+                clearError('receiverAddress');
+            }
+
+            // 顯示成功提示
+            const filledFields = [];
+            if (name) filledFields.push('姓名');
+            if (tel) filledFields.push('電話');
+            if (add) filledFields.push('地址');
+
+            if (filledFields.length > 0) {
+                // 按鈕暫時顯示成功狀態
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> 已帶入';
+                btn.disabled = true;
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }, 1500);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // Auto-hide flash messages
             const flashMessages = document.querySelectorAll('.flash-message');

@@ -30,7 +30,7 @@ body {
     min-height: 100vh;
 }
 
-/* --- 側邊欄 (固定左側滿版) --- */
+/* 側邊欄固定左側滿版 */
 nav {
     position: fixed;
     top: 0;
@@ -39,21 +39,40 @@ nav {
     height: 100vh;
     background: var(--white);
     border-right: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 24px;
+    padding: 16px 20px 0 20px;
     overflow-y: auto;
     z-index: 1000;
     display: flex;
     flex-direction: column;
 }
 
+/* 隱藏滾動條但保持功能 */
+nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+nav::-webkit-scrollbar-thumb {
+    background: rgba(107, 76, 59, 0.2);
+    border-radius: 2px;
+}
+
+nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 76, 59, 0.3);
+}
+
 nav .logo {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: var(--brown);
-    margin-bottom: 32px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding-left: 10px;
+    gap: 8px;
+    padding-left: 8px;
+    flex-shrink: 0;
 }
 
 nav ul {
@@ -61,20 +80,22 @@ nav ul {
     padding: 0;
     margin: 0;
     flex: 1;
+    padding-bottom: 140px;
 }
 
 nav li {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 nav li a {
     display: block;
-    padding: 12px 16px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
     color: var(--brown);
     text-decoration: none;
     transition: all 0.2s;
     font-weight: 500;
+    font-size: 0.95rem;
 }
 
 nav li a:hover {
@@ -88,12 +109,13 @@ nav li.active a {
 }
 
 nav li i {
-    width: 24px;
+    width: 20px;
     text-align: center;
     margin-right: 8px;
+    font-size: 0.9rem;
 }
 
-/* --- 側邊欄下拉選單 --- */
+/* 側邊欄下拉選單 */
 nav li.has-submenu > a {
     display: flex;
     justify-content: space-between;
@@ -109,7 +131,7 @@ nav li.has-submenu > a .arrow {
     width: auto;
     margin-right: 0;
     margin-left: 8px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     transition: transform 0.3s ease;
 }
 
@@ -131,7 +153,7 @@ nav .submenu {
 }
 
 nav li.has-submenu.open .submenu {
-    max-height: 200px;
+    max-height: 150px;
 }
 
 nav .submenu li {
@@ -139,9 +161,9 @@ nav .submenu li {
 }
 
 nav .submenu li a {
-    padding: 10px 16px 10px 44px;
-    font-size: 0.9rem;
-    border-radius: 8px;
+    padding: 8px 14px 8px 38px;
+    font-size: 0.88rem;
+    border-radius: 6px;
     color: var(--brown);
     opacity: 0.85;
 }
@@ -159,14 +181,13 @@ nav .submenu li.active a {
 }
 
 nav .submenu li i {
-    width: 20px;
-    font-size: 0.85rem;
+    width: 18px;
+    font-size: 0.8rem;
 }
 
-/* --- 右側主要內容區 --- */
+/* 右側主要內容區 */
 .main-content {
     margin-left: var(--sidebar-width);
-    /* 讓出左側空間 */
     flex: 1;
     padding: 30px;
     width: calc(100% - var(--sidebar-width));
@@ -309,18 +330,15 @@ input:focus {
         width: 100%;
         padding: 16px;
     }
-
-    /* 需要加 JS 控制手機版選單開啟，這邊先保留基本樣式 */
 }
 
-/* --- 側邊欄開關控制 (通用) --- */
+/* 側邊欄開關控制 */
 .menu-btn {
     font-size: 24px;
     background: none;
     border: none;
     cursor: pointer;
     display: none;
-    /* 平時隱藏 */
     color: var(--brown);
     padding: 0;
 }
@@ -330,7 +348,7 @@ nav.active {
     transform: translateX(0) !important;
 }
 
-/* 遮罩層：手機版選單打開時，背景變暗 */
+/* 遮罩層手機版選單打開時背景變暗 */
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -340,14 +358,13 @@ nav.active {
     height: 100%;
     background: rgba(0, 0, 0, 0.4);
     z-index: 999;
-    /* 位於 nav (1000) 之下 */
 }
 
 .sidebar-overlay.active {
     display: block;
 }
 
-/* --- 響應式調整 --- */
+/* 響應式調整 */
 @media (max-width: 992px) {
     .menu-btn { display: block; }
 
@@ -365,7 +382,6 @@ nav.active {
         padding: 16px;
     }
 }
-
 
 /* 分頁按鈕樣式 */
 .tab-container {
@@ -397,4 +413,515 @@ nav.active {
 .tab-btn.active {
     background-color: var(--orange);
     color: #fff;
+}
+
+/* 側邊欄底部樣式 */
+.sidebar-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    padding: 12px 20px 16px 20px;
+    background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0.95));
+    border-top: 1px solid rgba(107, 76, 59, 0.1);
+    z-index: 1001;
+}
+
+/* 管理員資訊顯示 */
+.admin-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--brown);
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background: rgba(244, 221, 151, 0.3);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.admin-info i {
+    font-size: 0.95rem;
+    color: var(--orange);
+}
+
+:root {
+    --yellow: #f4dd97;
+    /* 淺黃 */
+    --orange: #ce875be8;
+    /* 橘 */
+    --brown: #6B4C3B;
+    /* 咖 */
+    --white: #FFFFFF;
+    /* 白 */
+    --muted: #F7F3F0;
+    /* 淺灰底 */
+    --glass: rgba(255, 255, 255, 0.95);
+    --radius: 12px;
+    --sidebar-width: 260px;
+    /* 設定側邊欄寬度 */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', 'Helvetica Neue', Arial;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: var(--muted);
+    /* 背景色 */
+    color: #222;
+    display: flex;
+    /* 使用 Flex 排版 */
+    min-height: 100vh;
+}
+
+/* 側邊欄固定左側滿版 */
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--white);
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 16px 20px 0 20px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 隱藏滾動條但保持功能 */
+nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+nav::-webkit-scrollbar-thumb {
+    background: rgba(107, 76, 59, 0.2);
+    border-radius: 2px;
+}
+
+nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 76, 59, 0.3);
+}
+
+nav .logo {
+    font-size: 1.3rem;
+    color: var(--brown);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 8px;
+    flex-shrink: 0;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+    padding-bottom: 140px;
+}
+
+nav li {
+    margin-bottom: 4px;
+}
+
+nav li a {
+    display: block;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: var(--brown);
+    text-decoration: none;
+    transition: all 0.2s;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+nav li a:hover {
+    background: var(--yellow);
+}
+
+nav li.active a {
+    background: var(--orange);
+    color: var(--white);
+    box-shadow: 0 4px 12px rgba(206, 135, 91, 0.3);
+}
+
+nav li i {
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+    font-size: 0.9rem;
+}
+
+/* 側邊欄下拉選單 */
+nav li.has-submenu > a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav li.has-submenu > a span {
+    display: flex;
+    align-items: center;
+}
+
+nav li.has-submenu > a .arrow {
+    width: auto;
+    margin-right: 0;
+    margin-left: 8px;
+    font-size: 0.65rem;
+    transition: transform 0.3s ease;
+}
+
+nav li.has-submenu.open > a .arrow {
+    transform: rotate(180deg);
+}
+
+nav li.has-submenu.open > a {
+    background: var(--yellow);
+}
+
+nav .submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+nav li.has-submenu.open .submenu {
+    max-height: 150px;
+}
+
+nav .submenu li {
+    margin-bottom: 2px;
+}
+
+nav .submenu li a {
+    padding: 8px 14px 8px 38px;
+    font-size: 0.88rem;
+    border-radius: 6px;
+    color: var(--brown);
+    opacity: 0.85;
+}
+
+nav .submenu li a:hover {
+    background: rgba(244, 221, 151, 0.5);
+    opacity: 1;
+}
+
+nav .submenu li.active a {
+    background: var(--orange);
+    color: var(--white);
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(206, 135, 91, 0.25);
+}
+
+nav .submenu li i {
+    width: 18px;
+    font-size: 0.8rem;
+}
+
+/* 右側主要內容區 */
+.main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 30px;
+    width: calc(100% - var(--sidebar-width));
+}
+
+/* Header */
+header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: var(--radius);
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+    box-shadow: 0 6px 18px rgba(107, 76, 59, 0.08);
+    margin-bottom: 24px;
+    color: var(--brown);
+}
+
+header img {
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+header .sub {
+    opacity: 0.9;
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+/* 頁面內容區塊 */
+section {
+    background: var(--glass);
+    padding: 24px;
+    border-radius: var(--radius);
+    min-height: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+/* Card & Table */
+.card {
+    background: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin-bottom: 16px;
+    border: 1px solid #eee;
+}
+
+h3 {
+    margin-top: 0;
+    color: var(--brown);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: left;
+}
+
+th {
+    color: #888;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+td {
+    color: #444;
+}
+
+/* Buttons & Inputs */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    filter: brightness(1.1);
+}
+
+.btn.ghost {
+    background: transparent;
+    border: 1px solid var(--orange);
+    color: var(--orange);
+}
+
+.btn.ghost:hover {
+    background: var(--orange);
+    color: #fff;
+}
+
+.muted {
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: block;
+}
+
+input,
+select,
+textarea {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    width: 100%;
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--orange);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    nav {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
+    }
+}
+
+/* 側邊欄開關控制 */
+.menu-btn {
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;
+    color: var(--brown);
+    padding: 0;
+}
+
+/* 側邊欄啟動狀態 */
+nav.active {
+    transform: translateX(0) !important;
+}
+
+/* 遮罩層手機版選單打開時背景變暗 */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* 響應式調整 */
+@media (max-width: 992px) {
+    .menu-btn { display: block; }
+
+    nav {
+        transform: translateX(-100%);
+    }
+
+    nav.active {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
+    }
+}
+
+/* 分頁按鈕樣式 */
+.tab-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    font-size: 1rem;
+    color: #666;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.tab-btn.active {
+    background-color: var(--orange);
+    color: #fff;
+}
+
+/* 側邊欄底部樣式 */
+.sidebar-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    padding: 12px 20px 16px 20px;
+    background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0.95));
+    border-top: 1px solid rgba(107, 76, 59, 0.1);
+    z-index: 1001;
+}
+
+/* 管理員資訊顯示 */
+.admin-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--brown);
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background: rgba(244, 221, 151, 0.3);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.admin-info i {
+    font-size: 0.95rem;
+    color: var(--orange);
+}
+
+/* 登出按鈕樣式 */
+.logout-btn {
+    width: 100%;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #a4704a, #a4704a);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #c0392b, #a93226);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+}
+
+.logout-btn:active {
+    transform: translateY(0);
+}
+
+.logout-btn i {
+    font-size: 0.8rem;
 }

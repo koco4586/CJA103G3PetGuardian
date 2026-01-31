@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.petguardian.admin.dto.login.AdminLoginDTO;
 import com.petguardian.admin.model.Admin;
 import com.petguardian.admin.service.login.AdminLoginService;
-import com.petguardian.member.dto.MemberLoginDTO;
-import com.petguardian.member.model.Member;
 
 import jakarta.servlet.http.HttpSession;
 

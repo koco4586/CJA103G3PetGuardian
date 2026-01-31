@@ -2,6 +2,8 @@ package com.petguardian.sitter.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 import com.petguardian.sitter.model.*;
@@ -189,5 +191,51 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
             }
         }
         return false;
+    }
+
+    /**
+     * [Refactor] 檢查會員申請狀態，回傳對應的提示訊息
+     */
+    @Override
+    public String checkApplicationStatus(Integer memId) {
+        List<SitterApplicationVO> existingApps = repository.findByMemId(memId);
+        for (SitterApplicationVO app : existingApps) {
+            if (app.getAppStatus() == 0) {
+                return "您已有待審核的申請，請耐心等候結果";
+            }
+            if (app.getAppStatus() == 1) {
+                return "您已通過審核成為保姆，無需重複申請";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * [Refactor] 取得申請頁面所需的初始資料
+     */
+    @Override
+    public Map<String, Object> getApplyFormInitData(Integer memId, String avatarUrl) {
+        Map<String, Object> data = new HashMap<>();
+
+        String memName = "會員姓名";
+        String memPhone = "未設定";
+
+        if (memId != null) {
+            Optional<SitterMemberVO> memberOpt = sitterMemberRepository.findById(memId);
+            if (memberOpt.isPresent()) {
+                SitterMemberVO member = memberOpt.get();
+                memName = member.getMemName();
+                memPhone = member.getMemTel();
+            }
+        }
+
+        data.put("memName", memName != null ? memName : "會員姓名");
+        data.put("memPhone", memPhone != null ? memPhone : "未設定");
+        data.put("avatarUrl", avatarUrl);
+        data.put("memberRole", "一般會員");
+        data.put("defaultCity", "台北市");
+        data.put("defaultDistrict", "大安區");
+
+        return data;
     }
 }

@@ -26,6 +26,14 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoomEntity, Intege
         void updateMem2LastReadAt(@Param("id") Integer id, @Param("userId") Integer userId,
                         @Param("time") LocalDateTime time);
 
+        @Modifying
+        @Query("UPDATE ChatRoomEntity c SET " +
+                        "c.mem1LastReadAt = CASE WHEN c.memId1 = :userId THEN :time ELSE c.mem1LastReadAt END, " +
+                        "c.mem2LastReadAt = CASE WHEN c.memId2 = :userId THEN :time ELSE c.mem2LastReadAt END " +
+                        "WHERE c.chatroomId = :id AND (c.memId1 = :userId OR c.memId2 = :userId)")
+        void updateMemberReadStatus(@Param("id") Integer id, @Param("userId") Integer userId,
+                        @Param("time") LocalDateTime time);
+
         /**
          * Blind Update for Room Metadata.
          * Updates preview, timestamp, and sender's read status in a single SQL.

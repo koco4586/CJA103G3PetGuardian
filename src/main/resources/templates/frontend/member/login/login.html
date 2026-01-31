@@ -15,20 +15,17 @@
 </head>
 
 <body>
-
-    <h1>PetGuardian寵護家</h1>
+    <div>PetGuardian寵護家</div>
 
     <h2>會員登入</h2>
 
     <form>
-
         <span>使用者帳號</span><br>
         <input type="text" placeholder="請輸入使用者帳號" class="loginacc" required><br><br>
         <span>使用者密碼</span><br>
         <input type="password" placeholder="請輸入使用者密碼" class="loginpw" required><br><br>
         <button type="submit" class="submit">立即登入</button>
         <button type="reset">清除重填</button>
-
     </form>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -61,9 +58,9 @@
                     }
                 }).then(res => res.json()).then(data => {
                     console.log(data);
-                    if (data.result === "登入成功") {  // 後端返回 {result: true}
+                    if (data.result === "登入成功") {  
                         // window.location.href = "/frontend/index.html";//要小心，配置 Spring Boot 的靜態資源路徑,在 application.properties中添加，此行設定告訴 Spring Boot：「請把這些目錄當作靜態資源目錄」
-                        alert("登入成功");
+                        alert("登入成功，PetGuardian寵護家歡迎您～");
                     }
                 });
 

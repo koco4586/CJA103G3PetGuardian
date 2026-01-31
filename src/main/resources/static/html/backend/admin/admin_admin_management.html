@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PetGuardian｜後台中心</title>
+    <title>etGuardian｜後台中心</title>
+
     <style>
         * {
             box-sizing: border-box;
@@ -14,28 +15,27 @@
 
 <body>
 
-    <h1>管理員帳號管理</h1>
-    <h3>管理員列表</h3>
-
-    <table class="table">
+    <h1>後台管理員</h1>
+    <div>檢視管理員帳號列表與變更管理員狀態</div>
+    <table>
         <thead>
             <tr>
                 <th>管理員編號</th>
                 <th>帳號</th>
-                <th>密碼</th>
                 <th>姓名</th>
                 <th>電子郵件</th>
                 <th>手機號碼</th>
                 <th>狀態</th>
                 <th>建立時間</th>
                 <th>頭像</th>
-                <th>修改資料</th>
             </tr>
         </thead>
 
         <tbody class="tbody"></tbody>
-
     </table>
+
+    <a href="#">新增管理員</a><br><br>
+    <a href="#">修改個人資料</a><br><br>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -65,8 +65,7 @@
                         <tr>
                             <td>${data[i].admId}</td>
                             <td>${data[i].admAccount}</td>
-                            <td><a href="">修改</a></td>
-                            <td>${data[i].admName}</td>
+                            <td >${data[i].admName}</td>
                             <td>${data[i].admEmail}</td>
                             <td>${data[i].admTel}</td>
 
@@ -79,8 +78,6 @@
                             <td>${data[i].admCreatedAt}</td>
 
                             <td><img src="${data[i].admImage}" style="width: 50px;"></td>
-
-                            <td><a href=""><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_q7W2h6ihzOiAti35boAkGjPGTb5WVZ-21A&s" style="width: 20px;"></a></td>
                             
                         </tr>
 
@@ -89,7 +86,7 @@
                 }
             });
 
-function changeadminstatus(e) {
+            function changeadminstatus(e) {
 
                 e.preventDefault();
 
@@ -120,7 +117,7 @@ function changeadminstatus(e) {
 
             }
 
-            $(document).on("click", ".statussubmit", changeadminstatus); 
+            $(document).on("click", ".statussubmit", changeadminstatus);
 
         }
 
