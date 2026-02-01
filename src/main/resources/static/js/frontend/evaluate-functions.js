@@ -167,17 +167,19 @@ window.injectEvalBox = function (button, orderId, sitterId) {
         // 提交按鈕
         submitBtn.onclick = function () {
             const rating = evalBox.querySelector('.dynamic-stars').getAttribute('data-rating') || 0;
-            const content = evalBox.querySelector('.eval-content').value;
+            const content = evalBox.querySelector('.eval-content').value.trim();
             const selectedTags = Array.from(evalBox.querySelectorAll('.eval-tag.selected'))
-                .map(t => t.innerText).join(',');
+                .map(t => t.innerText);
 
             if (rating == 0) return alert('❌ 請先評分！');
-            if (!content.trim()) return alert('❌ 請輸入內容！');
+            if (selectedTags.length === 0 && !content) return alert('❌ 請選擇標籤或輸入內容！');
 
             // 確認提示
             if (!confirm('確定要送出評價嗎？')) return;
 
-            sendReviewToBackend(orderId, sitterId, content, 1, rating, evalBox);
+            // 合併標籤與內容
+            const fullContent = (selectedTags.length > 0 ? `[${selectedTags.join(',')}] ` : '') + content;
+            sendReviewToBackend(orderId, sitterId, fullContent, 1, rating, evalBox);
         };
     }
 
@@ -389,29 +391,46 @@ window.toggleHistoryReviews = function (containerId, iconId) {
 /**
  * 【功能2】載入並顯示保姆的歷史評價
  * 程式碼範圍：第 260-310 行
- * @param {number} sitterId - 保姆 ID
- * @param {string} containerSelector - 評價列表容器的選擇器（例如：'#reviewsList'）
- * @param {string} countSelector - 總筆數顯示元素的選擇器（例如：'span' 或 null）
+ * @param {string} countSelector - 不使用，保留參數相容性
+ * @param {string} sitterName - 保姆名稱 (用於標題顯示)
  */
-window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelector) {
+window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelector, sitterName) {
     fetch(`/pet/evaluate/list/${sitterId}`)
         .then(res => res.json())
         .then(reviews => {
-            // 更新總筆數 - 找到包含 "共" 和 "筆" 的 span 元素
-            const allSpans = document.querySelectorAll('span');
-            allSpans.forEach(span => {
-                const text = span.textContent;
-                if (text.includes('共') && text.includes('筆')) {
-                    // 找到父元素中的數字 span 並更新
-                    const parentH3 = span.closest('h3');
-                    if (parentH3) {
-                        const numberSpan = parentH3.querySelector('span span');
-                        if (numberSpan) {
-                            numberSpan.textContent = reviews.length;
-                        }
+            // 更新標題顯示 "XXX 的歷史評價"
+            if (sitterName) {
+                const reviewsSection = document.getElementById('reviews');
+                if (reviewsSection) {
+                    const h3 = reviewsSection.querySelector('h3');
+                    if (h3) {
+                        // 保留 icon 和筆數 span，只改文字
+                        const safeName = (sitterName && sitterName !== '""') ? sitterName : '保母';
+                        h3.innerHTML = `
+                            <i class="fas fa-comments"></i> ${safeName} 的歷史評價
+                            <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
+                                (共 <span id="sitterReviewCount">${reviews.length}</span> 筆)
+                            </span>
+                            <i id="toggleIcon" class="fas fa-chevron-down" style="float: right; transition: transform 0.3s;"></i>
+                        `;
                     }
                 }
-            });
+            } else {
+                // 原有的總筆數更新邏輯 (作為 fallback)
+                const allSpans = document.querySelectorAll('span');
+                allSpans.forEach(span => {
+                    const text = span.textContent;
+                    if (text.includes('共') && text.includes('筆')) {
+                        const parentH3 = span.closest('h3');
+                        if (parentH3) {
+                            const numberSpan = parentH3.querySelector('span span');
+                            if (numberSpan) {
+                                numberSpan.textContent = reviews.length;
+                            }
+                        }
+                    }
+                });
+            }
 
             // 動態生成評價卡片
             const container = document.querySelector(containerSelector);
@@ -443,23 +462,35 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                     function (review) {
                         const stars = renderStars(review.starRating || 0);
                         const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                        const { tags, plainContent } = parseEvaluationContent(review.content);
+                        const tagsHtml = renderTagsVertical(tags);
+
                         return `
-                            <div class="review-card">
-                                <div class="review-header">
-                                    <div>
-                                        <strong>${reviewerName}</strong>
-                                        <button class="btn btn-sm btn-outline-danger ms-2"
-                                            style="padding: 0px 6px; font-size: 0.8rem;"
+                            <div class="review-card" style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                            style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
                                             onclick="reportReview(${review.bookingOrderId})">
                                             <i class="fas fa-flag"></i> 檢舉
                                         </button>
                                     </div>
-                                    <div style="color: #ffc107;">
+                                    <div style="color: #ffc107; font-size: 1.1rem;">
                                         ${stars}
                                     </div>
                                 </div>
-                                <p class="mb-0 text-muted">${review.content || ''}</p>
-                                <small class="text-muted">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1; min-width: 0; padding-right: 20px;">
+                                        <p style="margin: 0 0 10px 0; color: #555; line-height: 1.6; word-break: break-all;">
+                                            ${plainContent || '無評論內容'}
+                                        </p>
+                                        <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px; width: 120px; align-items: flex-end;">
+                                        ${tagsHtml}
+                                    </div>
+                                </div>
                             </div>
                         `;
                     }
@@ -469,24 +500,37 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                 reviews.forEach(review => {
                     const stars = renderStars(review.starRating || 0);
                     const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                    const { tags, plainContent } = parseEvaluationContent(review.content);
+                    const tagsHtml = renderTagsVertical(tags);
+
                     const card = document.createElement('div');
-                    card.className = 'review-card';
                     card.innerHTML = `
-                        <div class="review-header">
-                            <div>
-                                <strong>${reviewerName}</strong>
-                                <button class="btn btn-sm btn-outline-danger ms-2"
-                                    style="padding: 0px 6px; font-size: 0.8rem;"
-                                    onclick="reportReview(${review.bookingOrderId})">
-                                    <i class="fas fa-flag"></i> 檢舉
-                                </button>
+                        <div class="review-card" style="border-bottom: 1px solid #eee; padding: 1.5rem 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                        style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
+                                        onclick="reportReview(${review.bookingOrderId})">
+                                        <i class="fas fa-flag"></i> 檢舉
+                                    </button>
+                                </div>
+                                <div style="color: #ffc107; font-size: 1.1rem;">
+                                    ${stars}
+                                </div>
                             </div>
-                            <div style="color: #ffc107;">
-                                ${stars}
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="flex: 1; min-width: 0; padding-right: 20px;">
+                                    <p style="margin: 0 0 10px 0; color: #555; line-height: 1.6; word-break: break-all;">
+                                        ${plainContent || '無評論內容'}
+                                    </p>
+                                    <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 6px; width: 120px; align-items: flex-end;">
+                                    ${tagsHtml}
+                                </div>
                             </div>
                         </div>
-                        <p class="mb-0 text-muted">${review.content || ''}</p>
-                        <small class="text-muted">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
                     `;
                     container.appendChild(card);
                 });
@@ -502,13 +546,14 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
  * 程式碼範圍：第 328-410 行
  * @param {number} sitterId - 保姆 ID
  * @param {string} containerSelector - 不使用，保留參數相容性
+ * @param {string} sitterName - 保姆名稱 (用於標題顯示)
  * 
  * 佈局說明：
  * - 星星在檢舉按鈕旁邊
  * - 日期在最右邊
  * - 自動找到並替換現有的 Thymeleaf 評價區塊
  */
-window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector) {
+window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector, sitterName) {
     console.log('🔍 開始載入保母主頁評價，保姆 ID:', sitterId);
 
     fetch(`/pet/evaluate/list/${sitterId}`)
@@ -529,13 +574,14 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                 return;
             }
 
-            // 修改標題，加入總筆數和收放圖示
+            // 修改標題，加入人名、總筆數和收放圖示
             const h3 = reviewsCard.querySelector('h3');
             if (h3) {
+                const safeName = (sitterName && sitterName !== '""') ? sitterName : '保母';
                 h3.style.cursor = 'pointer';
                 h3.style.userSelect = 'none';
                 h3.innerHTML = `
-                    <i class="fas fa-comments"></i> 歷史評價
+                    <i class="fas fa-comments"></i> ${safeName} 的歷史評價
                     <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
                         (共 <span id="dashboardReviewCount">${reviews.length}</span> 筆)
                     </span>
@@ -597,23 +643,35 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                     function (review) {
                         const stars = renderStars(review.starRating || 0);
                         const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                        const { tags, plainContent } = parseEvaluationContent(review.content);
+                        const tagsHtml = renderTagsVertical(tags);
+
                         return `
-                            <div style="border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <strong>${reviewerName}</strong>
-                                        <button class="btn btn-sm btn-outline-danger"
-                                            style="padding: 0px 6px; font-size: 0.8rem;"
+                                        <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                            style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
                                             onclick="reportReview(${review.bookingOrderId})">
                                             <i class="fas fa-flag"></i> 檢舉
                                         </button>
-                                        <span style="color: #ffc107;">
-                                            ${stars}
-                                        </span>
                                     </div>
-                                    <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                                    <div style="color: #ffc107; font-size: 1.1rem;">
+                                        ${stars}
+                                    </div>
                                 </div>
-                                <p style="margin: 0; color: #555; line-height: 1.6;">${review.content || ''}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1; min-width: 0; padding-right: 20px;">
+                                        <p style="margin: 0 0 10px 0; color: #555; line-height: 1.6; word-break: break-all;">
+                                            ${plainContent || '無評論內容'}
+                                        </p>
+                                        <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px; width: 120px; align-items: flex-end;">
+                                        ${tagsHtml}
+                                    </div>
+                                </div>
                             </div>
                         `;
                     }
@@ -623,24 +681,37 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                 reviews.forEach(review => {
                     const stars = renderStars(review.starRating || 0);
                     const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                    const { tags, plainContent } = parseEvaluationContent(review.content);
+                    const tagsHtml = renderTagsVertical(tags);
+
                     const card = document.createElement('div');
-                    card.style.cssText = 'border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;';
                     card.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <strong>${reviewerName}</strong>
-                                <button class="btn btn-sm btn-outline-danger"
-                                    style="padding: 0px 6px; font-size: 0.8rem;"
-                                    onclick="reportReview(${review.bookingOrderId})">
-                                    <i class="fas fa-flag"></i> 檢舉
-                                </button>
-                                <span style="color: #ffc107;">
+                        <div style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                        style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
+                                        onclick="reportReview(${review.bookingOrderId})">
+                                        <i class="fas fa-flag"></i> 檢舉
+                                    </button>
+                                </div>
+                                <div style="color: #ffc107; font-size: 1.1rem;">
                                     ${stars}
-                                </span>
+                                </div>
                             </div>
-                            <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="flex: 1; min-width: 0; padding-right: 20px;">
+                                    <p style="margin: 0 0 10px 0; color: #555; line-height: 1.6; word-break: break-all;">
+                                        ${plainContent || '無評論內容'}
+                                    </p>
+                                    <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 6px; width: 120px; align-items: flex-end;">
+                                    ${tagsHtml}
+                                </div>
+                            </div>
                         </div>
-                        <p style="margin: 0; color: #555; line-height: 1.6;">${review.content || ''}</p>
                     `;
                     container.appendChild(card);
                 });
@@ -831,3 +902,41 @@ window.loadMemberReviews = function (memberId, memberName, buttonElement) {
             alert('❌ 載入評價失敗，請稍後再試');
         });
 }
+
+// ========================================
+// 輔助功能：解析與渲染評價標籤
+// ========================================
+
+function parseEvaluationContent(content) {
+    if (!content) return { tags: [], plainContent: '' };
+
+    // 匹配格式: [標籤1,標籤2] 實際評價內容
+    // 改良 regex 支援沒有內容的情況
+    const match = content.match(/^\[(.*?)\]\s?(.*)$/);
+    if (match) {
+        return {
+            tags: match[1].split(',').map(t => t.trim()).filter(t => t),
+            plainContent: match[2].trim()
+        };
+    }
+    return { tags: [], plainContent: content };
+}
+
+function renderTagsVertical(tags) {
+    if (!tags || tags.length === 0) return '';
+
+    return tags.map(tag => `
+        <span style="
+            background: #fff9db; 
+            color: #f08c00; 
+            font-size: 0.8rem; 
+            padding: 2px 10px; 
+            border-radius: 4px; 
+            border: 1px solid #ffe066;
+            text-align: center;
+            white-space: nowrap;
+            display: inline-block;
+        ">${tag}</span>
+    `).join('');
+}
+

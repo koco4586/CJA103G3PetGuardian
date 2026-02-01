@@ -9,6 +9,72 @@
     <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/frontend/sitter/dashboard.css">
+    <style>
+        /* 檢舉輸入框樣式 */
+        .dynamic-report-wrapper {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            padding: 0 20px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff5f5;
+            border-radius: 15px;
+            border: 1px solid transparent;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dynamic-report-wrapper.active {
+            max-height: 800px;
+            opacity: 1;
+            margin-top: 15px;
+            padding: 20px;
+            border: 1px solid #ffcdd2;
+            box-shadow: 0 4px 15px rgba(255, 205, 210, 0.3);
+        }
+
+        .report-tag {
+            display: inline-block;
+            padding: 6px 14px;
+            margin: 5px;
+            background: #fff;
+            border: 1px solid #ffcdd2;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #c62828;
+            transition: all 0.2s;
+        }
+
+        .report-tag.selected {
+            background: #ffcdd2;
+            font-weight: bold;
+        }
+
+        .submit-report-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            float: right;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .submit-report-btn:active {
+            transform: scale(0.92);
+        }
+
+        .submit-report-btn:hover {
+            background: #ff5252;
+        }
+    </style>
 </head>
 
 <body>
@@ -643,20 +709,18 @@
                 });
         }
 
-        // [New] 檢舉評價
-        function reportReview(orderId) {
-            if (confirm("確定要檢舉這則評論嗎？(訂單編號: " + orderId + ")")) {
-                alert("已收到您的檢舉，管理員將進行審核。");
-                // TODO: 串接後端檢舉 API
-            }
-        }
+        // 註：檢舉功能已改用 complaint-functions.js 的 injectReportBox()
 
         // 載入評價資料（保母主頁專用佈局）
         // 使用上面已經宣告的 sitterId 變數（第 372 行）
         if (sitterId) {
-            loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList');
+            loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList', '[[${sitter.sitterName}]]');
         }
     </script>
+
+    <script src="/js/frontend/complaint-functions.js"></script>
+    <script src="/js/frontend/sitter-evaluate-functions.js"></script>
+    <script src="/js/frontend/main.js"></script>
 
 </body>
 

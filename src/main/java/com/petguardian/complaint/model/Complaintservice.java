@@ -11,17 +11,52 @@ public class Complaintservice {
     @Autowired
     private Complaintrepository repository;
 
+    @Autowired
+    private com.petguardian.member.repository.management.MemberManagementRepository memberRepository;
+
+    @Autowired
+    private com.petguardian.evaluate.model.EvaluateRepository evaluateRepository;
+
     public void insert(ComplaintVO vo) {
         repository.save(vo);
     }
-    
+
     public List<ComplaintVO> getAll() {
-        return repository.findAll(); // 調用 JpaRepository 內建的 findAll()
+        List<ComplaintVO> list = repository.findAll();
+        for (ComplaintVO vo : list) {
+            populateTransientFields(vo);
+        }
+        return list;
     }
-    
+
     public ComplaintVO getOne(Integer id) {
         Optional<ComplaintVO> optional = repository.findById(id);
-        return optional.orElse(null); // 如果找不到就回傳 null，或拋出例外
+        ComplaintVO vo = optional.orElse(null);
+        if (vo != null) {
+            populateTransientFields(vo);
+        }
+        return vo;
+    }
+
+    private void populateTransientFields(ComplaintVO vo) {
+        // 1. 抓取檢舉人姓名
+        if (vo.getReportMemId() != null) {
+            memberRepository.findById(vo.getReportMemId()).ifPresent(m -> vo.setReporterName(m.getMemName()));
+        }
+
+        // 2. 抓取被檢舉人姓名
+        if (vo.getToReportedMemId() != null) {
+            memberRepository.findById(vo.getToReportedMemId()).ifPresent(m -> vo.setAccusedName(m.getMemName()));
+        }
+
+        // 3. 抓取被檢舉的評價內容 (根據 bookingOrderId)
+        if (vo.getBookingOrderId() != null) {
+            List<com.petguardian.evaluate.model.EvaluateVO> evals = evaluateRepository
+                    .findByBookingOrderId(vo.getBookingOrderId());
+            if (!evals.isEmpty()) {
+                vo.setReportedContent(evals.get(0).getContent());
+            }
+        }
     }
 
     // 更新狀態
