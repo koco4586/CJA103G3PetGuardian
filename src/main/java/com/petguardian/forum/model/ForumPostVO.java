@@ -96,6 +96,14 @@ public class ForumPostVO implements Serializable{
 		super();
 	}
 
+	public Set<Member> getMembers() {
+		return members;
+	}
+
+	public void setMembers(Set<Member> members) {
+		this.members = members;
+	}
+
 	public MultipartFile getUpFile() {
 		return upFile;
 	}

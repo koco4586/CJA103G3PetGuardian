@@ -5,26 +5,242 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的收藏 | PetGuardian</title>
-    <link rel="stylesheet" href="/css/frontend/style.css">
-    <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/frontend/dashboard.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+    <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="/css/frontend/store.css">
+    <style>
+    
+        /* --- 核心配色 --- */
+        :root {
+            --primary-orange: #ff9800;
+            --deep-brown: #5d4037;
+            --soft-bg: #fdfdfd;
+        }
 
+        /* 列表容器 */
+        .post-list-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+        }
 
-</head>
-<body>
-	
-	
+        /* 收藏貼文列項目 (套用看板列表風格) */
+        .post-row-item {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 16px;
+            text-decoration: none;
+            color: inherit;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
 
+        .post-row-item:hover {
+            transform: translateX(8px);
+            border-color: var(--primary-orange);
+            box-shadow: 0 6px 16px rgba(255, 152, 0, 0.15);
+        }
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/4.0.2/timeago.full.min.js"></script>
-	<script src="/js/frontend/main.js"></script>
-	<script th:inline="javascript">
- 		// Timeago 初始化
-        const nodes = document.querySelectorAll('.need-timeago');
-        if (nodes.length) timeago.render(nodes, 'zh_TW');
+        /* 封面圖框 */
+        .post-img-box {
+            flex: 0 0 120px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-right: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .post-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 文字資訊 */
+        .post-main-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0; 
+        }
+
+        .post-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--deep-brown);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .post-preview {
+            font-size: 0.95rem;
+            color: #666;
+            font-weight: 600;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-all;
+            line-height: 1.5;
+    		height: 1.5em; /* 固定高度，防止排版跳動 */
+        }
+
+        /* 修改後的容器：橫向排列 */
+		.post-meta {
+		    flex: 0 0 auto; /* 寬度根據內容自動調整 */
+		    display: flex;
+		    align-items: center; /* 垂直居中 */
+		    gap: 12px;           /* 時間與愛心之間的間距 */
+		    padding-left: 15px;
+		    border-left: 1px solid #eee;
+		    white-space: nowrap;
+		}
+		
+		.time-box {
+		    color: orange;
+		    font-size: 0.85rem;
+		    font-weight: 700;
+		    display: flex;
+		    align-items: center;
+		    gap: 4px;
+		}
+
+        /* 空狀態樣式 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            background: #fff;
+            border-radius: 16px;
+            border: 2px dashed #eee;
+        }
         
+        .fav-form {
+		    display: inline-block;
+		    vertical-align: middle;
+		}
+		
+		.heart-submit-btn {
+		    background: transparent;
+		    border: none;
+		    padding: 10px; /* 增加內距，讓點擊範圍變大 */
+		    cursor: pointer;
+		    color: #ff4d4d;
+		    font-size: 1.2rem;
+		    transition: transform 0.2s;
+		    outline: none;
+		}
+		
+		.heart-submit-btn:hover {
+		    transform: scale(1.2);
+		    color: #ff0000;
+		}
+		
+    </style>
+</head>
+
+<body>
+    <header id="main-header" class="header"></header>
+
+    <div class="dashboard-container container">
+        
+        <!-- Sidebar (共用元件) -->
+        <div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='favorites')}"></div>
+
+        <main class="dashboard-content">
+            <div class="content-header" style="margin-bottom: 2rem;">
+                <h2 style="font-weight: 900; color: var(--deep-brown);">🐾 我的收藏文章</h2>
+                <p style="color: #888; font-weight: 600;">您收藏的所有精彩話題都在這裡！</p>
+            </div>
+
+            <div class="post-list-wrapper">
+                <th:block th:if="${not #lists.isEmpty(collectionList)}" th:each="forumPostVO : ${collectionList}">
+                    <a th:href="@{/forumpost/get-post-id-for-one-post(postId=${forumPostVO.postId}, forumId=${forumPostVO.forum.forumId}, forumName=${forumPostVO.forum.forumName})}" 
+                       class="post-row-item">
+                        
+                        <div class="post-img-box">
+                            <img th:src="@{/forum/post-picture(postId=${forumPostVO.postId})}" alt="貼文封面">
+                        </div>
+
+                        <div class="post-main-info">
+                            <h3 class="post-title" th:text="${forumPostVO.postTitle}"></h3>
+                            <p class="post-preview" th:text="${#strings.abbreviate(forumPostVO.postContent, 38)}"></p>
+                        </div>
+
+                       <div class="post-meta">
+                       
+						    <div class="time-box">
+						        <i class="far fa-clock"></i>
+						        <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span>
+						    </div>
+						    
+						    <form class="fav-form" th:action="@{/forumpost/delete-collection}" method="post">
+							    <input type="hidden" name="postId" th:value="${forumPostVO.postId}">
+							    
+							    <button type="submit" class="heart-submit-btn" onclick="handleHeartClick(event, this)">
+							        <i class="fas fa-heart"></i>
+							    </button>
+							</form>
+							
+						</div>
+                    </a>
+                </th:block>
+
+                <div th:if="${#lists.isEmpty(collectionList)}" class="empty-state">
+                    <i class="fas fa-bookmark" style="font-size: 3rem; color: #ddd; margin-bottom: 15px; display: block;"></i>
+                    <p style="color: #999; font-weight: 700;">目前還沒有收藏的文章喔，快去討論區逛逛吧！</p>
+                    <a th:href="@{/forum/list-all-active-forum}" style="color: var(--primary-orange); text-decoration: none; font-weight: 800;">
+                        前往討論區首頁 <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer id="main-footer"></footer>
+	
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/4.0.2/timeago.full.min.js"></script>
+    <script th:src="@{/js/frontend/main.js}"></script>
+    <script th:inline="javascript">
+    	document.addEventListener('DOMContentLoaded', function() {
+	        // Timeago 初始化
+	        const nodes = document.querySelectorAll('.need-timeago');
+	        if (nodes.length) timeago.render(nodes, 'zh_TW');
+    
+	        const successMsgs = [[${successMsgs}]]
+	        
+	        if(successMsgs){
+	        	Swal.fire({
+	        		icon: 'success',
+    		        title: '太棒了！',
+    		        text: successMsgs,
+    		        timer: 1000, // 1秒後自動消失
+    		        showConfirmButton: false,
+    		        background: '#fffcf9',
+	        	});    	
+	        }
+	        
+	        function handleHeartClick(event, button) {
+	            // 🛑 關鍵：阻止事件向上冒泡，這樣就不會觸發外層 <a> 的跳轉
+	            event.stopPropagation();
+	        }
+	        
+    	});
+    	
     </script>
 </body>
 </html>

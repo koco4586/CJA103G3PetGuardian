@@ -260,7 +260,7 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                             <i class="fas fa-ellipsis-h"></i>
                         </button>
                         <div class="dropdown-menu" id="postMenu">
-                            <a href="javascript:void(0)" onclick="handleAction('collect', null)">
+                            <a th:href="@{/forumpost/add-collection(postId=${forumPostVO.postId}, forumId=${forumId})}">
                                 <i class="far fa-bookmark"></i> 收藏文章
                             </a> 
                             <a th:href="@{/forumpost/report-post(postId=${forumPostVO.postId})}">

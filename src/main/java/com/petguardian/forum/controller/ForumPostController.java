@@ -490,7 +490,7 @@ public class ForumPostController {
 		forumPostReportVO.setMember(member);
 
 		forumPostReportService.addReport(forumPostReportVO, postId);
-		ra.addFlashAttribute("successMsgs", "檢舉成功，感謝您的回報");
+		ra.addFlashAttribute("successMsgs", "🎉 檢舉成功，感謝您的回報");
 		Integer forumId = forumPostReportVO.getForumPost().getForum().getForumId();
 
 		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
@@ -520,7 +520,7 @@ public class ForumPostController {
 		forumCommentReportVO.setMember(member);
 
 		forumCommentReportService.addReport(forumCommentReportVO, commentId);
-		ra.addFlashAttribute("successMsgs", "檢舉成功，感謝您的回報");
+		ra.addFlashAttribute("successMsgs", "🎉 檢舉成功，感謝您的回報");
 		Integer forumId = forumCommentReportVO.getForumComment().getForumPost().getForum().getForumId();
 
 		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
@@ -531,7 +531,7 @@ public class ForumPostController {
 			RedirectAttributes ra) {
 
 		forumPostService.deletePost(postId);
-		ra.addFlashAttribute("successMsgs", "貼文刪除成功");
+		ra.addFlashAttribute("successMsgs", "🎉 貼文刪除成功");
 
 		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumId;
 	}
@@ -546,7 +546,7 @@ public class ForumPostController {
 		ra.addAttribute("forumName", forumName);
 		ra.addAttribute("forumId", forumId);
 		ra.addAttribute("postId", postId);
-		ra.addFlashAttribute("successMsgs", "留言刪除成功");
+		ra.addFlashAttribute("successMsgs", "🎉 留言刪除成功");
 
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
@@ -554,11 +554,45 @@ public class ForumPostController {
 	@GetMapping("post-collection")
 	public String postCollection(ModelMap model, HttpServletRequest request) {
 		
-//		使用 AuthStrategyService 取得當前使用者
+		// 使用 AuthStrategyService 取得當前使用者
 		Integer userId = authStrategyService.getCurrentUserId(request);
+		
 		model.addAttribute("collectionList", new ArrayList<ForumPostVO>(forumPostService.getAllPostCollectionsByMemId(userId)));
 		
 		return "frontend/forum/post-collection";
+	}
+	
+	@PostMapping("delete-collection")
+	public String deleteCollection(RedirectAttributes ra, HttpServletRequest request,
+			@RequestParam("postId") Integer postId) {
+		
+		// 使用 AuthStrategyService 取得當前使用者
+		Integer userId = authStrategyService.getCurrentUserId(request);
+		
+		forumPostService.deletePostCollection(postId, userId);
+		
+		ra.addFlashAttribute("successMsgs", "🎉 取消收藏成功");
+		
+		return "redirect:/forumpost/post-collection";
+		
+	}
+	
+	@GetMapping("add-collection")
+	public String addCollection(RedirectAttributes ra, HttpServletRequest request, ModelMap model,
+			@RequestParam("postId") Integer postId, @RequestParam("forumId") Integer forumId) {
+		
+		// 使用 AuthStrategyService 取得當前使用者
+		Integer userId = authStrategyService.getCurrentUserId(request);	
+		String forumName = forumService.getOneForum(forumId).getForumName();
+		
+		forumPostService.addPostCollection(postId, userId);
+		
+		ra.addAttribute("forumName", forumName);
+		ra.addAttribute("forumId", forumId);
+		ra.addAttribute("postId", postId);
+		ra.addFlashAttribute("successMsgs", "🎉 收藏成功");
+		
+		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
 
 	@ModelAttribute
