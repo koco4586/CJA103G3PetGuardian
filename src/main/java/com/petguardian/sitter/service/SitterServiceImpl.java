@@ -21,7 +21,8 @@ import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.sitter.model.SitterDashboardDTO;
 // [NEW] Repositories for search
-import com.petguardian.petsitter.model.PetSitterServiceRepository;
+// import com.petguardian.petsitter.model.PetSitterServiceRepository; // [Refactor] 移除未使用 import
+import com.petguardian.petsitter.service.PetSitterService; // [Refactor] 新增 Service import
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.petsitter.model.PetSitterServicePetTypeRepository;
 import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
@@ -53,7 +54,7 @@ public class SitterServiceImpl implements SitterService {
     private SitterMemberRepository sitterMemberRepository;
 
     @Autowired
-    private PetSitterServiceRepository petSitterServiceRepository;
+    private PetSitterService petSitterService; // [Refactor] 改用 Service 注入
 
     @Autowired
     private SitterSearchService searchService;
@@ -256,6 +257,7 @@ public class SitterServiceImpl implements SitterService {
 
     /**
      * [Refactor] 取得保姆儀表板所需的整合資料
+     * 修改說明: 2026-02-01 優化 DTO 結構，移除對 SitterVO 的直接依賴
      */
     @Override
     @Transactional(readOnly = true)
@@ -266,31 +268,39 @@ public class SitterServiceImpl implements SitterService {
             return null;
         }
 
-        SitterDashboardDTO dto = new SitterDashboardDTO();
-        dto.setSitter(sitter);
-
         // 2. 統計數據
         // 服務數量
-        List<PetSitterServiceVO> services = petSitterServiceRepository.findBySitter_SitterId(sitter.getSitterId());
-        dto.setServices(services);
-        dto.setServiceCount(services.size());
+        // [Refactor] 使用 PetSitterService 取得服務列表，減少直接 Repository 依賴
+        List<PetSitterServiceVO> services = petSitterService.getServicesBySitter(sitter.getSitterId());
 
-        // 服務地區數量
-        // 使用 Hibernate Lazy Loading 直接取得 (需在 Transactional 下)
+        // 服務地區數量 (使用 Hibernate Lazy Loading 直接取得)
         List<ServiceAreaVO> areas = sitter.getServiceAreas();
-        dto.setAreas(areas);
-        dto.setAreaCount(areas != null ? areas.size() : 0);
 
         // 待審核訂單 (Status = 0)
         List<BookingOrderVO> pendingOrders = bookingOrderRepository.findBySitterIdAndOrderStatus(sitter.getSitterId(),
                 0);
-        dto.setPendingOrders(pendingOrders);
-        dto.setPendingOrderCount(pendingOrders != null ? pendingOrders.size() : 0);
 
-        // 平均評分
-        dto.setAverageRating(sitter.getAverageRating());
-
-        return dto;
+        // 3. [Refactor] 將 Entity 轉換為 Inner DTO，確保資料結構解耦
+        // 使用 Builder 模式進行 DTO 組裝
+        return SitterDashboardDTO.builder()
+                .sitterInfo(SitterDashboardDTO.SitterInfoDTO.builder()
+                        .sitterId(sitter.getSitterId())
+                        .memId(sitter.getMemId())
+                        .sitterName(sitter.getSitterName())
+                        .sitterAdd(sitter.getSitterAdd())
+                        .sitterStatus(sitter.getSitterStatus())
+                        .serviceTime(sitter.getServiceTime())
+                        .ratingCount(sitter.getSitterRatingCount())
+                        .starCount(sitter.getSitterStarCount())
+                        .build())
+                .serviceCount(services.size())
+                .areaCount(areas != null ? areas.size() : 0)
+                .pendingOrderCount(pendingOrders != null ? pendingOrders.size() : 0)
+                .averageRating(sitter.getAverageRating())
+                .services(services)
+                .areas(areas)
+                .pendingOrders(pendingOrders)
+                .build();
     }
 
     /**

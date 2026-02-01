@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pet Guardian - 會員個人資料管理</title>
+    <title>PetGuardian｜會員個人資料管理</title>
     <style>
         * {
             box-sizing: border-box;
@@ -53,7 +53,6 @@
             <span>帳號</span><br>
             <input type="text" class="mem_acc" placeholder="請輸入使用者帳號" required><br><br>
 
-            <span class="mustbe">*必填</span>
             <span>密碼</span><br>
             <input type="password" class="mem_pw" placeholder="********" disabled>
             <a href="./member_management_resetpw.html">變更密碼</a><br><br>
@@ -95,6 +94,7 @@
         <div class="rightone">
             <a href="./member_management_deactivate.html" class="deactivate">停用帳號</a>
         </div>
+
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -120,16 +120,16 @@
 
                 let formData = new FormData();
 
-                formData.append("memImage", memImage)
-                formData.append("memName", memName)
-                formData.append("memAcc", memAcc)
-                formData.append("memUid", memUid)
-                formData.append("memBth", memBth)
-                formData.append("memSex", memSex)
-                formData.append("memEmail", memEmail)
-                formData.append("memTel", memTel)
-                formData.append("memAdd", memAdd)
-                formData.append("memAccountNumber", memAccountNumber)
+                formData.append("memImage", memImage);
+                formData.append("memName", memName);
+                formData.append("memAcc", memAcc);
+                formData.append("memUid", memUid);
+                formData.append("memBth", memBth);
+                formData.append("memSex", memSex);
+                formData.append("memEmail", memEmail);
+                formData.append("memTel", memTel);
+                formData.append("memAdd", memAdd);
+                formData.append("memAccountNumber", memAccountNumber);
 
                 fetch("http://localhost:8080/front/management", {
                     method: "PUT",

@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <a href="/html/frontend/member/management/member_management_ai.html" class="dropdown-item">會員中心</a>
                         <a href="/sitter/hub" class="dropdown-item">保母專區</a>
                         <hr style="border:0; border-top:1px solid #eee; margin: 0.5rem 0;">
-                        <a href="/logout" class="dropdown-item">登出</a>
+                        <a href="#" class="dropdown-item">登出</a>
                     </div>
                 </div>
                 <div class="mobile-menu-btn">☰</div>

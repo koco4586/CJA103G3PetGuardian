@@ -180,6 +180,56 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
 .transparent-popup { background: transparent !important; box-shadow: none !important; border: none !important; }
 .zoom-out-img { cursor: zoom-out; max-width: 95vw; max-height: 95vh; object-fit: contain; }
 @keyframes menuPop { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 留言編輯模式下的按鈕容器 */
+.edit-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+/* 儲存按鈕 - 充滿活力的橘色 */
+.btn-save {
+    background-color: var(--primary-orange);
+    color: white;
+    border: none;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+}
+
+.btn-save:hover {
+    background-color: #f57c00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+}
+
+/* 取消按鈕 - 溫潤的淡色背景 */
+.btn-cancel {
+    background-color: #f5f5f5;
+    color: var(--deep-brown);
+    border: 1px solid #ddd;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background-color: #eeeeee;
+    border-color: #ccc;
+    color: #333;
+}
+
+/* 按鈕點擊時的下壓效果 */
+.btn-save:active, .btn-cancel:active {
+    transform: translateY(0);
+}
 </style>
 </head>
 
@@ -243,37 +293,62 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                     <h4><i class="far fa-comments"></i> 留言回覆</h4>
                     
                     <th:block th:each="forumPostCommentVO, iterStat : ${commentList}">
-                        <div class="comment-item">
-                            <img src="https://via.placeholder.com/50" class="comment-user-mini-img">
-                            <div class="comment-body">
-                                <div class="comment-header">
-                                    <div class="comment-info">
-                                        <span class="comment-user-name">會員名稱</span> 
-                                        <span class="comment-time need-timeago" th:datetime="${forumPostCommentVO.lastEditedAt}"></span>
-                                    </div>
-                                    
-                                    <div class="options-dropdown comment-options">
-                                        <button type="button" class="btn-options-trigger" 
-                                                th:onclick="|toggleMenu(event, 'commentMenu-${iterStat.index}')|">
-                                            <i class="fas fa-ellipsis-h"></i>
-                                        </button>
-                                        <div class="dropdown-menu" th:id="|commentMenu-${iterStat.index}|">
-                                            <a href="javascript:void(0)" >
-                                                <i class="fas fa-pen"></i> 編輯留言
-                                            </a> 
-                                            <a th:href="@{/forumpost/report-comment(commentId=${forumPostCommentVO.commentId})}">
-                                                <i class="fas fa-exclamation-circle"></i> 檢舉留言
-                                            </a>
-                                            <a th:href="@{/forumpost/delete-comment(commentId=${forumPostCommentVO.commentId}, postId=${forumPostVO.postId}, forumId=${forumId})}" style="color: #e74c3c;">
-											    <i class="far fa-trash-alt"></i> 刪除留言
-											</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="comment-content" th:text="${forumPostCommentVO.commentContent}"></div>
-                            </div>
-                        </div>
-                    </th:block>
+					    <div class="comment-item">
+					        <img src="https://via.placeholder.com/50" class="comment-user-mini-img">
+					        <div class="comment-body">
+					            <div class="comment-header">
+					                <div class="comment-info">
+					                    <span class="comment-user-name">會員名稱</span> 
+					                    <span class="comment-time need-timeago" th:datetime="${forumPostCommentVO.lastEditedAt}"></span>
+					                </div>
+					                
+					                <div class="options-dropdown comment-options">
+					                    <button type="button" class="btn-options-trigger" 
+					                            th:onclick="|toggleMenu(event, 'commentMenu-${iterStat.index}')|">
+					                        <i class="fas fa-ellipsis-h"></i>
+					                    </button>
+					                    <div class="dropdown-menu" th:id="|commentMenu-${iterStat.index}|">
+					                        <a href="javascript:void(0)" th:onclick="|switchToEditMode('${forumPostCommentVO.commentId}')|">
+					                            <i class="fas fa-pen"></i> 編輯留言
+					                        </a>
+					                        <a th:href="@{/forumpost/report-comment(commentId=${forumPostCommentVO.commentId})}">
+					                            <i class="fas fa-exclamation-circle"></i> 檢舉留言
+					                        </a>
+					                        <a th:href="@{/forumpost/delete-comment(commentId=${forumPostCommentVO.commentId}, postId=${forumPostVO.postId}, forumId=${forumId})}" style="color: #e74c3c;">
+					                            <i class="far fa-trash-alt"></i> 刪除留言
+					                        </a>
+					                    </div>
+					                </div>
+					            </div>
+					
+					            <div class="comment-content" th:id="|comment-display-${forumPostCommentVO.commentId}|" th:text="${forumPostCommentVO.commentContent}"></div>
+					
+					            <div th:id="|comment-edit-${forumPostCommentVO.commentId}|" style="display: none; margin-top: 10px;">
+					                <form th:action="@{/forumpost/update-comment-submit}" th:object="${forumCommentVO}" method="post">
+					                    <input type="hidden" name="commentId" th:value="${forumPostCommentVO.commentId}">
+					                    <input type="hidden" name="postId" th:value="${forumPostVO.postId}">
+					                    <input type="hidden" name="forumId" th:value="${forumId}">
+					                    
+					                    <textarea name="commentContent" class="form-control" 
+					                              style="width: 100%; border-radius: 10px; padding: 10px; border: 1px solid #ddd;"
+					                              th:text="${forumPostCommentVO.commentContent}"></textarea>
+					                    
+					                    <div class="edit-buttons">
+										    <button type="button" class="btn-cancel" 
+										            th:onclick="|switchToDisplayMode('${forumPostCommentVO.commentId}')|">取消</button>
+										    <button type="submit" class="btn-save">儲存</button>
+										</div>
+					                    
+					                    <div id="updateCommentError" 
+										     th:if="${#fields.hasErrors('commentContent')}" 
+										     th:errors="*{commentContent}" 
+										     style="display: none;">
+										</div>
+					                </form>
+					            </div>
+					        </div>
+					    </div>
+					</th:block>
 
                     <form th:action="@{/forumpost/insert-comment}" method="post" th:object="${forumCommentVO}" class="reply-box-modern">
                         <input type="hidden" name="postId" th:value="${forumPostVO.postId}"> 
@@ -325,6 +400,17 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                 });
             }
             
+            const updateErrorEl = document.getElementById('updateCommentError');
+            // 只有當 Spring Validation 驗證失敗產生錯誤標籤時，才會執行
+            if (updateErrorEl && updateErrorEl.textContent.trim() !== "") {
+                Swal.fire({ 
+                    icon: 'warning', 
+                    title: '留言失敗', 
+                    text: updateErrorEl.textContent, // 抓取 th:errors 產生的文字
+                    confirmButtonColor: '#ff9800' 
+                });
+            }
+            
          	// 取得 Flash Attribute 傳來的訊息
     		const successMsgs = [[${successMsgs}]];
     		
@@ -361,6 +447,24 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                 el.classList.remove('show');
             });
         });
+        
+     	// 切換至編輯模式
+        function switchToEditMode(commentId) {
+            // 1. 隱藏原本的內容，顯示編輯表單
+            document.getElementById(`comment-display-${commentId}`).style.display = 'none';
+            document.getElementById(`comment-edit-${commentId}`).style.display = 'block';
+            
+            // 2. 自動關閉已經開啟的下拉選單 (避免選單卡在畫面上)
+            document.querySelectorAll('.dropdown-menu.show').forEach(el => {
+                el.classList.remove('show');
+            });
+        }
+
+        // 切換回顯示模式 (取消編輯時)
+        function switchToDisplayMode(commentId) {
+            document.getElementById(`comment-display-${commentId}`).style.display = 'block';
+            document.getElementById(`comment-edit-${commentId}`).style.display = 'none';
+        }
 
 		// 圖片縮放
         function openImageModal(imgUrl) {
