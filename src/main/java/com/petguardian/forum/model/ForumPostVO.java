@@ -41,16 +41,9 @@ public class ForumPostVO implements Serializable{
 	@JoinColumn(name = "mem_id", referencedColumnName = "mem_id", updatable = false)
 	private Member member;
 	
-	// 測試用
-//	@Transient
-//	private Integer memId;
-	
 	@ManyToOne
 	@JoinColumn(name = "forum_id", referencedColumnName = "forum_id", updatable = false)
 	private ForumVO forum;
-	
-//	@Column(name = "forum_id", updatable = false)
-//	private Integer forumId;
 	
 	@Column(name = "post_title")
 	@NotBlank(message = "文章標題請勿空白")
@@ -91,13 +84,13 @@ public class ForumPostVO implements Serializable{
 	@OrderBy("reportId asc")
 	private Set<ForumPostReportVO> forumPostReports;
 	
-//	@ManyToMany
-//	@JoinTable(
-//			   name = "forumpostcollection",
-//			   joinColumns = { @JoinColumn( name = "post_id", referencedColumnName = "post_id" ) },
-//			   inverseJoinColumns = { @JoinColumn( name = "mem_id", referencedColumnName = "mem_id") }
-//			  )
-//	private Set<> members;
+	@ManyToMany
+	@JoinTable(
+			   name = "forumpostcollection",
+			   joinColumns = { @JoinColumn( name = "post_id", referencedColumnName = "post_id" ) },
+			   inverseJoinColumns = { @JoinColumn( name = "mem_id", referencedColumnName = "mem_id") }
+			  )
+	private Set<Member> members;
 	
 	public ForumPostVO() {
 		super();
@@ -158,22 +151,6 @@ public class ForumPostVO implements Serializable{
 	public void setPostId(Integer postId) {
 		this.postId = postId;
 	}
-	
-//	public Integer getMemId() {
-//		return memId;
-//	}
-//	
-//	public void setMemId(Integer memId) {
-//		this.memId = memId;
-//	}
-	
-//	public Integer getForumId() {
-//		return forumId;
-//	}
-	
-//	public void setForumId(Integer forumId) {
-//		this.forumId = forumId;
-//	}
 	
 	public String getPostTitle() {
 		return postTitle;
@@ -241,25 +218,5 @@ public class ForumPostVO implements Serializable{
 		}
 		return true;
 	}
-	
-	//	驗證上傳檔案是否為圖片檔
-//	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
-//	public boolean isImage() {
-//		if(upFile == null || upFile.isEmpty()) {
-//			return true;
-//		}
-//		String contentType = upFile.getContentType();
-//		return contentType != null && contentType.startsWith("image/");
-//	}
-	
-	//	驗證圖片大小不得超過1MB
-//	@AssertTrue(message = "圖片過大，請選擇小於 1MB 的檔案")
-//	public boolean isSize() {
-//		if (upFile == null || upFile.isEmpty()) {
-//			return true;
-//		}
-//		long maxSize = 1 * 1024 *1024;	
-//		return upFile != null && maxSize > upFile.getSize();
-//	}
 
 }

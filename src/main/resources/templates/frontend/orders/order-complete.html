@@ -64,7 +64,8 @@
                 <div class="card order-info-card">
                     <div class="card-header">
                         <h3>
-                            <i class="fas fa-file-invoice" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            <i class="fas fa-file-invoice"
+                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
                             訂單資訊
                         </h3>
                     </div>
@@ -76,7 +77,9 @@
 
                     <div class="order-info-row">
                         <span class="info-label">訂單時間</span>
-                        <span class="info-value" th:text="${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</span>
+                        <span class="info-value"
+                            th:text="${#temporals.format(order.orderTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01
+                            12:00:00</span>
                     </div>
 
                     <div class="order-info-row">
@@ -112,32 +115,36 @@
                 <div class="card">
                     <div class="card-header">
                         <h3>
-                            <i class="fas fa-shopping-bag" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            <i class="fas fa-shopping-bag"
+                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
                             商品明細
                         </h3>
                     </div>
 
                     <div id="orderItemsList">
-                        <div th:each="item : ${orderItems}" class="order-item-row" style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 12px;">
-                            <img th:src="${item.productImg}"
-                                 th:alt="${item.productTitle}"
-                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                        <div th:each="item : ${orderItems}" class="order-item-row"
+                            style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 12px;">
+                            <img th:src="${item.productImg}" th:alt="${item.productTitle}"
+                                style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
                             <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
                                 <div>
-                                    <div style="font-weight: 600; margin-bottom: 0.25rem;" th:text="${item.productTitle}">商品名稱</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;"
+                                        th:text="${item.productTitle}">商品名稱</div>
                                     <small style="color: #999;">
                                         <span th:text="'$' + ${item.proPrice}">$0</span>
                                         <span th:text="' x ' + ${item.quantity}">x 1</span>
                                     </small>
                                 </div>
-                                <div style="font-weight: 700; color: var(--primary-color);" th:text="'$' + ${item.subtotal}">$0</div>
+                                <div style="font-weight: 700; color: var(--primary-color);"
+                                    th:text="'$' + ${item.subtotal}">$0</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- 金額小計 -->
                     <div style="border-top: 1px solid #eee; padding-top: 1rem; margin-top: 1rem;">
-                        <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700;">
                             <span>合計</span>
                             <span style="color: var(--primary-color);" th:text="'$' + ${order.orderTotal}">$0</span>
                         </div>
@@ -166,7 +173,8 @@
                             <i class="fas fa-map-marker-alt"></i>
                             <span th:text="${order.receiverAddress}">收件地址</span>
                         </div>
-                        <div class="receiver-row" th:if="${order.specialInstructions != null and !order.specialInstructions.isEmpty()}">
+                        <div class="receiver-row"
+                            th:if="${order.specialInstructions != null and !order.specialInstructions.isEmpty()}">
                             <i class="fas fa-comment"></i>
                             <span th:text="${order.specialInstructions}">備註說明</span>
                         </div>
@@ -174,7 +182,7 @@
                 </div>
 
                 <!-- 下一步說明 -->
-                <div class="card notice-card">
+                <!-- <div class="card notice-card">
                     <h4 style="margin-bottom: 1rem; color: var(--text-color);">
                         <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
                         接下來會發生什麼？
@@ -209,7 +217,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- 操作按鈕 -->
                 <div class="action-buttons">

@@ -25,10 +25,7 @@ public class ForumCommentReportVO implements Serializable{
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "report_id", updatable = false)
 	private Integer reportId;
-	
-//	@Column(name = "mem_id", updatable = false)
-//	private Integer memId;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "mem_id", referencedColumnName = "mem_id")
 	private Member member;
@@ -36,9 +33,6 @@ public class ForumCommentReportVO implements Serializable{
 	@ManyToOne
 	@JoinColumn(name = "comment_id", referencedColumnName = "comment_id")
 	private ForumCommentVO forumComment;
-	
-//	@Column(name = "comment_id", updatable = false)
-//	private Integer commentId;
 	
 	@Column(name = "report_type")
 	private Integer reportType;
@@ -87,22 +81,6 @@ public class ForumCommentReportVO implements Serializable{
 	public void setReportId(Integer reportId) {
 		this.reportId = reportId;
 	}
-
-//	public Integer getMemId() {
-//		return memId;
-//	}
-//
-//	public void setMemId(Integer memId) {
-//		this.memId = memId;
-//	}
-
-//	public Integer getCommentId() {
-//		return commentId;
-//	}
-//
-//	public void setCommentId(Integer commentId) {
-//		this.commentId = commentId;
-//	}
 
 	public Integer getReportType() {
 		return reportType;
