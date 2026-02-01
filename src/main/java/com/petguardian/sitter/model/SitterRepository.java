@@ -3,9 +3,12 @@ package com.petguardian.sitter.model;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 
 /**
  * 保姆 Repository
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Repository;
  * 包含依會員查詢、狀態篩選、服務地區篩選等功能
  */
 @Repository
+@Transactional
 public interface SitterRepository extends JpaRepository<SitterVO, Integer> {
 
         /**
@@ -32,8 +36,8 @@ public interface SitterRepository extends JpaRepository<SitterVO, Integer> {
          */
         List<SitterVO> findBySitterStatus(Byte sitterStatus);
 
-        @org.springframework.data.jpa.repository.Modifying
-        @org.springframework.data.jpa.repository.Query("UPDATE SitterVO s SET s.serviceTime = :serviceTime WHERE s.sitterId = :sitterId")
+        @Modifying
+        @Query("UPDATE SitterVO s SET s.serviceTime = :serviceTime WHERE s.sitterId = :sitterId")
         void updateServiceTime(Integer sitterId, String serviceTime);
 
         // ========== 以下為會員搜尋保姆功能新增的方法 ==========
