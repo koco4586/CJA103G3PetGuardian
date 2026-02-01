@@ -18,7 +18,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.booking.model.BookingScheduleVO;
 import com.petguardian.booking.model.BookingOrderVO;
-import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.booking.model.BookingOrderVO;
+// import com.petguardian.sitter.model.SitterVO; // [Refactor] 不再直接引用 Entity
 import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.model.SitterDashboardDTO;
 
@@ -66,15 +67,18 @@ public class SitterDashboardController {
             return "redirect:/sitter/apply";
         }
 
-        SitterVO sitter = dashboardData.getSitter();
+        // [Refactor] 改用專屬 DTO 取代 Entity
+        SitterDashboardDTO.SitterInfoDTO sitter = dashboardData.getSitterInfo();
 
         // 3. 檢查停權狀態 (sitterStatus == 1, 停權)
+        // [Refactor] 使用新的 Inner DTO 取得狀態
         if (sitter.getSitterStatus() != null && sitter.getSitterStatus() == 1) {
             redirectAttributes.addFlashAttribute("errorMessage", "您已經被停權,無法使用保姆的服務,如有疑問請聯繫管理員處理");
             return "redirect:/front/managementpage";
         }
 
         // 4. 準備 Model (維持與原本 View 的相容性)
+        // [Refactor] 將 DTO 放入 "sitter"，前端無需修改
         model.addAttribute("sitter", sitter);
         model.addAttribute("serviceTime", sitter.getServiceTime());
         model.addAttribute("serviceCount", dashboardData.getServiceCount());
