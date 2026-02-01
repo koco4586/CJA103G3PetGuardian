@@ -11,12 +11,22 @@ import org.springframework.stereotype.Service;
 import com.petguardian.evaluate.model.EvaluateDTO;
 import com.petguardian.evaluate.model.EvaluateRepository;
 import com.petguardian.evaluate.model.EvaluateVO;
+import com.petguardian.sitter.model.SitterMemberRepository;
+import com.petguardian.sitter.model.SitterMemberVO;
+import com.petguardian.sitter.model.SitterRepository;
+import com.petguardian.sitter.model.SitterVO;
 
 @Service
 public class EvaluateServiceImpl implements EvaluateService {
 
     @Autowired
     private EvaluateRepository repo;
+
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
+
+    @Autowired
+    private SitterRepository sitterRepository;
 
     @Override
     public void handleSubmission(EvaluateVO vo, String currentRole) {
@@ -102,6 +112,52 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
     public List<EvaluateVO> getReviewsBySitterId(Integer sitterId) {
-        return repo.findByReceiverId(sitterId);
+        List<EvaluateVO> reviews = repo.findByReceiverId(sitterId);
+        // 填充評價者名字（會員評保母，所以 senderId 是會員ID）
+        fillSenderNames(reviews);
+        return reviews;
+    }
+
+    @Override
+    public List<EvaluateVO> getReviewsByMemberId(Integer memberId) {
+        // roleType=0 代表保母評價會員
+        List<EvaluateVO> reviews = repo.findByReceiverIdAndRoleType(memberId, 0);
+        // 填充評價者名字（保母評會員，所以 senderId 是保母ID）
+        fillSenderNames(reviews);
+        return reviews;
+    }
+
+    /**
+     * 填充評價者名字
+     * 根據 roleType 和 senderId 從對應的表查詢名字
+     */
+    private void fillSenderNames(List<EvaluateVO> reviews) {
+        if (reviews == null || reviews.isEmpty()) {
+            return;
+        }
+
+        for (EvaluateVO review : reviews) {
+            if (review.getSenderId() == null || review.getRoleType() == null) {
+                continue;
+            }
+
+            String senderName = null;
+
+            if (review.getRoleType() == 0) {
+                // roleType=0: 保母評會員，senderId 是保母ID (sitterId)
+                // 從 SITTER 表查詢保母名字
+                senderName = sitterRepository.findById(review.getSenderId())
+                        .map(SitterVO::getSitterName)
+                        .orElse(null);
+            } else if (review.getRoleType() == 1) {
+                // roleType=1: 會員評保母，senderId 是會員ID (memId)
+                // 從 SITTER_MEMBER 表查詢會員名字
+                senderName = sitterMemberRepository.findById(review.getSenderId())
+                        .map(SitterMemberVO::getMemName)
+                        .orElse(null);
+            }
+
+            review.setSenderName(senderName);
+        }
     }
 }

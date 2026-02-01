@@ -1,0 +1,170 @@
+/* ========================================
+   評價功能共用樣式
+   ======================================== */
+
+/* 評價輸入框樣式 */
+.dynamic-eval-wrapper {
+	overflow: hidden;
+	max-height: 0;
+	opacity: 0;
+	margin-top: 0;
+	padding: 0 20px;
+	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	background: #fffef2;
+	border-radius: 15px;
+	border: 1px solid transparent;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.dynamic-eval-wrapper.active {
+	max-height: 800px;
+	opacity: 1;
+	margin-top: 10px;
+	margin-bottom: 20px;
+	padding: 20px;
+	border: 1px solid #ffeaa7;
+	box-shadow: 0 4px 15px rgba(255, 234, 167, 0.3);
+}
+
+/* 標籤按鈕樣式 */
+.eval-tag {
+	display: inline-block;
+	padding: 6px 14px;
+	margin: 5px;
+	background: #fff;
+	border: 1px solid #ffeaa7;
+	border-radius: 20px;
+	cursor: pointer;
+	font-size: 0.9rem;
+	color: #7d5a00;
+	transition: all 0.2s;
+}
+
+.eval-tag.selected {
+	background: #ffeaa7;
+	font-weight: bold;
+}
+
+/* 狗狗腳印送出按鈕 */
+.submit-paw-btn {
+	background: #f39c12;
+	color: white;
+	border: none;
+	padding: 10px 25px;
+	border-radius: 50px;
+	cursor: pointer;
+	font-weight: bold;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	float: right;
+	transition: transform 0.1s, background 0.2s;
+}
+
+.submit-paw-btn:active {
+	transform: scale(0.92);
+}
+
+.submit-paw-btn:hover {
+	background: #e67e22;
+}
+
+/* 星星樣式 */
+.dynamic-stars {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 1.5rem;
+	color: #ddd;
+	cursor: pointer;
+	flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+	.dynamic-stars {
+		font-size: 1.2rem;
+	}
+}
+
+.star-btn {
+	transition: color 0.2s, transform 0.1s;
+}
+
+.star-btn:active {
+	transform: scale(0.9);
+}
+
+.rating-text {
+	font-size: 0.9rem;
+	color: #666;
+	margin-left: 0.5rem;
+	white-space: nowrap;
+}
+
+/* 會員歷史評價顯示區塊 */
+.member-review-box {
+	background: #f8f9fa;
+	border-radius: 15px;
+	padding: 20px;
+	margin-top: 15px;
+	border: 1px solid #e9ecef;
+	animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.member-review-box h4 {
+	color: #495057;
+	margin-bottom: 15px;
+	font-size: 1.1rem;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.reviews-container {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.review-card {
+	background: white;
+	padding: 15px;
+	border-radius: 10px;
+	border: 1px solid #dee2e6;
+}
+
+.review-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.review-card strong {
+	color: #212529;
+	font-size: 0.95rem;
+}
+
+.review-card p {
+	color: #6c757d;
+	line-height: 1.6;
+	margin: 8px 0;
+}
+
+.review-card small {
+	color: #adb5bd;
+	font-size: 0.85rem;
+}

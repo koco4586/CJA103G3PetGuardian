@@ -20,4 +20,12 @@ public interface EvaluateService {
      * @return 該保姆的所有評價列表
      */
     List<EvaluateVO> getReviewsBySitterId(Integer sitterId);
+
+    /**
+     * 根據會員 ID 查詢所有保母對該會員的評價
+     * 
+     * @param memberId 會員 ID
+     * @return 該會員被保母評價的所有紀錄
+     */
+    List<EvaluateVO> getReviewsByMemberId(Integer memberId);
 }

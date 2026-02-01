@@ -66,14 +66,25 @@ window.injectEvalBox = function (button, orderId, sitterId) {
     // 如果已經展開，則收合
     if (evalBox && evalBox.classList.contains('active')) {
         const textarea = evalBox.querySelector('.eval-content');
-        if (textarea.value.trim().length > 0) {
-            if (!confirm('您的評價尚未送出，確定要先暫時收起來嗎？(內容將會保留)')) {
-                return;
+        const rating = evalBox.querySelector('.dynamic-stars').getAttribute('data-rating') || 0;
+
+        // 檢查是否有填寫內容
+        if (textarea.value.trim().length > 0 || rating > 0) {
+            const keepContent = confirm('您的評價尚未送出，是否要保留內容？\n\n點擊「確定」保留內容（下次展開時可繼續編輯）\n點擊「取消」清空內容');
+
+            if (keepContent) {
+                // 保留內容，只收起
+                evalBox.classList.remove('active');
+            } else {
+                // 不保留，移除元素
+                evalBox.classList.remove('active');
+                setTimeout(() => evalBox.remove(), 500);
             }
+        } else {
+            // 沒有內容，直接移除
+            evalBox.classList.remove('active');
+            setTimeout(() => evalBox.remove(), 500);
         }
-        evalBox.classList.remove('active');
-        // 延遲移除，讓動畫完成
-        setTimeout(() => evalBox.remove(), 500);
         return;
     }
 
@@ -218,6 +229,126 @@ function sendReviewToBackend(orderId, receiverId, content, roleType, rating, eva
         });
 }
 
+/**
+ * 動態插入保母評價會員的輸入框
+ * @param {HTMLElement} button - 觸發按鈕
+ * @param {number} orderId - 訂單編號
+ * @param {number} memberId - 會員編號
+ */
+window.injectSitterEvalBox = function (button, orderId, memberId) {
+    const parentCard = button.closest('.booking-card');
+
+    // 檢查是否已經有輸入框（在訂單卡片之後）
+    let evalBox = parentCard.nextElementSibling;
+    if (evalBox && !evalBox.classList.contains('dynamic-eval-wrapper')) {
+        evalBox = null;
+    }
+
+    // 如果已經展開，則收合
+    if (evalBox && evalBox.classList.contains('active')) {
+        const textarea = evalBox.querySelector('.eval-content');
+        const rating = evalBox.querySelector('.dynamic-stars').getAttribute('data-rating') || 0;
+
+        // 檢查是否有填寫內容
+        if (textarea.value.trim().length > 0 || rating > 0) {
+            const keepContent = confirm('您的評價尚未送出，是否要保留內容？\n\n點擊「確定」保留內容（下次展開時可繼續編輯）\n點擊「取消」清空內容');
+
+            if (keepContent) {
+                // 保留內容，只收起
+                evalBox.classList.remove('active');
+            } else {
+                // 不保留，移除元素
+                evalBox.classList.remove('active');
+                setTimeout(() => evalBox.remove(), 500);
+            }
+        } else {
+            // 沒有內容，直接移除
+            evalBox.classList.remove('active');
+            setTimeout(() => evalBox.remove(), 500);
+        }
+        return;
+    }
+
+    // 如果不存在，則建立新的輸入框
+    if (!evalBox) {
+        evalBox = document.createElement('div');
+        evalBox.className = 'dynamic-eval-wrapper';
+
+        evalBox.innerHTML = `
+            <h4 style="color: #7d5a00; margin-bottom: 15px;">您對會員的滿意度為？</h4>
+            
+            <div class="rating-input dynamic-stars" style="margin-bottom: 15px;">
+                <i class="fas fa-star star-btn" data-value="1"></i>
+                <i class="fas fa-star star-btn" data-value="2"></i>
+                <i class="fas fa-star star-btn" data-value="3"></i>
+                <i class="fas fa-star star-btn" data-value="4"></i>
+                <i class="fas fa-star star-btn" data-value="5"></i>
+                <span class="rating-text" style="font-size: 0.9rem; color: #999; margin-left:10px;">請點擊星等</span>
+            </div>
+
+            <textarea class="eval-content" style="width: 100%; height: 80px; border: 1px solid #ffeaa7; border-radius: 8px; padding: 10px; background:#fff; font-size: 1rem;" placeholder="輸入評論..."></textarea>
+            
+            <div style="text-align: right; margin-top: 15px;">
+                <button class="cancel-eval-btn" style="background: #95a5a6; color: white; border: none; padding: 10px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-right: 10px; transition: all 0.2s;">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button class="submit-paw-btn">
+                    提交評論 <i class="fas fa-paw paw-icon"></i>
+                </button>
+            </div>
+        `;
+
+        // 插入到訂單卡片之後（不是內部）
+        parentCard.insertAdjacentElement('afterend', evalBox);
+
+        // 初始化星星邏輯
+        initStarRating(evalBox.querySelector('.dynamic-stars'));
+
+        // 狗腳印移入移出效果
+        const submitBtn = evalBox.querySelector('.submit-paw-btn');
+
+        submitBtn.addEventListener('mouseenter', function () {
+            const pawIcon = this.querySelector('.paw-icon');
+            if (pawIcon) {
+                pawIcon.outerHTML = '<i class="fas fa-paw"></i><i class="fas fa-paw"></i>';
+            }
+        });
+
+        submitBtn.addEventListener('mouseleave', function () {
+            const icons = this.querySelectorAll('.fas.fa-paw');
+            if (icons.length > 1) {
+                icons[1].remove();
+                icons[0].classList.add('paw-icon');
+            }
+        });
+
+        // 取消按鈕
+        evalBox.querySelector('.cancel-eval-btn').onclick = function () {
+            evalBox.classList.remove('active');
+            // 延遲移除，讓動畫完成
+            setTimeout(() => evalBox.remove(), 500);
+        };
+
+        // 提交按鈕
+        submitBtn.onclick = function () {
+            const rating = evalBox.querySelector('.dynamic-stars').getAttribute('data-rating') || 0;
+            const content = evalBox.querySelector('.eval-content').value;
+
+            if (rating == 0) return alert('❌ 請先評分！');
+            if (!content.trim()) return alert('❌ 請輸入內容！');
+
+            // 確認提示
+            if (!confirm('確定要送出評價嗎？')) return;
+
+            // roleType=0 代表保母評價會員
+            sendReviewToBackend(orderId, memberId, content, 0, rating, evalBox);
+        };
+    }
+
+    // 展開輸入框
+    evalBox.classList.add('active');
+}
+
 
 // ========================================
 // 歷史評價功能區塊
@@ -296,29 +427,70 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                 return;
             }
 
-            reviews.forEach(review => {
-                const stars = renderStars(review.starRating || 0);
-                const card = document.createElement('div');
-                card.className = 'review-card';
-                card.innerHTML = `
-                    <div class="review-header">
-                        <div>
-                            <strong>會員 ${review.senderId}</strong>
-                            <button class="btn btn-sm btn-outline-danger ms-2"
-                                style="padding: 0px 6px; font-size: 0.8rem;"
-                                onclick="reportReview(${review.bookingOrderId})">
-                                <i class="fas fa-flag"></i> 檢舉
-                            </button>
-                        </div>
-                        <div style="color: #ffc107;">
-                            ${stars}
-                        </div>
-                    </div>
-                    <p class="mb-0 text-muted">${review.content || ''}</p>
-                    <small class="text-muted">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+            // 如果評價數量 >= 10，使用分頁功能
+            if (reviews.length >= 10) {
+                // 建立分頁結構
+                container.innerHTML = `
+                    <div id="reviewsItemsContainer"></div>
+                    <div id="reviewsPaginationContainer" style="text-align: center; margin-top: 1.5rem; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;"></div>
                 `;
-                container.appendChild(card);
-            });
+
+                initPagination(
+                    reviews,
+                    10,
+                    'reviewsItemsContainer',
+                    'reviewsPaginationContainer',
+                    function (review) {
+                        const stars = renderStars(review.starRating || 0);
+                        const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                        return `
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div>
+                                        <strong>${reviewerName}</strong>
+                                        <button class="btn btn-sm btn-outline-danger ms-2"
+                                            style="padding: 0px 6px; font-size: 0.8rem;"
+                                            onclick="reportReview(${review.bookingOrderId})">
+                                            <i class="fas fa-flag"></i> 檢舉
+                                        </button>
+                                    </div>
+                                    <div style="color: #ffc107;">
+                                        ${stars}
+                                    </div>
+                                </div>
+                                <p class="mb-0 text-muted">${review.content || ''}</p>
+                                <small class="text-muted">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                            </div>
+                        `;
+                    }
+                );
+            } else {
+                // 不足10筆，直接全部顯示，不使用分頁
+                reviews.forEach(review => {
+                    const stars = renderStars(review.starRating || 0);
+                    const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                    const card = document.createElement('div');
+                    card.className = 'review-card';
+                    card.innerHTML = `
+                        <div class="review-header">
+                            <div>
+                                <strong>${reviewerName}</strong>
+                                <button class="btn btn-sm btn-outline-danger ms-2"
+                                    style="padding: 0px 6px; font-size: 0.8rem;"
+                                    onclick="reportReview(${review.bookingOrderId})">
+                                    <i class="fas fa-flag"></i> 檢舉
+                                </button>
+                            </div>
+                            <div style="color: #ffc107;">
+                                ${stars}
+                            </div>
+                        </div>
+                        <p class="mb-0 text-muted">${review.content || ''}</p>
+                        <small class="text-muted">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                    `;
+                    container.appendChild(card);
+                });
+            }
         })
         .catch(err => {
             console.error('載入評價失敗:', err);
@@ -409,29 +581,70 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                 return;
             }
 
-            reviews.forEach(review => {
-                const stars = renderStars(review.starRating || 0);
-                const card = document.createElement('div');
-                card.style.cssText = 'border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;';
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <strong>會員 ${review.senderId}</strong>
-                            <button class="btn btn-sm btn-outline-danger"
-                                style="padding: 0px 6px; font-size: 0.8rem;"
-                                onclick="reportReview(${review.bookingOrderId})">
-                                <i class="fas fa-flag"></i> 檢舉
-                            </button>
-                            <span style="color: #ffc107;">
-                                ${stars}
-                            </span>
-                        </div>
-                        <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
-                    </div>
-                    <p style="margin: 0; color: #555; line-height: 1.6;">${review.content || ''}</p>
+            // 如果評價數量 >= 10，使用分頁功能
+            if (reviews.length >= 10) {
+                // 建立分頁結構
+                container.innerHTML = `
+                    <div id="dashboardReviewsItems"></div>
+                    <div id="dashboardReviewsPagination" style="text-align: center; margin-top: 1.5rem; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;"></div>
                 `;
-                container.appendChild(card);
-            });
+
+                initPagination(
+                    reviews,
+                    10,
+                    'dashboardReviewsItems',
+                    'dashboardReviewsPagination',
+                    function (review) {
+                        const stars = renderStars(review.starRating || 0);
+                        const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                        return `
+                            <div style="border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <strong>${reviewerName}</strong>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            style="padding: 0px 6px; font-size: 0.8rem;"
+                                            onclick="reportReview(${review.bookingOrderId})">
+                                            <i class="fas fa-flag"></i> 檢舉
+                                        </button>
+                                        <span style="color: #ffc107;">
+                                            ${stars}
+                                        </span>
+                                    </div>
+                                    <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                                </div>
+                                <p style="margin: 0; color: #555; line-height: 1.6;">${review.content || ''}</p>
+                            </div>
+                        `;
+                    }
+                );
+            } else {
+                // 不足10筆，直接全部顯示，不使用分頁
+                reviews.forEach(review => {
+                    const stars = renderStars(review.starRating || 0);
+                    const reviewerName = review.senderName || `會員 ${review.senderId}`;
+                    const card = document.createElement('div');
+                    card.style.cssText = 'border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;';
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <strong>${reviewerName}</strong>
+                                <button class="btn btn-sm btn-outline-danger"
+                                    style="padding: 0px 6px; font-size: 0.8rem;"
+                                    onclick="reportReview(${review.bookingOrderId})">
+                                    <i class="fas fa-flag"></i> 檢舉
+                                </button>
+                                <span style="color: #ffc107;">
+                                    ${stars}
+                                </span>
+                            </div>
+                            <small style="color: #999;">${new Date(review.createTime).toLocaleDateString('zh-TW')}</small>
+                        </div>
+                        <p style="margin: 0; color: #555; line-height: 1.6;">${review.content || ''}</p>
+                    `;
+                    container.appendChild(card);
+                });
+            }
         })
         .catch(err => {
             console.error('載入評價失敗:', err);
@@ -536,4 +749,85 @@ window.renderStars = function (rating) {
         }
     }
     return stars;
+}
+
+/**
+ * 顯示會員被保母評價的歷史紀錄
+ * @param {number} memberId - 會員 ID
+ * @param {string} memberName - 會員名稱
+ * @param {HTMLElement} buttonElement - 觸發按鈕元素
+ */
+window.loadMemberReviews = function (memberId, memberName, buttonElement) {
+    const parentCard = buttonElement.closest('.booking-card');
+
+    // 檢查是否已經展開評論區塊
+    let reviewBox = parentCard.nextElementSibling;
+    if (reviewBox && reviewBox.classList.contains('member-review-box')) {
+        // 如果已展開，則收合並移除
+        reviewBox.remove();
+        return;
+    }
+
+    // 呼叫 API 取得該會員的歷史評價
+    fetch(`/pet/evaluate/member/${memberId}`)
+        .then(res => res.json())
+        .then(reviews => {
+            console.log('📦 收到會員評價資料:', reviews);
+
+            // 建立評論顯示區塊
+            reviewBox = document.createElement('div');
+            reviewBox.className = 'member-review-box';
+
+            // 建立標題
+            let headerHTML = `
+                <h4>
+                    <i class="fas fa-user-circle"></i> ${memberName} 的歷史評價
+                    <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">(共 ${reviews.length} 筆)</span>
+                </h4>
+            `;
+
+            // 建立評價列表
+            let reviewsHTML = '<div class="reviews-container">';
+
+            if (reviews.length === 0) {
+                reviewsHTML += `
+                    <div style="text-align: center; padding: 2rem; color: #999;">
+                        <i class="far fa-comment-dots fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
+                        <p>目前尚無評價紀錄</p>
+                    </div>
+                `;
+            } else {
+                reviews.forEach(review => {
+                    const stars = renderStars(review.starRating || 0);
+                    const reviewDate = new Date(review.createTime).toLocaleDateString('zh-TW');
+
+                    reviewsHTML += `
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div>
+                                    <strong>保母 ${review.senderId}</strong>
+                                </div>
+                                <div style="color: #ffc107;">
+                                    ${stars}
+                                </div>
+                            </div>
+                            <p class="mb-0 text-muted">${review.content || ''}</p>
+                            <small class="text-muted">${reviewDate}</small>
+                        </div>
+                    `;
+                });
+            }
+
+            reviewsHTML += '</div>';
+
+            // 組合完整 HTML
+            reviewBox.innerHTML = headerHTML + reviewsHTML;
+
+            // 插入到訂單卡片之後
+            parentCard.insertAdjacentElement('afterend', reviewBox);
+        })
+        .catch(err => {
+            console.error('載入會員評價失敗:', err);
+            alert('❌ 載入評價失敗，請稍後再試');
+        });
 }

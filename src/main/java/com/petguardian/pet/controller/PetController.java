@@ -4,6 +4,7 @@ package com.petguardian.pet.controller;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -552,6 +553,8 @@ public class PetController {
     @PostMapping("/evaluate/save")
     @ResponseBody
     public String saveEvaluate(@RequestBody Map<String, Object> payload, HttpSession session) {
+
+        System.out.println("當前 session 中的 roleId 是: " + session.getAttribute("roleId"));
         try {
             EvaluateVO vo = new EvaluateVO();
 
@@ -574,28 +577,33 @@ public class PetController {
                 return "error: 找不到訂單資料";
             }
 
-            // --- 3. 取得當前登入者 ID (senderId) ---
+            // --- 3. 取得當前登入者 ID ---
             Integer memId = (Integer) session.getAttribute("memId");
             if (memId == null) {
                 return "error: 請先登入";
             }
-            vo.setSenderId(memId);
 
-            // --- 4. 判斷角色並設定 receiverId ---
-            Object roleObj = session.getAttribute("roleId");
+            // --- 4. 判斷角色並設定 senderId、receiverId 和 roleType ---
+            // 關鍵：使用前端傳送的 roleType 判斷，而不是 session.roleId
+            // 因為同一個會員可能同時有保母身分
+            Object roleTypeObj = payload.get("roleType");
+            int roleType = (roleTypeObj != null) ? Integer.parseInt(roleTypeObj.toString()) : 1;
             String currentRole;
 
-            // 🔴 重要：你的系統定義
-            // roleId = 0 → 會員評保姆
-            // roleId = 1 → 保姆評會員
-            if (roleObj != null && "1".equals(roleObj.toString())) {
-                // roleId = 1 → 保姆
+            // 🔴 重要：根據前端傳送的 roleType 判斷
+            // roleType: 0 = 保母評會員，1 = 會員評保母
+            if (roleType == 0) {
+                // 保母評價會員
                 currentRole = "SITTER";
-                vo.setReceiverId(order.getMemId()); // 保姆評價會員 → receiverId = 會員ID
+                vo.setSenderId(order.getSitterId()); // 保母評價會員 → senderId = 保母ID
+                vo.setReceiverId(order.getMemId()); // 保母評價會員 → receiverId = 會員ID
+                vo.setRoleType(0); // 保母評會員
             } else {
-                // roleId = 0 或 null → 會員
+                // 會員評價保母
                 currentRole = "MEMBER";
-                vo.setReceiverId(order.getSitterId()); // 會員評價保姆 → receiverId = 保姆ID
+                vo.setSenderId(memId); // 會員評價保母 → senderId = 會員ID
+                vo.setReceiverId(order.getSitterId()); // 會員評價保母 → receiverId = 保母ID
+                vo.setRoleType(1); // 會員評保母
             }
 
             // --- 5. 設定其他資訊 ---
@@ -612,4 +620,64 @@ public class PetController {
             return "error: " + e.getMessage();
         }
     }
+
+    /**
+     * API 端點：根據會員 ID 撈取所有保母對該會員的評價
+     * URL: /pet/evaluate/member/{memberId}
+     * 
+     * @param memberId 會員 ID
+     * @param session  HttpSession 用於權限驗證
+     * @return 該會員被保母評價的所有紀錄 (JSON 格式)
+     */
+    @GetMapping("/evaluate/member/{memberId}")
+    @ResponseBody
+    public ResponseEntity<?> getReviewsByMemberId(@PathVariable Integer memberId, HttpSession session) {
+        try {
+            // 權限驗證：只有會員本人或保母身分才能查看
+            Integer currentMemId = (Integer) session.getAttribute("memId");
+            Integer roleId = (Integer) session.getAttribute("roleId");
+
+            // 檢查是否登入
+            if (currentMemId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("請先登入");
+            }
+
+            // 權限判斷：會員本人或保母身分
+            boolean isOwner = currentMemId.equals(memberId);
+            boolean isSitter = (roleId != null && roleId == 0);
+
+            if (!isOwner && !isSitter) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("無權限查看此評價");
+            }
+
+            List<EvaluateVO> reviews = evaluateService.getReviewsByMemberId(memberId);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("查詢失敗：" + e.getMessage());
+        }
+    }
+
+    @GetMapping("/booking/memberOrders")
+    public String showOrders(HttpSession session, Model model) {
+        // 1. 從 Session 取得 memId 確保有登入
+        Integer memId = (Integer) session.getAttribute("memId");
+        // if (memId == null) {
+        // return "redirect:/front/loginpage"; // 沒登入就踢去登入頁
+        // }
+
+        // 2. 取得角色 ID (保母 0, 會員 1)
+        Object roleId = session.getAttribute("roleId");
+
+        // 3. 傳給前端，讓你的 th:if="${session.roleId == 0}" 能正常運作
+        model.addAttribute("currentRole", roleId);
+        model.addAttribute("memId", memId);
+
+        // 這裡通常還會去 Service 撈該使用者的訂單列表
+        // List<BookingOrderVO> orders = bookingOrderSvc.getOrdersByMemId(memId);
+        // model.addAttribute("orders", orders);
+
+        return "frontend/dashboard-bookings"; // 返回你的預約紀錄 HTML
+    }
+
 }
