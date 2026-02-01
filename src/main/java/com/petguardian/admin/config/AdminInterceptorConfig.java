@@ -21,13 +21,11 @@ public class AdminInterceptorConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/admin/adminloginpage",
                         "/admin/adminlogin",
-                        "/admin/admininsertpage",
-                        "/admin/admininsert",
+                        "/html/backend/admin/admin_login_success.html",
                         "/css/**",
                         "/js/**",
-                        "/images/**",
-                        "/admin/sitter/*",
-                        "/admin/**" // [Temporarily Bypass] Allow all admin pages
+                        "/images/**"
                 );
     }
 }
+

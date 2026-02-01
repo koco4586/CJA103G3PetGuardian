@@ -21,12 +21,11 @@ window.toggleSubmenu = function (e) {
 };
 
 // 管理員登出功能
-window.adminLogout = function() {
-    if (confirm('確定要登出嗎?')) {
-        // 清除 session 並導向登入頁
-        window.location.href = '/admin/logout';
-    }
+window.adminLogout = function () {
+    window.location.href = "../../html/backend/admin/admin_logout.html";
 };
+
+
 
 document.addEventListener("DOMContentLoaded", function () {
     // 定義側邊欄的 HTML 結構

@@ -11,8 +11,10 @@ public class MemberLoginRedirectController {
     @GetMapping("/loginpage")
     public String loginpage(){
 
-        return "frontend/member/login/login";
+        return "redirect:/html/frontend/member/login/login.html";
 
     }
 
 }
+
+///
