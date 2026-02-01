@@ -95,12 +95,7 @@ public class Member {
     private Set<ForumCommentReportVO> forumCommentReports;
     
     // 羽澈
-    @ManyToMany
-	@JoinTable(
-			   name = "forumpostcollection",
-			   joinColumns = { @JoinColumn( name = "mem_id", referencedColumnName = "mem_id" ) },
-			   inverseJoinColumns = { @JoinColumn( name = "post_id", referencedColumnName = "post_id") }
-			  )
+    @ManyToMany(mappedBy = "members")
     private Set<ForumPostVO> postCollections;
     
     // 羽澈

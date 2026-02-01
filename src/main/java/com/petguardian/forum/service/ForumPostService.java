@@ -2,6 +2,7 @@ package com.petguardian.forum.service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,8 @@ import com.petguardian.forum.model.ForumPostPicsRepository;
 import com.petguardian.forum.model.ForumPostPicsVO;
 import com.petguardian.forum.model.ForumPostRepository;
 import com.petguardian.forum.model.ForumPostVO;
+import com.petguardian.member.model.Member;
+import com.petguardian.member.repository.management.MemberManagementRepository;
 
 @Service
 public class ForumPostService {
@@ -22,6 +25,9 @@ public class ForumPostService {
 	
 	@Autowired
 	ForumPostPicsRepository picRepo;
+	
+	@Autowired
+	MemberManagementRepository memRepo;
 	
 	public void addPost(ForumPostVO forumPostVO) {
 		repo.save(forumPostVO);
@@ -94,6 +100,40 @@ public class ForumPostService {
 	
 	public List<ForumPostVO> getAllPostCollectionsByMemId(Integer memId){
 		return repo.findAllPostCollectionsByMemId(memId);
+	}
+	
+	@Transactional
+	public void deletePostCollection(Integer postId, Integer memId) {
+		
+		ForumPostVO forumPostVO = repo.findById(postId)
+				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+	
+		Member member = memRepo.findById(memId)
+				.orElseThrow(() -> new RuntimeException("找不到該會員，編號：" + memId));
+		
+		Set<Member> members = forumPostVO.getMembers();
+		Set<ForumPostVO> posts = member.getPostCollections();
+		
+		posts.remove(forumPostVO);
+		members.remove(member);
+	
+	}
+	
+	@Transactional
+	public void addPostCollection(Integer postId, Integer memId) {
+		
+		ForumPostVO forumPostVO = repo.findById(postId)
+				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
+	
+		Member member = memRepo.findById(memId)
+				.orElseThrow(() -> new RuntimeException("找不到該會員，編號：" + memId));
+		
+		Set<Member> members = forumPostVO.getMembers();
+		Set<ForumPostVO> posts = member.getPostCollections();
+		
+		posts.add(forumPostVO);
+		members.add(member);
+	
 	}
 	
 	public byte[] getPostPic(Integer postId) {
