@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
  * 包含依會員查詢、狀態篩選、服務地區篩選等功能
  */
 @Repository
-@Transactional
 public interface SitterRepository extends JpaRepository<SitterVO, Integer> {
 
         /**
