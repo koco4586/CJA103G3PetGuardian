@@ -6,17 +6,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetGuardian｜後台登出</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../../../css/backend/style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .outer {
+            border: 1px solid lightgray;
+            background-color: lightcyan;
+            border-radius: 30px;
+            padding: 20px;
+        }
+    </style>
+
 </head>
 
 <body>
 
-    <h1>管理員登出</h1>
-    <img src="../../../images/backend/admin/adminlogout/adminlogout.jpg" width="200px">
-    <h3>您確定要登出嗎？</h3>
-    <button class="adminlogout">確定登出</button><br><br>
-    <a href="#">回到首頁</a>
+    <!-- header start -->
+
+    <div class="main-content">
+
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>後台帳號管理</h1>
+                <div class="sub">登出後台中心</div>
+            </div>
+        </header>
+
+        <!-- header end -->
+
+        <div class="outer">
+
+            <h1>管理員登出</h1>
+            <img src="../../../images/backend/admin/adminlogout/adminlogout.jpg" width="200px">
+            <h3>您確定要登出嗎？</h3>
+            <button class="adminlogout">確定登出</button><br><br>
+
+        </div>
+
+    </div> <!-- header最外層<div class="main-content">結束標籤 -->
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="../../../js/backend/sidebar.js"></script>
 
     <script>
         function init() {
@@ -30,7 +70,12 @@
                     credentials: "include"
                 }).then(res => res.json()).then(data => {
                     console.log(data.result);
-                    alert("您已登出～");
+
+                    if (data.result === "登出成功") {
+                        alert("已登出PetGuardian後台中心！");
+                        window.location.href = "./admin_logout_success.html";
+                    }
+
                 });
 
             }

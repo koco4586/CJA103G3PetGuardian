@@ -10,6 +10,6 @@ public class MemberRegisterRedirectController {
 
     @GetMapping("/registerpage")
     public String registerpage(){
-    return "frontend/member/register/register";
+    return "redirect:/html/frontend/member/register/register.html";
     }
 }

@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetGuardian｜管理員修改個人資料</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../../../css/backend/style.css">
+
     <style>
         * {
             box-sizing: border-box;
@@ -24,47 +28,72 @@
         .rightword {
             color: rgb(57, 191, 236);
         }
+
+        .brown {
+            color: brown;
+        }
     </style>
 </head>
 
 <body>
-    <div class="outer">
-        <h1>Petguardian寵護家</h1>
-        <h3>管理員基本資料管理</h3>
 
-        <form>
-            <input type="file" class="adm_image">
-            <div class="show_image"></div>
-            <br><br><!-- 管理員頭像 -->
+    <!-- header start -->
 
-            <span class="mustbe">*必填</span>
-            <span>姓名</span><br>
-            <input type="text" class="adm_name" placeholder="請輸入管理員姓名" required><br><br>
+    <div class="main-content">
 
-            <span class="mustbe">*必填</span>
-            <span>帳號</span><br>
-            <input type="text" class="adm_acc" placeholder="請輸入管理員帳號" required><br><br>
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
 
-            <span>密碼</span><br>
-            <input type="password" class="adm_pw" placeholder="********" disabled>
-            <a href="./admin_resetpw.html">變更密碼</a><br><br>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>後台帳號管理</h1>
+                <div class="sub">變更管理員基本資料</div>
+            </div>
+        </header>
 
-            <span class="mustbe">*必填</span>
-            <span>電子信箱</span><br>
-            <input type="email" class="adm_email" placeholder="請輸入管理員電子信箱" required><br><br>
+        <!-- header end -->
 
-            <span>手機號碼</span><br>
-            <input type="tel" class="adm_tel" placeholder="請輸入管理員手機號碼">
-            <span class="rightword">範例：0912345678</span><br><br>
+        <div class="outer">
 
-            <button type="submit" class="submit">儲存變更</button>
-            <button type="reset">清除重填</button><br><br>
-        </form>
-        <a href="#">返回首頁</a>
+            <form>
+                <input type="file" class="adm_image">
+                <div class="show_image"></div>
+                <br><br><!-- 管理員頭像 -->
 
-    </div>
+                <span class="mustbe">*必填</span>
+                <span>姓名</span><br>
+                <input type="text" class="adm_name" placeholder="請輸入管理員姓名" required><br><br>
+
+                <span class="mustbe">*必填</span>
+                <span>帳號</span><br>
+                <input type="text" class="adm_acc" placeholder="請輸入管理員帳號" required><br><br>
+
+                <span>密碼</span><br>
+                <input type="password" class="adm_pw" placeholder="********" disabled>
+                <a class="brown" href="./admin_resetpw.html">變更密碼</a><br><br>
+
+                <span class="mustbe">*必填</span>
+                <span>電子信箱</span><br>
+                <input type="email" class="adm_email" placeholder="請輸入管理員電子信箱" required><br><br>
+
+                <span>手機號碼</span><br>
+                <input type="tel" class="adm_tel" placeholder="請輸入管理員手機號碼">
+                <span class="rightword">範例：0912345678</span><br><br>
+
+                <button type="submit" class="submit">儲存變更</button>
+                <button type="reset">清除重填</button><br><br>
+            </form>
+
+        </div>
+
+    </div> <!-- header最外層<div class="main-content">結束標籤 -->
+
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="../../../js/backend/sidebar.js"></script>
+
     <script>
 
 
@@ -94,8 +123,8 @@
                     body: formData         //FormData 是瀏覽器提供的「表單資料物件」,瀏覽器會自動Content-Type: multipart/form-data
                 }).then(res => res.json()).then(data => {
                     console.log(data);
+                    alert("管理員基本資料變更成功！");
                     $(".show_image").append(`<img src="${data.admImage}" style="width: 200px;">`);
-                    alert("變更成功");
                 });
 
             }
