@@ -1,8 +1,9 @@
 package com.petguardian.chat.service.chatmessage;
 
-import com.petguardian.chat.service.MessageCreationContext;
+import com.petguardian.chat.service.context.MessageCreationContext;
 
 import com.petguardian.chat.model.ChatMessageEntity;
+import com.petguardian.chat.model.ChatMessageRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -30,12 +31,12 @@ public class ChatMessageService {
 
     private final ChatMessagePersistenceManager persistenceManager;
     private final ChatMessageRetrievalManager retrievalManager;
-    private final com.petguardian.chat.model.ChatMessageRepository messageRepository;
+    private final ChatMessageRepository messageRepository;
 
     public ChatMessageService(
             ChatMessagePersistenceManager persistenceManager,
             ChatMessageRetrievalManager retrievalManager,
-            com.petguardian.chat.model.ChatMessageRepository messageRepository) {
+            ChatMessageRepository messageRepository) {
         this.persistenceManager = persistenceManager;
         this.retrievalManager = retrievalManager;
         this.messageRepository = messageRepository;

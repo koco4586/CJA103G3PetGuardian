@@ -2,7 +2,7 @@ package com.petguardian.chat.service.chatroom;
 
 import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 import com.petguardian.chat.dto.MemberProfileDTO;
-import com.petguardian.chat.service.redis.RedisJsonMapper;
+import com.petguardian.chat.service.RedisJsonMapper;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -118,19 +118,28 @@ public class ChatRoomMetadataCache {
         }
     }
 
-    public void updateReadStatusInCache(Integer roomId, Integer userId, LocalDateTime time) {
-        getRoomMeta(roomId).ifPresent(dto -> {
-            List<Integer> members = dto.getMemberIds();
-            if (members != null && !members.isEmpty()) {
-                if (userId.equals(members.get(0))) {
-                    dto.setMem1LastReadAt(time);
-                } else if (members.size() > 1 && userId.equals(members.get(1))) {
-                    dto.setMem2LastReadAt(time);
-                }
-                setRoomMeta(roomId, dto);
-                markAsDirty(roomId);
+    /**
+     * Updates read status in cache and returns whether update was successful.
+     * @return true if cache was updated, false if cache read failed (Redis down)
+     */
+    public boolean updateReadStatusInCache(Integer roomId, Integer userId, LocalDateTime time) {
+        Optional<ChatRoomMetadataDTO> meta = getRoomMeta(roomId);
+        if (meta.isEmpty()) {
+            return false; // Cache unavailable - caller should fallback to DB
+        }
+        
+        ChatRoomMetadataDTO dto = meta.get();
+        List<Integer> members = dto.getMemberIds();
+        if (members != null && !members.isEmpty()) {
+            if (userId.equals(members.get(0))) {
+                dto.setMem1LastReadAt(time);
+            } else if (members.size() > 1 && userId.equals(members.get(1))) {
+                dto.setMem2LastReadAt(time);
             }
-        });
+            setRoomMeta(roomId, dto);
+            markAsDirty(roomId);
+        }
+        return true;
     }
 
     // =================================================================================

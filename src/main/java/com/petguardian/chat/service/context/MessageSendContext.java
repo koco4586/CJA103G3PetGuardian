@@ -1,4 +1,4 @@
-package com.petguardian.chat.service;
+package com.petguardian.chat.service.context;
 
 import com.petguardian.chat.dto.MemberProfileDTO;
 import com.petguardian.chat.model.ChatMessageEntity;

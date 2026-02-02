@@ -118,7 +118,13 @@ public class ChatRoomMetadataService {
         // 1. Try Cache List
         List<Integer> roomIds = metadataCache.getUserRoomIds(userId);
         if (!roomIds.isEmpty()) {
-            return metadataCache.getRoomMetaBatch(roomIds);
+            List<ChatRoomMetadataDTO> cached = metadataCache.getRoomMetaBatch(roomIds);
+            // CRITICAL: If cache returned data, use it. Otherwise fallback to DB.
+            // This handles the case where Redis goes down after we got room IDs.
+            if (!cached.isEmpty()) {
+                return cached;
+            }
+            // Cache failed to return data - fall through to DB
         }
 
         // 2. Fallback to DB
@@ -127,7 +133,7 @@ public class ChatRoomMetadataService {
                 .map(mapper::toMetadataDto)
                 .collect(Collectors.toList());
 
-        // 3. Re-fill cache
+        // 3. Re-fill cache (best effort)
         if (!dtos.isEmpty()) {
             metadataCache.setUserRoomIds(userId,
                     dtos.stream().map(ChatRoomMetadataDTO::getChatroomId).collect(Collectors.toList()));
@@ -189,7 +195,15 @@ public class ChatRoomMetadataService {
     }
 
     public void updateLastReadAt(Integer chatroomId, Integer userId, LocalDateTime time) {
-        metadataCache.updateReadStatusInCache(chatroomId, userId, time);
+        boolean cacheUpdated = metadataCache.updateReadStatusInCache(chatroomId, userId, time);
+
+        // CRITICAL: If cache update failed (Redis down), directly update MySQL
+        // This ensures read status is persisted even without Redis
+        if (!cacheUpdated) {
+            log.debug("[MetadataService] Redis unavailable, updating read status directly in MySQL for room {}",
+                    chatroomId);
+            chatRoomRepository.updateMemberReadStatus(chatroomId, userId, time);
+        }
     }
 
     public void addUserToRoom(Integer userId, Integer chatroomId) {

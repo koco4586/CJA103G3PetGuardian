@@ -1,4 +1,4 @@
-package com.petguardian.chat.service.redis;
+package com.petguardian.chat.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

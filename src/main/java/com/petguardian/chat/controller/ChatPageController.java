@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.chat.dto.ChatRoomDTO;
 import com.petguardian.chat.dto.MemberProfileDTO;
+import com.petguardian.chat.service.context.ChatPageContext;
 import com.petguardian.chat.service.chatroom.ChatRoomService;
 import com.petguardian.common.service.AuthStrategyService;
 
@@ -66,7 +67,7 @@ public class ChatPageController {
         }
 
         // 1. Optimized Batch Load (Single Round Trip)
-        com.petguardian.chat.dto.ChatPageContext pageContext = chatRoomService.getUserChatroomsWithCurrentUser(userId);
+        ChatPageContext pageContext = chatRoomService.getUserChatroomsWithCurrentUser(userId);
 
         MemberProfileDTO currentUser = pageContext.getCurrentUser();
         List<ChatRoomDTO> chatrooms = pageContext.getChatrooms();
