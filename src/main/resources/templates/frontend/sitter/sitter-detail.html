@@ -222,29 +222,39 @@
                 </div>
 
                 <!-- F. 歷史評價 -->
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-comments"></i> 歷史評價</h3>
+                <div class="section-card" id="reviews" th:data-sitter-id="${sitter.sitterId}">
+                    <h3 class="section-title" style="cursor: pointer; user-select: none;"
+                        onclick="toggleHistoryReviews('reviewsList', 'toggleIcon')">
+                        <i class="fas fa-comments"></i> 歷史評價
+                        <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
+                            (共 <span th:text="${reviews != null ? reviews.size() : 0}">0</span> 筆)
+                        </span>
+                        <i id="toggleIcon" class="fas fa-chevron-down"
+                            style="float: right; transition: transform 0.3s;"></i>
+                    </h3>
 
-                    <div th:if="${reviews != null and !reviews.isEmpty()}">
-                        <div class="review-card" th:each="review : ${reviews}">
-                            <div class="review-header">
-                                <!-- 顯示評價者 (會員 ID 或 名稱，這裡暫用 ID) -->
-                                <div>
-                                    <strong>會員 <span th:text="${review.memId}">ID</span></strong>
-                                    <button class="btn btn-sm btn-outline-danger ms-2"
-                                        style="padding: 0px 6px; font-size: 0.8rem;"
-                                        th:onclick="'reportReview(' + ${review.bookingOrderId} + ')'">
-                                        <i class="fas fa-flag"></i> 檢舉
-                                    </button>
+                    <div id="reviewsList" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease;">
+                        <div th:if="${reviews != null and !reviews.isEmpty()}">
+                            <div class="review-card" th:each="review : ${reviews}">
+                                <div class="review-header">
+                                    <!-- 顯示評價者 (會員 ID 或 名稱，這裡暫用 ID) -->
+                                    <div>
+                                        <strong>會員 <span th:text="${review.memId}">ID</span></strong>
+                                        <button class="btn btn-sm btn-outline-danger ms-2"
+                                            style="padding: 0px 6px; font-size: 0.8rem;"
+                                            th:onclick="'reportReview(' + ${review.bookingOrderId} + ')'">
+                                            <i class="fas fa-flag"></i> 檢舉
+                                        </button>
+                                    </div>
+                                    <div style="color: #ffc107;" th:if="${review.sitterRating != null}">
+                                        <i class="fas fa-star"
+                                            th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
+                                    </div>
                                 </div>
-                                <div style="color: #ffc107;" th:if="${review.sitterRating != null}">
-                                    <i class="fas fa-star"
-                                        th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
-                                </div>
+                                <p class="mb-0 text-muted" th:text="${review.sitterReview}">很棒的保母！</p>
+                                <small class="text-muted"
+                                    th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
                             </div>
-                            <p class="mb-0 text-muted" th:text="${review.sitterReview}">很棒的保母！</p>
-                            <small class="text-muted"
-                                th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
                         </div>
                     </div>
 
@@ -334,6 +344,8 @@
 
     <!-- JS -->
     <script src="/js/frontend/main.js"></script>
+    <script src="/js/frontend/evaluate-functions.js"></script>
+    <script src="/js/frontend/complaint-functions.js"></script>
 
     <script>
         // 1. 開啟預約彈窗
@@ -448,6 +460,15 @@
             if (confirm("確定要檢舉這則評論嗎？")) {
                 alert("已收到您的檢舉 (Order ID: " + orderId + ")，管理員將進行審核。");
                 // TODO: 串接後端檢舉 API
+            }
+        }
+
+        // 5. 載入評價資料（從 DOM 讀取 sitterId，避免 Lint 警告）
+        const reviewsCard = document.getElementById('reviews');
+        if (reviewsCard) {
+            const sitterId = reviewsCard.getAttribute('data-sitter-id');
+            if (sitterId) {
+                loadAndDisplayReviews(sitterId, '#reviewsList', 'span');
             }
         }
     </script>

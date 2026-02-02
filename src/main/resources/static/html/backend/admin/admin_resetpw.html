@@ -5,9 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pet Guardian - 管理員密碼變更</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../../../css/backend/style.css">
+
     <style>
         * {
             box-sizing: border-box;
+        }
+
+        .outer {
+            border: 1px solid lightgray;
+            background-color: lightcyan;
+            border-radius: 30px;
+            padding: 20px;
         }
 
         .middle {
@@ -30,28 +41,57 @@
 </head>
 
 <body>
-    <div class="middle">
-        <h1 class="title">Petguardian寵護家</h1>
-        <h3 class="title">管理員密碼變更</h3>
-        <span class="alert">重設密碼，完成後請於下一次登入時使用新密碼。</span><br><br>
-    </div>
-    <form>
-        <div class="inside">
-            <span class="word">新密碼</span><br>
-            <input type="password" class="pw" placeholder="請輸入管理員密碼" required><br>
-            <span class="rightword">說明：管理員密碼需含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
-            <span class="word">密碼確認</span><br>
-            <input type="password" class="pwcheck" placeholder="請再次輸入相同密碼" required><br><br>
-        </div>
-        <div class="middle">
-            <span class="alert">＊注意：密碼請勿與帳號及其他網站相同，以確保帳戶安全。</span><br><br>
 
-            <button type="submit" class="submit">確認變更</button>
-            <button type="reset">清除重填</button>
+
+    <!-- header start -->
+
+    <div class="main-content">
+
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>後台帳號管理</h1>
+                <div class="sub">變更管理員密碼</div>
+            </div>
+        </header>
+
+        <!-- header end -->
+
+        <div class="outer">
+
+            <div class="middle">
+
+                <h3 class="title">管理員密碼變更</h3>
+                <span class="alert">重設密碼，完成後請於下一次登入時使用新密碼。</span><br><br>
+            </div>
+            <form>
+                <div class="inside">
+                    <span class="word">新密碼</span><br>
+                    <input type="password" class="pw" placeholder="請輸入管理員密碼" required><br>
+                    <span class="rightword">說明：管理員密碼需含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
+                    <span class="word">密碼確認</span><br>
+                    <input type="password" class="pwcheck" placeholder="請再次輸入相同密碼" required><br><br>
+                </div>
+                <div class="middle">
+                    <span class="alert">＊注意：密碼請勿與帳號及其他網站相同，以確保帳戶安全。</span><br><br>
+
+                    <button type="submit" class="submit">確認變更</button>
+                    <button type="reset">清除重填</button>
+                </div>
+            </form>
+
         </div>
-    </form>
+
+    </div> <!-- header最外層<div class="main-content">結束標籤 -->
+
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="../../../js/backend/sidebar.js"></script>
+
     <script>
 
         function init() {
@@ -84,8 +124,8 @@
                     if (data.result === "密碼輸入不一致，請再次確認是否輸入正確。") {
                         alert("密碼輸入不一致，請再次確認是否輸入正確。");
                     } else if (data.result === "密碼變更成功") {
-                        alert("密碼變更成功");
-                        // window.location.href = "/html/backend/admin/admin_admin_management.html";
+                        alert("管理員密碼變更成功");
+                        window.location.href = "/admin/index";
                     }
                 });
 

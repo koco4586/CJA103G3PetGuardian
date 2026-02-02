@@ -4,69 +4,99 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
 <title>修改寵物資料</title>
 
-<style>
+		<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+	    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+
+ <style>
   body {
-    background-image: url("/images/pet/images1.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    font-family: Arial, sans-serif;
-  }
+  background-image: url("/images/pet/images1.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
 
-  table {
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-    background-color: rgba(255,255,255,0.9);
-    border-collapse: collapse;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    margin-bottom: 20px;
-  }
+.pet-form-wrapper {
+  background-color: #ffffff !important;
+  width: 90%;
+  max-width: 600px; /* 可以調整寬度 */
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  border: 2px solid #ddd;
+ margin: 120px auto 30px auto;
+}
 
-  th, td {
-    padding: 12px;
-    border: 1px solid #ddd;
-    vertical-align: middle;
-  }
+.pet-form-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 auto;
+}
 
-  th { background-color: #f8f9fa; }
+.pet-form-wrapper table td,
+.pet-form-wrapper table th {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+  vertical-align: middle;
+}
 
-  .submit_wrap {
-    text-align: center;
+/* 讓第一欄（標籤欄）寬度固定 */
+.pet-form-wrapper table td:first-child {
+  width: 120px;
+  font-weight: 600;
+  background-color: #f9f9f9;
+}
+
+/* 保持原本的 header 設定不變 */
+#main-header, .header {
+  width: 100% !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+}
+
+.submit_wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-top: 20px;
-  }
+    width: 100%;
+}
 
-  .submit_wrap input {
+.submit_wrap input[type="submit"] {
     padding: 10px 30px;
-    font-size: 16px;
+    font-size: 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
     border-radius: 6px;
     cursor: pointer;
-  }
-  #successOverlay {
-    display: none; /* 初始化隱藏 */
-}
-/* 閃爍效果的平滑過渡 */
-#countdownText {
-    transition: opacity 0.2s ease-in-out;
+    transition: all 0.3s ease;
 }
 
-#preview_img {
-    max-width: 200px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    display: block;    /* 變成區塊元素 */
-    margin: 10px auto; /* 左右自動邊距達成水平置中 */
+.submit_wrap input[type="submit"]:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
+  
 </style>
 </head>
 
 <body>
 
+<header id="main-header" class="header"></header>
 
 
+<div class="container pet-form-wrapper">
 <table id="table-1">
   <tr>
     <td><h3>修改寵物資料</h3></td>
@@ -158,9 +188,8 @@
   <tr>
     <td>寵物備註:</td>
     <td>
-      <textarea name="petDescription"
-                rows="4" cols="45"
-                th:text="${pet.petDescription}"></textarea>
+      <textarea name="petDescription" rows="4" cols="45"
+                th:text="${pet.petDescription != null ? pet.petDescription : ''}"></textarea>
     </td>
   </tr>
 
@@ -209,7 +238,9 @@
         <button type="button" onclick="cancelSubmission()" style="padding: 12px 25px; font-size: 18px; cursor: pointer; background:#666; color:white; border:none; border-radius:5px;">返回修改</button>
     </div>
 </div>
+</div>
 
+  
 <!-- <div th:unless="${session.memId == pet.memId}" style="text-align: center; margin-top: 50px;"> -->
 <!--     <div style="background: white; display: inline-block; padding: 20px; border-radius: 10px;"> -->
 <!--         <h2 style="color: red;">抱歉！您不是此寵物的主人，無法進行修改。</h2> -->
@@ -264,13 +295,36 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                previewImg.src = e.target.result;
-                previewImg.style.display = 'block';
+            	
+            	const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+
+                    // 設定等比例縮放 (最大寬度 800px)
+                    const maxWidth = 800;
+                    let scale = 1;
+                    if (img.width > maxWidth) {
+                        scale = maxWidth / img.width;
+                    }
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+
+                    // 繪製到畫布
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // 轉成壓縮後的 Base64 (JPEG 品質 0.7)
+                    const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+            	
+                    previewImg.src = compressedBase64;
+                    previewImg.style.display = 'block';
                 isDeleted = false;
             };
             reader.readAsDataURL(file);
         }
     };
+ };
     
     // 2. 監聽刪除按鈕 (假設你有一個 id="deleteImageBtn" 的按鈕)
     const deleteBtn = document.getElementById("deleteImageBtn");
@@ -287,147 +341,83 @@
         };
     }
 
- // 3. 監聽表單送出 (核心邏輯修正)
     updateForm.addEventListener('submit', function(e) {
-    	e.preventDefault(); // 先攔截所有送出
+        e.preventDefault(); 
         if (this.dataset.submitting === 'true') return;
-        
-     // 🔴 1. 取得姓名欄位並檢查
+
         const nameInput = document.querySelector('input[name="petName"]');
         if (!nameInput.value.trim()) {
-            alert("請輸入寵物姓名！"); // 或者用自定義的警告樣式
+            alert("請輸入寵物姓名！");
             nameInput.focus();
-            return; // 攔截，不往下執行
-        }
-
-        this.dataset.submitting = 'true';
-        if (isDeleted) {
-            submitWithDelete(this);
             return;
         }
 
         const hasNewFile = fileInput.files.length > 0;
+        let finalImageToSave = ""; 
 
-        if (!hasNewFile) {
-            // --- 需求：按確認直接保留原圖送出，按取消留在原頁面 ---
-            const msg = "您尚未選擇新圖片，是否保留原圖並送出修改？";
-            if (confirm(msg)) {
-                // 使用者按「確定」：檢查資料是否有變，有變就印字，沒變就直送
-                processCanvasOrSubmit(this);
-            } else {
-                // 使用者按「取消」：留在原頁面
-                console.log("留在原頁面");
+        // --- 核心邏輯分支 ---
+        if (isDeleted || hasNewFile) { 
+            // 【路徑：已刪除 或 已選新圖】 -> 單次詢問
+            if (confirm("確認送出修改嗎？")) {
+                this.dataset.submitting = 'true';
+                // 如果點了刪除，傳送 "NONE" 字串；否則傳送預覽圖 src
+                finalImageToSave = isDeleted ? "NONE" : (previewImg.src || "");
+                handleDataTransfer(finalImageToSave);
             }
         } else {
-            // 有新圖，直接跑繪圖流程
-            processCanvasOrSubmit(this);
-            
+            // 【路徑：沒動圖片】 -> 二階段詢問
+            if (confirm("您尚未選擇新圖片，是否保留原圖？")) {
+                // 第一階按「是」
+                if (confirm("確認保留原圖並送出修改嗎？")) {
+                    this.dataset.submitting = 'true';
+                    finalImageToSave = previewImg.src; // 保留原圖
+                    handleDataTransfer(finalImageToSave);
+                }
+            } else {
+                // 第一階按「否」(不想保留原圖)
+                if (confirm("確認不帶圖片(僅更新文字)並送出修改嗎？")) {
+                    this.dataset.submitting = 'true';
+                    finalImageToSave = "NONE"; // 傳送 NONE 代表要在下一頁顯示「暫無圖片」
+                    handleDataTransfer(finalImageToSave);
+                }
+            }
         }
     });
 
         
-
-    function submitWithDelete(form) {
-        // 取得當前輸入的值，確保確認頁面顯示的是最新的文字
-        const currentName = document.querySelector('input[name="petName"]').value;
-        const currentAge = document.querySelector('input[name="petAge"]').value;
-        const currentGender = document.querySelector('select[name="petGender"]').value;
-
+    function handleDataTransfer(imageData) {
+    	
+    	const descValue = document.querySelector('textarea[name="petDescription"]').value.trim();
         const pendingData = {
             petId: document.querySelector('input[name="petId"]').value,
             memId: document.querySelector('input[name="memId"]').value,
-            petName: currentName,
-            petAge: currentAge,
-            petGender: currentGender,
-            typeId: document.querySelector('select[name="typeId"]').value,  // 🔴 確保名稱對應 VO
-            sizeId: document.querySelector('select[name="sizeId"]').value,  // 🔴 確保名稱對應 VO
+            petName: document.querySelector('input[name="petName"]').value,
+            petAge: document.querySelector('input[name="petAge"]').value,
+            petGender: document.querySelector('select[name="petGender"]').value,
+            typeId: document.querySelector('select[name="typeId"]').value,
+            sizeId: document.querySelector('select[name="sizeId"]').value,
             petDescription: document.querySelector('textarea[name="petDescription"]').value,
-            deleteImage: isDeleted ? "true" : "false",
-            img_base64: "",       
+            
+            // 重要：這兩個 Key 都存入決定後的 imageData ("NONE" 或 Base64)
+            petImage: imageData, 
+            original_base64: imageData, 
+            
             fromPage: window.location.href
         };
 
-        saveAndRedirect(pendingData); 
+        sessionStorage.setItem("pending_data", JSON.stringify(pendingData));
+        window.location.href = "/pet/confirm";
     }
-   
+    
         
         
   // 修改：原本的核心功能
-     function processCanvasOrSubmit(formElement) {
-    const currentName = document.querySelector('input[name="petName"]').value;
-    const currentAge = document.querySelector('input[name="petAge"]').value;
-    const currentGender = document.querySelector('select[name="petGender"]').value;
-
-    const hasChanged = currentName !== oriData.name || currentAge != oriData.age || currentGender != oriData.gender;
-    const hasImageNow = previewImg && previewImg.src && !isDeleted && previewImg.style.display !== 'none';
-    const isNewFile = fileInput.files.length > 0;
-
-    const pendingData = {
-        petId: document.querySelector('input[name="petId"]').value,
-        memId: document.querySelector('input[name="memId"]').value,
-        petName: currentName,
-        petAge: currentAge,
-        petGender: currentGender, // 這裡配合你 confirm 頁面的變數名
-        typeId: document.querySelector('select[name="typeId"]').value,
-        sizeId: document.querySelector('select[name="sizeId"]').value,
-        petDescription: document.querySelector('textarea[name="petDescription"]').value,
-        deleteImage: isDeleted ? "true" : "false",
-        img_base64: "",
-        fromPage: window.location.href
-    };
+    
    
 
-    if (hasImageNow && (hasChanged || isNewFile)) {
-        // 【情境：有圖且資料變更】 -> 繪製畫布
-        const img = new Image();
-        img.crossOrigin = "Anonymous";
-        img.onload = function() {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            ctx.drawImage(img, 0, 0);
+    
 
-            const fontSize = Math.max(Math.floor(canvas.width / 20), 24);
-            ctx.font = `bold ${fontSize}px Arial`;
-            ctx.fillStyle = "red";
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = fontSize / 10;
 
-            const textLines = [
-                "名稱：" + currentName,
-                "年齡：" + currentAge,
-                "性別：" + (currentGender == "1" ? "公" : "母")
-            ];
-
-            let yPos = fontSize + 20;
-            
-            const lineSpacing = fontSize * 1.5;
-
-            const lineHeight = 60; // 每行間隔 60 像素
-
-            textLines.forEach(line => {
-                ctx.strokeText(line, 30, yPos);
-                ctx.fillText(line, 30, yPos);
-                yPos += lineSpacing; // 這裡控制行間距
-            });
-
-            pendingData.img_base64 = canvas.toDataURL("image/jpeg", 0.8);
-            saveAndRedirect(pendingData); // 🔴 呼叫跳轉
-        };
-        img.src = previewImg.src;
-    } else {
-        // 【情境：沒圖 或 沒改資料】 -> 直接帶圖 URL 或空值
-        pendingData.img_base64 = hasImageNow ? previewImg.src : "";
-        saveAndRedirect(pendingData); // 🔴 呼叫跳轉
-    }
-}
-
-// 🔴 必須定義在最外層 (Global Scope)
-function saveAndRedirect(data) {
-    sessionStorage.setItem("pending_data", JSON.stringify(data));
-    window.location.href = "/pet/confirm";
-}
 
 
 </script>

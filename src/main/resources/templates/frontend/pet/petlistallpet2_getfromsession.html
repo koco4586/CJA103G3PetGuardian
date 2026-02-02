@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>寵物資料詳情</title>
 
+		<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+	    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
     <style>
       /* 1. 設定背景底圖 */
   body {
@@ -11,202 +15,217 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            margin: 0;
-            padding-top: 100px; /* 預留給 Header 的空間 */
+            
+            display: flex;
+            flex-direction: column; /* 讓 Footer 能被推到底部 */
+            min-height: 100vh;
+        }
+/* 白色半透明容器 (把表格包起來) */
+        .content-wrapper {
+            flex: 1 0 auto; /* 撐開內容區，將 footer 推到底部 */
+            padding: 100px 20px 50px; /* 預留 Header 空間 */
+            display: flex;
+            justify-content: center;
         }
 
-        /* 3. 將表格容器美化為「卡片」風格 (與 pet1 統一) */
-        .content-container {
-            max-width: 1200px;
-            margin: 0 auto 50px auto;
-            background-color: rgba(255, 255, 255, 0.95);
+        .white-glass-card {
+            background: rgba(255, 255, 255, 0.9); /* 白色半透明 */
+            backdrop-filter: blur(10px);
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 1200px;
+            color: #333; /* 文字改為深色 */
         }
 
-        .page-title {
-            text-align: center;
-            color: #444;
-            margin-bottom: 25px;
-            font-size: 1.8rem;
-            font-weight: bold;
-        }
-
-        /* 4. 表格美化：使用 components.css 的風格 */
+        /* 表格樣式優化 */
         .standard-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-top: 10px;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
 
         .standard-table th {
-            background-color: #f8f9fa;
+            background: #f8f9fa;
             color: #555;
-            font-weight: 600;
             padding: 15px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid #dee2e6;
         }
 
         .standard-table td {
-            padding: 15px;
+            padding: 12px;
             border-bottom: 1px solid #eee;
+            text-align: center;
             vertical-align: middle;
-            text-align: center;
         }
 
-        .standard-table tr:hover {
-            background-color: rgba(240, 240, 240, 0.5); /* 滑鼠經過時變色 */
+        .table-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* 5. 標籤與按鈕美化 */
-        .badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 50px;
-            font-weight: bold;
-        }
-        .badge-mine { color: #2d6a4f; border: 1px solid #2d6a4f; background: #d8f3dc; }
-        .badge-other { color: #d68c45; border: 1px solid #d68c45; background: #fefae0; }
-
-        .btn-action {
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: 0.3s;
-            font-size: 0.9rem;
-        }
-        .btn-view { color: #007bff; }
-        .btn-edit { color: #28a745; }
-        .btn-delete { color: #dc3545; }
-
+        /* 分頁連結樣式 */
         .pagination-links {
-            text-align: center;
             margin-top: 30px;
-            padding: 20px;
+            text-align: center;
         }
+
+        /* Footer 樣式 */
+        .footer {
+            flex-shrink: 0;
+            background: white;
+            padding: 20px 0;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+/* 圖片樣式優化 */
+.table-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 按鈕改為較亮的顏色以在深底中突出 */
+.btn-view { color: #64b5f6; }
+.btn-edit { color: #81c784; }
+.btn-delete { color: #e57373; }
   </style>
 </head>
 
 <body>
 
+<header id="main-header" class="header"></header>
 
-
-<table id="table-1">
-    <tr>
-        <td>
-            <h3>寵物資料詳情</h3>
-            <h4><a th:href="@{/pet/dashboard}">回首頁</a></h4>
-        </td>
-    </tr>
-</table>
-
-<table>
-<thead>
-    <tr>
-        <th>寵物編號</th>
-        <th>寵物姓名</th>
-        <th>寵物種類</th>
-        <th>寵物體型</th> 
-        <th>寵物年齡</th> 
-        <th>寵物圖片</th> 
-        <th>性別</th>   
-         <th>備註</th>  
-         <th>功能</th>        </tr>
-</thead>
-
-<tbody>
-    <tr th:each="pet : ${petlist}">
-        <td th:text="${pet.petId}"></td>
-        <td th:text="${pet.petName}"></td>
-        <td th:text="${pet.typeName}"></td>
-        <td th:text="${pet.sizeName}"></td> 
-        <td th:text="${pet.petAge}"></td>
+<main class="content-wrapper">
+    <div class="white-glass-card">
         
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h3 style="margin: 0; font-size: 1.5rem; color: #222;"><i class="fa-solid fa-paw"></i> 寵物資料詳情</h3>
+            <a th:href="@{/pet/dashboard}" class="btn-view" style="font-size: 1rem;"><i class="fa-solid fa-circle-left"></i> 回首頁</a>
+        </div>
 
-        <td>
-            <img th:src="@{/pet/img/{id}(id=${pet.petId})}" 
-                 style="max-width: 100px; min-height: 50px; background-color: #eee;" 
-         alt="無圖片"
-         onerror="this.style.display='none'; this.parentElement.innerHTML='暫無圖片';">
-        </td>
+        <table class="standard-table">
+            <thead>
+                <tr>
+                    <th>寵物編號</th>
+                    <th>寵物姓名</th>
+                    <th>寵物種類</th>
+                    <th>寵物體型</th> 
+                    <th>寵物年齡</th> 
+                    <th>寵物圖片</th> 
+                    <th>寵物性別</th>   
+                    <th>寵物備註</th>  
+                    <th>建立時間</th>
+    				<th>最後更新</th>
+    				<th>功能</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="pet : ${petlist}">
+                    <td th:text="${pet.petId}"></td>
+                    <td th:text="${pet.petName}" style="font-weight: bold;"></td>
+                    <td th:text="${pet.typeId}"></td>
+                    <td th:text="${pet.sizeId}"></td> 
+                    <td th:text="${pet.petAge} + ' 歲'"></td>
+                    <td>
+                        <img th:src="@{/pet/img/{id}(id=${pet.petId})}" class="table-img"
+                             alt="無圖片"onerror="this.onerror=null;">
+                    </td>
+                    <td></td>
+                     <td th:text="${pet.petDescription}"></td>
+    				 <td th:text="${pet.createdTimeText}"></td>
+					 <td th:text="${pet.updatedAtText}"></td>
+                    <td>
+                        <a th:href="@{/pet/one(petId=${pet.petId})}" class="btn-view">查看</a>
 
-        <td th:text="${pet.petGenderText}"></td>
-        <td th:text="${pet.petDescription}"></td>
-        
-       <td>
-    <a th:href="@{/pet/one(petId=${pet.petId})}" style="color: blue;">查看</a>
+                        <span style="margin-left: 5px;">
+                            <small th:if="${session.memId == pet.memId}" class="badge-mine">我的</small>
+                            <small th:if="${session.memId != pet.memId}" class="badge-other">受託</small>
+                        </span>
 
-    <span style="margin-left: 5px;">
-        <small th:if="${session.memId == pet.memId}" style="color: green; border: 1px solid green; border-radius: 3px; padding: 0 2px;">我的</small>
-        <small th:if="${session.memId != pet.memId}" style="color: orange; border: 1px solid orange; border-radius: 3px; padding: 0 2px;">受託</small>
-    </span>
+                        <span th:if="${session.memId != null and session.memId == pet.memId}">
+                            | 
+                            <a th:href="@{/pet/getOne_For_Update(petId=${pet.petId})}" class="btn-edit">修改</a>
+                            | 
+                            <a href="javascript:void(0);" th:onclick="'deletePet(' + ${pet.petId} + ')'" class="btn-delete">刪除</a>
+                        </span>
 
-    <span th:if="${session.memId != null and session.memId == pet.memId}">
-        | 
-        <a th:href="@{/pet/getOne_For_Update(petId=${pet.petId})}">修改</a>
-        | 
-        <a href="javascript:void(0);" 
-           th:onclick="'deletePet(' + ${pet.petId} + ')'" 
-           style="color:red; cursor:pointer;">
-            刪除
-        </a>
-    </span>
+                        <span th:if="${session.memId != null and session.memId != pet.memId}" class="text-readonly">
+                            | (唯讀)
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-    <span th:if="${session.memId != null and session.memId != pet.memId}" style="color: #999;">
-        | (唯讀)
-    </span>
-</td>
-        
+        <div class="pagination-links" th:if="${pageNumber > 1}" style="margin-top: 30px; text-align: center;">
+            <span th:if="${whichPage > 1}">
+                <a th:href="@{/pet/all(whichPage=1)}">至第一頁</a>&nbsp;
+                <a th:href="@{/pet/all(whichPage=${whichPage - 1})}">上一頁</a>&nbsp;
+            </span>
+            第 <span th:text="${whichPage}" style="font-weight: bold; color: #007bff;"></span> / <span th:text="${pageNumber}"></span> 頁
+            <span th:if="${whichPage < pageNumber}">
+                <a th:href="@{/pet/all(whichPage=${whichPage + 1})}">下一頁</a>&nbsp;
+                <a th:href="@{/pet/all(whichPage=${pageNumber})}">至最後一頁</a>&nbsp;
+            </span>
+        </div>
+    </div>
+</main>
 
+<footer class="footer">
+    <p>© 2024 PetGuardian. All rights reserved.</p>
+</footer>
 
-</tr>
-    </tbody>
-    
-    
-</table>
-<!-- 在頁面底部加入隱藏的表單 -->
 <form id="deleteForm" th:action="@{/pet/delete}" method="post" style="display:none;">
     <input type="hidden" id="deletePetId" name="petId">
 </form>
 
-<div class="pagination-links" th:if="${pageNumber > 1}">
-    <span th:if="${whichPage > 1}">
-        <a th:href="@{/pet/all(whichPage=1)}">至第一頁</a>&nbsp;
-        <a th:href="@{/pet/all(whichPage=${whichPage - 1})}">上一頁</a>&nbsp;
-    </span>
-
-    第 <span th:text="${whichPage}"></span> / <span th:text="${pageNumber}"></span> 頁
-
-    <span th:if="${whichPage < pageNumber}">
-        <a th:href="@{/pet/all(whichPage=${whichPage + 1})}">下一頁</a>&nbsp;
-        <a th:href="@{/pet/all(whichPage=${pageNumber})}">至最後一頁</a>&nbsp;
-    </span>
-</div>
-
 <script>
 
 function deletePet(petId) {
-	if (!confirm("確定要刪除嗎？")) return;
+    if (!confirm("確定要刪除嗎？")) return;
 
     fetch(`/pet/delete?petId=${petId}`, { method: 'POST' })
-        .then(res => res.text())
+        .then(res => {
+            // 檢查伺服器回應狀態 (如 404, 500 等)
+            if (!res.ok) {
+                throw new Error("網路回應不正確");
+            }
+            return res.text();
+        })
         .then(text => {
             if (text === "success") {
                 alert("刪除成功！");
                 
-                // --- 在這裡做跳轉判斷 ---
+                // --- 保留你原本的跳轉判斷邏輯 ---
                 if (window.location.pathname.includes("all")) {
                     location.href = "/pet/all";       // 留在列表頁
                 } else {
                     location.href = "/pet/dashboard"; // 回到儀表板
                 }
+            } else {
+                // 處理後端回傳不是 "success" 的情況 (例如：權限不足、資料不存在)
+                alert("刪除失敗：" + text);
             }
+        })
+        .catch(error => {
+            // 處理網路斷線或發生 Exception 的情況
+            console.error("發生錯誤:", error);
+            alert("系統發生錯誤，請稍後再試。");
         });
 }
+
 </script>
 
+<script th:src="@{/js/frontend/main.js}">
+    </script>
 
 </body>
 </html>

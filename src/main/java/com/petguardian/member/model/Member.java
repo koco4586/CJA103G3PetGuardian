@@ -76,31 +76,27 @@ public class Member {
     
     // 羽澈
     @OneToMany(mappedBy = "member")
-    @JsonIgnore
+    @JsonIgnore//恩臨
     private Set<ForumPostVO> forumPosts;
     
     // 羽澈
     @OneToMany(mappedBy = "member")
-    @JsonIgnore
+    @JsonIgnore//恩臨
     private Set<ForumPostReportVO> forumPostReports;
     
     // 羽澈
     @OneToMany(mappedBy = "member")
-    @JsonIgnore
+    @JsonIgnore//恩臨
     private Set<ForumCommentVO> forumComments;
     
     // 羽澈
     @OneToMany(mappedBy = "member")
-    @JsonIgnore
+    @JsonIgnore//恩臨
     private Set<ForumCommentReportVO> forumCommentReports;
     
     // 羽澈
-    @ManyToMany
-	@JoinTable(
-			   name = "forumpostcollection",
-			   joinColumns = { @JoinColumn( name = "mem_id", referencedColumnName = "mem_id" ) },
-			   inverseJoinColumns = { @JoinColumn( name = "post_id", referencedColumnName = "post_id") }
-			  )
+    @ManyToMany(mappedBy = "members")
+    @JsonIgnore//恩臨
     private Set<ForumPostVO> postCollections;
     
     // 羽澈

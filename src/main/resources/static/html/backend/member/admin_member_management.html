@@ -6,64 +6,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetGuardian｜會員管理</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="../../../css/backend/style.css">
+
     <style>
         * {
             box-sizing: border-box;
+        }
+
+        .outer {
+            border: 1px solid lightgray;
+            background-color: lightcyan;
+            border-radius: 30px;
+            padding: 20px;
         }
     </style>
 </head>
 
 <body>
 
-    <div>
+    <!-- header start -->
 
-        <h1>會員管理</h1>
-        <div>檢視與管理會員狀態</div>
+    <div class="main-content">
 
-        <form>
-            <input type="text" placeholder="請輸入會員編號" class="searchmemid" required>
-            <button type="submit" class="selectsubmit">點擊查詢</button>
-        </form>
+        <header>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>會員編號</th>
-                    <th>會員姓名</th>
-                    <th>電子信箱</th>
-                    <th>會員狀態</th>
-                    <th>註冊時間</th>
-                    <th>會員頭像</th>
-                </tr>
-            </thead>
-            <tbody class="tbody"></tbody>
+            <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
+                alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+            <div>
+                <h1>會員管理</h1>
+                <div class="sub">檢視會員資料與管理會員狀態</div>
+            </div>
+        </header>
 
-        </table>
+        <!-- header end -->
 
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <div class="outer">
 
-        <script>
+            <form>
+                <input type="text" placeholder="請輸入會員編號" class="searchmemid" required>
+                <button type="submit" class="selectsubmit">點擊查詢</button>
+            </form>
 
-            function init() {
+            <table>
+                <thead>
+                    <tr>
+                        <th>會員編號</th>
+                        <th>會員姓名</th>
+                        <th>電子信箱</th>
+                        <th>會員狀態</th>
+                        <th>註冊時間</th>
+                        <th>會員頭像</th>
+                    </tr>
+                </thead>
+                <tbody class="tbody"></tbody>
 
-                let fetch_url = "http://localhost:8080/admin/admin-member-management";
+            </table>
 
-                fetch(fetch_url, {
-                    credentials: "include"
-                }).then(res => res.json()).then(data => {
-                    console.log(data);
+        </div>
 
-                    for (i = 0; i < data.length; i++) {
+    </div> <!-- header最外層<div class="main-content">結束標籤 -->
 
-                        let memchinesestatus;
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-                        if (data[i].memStatus === 0) {
-                            memchinesestatus = "已停用";
-                        } else {
-                            memchinesestatus = "已啟用";
-                        }
+    <script src="../../../js/backend/sidebar.js"></script>
 
-                        $(".tbody").append(`
+    <script>
+
+        function init() {
+
+            let fetch_url = "http://localhost:8080/admin/admin-member-management";
+
+            fetch(fetch_url, {
+                credentials: "include"
+            }).then(res => res.json()).then(data => {
+                console.log(data);
+
+                for (i = 0; i < data.length; i++) {
+
+                    let memchinesestatus;
+
+                    if (data[i].memStatus === 0) {
+                        memchinesestatus = "已停用";
+                    } else {
+                        memchinesestatus = "已啟用";
+                    }
+
+                    $(".tbody").append(`
 
                         <tr>
                             <td>${data[i].memId}</td>
@@ -80,31 +110,31 @@
 
                     `);
 
+                }
+            });
+
+            function searchmember(e) {
+
+                e.preventDefault();
+
+                let memid = $(".searchmemid").val();
+
+                let fetch_url = `http://localhost:8080/admin/admin-member-management-searchmember?memId=${memid}`;
+
+                fetch(fetch_url, {
+                    credentials: "include"
+                }).then(res => res.json()).then(data => {
+                    console.log(data);
+
+                    let memchinesestatus;
+
+                    if (data.memStatus === 0) {
+                        memchinesestatus = "已停用";
+                    } else {
+                        memchinesestatus = "已啟用";
                     }
-                });
 
-                function searchmember(e) {
-
-                    e.preventDefault();
-
-                    let memid = $(".searchmemid").val();
-
-                    let fetch_url = `http://localhost:8080/admin/admin-member-management-searchmember?memId=${memid}`;
-
-                    fetch(fetch_url, {
-                        credentials: "include"
-                    }).then(res => res.json()).then(data => {
-                        console.log(data);
-
-                        let memchinesestatus;
-
-                        if (data.memStatus === 0) {
-                            memchinesestatus = "已停用";
-                        } else {
-                            memchinesestatus = "已啟用";
-                        }
-
-                        $(".tbody").html(`
+                    $(".tbody").html(`
                     
                         <tr>
                             <td>${data.memId}</td>
@@ -121,48 +151,49 @@
 
                     `);
 
-                    })
+                })
 
-                }
-
-                $(".selectsubmit").on("click", searchmember);
-
-                function changememberstatus(e) {
-
-                    e.preventDefault();
-
-                    let memberid = $(e.currentTarget).attr("data-memid");// 取得當前按鈕的 memId
-
-                    let memberstatusobject = {
-                        "memId": memberid
-                    }
-
-                    var fetch_url = "http://localhost:8080/admin/admin-member-management-updatestatus";
-
-                    fetch(fetch_url, {
-                        method: "PUT",
-                        credentials: "include",
-                        body: JSON.stringify(memberstatusobject),
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }).then(res => res.json()).then(data => {
-                        alert("會員狀態已變更");
-                        console.log(data.result);
-                        if (data.result === "已停用") {
-                            $(e.currentTarget).html("已停用");
-                        } else {
-                            $(e.currentTarget).html("已啟用");
-                        }
-                    });
-
-                }
-
-                $(document).on("click", ".statussubmit", changememberstatus);  //委派事件：動態生成的元素要註冊事件，需要經過委派，不能直接註冊
             }
-            $(window).on("load", init);
 
-        </script>
+            $(".selectsubmit").on("click", searchmember);
+
+            function changememberstatus(e) {
+
+                e.preventDefault();
+
+                let memberid = $(e.currentTarget).attr("data-memid");// 取得當前按鈕的 memId
+
+                let memberstatusobject = {
+                    "memId": memberid
+                }
+
+                var fetch_url = "http://localhost:8080/admin/admin-member-management-updatestatus";
+
+                fetch(fetch_url, {
+                    method: "PUT",
+                    credentials: "include",
+                    body: JSON.stringify(memberstatusobject),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }).then(res => res.json()).then(data => {
+                    console.log(data.result);
+                    if (data.result === "已停用") {
+                        alert("該會員帳號已被停用。");
+                        $(e.currentTarget).html("已停用");
+                    } else {
+                        alert("該會員帳號已恢復啟用。");
+                        $(e.currentTarget).html("已啟用");
+                    }
+                });
+
+            }
+
+            $(document).on("click", ".statussubmit", changememberstatus);  //委派事件：動態生成的元素要註冊事件，需要經過委派，不能直接註冊
+        }
+        $(window).on("load", init);
+
+    </script>
 </body>
 
 </html>
