@@ -15,6 +15,7 @@ import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
 @Service
+@Transactional(readOnly = true)
 public class SitterScheduleServiceImpl implements SitterScheduleService {
 
     @Autowired
@@ -57,7 +58,6 @@ public class SitterScheduleServiceImpl implements SitterScheduleService {
     // ========== 排程相關功能 (透過會員 ID) ==========
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingScheduleVO> getScheduleByMember(Integer memId, int year, int month) {
         SitterVO sitter = repository.findByMemId(memId);
         if (sitter == null) {

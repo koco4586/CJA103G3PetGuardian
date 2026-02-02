@@ -1,6 +1,6 @@
 package com.petguardian.sitter.service;
 
-import java.util.ArrayList;
+// import java.util.ArrayList; // [Refactor] Unused
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +16,7 @@ import com.petguardian.sitter.model.SitterSearchDTO;
 import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.booking.model.BookingScheduleVO;
-import com.petguardian.booking.model.BookingScheduleRepository;
+// import com.petguardian.booking.model.BookingScheduleRepository; // [Refactor] Unused
 import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.sitter.model.SitterDashboardDTO;
@@ -24,17 +24,17 @@ import com.petguardian.sitter.model.SitterDashboardDTO;
 // import com.petguardian.petsitter.model.PetSitterServiceRepository; // [Refactor] 移除未使用 import
 import com.petguardian.petsitter.service.PetSitterService; // [Refactor] 新增 Service import
 import com.petguardian.petsitter.model.PetSitterServiceVO;
-import com.petguardian.petsitter.model.PetSitterServicePetTypeRepository;
-import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
+// import com.petguardian.petsitter.model.PetSitterServicePetTypeRepository; // [Refactor] Unused
+// import com.petguardian.petsitter.model.PetSitterServicePetTypeVO; // [Refactor] Unused
 import java.time.LocalDate;
-import java.util.stream.Collectors;
+// import java.util.stream.Collectors; // [Refactor] Unused
 
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.jpa.domain.Specification;
+// import jakarta.persistence.criteria.Join; // [Refactor] Unused
+// import jakarta.persistence.criteria.JoinType; // [Refactor] Unused
+// import jakarta.persistence.criteria.Predicate; // [Refactor] Unused
+// import org.springframework.data.jpa.domain.Specification; // [Refactor] Unused
 import com.petguardian.service.model.ServiceAreaVO;
-import com.petguardian.area.model.AreaVO;
+// import com.petguardian.area.model.AreaVO; // [Refactor] Unused
 
 /**
  * 保姆業務邏輯實作
@@ -42,6 +42,7 @@ import com.petguardian.area.model.AreaVO;
  * 提供保姆資料管理、保姆搜尋等功能的實作
  */
 @Service("sitterService")
+@Transactional(readOnly = true)
 public class SitterServiceImpl implements SitterService {
 
     @Autowired

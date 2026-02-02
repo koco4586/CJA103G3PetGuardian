@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 提供會員申請成為保姆、管理員審核申請等功能的實作
  */
 @Service("sitterApplicationService")
+@Transactional(readOnly = true)
 public class SitterApplicationServiceImpl implements SitterApplicationService {
 
     @Autowired
