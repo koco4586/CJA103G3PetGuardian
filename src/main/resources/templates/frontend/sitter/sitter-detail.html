@@ -84,7 +84,7 @@
 
         .review-card {
             border-bottom: 1px solid #eee;
-            padding: 1rem 0;
+            padding: 1.5rem 1.2rem;
         }
 
         .review-header {
@@ -105,6 +105,72 @@
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
+        }
+    </style>
+    <style>
+        /* 檢舉輸入框樣式 */
+        .dynamic-report-wrapper {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            padding: 0 20px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff5f5;
+            border-radius: 15px;
+            border: 1px solid transparent;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dynamic-report-wrapper.active {
+            max-height: 800px;
+            opacity: 1;
+            margin-top: 15px;
+            padding: 20px;
+            border: 1px solid #ffcdd2;
+            box-shadow: 0 4px 15px rgba(255, 205, 210, 0.3);
+        }
+
+        .report-tag {
+            display: inline-block;
+            padding: 6px 14px;
+            margin: 5px;
+            background: #fff;
+            border: 1px solid #ffcdd2;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #c62828;
+            transition: all 0.2s;
+        }
+
+        .report-tag.selected {
+            background: #ffcdd2;
+            font-weight: bold;
+        }
+
+        .submit-report-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            float: right;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .submit-report-btn:active {
+            transform: scale(0.92);
+        }
+
+        .submit-report-btn:hover {
+            background: #ff5252;
         }
     </style>
 </head>
@@ -222,7 +288,8 @@
                 </div>
 
                 <!-- F. 歷史評價 -->
-                <div class="section-card" id="reviews" th:data-sitter-id="${sitter.sitterId}">
+                <div class="section-card" id="reviews" th:data-sitter-id="${sitter.sitterId}"
+                    th:data-sitter-name="${sitter.sitterName}">
                     <h3 class="section-title" style="cursor: pointer; user-select: none;"
                         onclick="toggleHistoryReviews('reviewsList', 'toggleIcon')">
                         <i class="fas fa-comments"></i> 歷史評價
@@ -455,23 +522,21 @@
             }
         }
 
-        // 4. 檢舉評價 (暫時實作)
-        function reportReview(orderId) {
-            if (confirm("確定要檢舉這則評論嗎？")) {
-                alert("已收到您的檢舉 (Order ID: " + orderId + ")，管理員將進行審核。");
-                // TODO: 串接後端檢舉 API
-            }
-        }
+        // 註：檢舉功能已改用 complaint-functions.js 的 injectReportBox()
 
         // 5. 載入評價資料（從 DOM 讀取 sitterId，避免 Lint 警告）
         const reviewsCard = document.getElementById('reviews');
         if (reviewsCard) {
             const sitterId = reviewsCard.getAttribute('data-sitter-id');
+            const sitterName = reviewsCard.getAttribute('data-sitter-name');
             if (sitterId) {
-                loadAndDisplayReviews(sitterId, '#reviewsList', 'span');
+                loadAndDisplayReviews(sitterId, '#reviewsList', 'span', sitterName);
             }
         }
     </script>
+
+    <script src="/js/frontend/complaint-functions.js"></script>
+    <script src="/js/frontend/evaluate-functions.js"></script>
 
 </body>
 

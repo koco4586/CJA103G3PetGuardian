@@ -43,6 +43,71 @@
 			color: #ccc;
 			cursor: not-allowed;
 		}
+
+		/* 檢舉輸入框樣式 */
+		.dynamic-report-wrapper {
+			overflow: hidden;
+			max-height: 0;
+			opacity: 0;
+			margin-top: 0;
+			padding: 0 20px;
+			transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+			background: #fff5f5;
+			border-radius: 15px;
+			border: 1px solid transparent;
+			width: 100%;
+			box-sizing: border-box;
+		}
+
+		.dynamic-report-wrapper.active {
+			max-height: 800px;
+			opacity: 1;
+			margin-top: 15px;
+			padding: 20px;
+			border: 1px solid #ffcdd2;
+			box-shadow: 0 4px 15px rgba(255, 205, 210, 0.3);
+		}
+
+		.report-tag {
+			display: inline-block;
+			padding: 6px 14px;
+			margin: 5px;
+			background: #fff;
+			border: 1px solid #ffcdd2;
+			border-radius: 20px;
+			cursor: pointer;
+			font-size: 0.9rem;
+			color: #c62828;
+			transition: all 0.2s;
+		}
+
+		.report-tag.selected {
+			background: #ffcdd2;
+			font-weight: bold;
+		}
+
+		.submit-report-btn {
+			background: #ff6b6b;
+			color: white;
+			border: none;
+			padding: 10px 25px;
+			border-radius: 50px;
+			cursor: pointer;
+			font-weight: bold;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			float: right;
+			transition: transform 0.1s, background 0.2s;
+		}
+
+		.submit-report-btn:active {
+			transform: scale(0.92);
+		}
+
+		.submit-report-btn:hover {
+			background: #ff5252;
+		}
 	</style>
 
 </head>
@@ -163,7 +228,7 @@
 	<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>
-	<script>
+	<script th:inline="javascript">
 		let currentCancelId = null;
 
 		function openCancelModal(btn) {
@@ -228,8 +293,16 @@
 
 		// 顯示會員歷史評價
 		async function showMemberReviews() {
-			const memId = Number('[[${session.memId}]]') || 0;
-			const memName = '[[${session.memName}]]' || '會員';
+			// 從 Thymeleaf Model 或 Session 取得名字，處理引號與空值
+			let memName = /*[[${memName}]]*/ '';
+			if (!memName || memName === '""' || memName === "''") {
+				memName = /*[[${session.memName}]]*/ '會員';
+			}
+			if (!memName || memName === '""' || memName === "''") {
+				memName = '會員';
+			}
+
+			const memId = Number(/*[[${session.memId}]]*/) || 0;
 			const reviewsTab = document.getElementById('reviewsTab');
 			const bookingListContainer = document.querySelector('.booking-list');
 
@@ -250,7 +323,7 @@
 					<div style="background: white; border-radius: 1.5rem; padding: 2rem; margin-bottom: 1.5rem;">
 						<h3 style="cursor: pointer; user-select: none; margin-bottom: 1.5rem; color: #333;"
 							onclick="toggleHistoryReviews('memberReviewsList', 'memberToggleIcon')">
-							<i class="fas fa-star" style="color: #ffc107;"></i> ${memName} 的歷史評價
+							<i class="fas fa-comments"></i> ${memName} 的歷史評價
 							<span style="color: #999; font-size: 0.9rem; margin-left: 10px;">(共 ${reviews.length} 筆)</span>
 							<i id="memberToggleIcon" class="fas fa-chevron-down" 
 								style="float: right; transition: transform 0.3s;"></i>
@@ -292,16 +365,17 @@
 						const reviewerName = review.senderName || `保母 ID: ${review.senderId}`;
 						return `
 							<div class="review-card" style="
+								border: none;
 								border-bottom: 1px solid #eee; 
-								padding: 1rem 0; 
+								padding: 1.5rem 1.2rem; 
 								margin-bottom: 0.5rem;
 							">
 								<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-									<div>
-										<strong>${reviewerName}</strong>
+									<div style="display: flex; align-items: center; gap: 10px;">
+										<strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
 										<button class="btn btn-sm btn-outline-danger" 
 											style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
-											onclick="reportReview(${review.evaluateId || review.bookingOrderId})">
+											onclick="openComplaintModal(${review.evaluateId || review.bookingOrderId})">
 											<i class="fas fa-flag"></i> 檢舉
 										</button>
 									</div>
@@ -329,13 +403,7 @@
 			}
 		}
 
-		// 檢舉評價
-		function reportReview(id) {
-			if (confirm('確定要檢舉這則評論嗎？')) {
-				alert('已收到您的檢舉，管理員將進行審核。');
-				// TODO: 串接後端檢舉 API
-			}
-		}
+		// 註：檢舉功能已改用 complaint-functions.js 的 injectReportBox()
 
 		// 渲染星星評分
 		function renderStars(rating) {
@@ -352,6 +420,8 @@
 
 	</script>
 
+	<script src="/js/frontend/complaint-functions.js"></script>
+	<script src="/js/frontend/evaluate-functions.js"></script>
 
 </body>
 

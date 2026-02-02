@@ -141,9 +141,8 @@
 
 .review-card {
 	background: white;
-	padding: 15px;
-	border-radius: 10px;
-	border: 1px solid #dee2e6;
+	padding: 1.5rem 1.2rem;
+	border-bottom: 1px solid #eee;
 }
 
 .review-header {
