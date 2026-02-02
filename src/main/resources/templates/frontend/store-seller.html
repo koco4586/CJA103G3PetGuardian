@@ -31,9 +31,9 @@
                     <!-- 頭像 -->
                     <div style="position: relative;">
                         <img th:if="${sellerInfo.memImage != null}"
-                             th:src="${sellerInfo.memImage}" alt="賣家頭像"
+                             th:src="@{'/images' + ${sellerInfo.memImage}}" alt="賣家頭像"
                              style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
-                                    border: 3px solid rgba(255,255,255,0.3);">
+                border: 3px solid rgba(255,255,255,0.3);">
                         <div th:unless="${sellerInfo.memImage != null}"
                              style="width: 60px; height: 60px; border-radius: 50%;
                                     background: rgba(255,255,255,0.2); display: flex;
@@ -351,17 +351,15 @@
                                 th:text="${#temporals.format(item.order.orderTime, 'yyyy-MM-dd HH:mm')}">2024-01-01
                             </td>
 
-                            <!-- 狀態標籤 -->
+                            <!-- 狀態標籤 (對應 DB order_status 0~5) -->
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
                                 <span th:switch="${item.order.orderStatus}">
                                     <span th:case="0" class="badge badge-warning">已付款</span>
                                     <span th:case="1" class="badge badge-info">已出貨</span>
                                     <span th:case="2" class="badge badge-success">已完成</span>
                                     <span th:case="3" class="badge badge-secondary">已取消</span>
-                                    <span th:case="4" class="badge"
-                                          style="background: #ffc107; color: #333;">申請退貨中</span>
-                                    <span th:case="5" class="badge"
-                                          style="background: #6c757d; color: white;">退貨完成</span>
+                                    <span th:case="4" class="badge" style="background: #ffc107; color: #333;">申請退貨中</span>
+                                    <span th:case="5" class="badge" style="background: #6c757d; color: white;">退貨完成</span>
                                     <span th:case="*" class="badge">未知</span>
                                 </span>
                             </td>
@@ -370,8 +368,8 @@
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
                                 <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap;">
 
-                                    <!-- 已付款狀態：顯示出貨、取消按鈕 -->
-                                    <th:block th:if="${item.canShip}">
+                                    <!-- 已付款狀態 (0)：顯示出貨、取消按鈕 -->
+                                    <th:block th:if="${item.order.orderStatus == 0}">
                                         <!-- 出貨按鈕 -->
                                         <form th:action="@{/seller/order/ship}" method="post" style="display: inline;">
                                             <input type="hidden" name="orderId" th:value="${item.order.orderId}">
@@ -393,16 +391,16 @@
                                         </form>
                                     </th:block>
 
-                                    <!-- 非已付款狀態：出貨按鈕變灰色不可按 -->
-                                    <th:block th:unless="${item.canShip}">
+                                    <!-- 已出貨狀態 (1)：可顯示取消(視業務邏輯)或其他，這裡設為灰色 -->
+                                    <th:block th:unless="${item.order.orderStatus == 0}">
                                         <button class="btn btn-sm"
                                                 style="background: #e9ecef; color: #adb5bd; cursor: not-allowed;"
-                                                disabled title="此狀態無法出貨">
+                                                disabled title="此狀態無法執行出貨/取消操作">
                                             <i class="fas fa-shipping-fast"></i>
                                         </button>
                                     </th:block>
 
-                                    <!-- 查看訂單詳情（改用 Modal） -->
+                                    <!-- 查看訂單詳情（綁定完整資料） -->
                                     <button type="button" class="btn btn-sm btn-outline view-order-btn"
                                             th:data-order-id="${item.order.orderId}"
                                             th:data-buyer-name="${item.buyerName}"
