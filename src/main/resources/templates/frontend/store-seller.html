@@ -29,11 +29,12 @@
                         border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; color: black;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <!-- 頭像 -->
+                    <!-- 頭像 -->
                     <div style="position: relative;">
                         <img th:if="${sellerInfo.memImage != null}"
-                             th:src="${sellerInfo.memImage}" alt="賣家頭像"
+                             th:src="@{'/images' + ${sellerInfo.memImage}}" alt="賣家頭像"
                              style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
-                                    border: 3px solid rgba(255,255,255,0.3);">
+                border: 3px solid rgba(255,255,255,0.3);">
                         <div th:unless="${sellerInfo.memImage != null}"
                              style="width: 60px; height: 60px; border-radius: 50%;
                                     background: rgba(255,255,255,0.2); display: flex;

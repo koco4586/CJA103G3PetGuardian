@@ -4,8 +4,9 @@
  */
 
 // 全域變數
-var existingImagesList = [];
-var deleteImageIdsList = [];
+var existingImagesList = [];      // 現有圖片清單
+var deleteImageIdsList = [];      // 待刪除圖片ID清單
+var isEditMode = false;           // 是否為編輯模式
 
 // ==================== 商品管理 ====================
 
@@ -13,6 +14,9 @@ var deleteImageIdsList = [];
 function openProductModal() {
     document.getElementById('productModal').classList.add('active');
     document.getElementById('modalTitle').innerText = '新增商品';
+
+    // 設定為新增模式
+    isEditMode = false;
 
     // 清空表單
     document.getElementById('productForm').reset();
@@ -41,6 +45,9 @@ function openEditProductModal(button) {
     var proDescription = button.getAttribute('data-pro-description');
     var stockQuantity = button.getAttribute('data-stock-quantity');
     var proState = button.getAttribute('data-pro-state');
+
+    // 設定為編輯模式
+    isEditMode = true;
 
     // 開啟 Modal
     document.getElementById('productModal').classList.add('active');
@@ -74,7 +81,7 @@ function loadExistingImages(proId) {
             return response.json();
         })
         .then(function(images) {
-            existingImagesList = images;
+            existingImagesList = images || [];
             var container = document.getElementById('existingImages');
             container.innerHTML = '';
 
@@ -110,6 +117,7 @@ function loadExistingImages(proId) {
         })
         .catch(function(error) {
             console.error('載入圖片失敗:', error);
+            existingImagesList = [];
         });
 }
 
@@ -150,30 +158,20 @@ function updateDeleteImageInputs() {
 // 預覽新上傳的圖片
 function previewNewImages(input) {
     var container = document.getElementById('newImagePreview');
+    var existingContainer = document.getElementById('existingImages');
     var files = input.files;
 
     console.log('previewNewImages 被呼叫');
     console.log('選擇的檔案數量:', files ? files.length : 0);
+    console.log('是否為編輯模式:', isEditMode);
 
     if (!files || files.length === 0) {
         console.log('沒有選擇檔案');
         return;
     }
 
-    // 計算目前已有的圖片數量（現有圖片清單中的數量）
-    var existingCount = existingImagesList.length;
-    console.log('現有圖片數量:', existingCount);
-
-    // 限制最多1張圖片
-    if (existingCount >= 1) {
-        alert('最多只能有 1 張商品圖片，請先刪除現有圖片後再上傳新圖片');
-        input.value = '';
-        return;
-    }
-
     // 只處理第一張圖片
     var file = files[0];
-    console.log('選擇新圖片:', file.name, '大小:', file.size, 'bytes');
 
     if (!file.type.startsWith('image/')) {
         alert('請選擇圖片檔案');
@@ -186,6 +184,26 @@ function previewNewImages(input) {
         alert('圖片檔案太大，請選擇小於 10MB 的圖片');
         input.value = '';
         return;
+    }
+
+    // 編輯模式下，如果有選擇新圖片，不管原本的 existingImagesList 狀態如何
+    // 直接清空舊圖片的顯示區塊，並嘗試標記刪除
+    if (isEditMode) {
+        console.log('編輯模式且已選新圖：強制隱藏現有圖片，由後端執行全覆蓋');
+
+        // 這裡我們還是盡量標記 ID，給後端參考 (雖然我們已經修改後端為強制的 Replace 模式)
+        if (existingImagesList && existingImagesList.length > 0) {
+            existingImagesList.forEach(function(img) {
+                if (deleteImageIdsList.indexOf(img.productPicId) === -1) {
+                    deleteImageIdsList.push(img.productPicId);
+                }
+            });
+            updateDeleteImageInputs();
+        }
+
+        // 重要：視覺上直接清空舊圖
+        existingImagesList = [];
+        existingContainer.innerHTML = '';
     }
 
     // 清空現有預覽並建立新預覽
@@ -216,7 +234,7 @@ function previewNewImages(input) {
         imgWrapper.appendChild(deleteBtn);
         container.appendChild(imgWrapper);
 
-        console.log('預覽圖片已建立，file input 仍保留檔案');
+        console.log('預覽圖片已建立');
     };
     reader.readAsDataURL(file);
 }
@@ -243,28 +261,14 @@ function openOrderDetailModal(button) {
     document.getElementById('detailReceiverName').textContent = receiverName || '-';
     document.getElementById('detailReceiverPhone').textContent = receiverPhone || '-';
     document.getElementById('detailReceiverAddress').textContent = receiverAddress || '-';
+    document.getElementById('detailSpecialInstructions').textContent = specialInstructions || '無';
 
-    // 訂單狀態
-    var statusMap = {
-        '0': '<span class="badge badge-warning">已付款</span>',
-        '1': '<span class="badge badge-info">已出貨</span>',
-        '2': '<span class="badge badge-success">已完成</span>',
-        '3': '<span class="badge badge-secondary">已取消</span>',
-        '4': '<span class="badge" style="background: #ffc107; color: #333;">申請退貨中</span>',
-        '5': '<span class="badge" style="background: #6c757d; color: white;">退貨完成</span>'
-    };
-    document.getElementById('detailOrderStatus').innerHTML = statusMap[orderStatus] || '<span class="badge">未知</span>';
+    // 設定訂單狀態標籤
+    var statusBadge = document.getElementById('detailOrderStatus');
+    statusBadge.textContent = getStatusText(orderStatus);
+    statusBadge.className = 'badge ' + getStatusClass(orderStatus);
 
-    // 備註
-    var specialRow = document.getElementById('detailSpecialRow');
-    if (specialInstructions && specialInstructions.trim()) {
-        document.getElementById('detailSpecialInstructions').textContent = specialInstructions;
-        specialRow.style.display = 'flex';
-    } else {
-        specialRow.style.display = 'none';
-    }
-
-    // 顯示 Modal
+    // 開啟 Modal
     document.getElementById('orderDetailModal').classList.add('active');
 }
 
@@ -273,16 +277,47 @@ function closeOrderDetailModal() {
     document.getElementById('orderDetailModal').classList.remove('active');
 }
 
-// 切換訂單狀態篩選
-function filterOrders(status, btn) {
-    // 更新按鈕狀態
-    document.querySelectorAll('.sub-tabs .sub-tab').forEach(function(t) {
-        t.classList.remove('active');
-    });
-    btn.classList.add('active');
+// 取得狀態文字
+function getStatusText(status) {
+    var statusMap = {
+        '0': '待付款',
+        '1': '已付款',
+        '2': '處理中',
+        '3': '已出貨',
+        '4': '已完成',
+        '5': '已取消',
+        '6': '退款中',
+        '7': '已退款'
+    };
+    return statusMap[status] || '未知';
+}
 
-    // 篩選訂單
-    var rows = document.querySelectorAll('#ordersTable tbody tr');
+// 取得狀態 CSS 類別
+function getStatusClass(status) {
+    var classMap = {
+        '0': 'badge-warning',
+        '1': 'badge-info',
+        '2': 'badge-info',
+        '3': 'badge-primary',
+        '4': 'badge-success',
+        '5': 'badge-secondary',
+        '6': 'badge-warning',
+        '7': 'badge-secondary'
+    };
+    return classMap[status] || 'badge-secondary';
+}
+
+// 訂單篩選
+function filterOrders(status) {
+    // 更新 Tab 樣式
+    var tabs = document.querySelectorAll('.order-tab');
+    tabs.forEach(function(tab) {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // 篩選訂單列表
+    var rows = document.querySelectorAll('.order-row');
     rows.forEach(function(row) {
         var orderStatus = row.getAttribute('data-status');
         if (status === 'all' || orderStatus === status) {
@@ -305,38 +340,15 @@ function confirmCancel(orderId) {
     if (confirm('確定要取消此訂單嗎？買家將會收到退款。')) {
         document.getElementById('cancelForm_' + orderId).submit();
     }
-    function submitProductForm() {
-        const formElement = document.getElementById('productForm');
-        const formData = new FormData(formElement);
-
-        // 強制手動加入 proId (防止 hidden input 沒抓到值)
-        const proId = document.getElementById('proId').value;
-        if (proId) {
-            formData.set('proId', proId);
+}
+function toggleReviewsList() {
+    var reviewsList = document.getElementById('reviewsList');
+    if (reviewsList) {
+        if (reviewsList.style.display === 'none' || reviewsList.style.display === '') {
+            reviewsList.style.display = 'block';
+            reviewsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            reviewsList.style.display = 'none';
         }
-
-        // 檢查是否有選圖片
-        const fileInput = document.getElementById('productImages');
-        if (fileInput.files.length > 0) {
-            // FormData 會自動處理 MultipartFile
-        }
-
-        // 送出 AJAX
-        fetch('/seller/product/save', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url; // 處理 Controller 的 redirect
-                    return;
-                }
-                alert('儲存成功！');
-                location.reload();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('儲存發生錯誤');
-            });
     }
 }
