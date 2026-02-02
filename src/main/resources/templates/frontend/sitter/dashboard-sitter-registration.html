@@ -106,6 +106,35 @@
             return false;
         }
     </script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function () {
+            // 取得後端傳來的 errorMessage
+            var errorMessage = /*[[${errorMessage}]]*/ '';
+
+            // 檢查是否包含 "停權" 關鍵字
+            if (errorMessage && errorMessage.includes('停權')) {
+                Swal.fire({
+                    title: '通知',
+                    text: '你已被停權，請向管理員聯繫處理',
+                    icon: 'warning',
+                    confirmButtonText: '確認',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    // 關閉後強制跳轉首頁
+                    if (result.isConfirmed) {
+                        window.location.href = '/';
+                    }
+                });
+            }
+        });
+        /*]]>*/
+    </script>
 </body>
 
 </html>

@@ -36,13 +36,8 @@
                 <a href="/sitter/bookings" class="menu-item">
                     <i class="fas fa-calendar-check"></i> 預約管理
                 </a>
-                <a href="#reviews-card" class="menu-item">
-                    <i class="fas fa-comments"></i> 歷史評價
-                </a>
-                <div class="menu-item" style="color: var(--danger); cursor: pointer;"
-                    onclick="alert('已登出'); window.location.href='/front/memberlogoutpage'">
-                    <i class="fas fa-sign-out-alt"></i> 登出
-                </div>
+
+
             </nav>
         </div>
 
@@ -653,9 +648,9 @@
 
         // 載入評價資料（保母主頁專用佈局）
         // 使用上面已經宣告的 sitterId 變數（第 372 行）
-        if (sitterId) {
-            loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList');
-        }
+        // if (sitterId) {
+        //    loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList');
+        // }
     </script>
 
 </body>
