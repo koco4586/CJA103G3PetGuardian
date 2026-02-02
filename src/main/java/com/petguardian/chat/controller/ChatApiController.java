@@ -15,49 +15,51 @@ import org.springframework.web.bind.annotation.RestController;
 import com.petguardian.chat.dto.ChatMessageDTO;
 import com.petguardian.chat.dto.ChatRoomDTO;
 import com.petguardian.chat.dto.ReportRequestDTO;
-import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.chat.service.ChatService;
 import com.petguardian.chat.service.chatmessage.report.ChatReportService;
+import com.petguardian.chat.service.chatroom.ChatRoomService;
+import com.petguardian.common.service.AuthStrategyService;
+
 import org.springframework.web.bind.annotation.RequestBody;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 /**
  * REST Controller for Chat Resource Management.
  * 
  * Responsibilities:
- * - Provides JSON API for chatroom resolution
- * - Serves lazy-loaded message history via AJAX
- * - Enforces security and validation for data access
+ * Provides JSON API for chatroom resolution
+ * Serves lazy-loaded message history via AJAX
+ * Enforces security and validation for data access
+ * 
+ * Uses dual-facade pattern:
+ * {@link ChatRoomService} for chatroom operations
+ * {@link ChatService} for message operations
  */
 @RestController
 @RequestMapping("/api/chatrooms")
+@RequiredArgsConstructor
 public class ChatApiController {
 
-    // ============================================================
+    // =========================================================================
     // DEPENDENCIES
-    // ============================================================
+    // =========================================================================
+
     private final AuthStrategyService authStrategyService;
     private final ChatService chatService;
+    private final ChatRoomService chatRoomService;
     private final ChatReportService chatReportService;
 
-    public ChatApiController(AuthStrategyService authStrategyService,
-            ChatService chatService, ChatReportService chatReportService) {
-        this.authStrategyService = authStrategyService;
-        this.chatService = chatService;
-        this.chatReportService = chatReportService;
-    }
-
-    // ============================================================
+    // =========================================================================
     // ENDPOINTS
-    // ============================================================
+    // =========================================================================
 
     /**
-     * Finds or validates a chatroom with a specific partner.
-     * Used when a user selects a contact to chat with.
+     * Finds or creates a chatroom with a specific partner.
      * 
      * @param partnerId    Target User ID
-     * @param chatroomType Room Type (Default: 0 for 1-on-1)
+     * @param chatroomType Room Type (Default: 0 for Service)
      * @return ChatRoomDTO
      */
     @GetMapping
@@ -70,8 +72,10 @@ public class ChatApiController {
         if (currentUserId == null) {
             return ResponseEntity.status(401).build();
         }
-        // Always ensures room exists
-        ChatRoomDTO chatroom = chatService.findOrCreateChatroom(currentUserId, partnerId, chatroomType);
+
+        // Use ChatRoomService facade for chatroom operations
+        ChatRoomDTO chatroom = chatRoomService.findOrCreateChatroom(
+                currentUserId, partnerId, chatroomType);
 
         return ResponseEntity.ok(chatroom);
     }

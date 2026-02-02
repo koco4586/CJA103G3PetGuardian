@@ -10,6 +10,7 @@ import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 import com.petguardian.chat.dto.MemberProfileDTO;
 import java.util.Map;
+import java.util.Arrays;
 
 @Service
 public class ChatRoomMapperImpl implements ChatRoomMapper {
@@ -104,5 +105,45 @@ public class ChatRoomMapperImpl implements ChatRoomMapper {
         dto.setUnread(isUnread(chatRoomEntity.getLastMessageAt(), myLastReadAt));
 
         return dto;
+    }
+
+    // =========================================================================
+    // CACHE LAYER CONVERSION
+    // =========================================================================
+
+    /**
+     * {@inheritDoc}
+     * Converts a ChatRoomEntity to ChatRoomMetadataDTO for Redis caching.
+     * This centralizes the mapping logic previously in ChatRoomMetadataService.
+     */
+    @Override
+    public ChatRoomMetadataDTO toMetadataDto(ChatRoomEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return ChatRoomMetadataDTO.builder()
+                .chatroomId(entity.getChatroomId())
+                .chatroomName(entity.getChatroomName() != null ? entity.getChatroomName() : "Chat")
+                .chatroomType(entity.getChatroomType())
+                .chatroomStatus(entity.getChatroomStatus())
+                .memberIds(Arrays.asList(entity.getMemId1(), entity.getMemId2()))
+                .lastMessagePreview(entity.getLastMessagePreview())
+                .lastMessageAt(entity.getLastMessageAt())
+                .mem1LastReadAt(entity.getMem1LastReadAt())
+                .mem2LastReadAt(entity.getMem2LastReadAt())
+                .build();
+    }
+
+    @Override
+    public MemberProfileDTO toMemberProfileDto(ChatMemberEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return MemberProfileDTO.builder()
+                .memberId(entity.getMemId())
+                .memberName(entity.getMemName())
+                .memberImage(null) // Base member entity doesn't have image, but we preserve the field
+                .build();
     }
 }

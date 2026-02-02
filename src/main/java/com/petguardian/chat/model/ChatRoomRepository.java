@@ -42,9 +42,12 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoomEntity, Intege
         @Query("UPDATE ChatRoomEntity c SET " +
                         "c.lastMessagePreview = :preview, " +
                         "c.lastMessageAt = :time, " +
-                        "c.mem1LastReadAt = CASE WHEN c.memId1 = :senderId THEN :time ELSE c.mem1LastReadAt END, " +
-                        "c.mem2LastReadAt = CASE WHEN c.memId2 = :senderId THEN :time ELSE c.mem2LastReadAt END " +
+                        "c.mem1LastReadAt = CASE WHEN :mem1ReadAt IS NULL THEN c.mem1LastReadAt ELSE :mem1ReadAt END, "
+                        +
+                        "c.mem2LastReadAt = CASE WHEN :mem2ReadAt IS NULL THEN c.mem2LastReadAt ELSE :mem2ReadAt END " +
                         "WHERE c.chatroomId = :id")
-        void updateRoomMetadataAtomic(@Param("id") Integer id, @Param("preview") String preview,
-                        @Param("time") LocalDateTime time, @Param("senderId") Integer senderId);
+        void updateFullMetadata(@Param("id") Integer id, @Param("preview") String preview,
+                        @Param("time") LocalDateTime time,
+                        @Param("mem1ReadAt") LocalDateTime mem1ReadAt,
+                        @Param("mem2ReadAt") LocalDateTime mem2ReadAt);
 }

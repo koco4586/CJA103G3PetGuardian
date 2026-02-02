@@ -65,20 +65,20 @@ public class ChatReportService {
                 return cached;
             }
         } catch (Exception e) {
-            log.warn("[Report] Redis Cache Unavailable: {}", e.getMessage());
+            log.debug("[Report] Redis Cache Unavailable: {}", e.getMessage());
         }
 
         // 2. Cache Miss: Fetch FULL state for this user to simplify cache structure
         try {
             Map<String, Integer> fullState = getAllFromMysql(reporterId);
-            
+
             // Repopulate Cache (Functional API)
             try {
                 circuitBreaker.executeRunnable(() -> repopulateRedis(reporterId, fullState));
             } catch (Exception e) {
-                log.warn("[Report] Cache Repopulation Failed: {}", e.getMessage());
+                log.debug("[Report] Cache Repopulation Failed: {}", e.getMessage());
             }
-            
+
             // Filter results for requested messageIds
             Map<String, Integer> results = new HashMap<>();
             for (String mid : messageIds) {

@@ -12,7 +12,7 @@
 // CONFIGURATION
 // ============================================================
 const CONFIG = {
-    PAGE_SIZE: 50,
+    PAGE_SIZE: 20,
     RECONNECT_DELAY_MS: 5000,
     RECONNECT_JITTER_MS: 2000, // Random jitter to prevent thundering herd
     SCROLL_THRESHOLD_PX: 100,

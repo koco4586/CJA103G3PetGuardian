@@ -62,9 +62,10 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
 
         ChatRoomEntity saved = chatroomRepository.save(newRoom);
 
-        // Push to Cache List
+        // Push to Cache List & Lookup Cache
         metadataService.addUserToRoom(saved.getMemId1(), saved.getChatroomId());
         metadataService.addUserToRoom(saved.getMemId2(), saved.getChatroomId());
+        metadataService.cacheRoomLookup(saved.getMemId1(), saved.getMemId2(), saved.getChatroomId());
 
         return saved;
     }
