@@ -361,15 +361,14 @@ function confirmCancel(orderId) {
 
 // ==================== 評價管理 ====================
 
-// 切換評價列表顯示
 function toggleReviewsList() {
-    var reviewsSection = document.getElementById('reviewsListSection');
-    if (reviewsSection) {
-        if (reviewsSection.style.display === 'none' || !reviewsSection.style.display) {
-            reviewsSection.style.display = 'block';
-            reviewsSection.scrollIntoView({ behavior: 'smooth' });
+    var reviewsList = document.getElementById('reviewsList');
+    if (reviewsList) {
+        if (reviewsList.style.display === 'none' || reviewsList.style.display === '') {
+            reviewsList.style.display = 'block';
+            reviewsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
-            reviewsSection.style.display = 'none';
+            reviewsList.style.display = 'none';
         }
     }
 }
