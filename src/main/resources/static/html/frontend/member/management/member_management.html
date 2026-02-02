@@ -189,7 +189,7 @@
                     credentials: "include",
                     body: formData         //FormData 是瀏覽器提供的「表單資料物件」,瀏覽器會自動Content-Type: multipart/form-data
                 }).then(res => res.json()).then(data => {
-                    console.log(data);
+//                     console.log(data);
                     $(".show_image").append(`<img src="${data.memImage}" style="width: 200px;">`);
                     alert("Petguardian會員基本資料變更成功！");
                 });

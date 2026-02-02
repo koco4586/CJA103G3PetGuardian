@@ -15,10 +15,10 @@
         </div>
         <h4 th:text="${currentMember != null and currentMember.memName != null} ? ${currentMember.memName} : '會員中心'">
             會員中心</h4>
-        <p style="color: #999; font-size: 0.9rem;">一般會員</p>
+<!--        <p style="color: #999; font-size: 0.9rem;">一般會員</p>-->
     </div>
     <nav>
-        <a href="/html/frontend/member/management/member_management_ai.html" class="menu-item"
+        <a href="/html/frontend/member/management/member_management.html" class="menu-item"
             th:classappend="${activePage == 'profile'} ? ' active' : ''">
             <i class="fas fa-user"></i> 個人資料
         </a>

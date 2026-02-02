@@ -680,4 +680,36 @@ public class PetController {
         return "frontend/dashboard-bookings"; // 返回你的預約紀錄 HTML
     }
 
+    /**
+     * 顯示寵物保母服務頁面
+     * URL: GET /pet/services
+     */
+    @GetMapping("/services")
+    public String showPetServices() {
+        return "frontend/pet/Petser_item";
+    }
+
+    /**
+     * 根據服務類型查詢保母列表
+     * URL: GET /pet/sitters/search
+     * 
+     * @param service 服務類型（散步、洗澡、訓練等）
+     * @param model   Spring Model
+     * @return 轉發到保母列表頁面
+     */
+    @GetMapping("/sitters/search")
+    public String searchSittersByService(
+            @RequestParam(required = false) String service,
+            Model model) {
+
+        // 將服務參數傳遞給保母列表頁面
+        if (service != null && !service.trim().isEmpty()) {
+            model.addAttribute("serviceFilter", service);
+        }
+
+        // 轉發到現有的保母搜尋頁面
+        // 使用 forward 保持請求參數
+        return "forward:/booking/search?service=" + (service != null ? service : "");
+    }
+
 }

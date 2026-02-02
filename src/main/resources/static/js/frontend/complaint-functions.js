@@ -9,11 +9,15 @@
  */
 
 /**
- * 開啟檢舉彈窗
+ * 開啟檢舉彈窗 (用於保母詳情、主頁)
  * @param {number} bookingOrderId - 訂單 ID
  */
 window.openComplaintModal = function (bookingOrderId) {
-    // 建立彈窗 HTML
+    // 如果已經有彈窗，先移除
+    const oldModal = document.getElementById('complaintModal');
+    if (oldModal) oldModal.remove();
+
+    // 建立彈窗 HTML (樣式與 injectReportBox 一致，但包在 Modal 內)
     const modalHTML = `
         <div id="complaintModal" style="
             position: fixed;
@@ -26,130 +30,111 @@ window.openComplaintModal = function (bookingOrderId) {
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            backdrop-filter: blur(3px);
         ">
             <div style="
                 background: white;
                 border-radius: 15px;
                 padding: 30px;
                 width: 90%;
-                max-width: 600px;
+                max-width: 500px;
                 box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                position: relative;
+                animation: modalFadeIn 0.3s ease;
             ">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #2c3e50; font-size: 1.8rem;">
-                        <i class="fa-solid fa-flag"></i> 評價檢舉
-                    </h2>
+                <style>
+                    @keyframes modalFadeIn {
+                        from { opacity: 0; transform: translateY(-20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                </style>
+
+                <h4 style="color: #c62828; margin-bottom: 20px; font-weight: bold; font-size: 1.4rem;">
+                    <i class="fas fa-flag"></i> 為什麼要檢舉此評價？
+                </h4>
+                
+                <div class="tag-container" style="margin-bottom: 20px;">
+                    <span class="report-tag">不實評價</span>
+                    <span class="report-tag">惡意攻擊</span>
+                    <span class="report-tag">垃圾訊息</span>
+                    <span class="report-tag">其他</span>
+                </div>
+
+                <textarea class="report-content" id="modalReportContent" style="
+                    width: 100%; 
+                    height: 120px; 
+                    border: 1px solid #ffcdd2; 
+                    border-radius: 8px; 
+                    padding: 12px; 
+                    background:#fff; 
+                    font-size: 1rem; 
+                    font-family: inherit; 
+                    resize: vertical;
+                    margin-bottom: 20px;
+                    outline: none;
+                " placeholder="輸入詳細檢舉理由..."></textarea>
+                
+                <div style="text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
                     <button onclick="closeComplaintModal()" style="
-                        background: none;
-                        border: none;
-                        font-size: 1.5rem;
-                        cursor: pointer;
-                        color: #999;
-                    ">✕</button>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <p style="color: #777; font-size: 0.9rem;">處理保母申訴</p>
-                </div>
-
-                <!-- 檢舉類型選擇 -->
-                <div style="display: flex; gap: 15px; margin-bottom: 25px;">
-                    <div class="complaint-type-btn" data-type="sitter" style="
-                        flex: 1;
-                        padding: 20px;
-                        border: 2px solid #ddd;
-                        border-radius: 12px;
-                        background: #fff;
-                        cursor: pointer;
-                        text-align: center;
-                        transition: 0.3s;
+                        background: #95a5a6; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 25px; 
+                        border-radius: 50px; 
+                        cursor: pointer; 
+                        font-weight: bold; 
+                        transition: all 0.2s;
                     ">
-                        <i class="fa-solid fa-calendar-check"></i><br>檢舉保母內容
-                    </div>
-                    <div class="complaint-type-btn" data-type="order" style="
-                        flex: 1;
-                        padding: 20px;
-                        border: 2px solid #ddd;
-                        border-radius: 12px;
-                        background: #fff;
-                        cursor: pointer;
-                        text-align: center;
-                        transition: 0.3s;
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button class="submit-report-btn" id="modalSubmitBtn" style="
+                        background: #ff6b6b; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 25px; 
+                        border-radius: 50px; 
+                        cursor: pointer; 
+                        font-weight: bold; 
+                        transition: all 0.2s; 
+                        display: inline-flex; 
+                        align-items: center; 
+                        gap: 8px;
                     ">
-                        <i class="fa-solid fa-shop"></i><br>檢舉訂單
-                    </div>
-                </div>
-
-                <!-- 檢舉內容 -->
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; color: #555; font-weight: 500;">
-                        檢舉詳細內容：
-                    </label>
-                    <textarea id="complaintReason" placeholder="請描述發生經過..." style="
-                        width: 100%;
-                        padding: 12px;
-                        border: 2px solid #ddd;
-                        border-radius: 10px;
-                        min-height: 120px;
-                        font-family: inherit;
-                        transition: 0.3s;
-                        resize: vertical;
-                    "></textarea>
-                </div>
-
-                <!-- 按鈕 -->
-                <div style="text-align: center; display: flex; gap: 10px;">
-                    <button onclick="closeComplaintModal()" style="
-                        flex: 1;
-                        padding: 12px;
-                        border: 2px solid #ddd;
-                        border-radius: 8px;
-                        background: white;
-                        color: #666;
-                        cursor: pointer;
-                        font-size: 0.95rem;
-                        font-weight: bold;
-                    ">取消</button>
-                    <button onclick="submitComplaint(${bookingOrderId})" style="
-                        flex: 1;
-                        padding: 12px;
-                        border: none;
-                        border-radius: 8px;
-                        background: #ff6b6b;
-                        color: white;
-                        cursor: pointer;
-                        font-size: 0.95rem;
-                        font-weight: bold;
-                    ">提交申訴</button>
+                        提交檢舉 <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
     `;
 
-    // 插入彈窗到 body
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // 綁定檢舉類型按鈕事件
-    const typeBtns = document.querySelectorAll('.complaint-type-btn');
-    typeBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-            typeBtns.forEach(b => {
-                b.style.borderColor = '#ddd';
-                b.style.background = '#fff';
-                b.style.color = '#000';
-                b.style.boxShadow = 'none';
-            });
-            this.style.borderColor = '#c38d9e';
-            this.style.color = '#c38d9e';
-            this.style.background = '#fff5f5';
-            this.style.boxShadow = '0 5px 15px rgba(195, 141, 158, 0.2)';
-        });
+    const modal = document.getElementById('complaintModal');
+    const textarea = modal.querySelector('.report-content');
+    const submitBtn = modal.querySelector('#modalSubmitBtn');
+
+    // 標籤點擊邏輯 (僅切換狀態，不填入 textarea)
+    modal.querySelectorAll('.report-tag').forEach(tag => {
+        tag.onclick = function () {
+            this.classList.toggle('selected');
+        };
     });
 
-    // 預設選擇第一個
-    if (typeBtns.length > 0) {
-        typeBtns[0].click();
-    }
+    // 送出按鈕點擊邏輯
+    submitBtn.onclick = function () {
+        const content = textarea.value.trim();
+        const selectedTags = Array.from(modal.querySelectorAll('.report-tag.selected'))
+            .map(t => t.innerText);
+
+        if (selectedTags.length === 0 && !content) {
+            alert('❌ 請選擇標籤或輸入檢舉理由！');
+            return;
+        }
+
+        // 合併標籤與內容
+        const fullReason = (selectedTags.length > 0 ? `[${selectedTags.join(', ')}] ` : '') + content;
+        sendReportToBackend(bookingOrderId, fullReason, null, true);
+    };
 }
 
 /**
@@ -206,9 +191,172 @@ window.submitComplaint = function (bookingOrderId) {
 }
 
 /**
- * 修改 reportReview 函數，改為開啟檢舉彈窗
+ * 修改 reportReview 函數，改為開啟內嵌式檢舉框
+ * @param {HTMLElement} button - 觸發按鈕
  * @param {number} orderId - 訂單 ID
  */
-window.reportReview = function (orderId) {
-    openComplaintModal(orderId);
+window.reportReview = function (button, orderId) {
+    // 檢查第一個參數是否為按鈕（相容舊版呼叫）
+    if (typeof button === 'number') {
+        // 如果傳入的是 ID 而非按鈕，則嘗試開啟彈窗（後台或特殊頁面）
+        openComplaintModal(button);
+    } else {
+        injectReportBox(button, orderId);
+    }
+}
+
+/**
+ * 內嵌式檢舉輸入框（與評價輸入框樣式一致，包在白色卡片內）
+ * @param {HTMLElement} button - 檢舉按鈕元素
+ * @param {number} orderId - 訂單 ID
+ */
+window.injectReportBox = function (button, orderId) {
+    // 找到評價卡片容器 - 支援多種可能的父容器
+    let parentCard = button.closest('.order-review-card')
+        || button.closest('.review-card')
+        || button.closest('.member-eval-container')
+        || button.closest('div[style*="background"]');
+
+    if (!parentCard) {
+        console.error('找不到評價卡片容器');
+        return;
+    }
+
+    // 找到檢舉輸入框容器 (如果已經存在)
+    let reportBox = parentCard.querySelector('.dynamic-report-wrapper');
+
+    // 如果已經展開，則收合
+    if (reportBox && reportBox.classList.contains('active')) {
+        const textarea = reportBox.querySelector('.report-content');
+        if (textarea && textarea.value.trim().length > 0) {
+            const keepContent = confirm('您的檢舉尚未送出，是否要保留目前內容？\n\n點擊「確定」保留內容\n點擊「取消」直接關閉並移除');
+            if (keepContent) {
+                reportBox.classList.remove('active');
+            } else {
+                reportBox.classList.remove('active');
+                setTimeout(() => reportBox.remove(), 500);
+            }
+        } else {
+            reportBox.classList.remove('active');
+            setTimeout(() => reportBox.remove(), 500);
+        }
+        return;
+    }
+
+    // 如果不存在，則建立
+    if (!reportBox) {
+        reportBox = document.createElement('div');
+        reportBox.className = 'dynamic-report-wrapper';
+
+        // 樣式對齊 injectEvalBox
+        reportBox.innerHTML = `
+            <h4 style="color: #c62828; margin-bottom: 15px; font-weight: bold;">為什麼要檢舉此評價？</h4>
+            
+            <div class="tag-container" style="margin-bottom: 15px;">
+                <span class="report-tag">不實評價</span>
+                <span class="report-tag">惡意攻擊</span>
+                <span class="report-tag">垃圾訊息</span>
+                <span class="report-tag">其他</span>
+            </div>
+
+            <textarea class="report-content" style="width: 100%; height: 100px; border: 1px solid #ffcdd2; border-radius: 8px; padding: 12px; background:#fff; font-size: 1rem; font-family: inherit; resize: vertical;" placeholder="點擊標籤或輸入詳細檢舉理由..."></textarea>
+            
+            <div style="text-align: right; margin-top: 15px;">
+                <button class="cancel-report-btn" style="background: #95a5a6; color: white; border: none; padding: 10px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-right: 10px; transition: all 0.2s;">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button class="submit-report-btn" style="background: #ff6b6b; color: white; border: none; padding: 10px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;">
+                    提交檢舉 <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        `;
+
+        // 插入到日期下方，確保在同一個容器內
+        const timeStamp = parentCard.querySelector('.time-stamp')
+            || parentCard.querySelector('small')
+            || parentCard.querySelector('div[style*="text-align: right"]')
+            || parentCard.querySelector('div[style*="color: #888"]');
+
+        if (timeStamp) {
+            timeStamp.insertAdjacentElement('afterend', reportBox);
+        } else {
+            // 如果找不到日期，就插入到容器最後
+            parentCard.appendChild(reportBox);
+        }
+
+        // 標籤點擊邏輯 (僅切換選取狀態，不自動填入文字框)
+        const textarea = reportBox.querySelector('.report-content');
+        reportBox.querySelectorAll('.report-tag').forEach(tag => {
+            tag.onclick = function () {
+                this.classList.toggle('selected');
+            };
+        });
+
+        // 取消按鈕邏輯
+        reportBox.querySelector('.cancel-report-btn').onclick = function () {
+            reportBox.classList.remove('active');
+            setTimeout(() => reportBox.remove(), 500);
+        };
+
+        // 送出按鈕點擊邏輯
+        reportBox.querySelector('.submit-report-btn').onclick = function () {
+            const content = textarea.value.trim();
+            const selectedTags = Array.from(reportBox.querySelectorAll('.report-tag.selected'))
+                .map(t => t.innerText);
+
+            if (selectedTags.length === 0 && !content) {
+                alert('❌ 請選擇標籤或輸入檢舉理由！');
+                return;
+            }
+
+            // 合併標籤與內容
+            const fullReason = (selectedTags.length > 0 ? `[${selectedTags.join(', ')}] ` : '') + content;
+            sendReportToBackend(orderId, fullReason, reportBox);
+        };
+    }
+
+    // 展開輸入框
+    setTimeout(() => {
+        reportBox.classList.add('active');
+    }, 10);
+};
+
+/**
+ * 送出檢舉到後端
+ * @param {number} orderId - 訂單 ID
+ * @param {string} reason - 檢舉理由
+ * @param {HTMLElement} reportBox - 檢舉輸入框元素 (如果是彈窗則傳 null)
+ * @param {boolean} isModal - 是否為彈窗模式
+ */
+function sendReportToBackend(orderId, reason, reportBox, isModal = false) {
+    const formData = new URLSearchParams();
+    formData.append('reportReason', reason);
+    formData.append('bookingOrderId', orderId);
+
+    fetch('/pet/submitComplaint', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => {
+            if (response.ok || response.redirected) {
+                alert('✅ 檢舉已送出！\n您的檢舉已收到，請耐心等待管理員審核。');
+
+                if (isModal) {
+                    closeComplaintModal();
+                } else if (reportBox) {
+                    // 收合內嵌式輸入框
+                    reportBox.classList.remove('active');
+                    // 清空內容
+                    const textarea = reportBox.querySelector('.report-content');
+                    if (textarea) textarea.value = '';
+                    reportBox.querySelectorAll('.report-tag.selected').forEach(tag => tag.classList.remove('selected'));
+                }
+            } else {
+                alert('❌ 送出失敗，請稍後再試');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ 系統連線異常');
+        });
 }

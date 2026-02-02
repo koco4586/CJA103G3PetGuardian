@@ -15,7 +15,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.sitter.model.SitterApplicationDTO;
 import com.petguardian.sitter.model.SitterApplicationVO;
+import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterApplicationService;
+import com.petguardian.sitter.service.SitterService;
 
 import com.petguardian.common.service.AuthStrategyService;
 
@@ -33,11 +35,14 @@ import jakarta.validation.Valid;
 @RequestMapping("/sitter")
 public class SitterApplicationController {
 
-    @Autowired
+    @Autowired  //AuthStrategyService做介面做登入驗證 登入驗證的規格書
     private AuthStrategyService authStrategyService;
 
     @Autowired
     private SitterApplicationService service;
+
+    @Autowired
+    private SitterService sitterService;
 
     /**
      * 導向申請表格頁面
@@ -66,8 +71,27 @@ public class SitterApplicationController {
                 model.addAttribute("isDisableSubmit", true);
             }
         }
+
         // [NEW] 檢查是否已通過審核 (改用 Service 方法)
         if (service.isSitter(memId)) {
+            // 進一步檢查是否被停權
+            SitterVO sitter = sitterService.getSitterByMemId(memId);
+            if (sitter != null && sitter.getSitterStatus() != null && sitter.getSitterStatus() == 1) {
+                // 如果是被停權，則停留在當前頁面並顯示錯誤訊息 (讓前端 JS 彈出 SweetAlert)
+                model.addAttribute("errorMessage", "您已被停權,請向管理員聯繫處理");
+
+                // 為了讓頁面正常渲染，還是需要準備基本資料
+                SitterApplicationDTO dto = new SitterApplicationDTO();
+                dto.setMemId(memId);
+                model.addAttribute("sitterApplication", dto);
+
+                String avatarUrl = (String) session.getAttribute("avatarUrl");
+                Map<String, Object> initData = service.getApplyFormInitData(memId, avatarUrl);
+                model.addAllAttributes(initData);
+
+                return "frontend/sitter/dashboard-sitter-registration";
+            }
+
             return "redirect:/sitter/dashboard";// 導回保姆個人頁面
         }
 

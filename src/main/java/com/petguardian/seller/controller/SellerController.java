@@ -84,7 +84,7 @@ public class SellerController {
     public String showProducts(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         // 取得商品列表（含圖片）
@@ -156,7 +156,7 @@ public class SellerController {
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
             System.out.println("錯誤: sellerId 為 null，重導向到 /store");
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
         System.out.println("賣家ID: " + sellerId);
 
@@ -184,7 +184,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         boolean success = productService.deleteProductBySeller(sellerId, proId);
@@ -206,7 +206,7 @@ public class SellerController {
     public String showOrders(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         // 取得訂單列表（含買家名稱、是否可出貨）
@@ -232,7 +232,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         // 取得訂單詳情
@@ -310,7 +310,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         boolean success = orderService.shipOrder(sellerId, orderId);
@@ -334,7 +334,7 @@ public class SellerController {
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            return "redirect:/store";
+            return "redirect:/front/loginpage";
         }
 
         Integer refundAmount = orderService.cancelOrderWithRefund(sellerId, orderId);

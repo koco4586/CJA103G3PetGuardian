@@ -21,26 +21,26 @@ public class MemberManagementService {
     private static final String REALPATH = "/Users/CJA103G3_Workspace/CJA103G3PetGuardian/src/main/resources/static/images/member/";
 
     public Member update(MultipartFile fileImagePath,
-                                            MemberManagementUpdateDTO memberManagementUpdateDTO,
-                                            Integer memId) {
+            MemberManagementUpdateDTO memberManagementUpdateDTO,
+            Integer memId) {
 
         Member member1 = null;
 
         try {
 
-            //圖片存本機
+            // 圖片存本機
 
-            File dir = new File(REALPATH);//"記憶體"中創建一個存有路徑的File物件
+            File dir = new File(REALPATH);// "記憶體"中創建一個存有路徑的File物件
             if (!dir.exists()) {
-                dir.mkdirs();//創建資料夾
+                dir.mkdirs();// 創建資料夾
             }
 
-            String fileName = UUID.randomUUID().toString() + "_" + fileImagePath.getOriginalFilename();//照片檔名（隨機碼＿照片檔名）
+            String fileName = UUID.randomUUID().toString() + "_" + fileImagePath.getOriginalFilename();// 照片檔名（隨機碼＿照片檔名）
 
-            String filePath = REALPATH + fileName;//檔案上傳的目錄路徑+檔案名稱=組合後的完整檔案路徑
+            String filePath = REALPATH + fileName;// 檔案上傳的目錄路徑+檔案名稱=組合後的完整檔案路徑
 
-            fileImagePath.transferTo(new File(filePath));//創建指定路徑檔案，並且把使用者上傳照片內容寫入該檔案
-            //假路徑存資料庫
+            fileImagePath.transferTo(new File(filePath));// 創建指定路徑檔案，並且把使用者上傳照片內容寫入該檔案
+            // 假路徑存資料庫
 
             Member member = memberManagementRepository.findById(memId).orElse(null);
 
