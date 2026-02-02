@@ -225,8 +225,8 @@
 
                 <div class="d-flex justify-between align-center mb-2">
                     <div class="sub-tabs" style="margin-bottom: 0;">
-                        <div class="sub-tab" onclick="filterFavorites('sitters', this)">保母</div>
-                        <div class="sub-tab active" onclick="filterFavorites('store', this)">二手商品</div>
+                        <a class="sub-tab" th:href="@{/dashboard/favorites/sitters}">保母</a>
+                        <a class="sub-tab active" th:href="@{/dashboard/favorites}">二手商品</a>
                         <a class="sub-tab" th:href="@{/forumpost/post-collection}">文章</a>
                     </div>
                     <span style="color: #999; font-size: 0.9rem;"
