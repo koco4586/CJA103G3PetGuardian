@@ -62,7 +62,13 @@
 									th:if="${order.orderStatus == 1}" class="badge status-ongoing">進行中</span>
 									<span th:if="${order.orderStatus == 2}"
 									class="badge status-ready">服務完成</span> <span
-									th:if="${order.orderStatus == 5}" class="badge">已結案</span></td>
+									th:if="${order.orderStatus == 5}" class="badge">已結案</span>
+									<span th:if="${order.orderStatus == 4}" class="badge" 
+								          style="background-color: #95a5a6; color: white;"
+								          th:text="${#strings.contains(order.cancelReason, '已過審核時間') ? '已退款(已過審核時間)' : '已退款'}">
+								        已退款
+								    </span>
+								</td>
 								<td><span th:text="'$' + ${order.reservationFee}"></span> /
 									<strong th:if="${order.orderStatus == 5}" style="color: green">已撥款</strong>
 								</td>
@@ -70,7 +76,7 @@
 									<button th:if="${order.orderStatus == 2}" class="btn"
 										style="background: green;"
 										th:onclick="'executePayout(' + ${order.bookingOrderId} + ')'">執行撥款</button>
-									<button th:if="${order.orderStatus == 0}" class="btn ghost">催促保母</button>
+								<!-- 	<button th:if="${order.orderStatus == 0}" class="btn ghost">催促保母</button> -->
 								</td>
 							</tr>
 						</tbody>
@@ -88,7 +94,7 @@
 							<tr>
 								<th>編號</th>
 								<th>申請人</th>
-								<th>原因</th>
+								<th>服務時間</th> <th>申請退款時間</th><th>原因</th>
 								<th>預約金額</th>
 								<th>操作</th>
 							</tr>
@@ -97,8 +103,15 @@
 							<tr th:each="order : ${refundRequests}">
 								<td th:text="'#BK-' + ${order.bookingOrderId}"></td>
 								<td th:text="'會員ID: ' + ${order.memId}"></td>
-								<td th:text="${order.cancelReason}"></td>
-								<td th:text="'$' + ${order.reservationFee}"></td>
+								<td th:text="${#temporals.format(order.startTime, 'MM-dd HH:mm')} + ' ~ ' + ${#temporals.format(order.endTime, 'HH:mm')}"></td>
+						        <td th:style="${order.cancelTime != null && order.cancelTime.isAfter(order.startTime.minusHours(24)) ? 'color: orange; font-weight: bold;' : ''}">
+                                    <span th:text="${order.cancelTime != null ? #temporals.format(order.cancelTime, 'MM-dd HH:mm') : '無資料'}"></span>
+                                    <small th:if="${order.cancelTime != null && order.cancelTime.isAfter(order.startTime.minusHours(24))}" 
+                                           style="display: block; font-size: 10px;">(低於24h)</small>
+                                </td>
+                                <td th:text="${order.cancelReason}"></td>
+                                <td th:text="'$' + ${order.reservationFee}"></td>
+                                
 								<td>
 									<button class="btn"
 										th:onclick="'approveRefund(' + ${order.bookingOrderId} + ')'">核准退款</button>
@@ -106,6 +119,14 @@
 										style="color: red; border-color: red;"
 										th:onclick="'rejectRefund(' + ${order.bookingOrderId} + ')'">駁回</button>
 								</td>
+								</tr>
+                        </tbody>
+								<div th:if="${isExpired}">
+				                    <button class="btn" style="background: #6c757d;" 
+				                            th:onclick="'forceCompleteRefund(' + ${order.bookingOrderId} + ')'">
+				                        已退款 (已過審核時間)
+				                    </button>
+				                </div>
 							</tr>
 						</tbody>
 					</table>

@@ -36,7 +36,7 @@ public interface BookingService {
 	// 保母端
 	List<BookingOrderVO> getOrdersBySitterId(Integer sitterId);
 
-	List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status);
+//	List<BookingOrderVO> findBySitterAndStatus(Integer sitterId, Integer status);
 
 	/** 查詢某保母特定狀態的訂單 (例如待確認) */
 	List<BookingOrderVO> findOrdersBySitterAndStatus(Integer sitterId, Integer status);
@@ -47,5 +47,12 @@ public interface BookingService {
 	void approveRefund(Integer orderId, Double ratio);
 
 	void completePayout(Integer orderId);
+	
+	Double calculateRefundRatio(LocalDateTime startTime, LocalDateTime cancelTime);
+	
+	//收藏
+	boolean toggleSitterFavorite(Integer memId, Integer sitterId);
 
+	
+	List<com.petguardian.booking.model.BookingFavoriteVO> getSitterFavoritesByMember(Integer memId);
 }
