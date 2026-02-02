@@ -1,7 +1,7 @@
 package com.petguardian.chat.service.chatmessage;
 
 import com.petguardian.chat.model.ChatMessageEntity;
-import com.petguardian.chat.service.redis.RedisJsonMapper;
+import com.petguardian.chat.service.RedisJsonMapper;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;

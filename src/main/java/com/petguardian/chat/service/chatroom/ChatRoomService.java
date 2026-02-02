@@ -5,6 +5,7 @@ import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 import com.petguardian.chat.dto.MemberProfileDTO;
 import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.service.mapper.ChatRoomMapper;
+import com.petguardian.chat.service.context.ChatPageContext;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
@@ -169,7 +170,7 @@ public class ChatRoomService {
      * @return ChatPageContext containing all page data
      */
     @CircuitBreaker(name = "chatroomRead", fallbackMethod = "fallbackGetUserChatroomsWithContext")
-    public com.petguardian.chat.dto.ChatPageContext getUserChatroomsWithCurrentUser(Integer userId) {
+    public ChatPageContext getUserChatroomsWithCurrentUser(Integer userId) {
         // 1. Fetch chatroom metadata (List)
         List<ChatRoomMetadataDTO> metadataList = dataManager.getUserChatrooms(userId);
         if (metadataList == null)
@@ -203,17 +204,17 @@ public class ChatRoomService {
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
 
-        return com.petguardian.chat.dto.ChatPageContext.builder()
+        return ChatPageContext.builder()
                 .currentUser(currentUser)
                 .chatrooms(chatrooms)
                 .memberMap(profileMap)
                 .build();
     }
 
-    protected com.petguardian.chat.dto.ChatPageContext fallbackGetUserChatroomsWithContext(Integer userId,
+    protected ChatPageContext fallbackGetUserChatroomsWithContext(Integer userId,
             Throwable t) {
         log.error("[ChatRoomService] Page Context Fallback: {}", t.getMessage());
-        return com.petguardian.chat.dto.ChatPageContext.builder()
+        return ChatPageContext.builder()
                 .currentUser(MemberProfileDTO.builder().memberId(userId).memberName("Fallback").build())
                 .chatrooms(Collections.emptyList())
                 .build();

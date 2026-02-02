@@ -1,5 +1,7 @@
-package com.petguardian.chat.dto;
+package com.petguardian.chat.service.context;
 
+import com.petguardian.chat.dto.ChatRoomDTO;
+import com.petguardian.chat.dto.MemberProfileDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

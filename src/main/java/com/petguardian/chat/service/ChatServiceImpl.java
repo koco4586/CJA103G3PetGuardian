@@ -25,6 +25,8 @@ import com.petguardian.chat.service.chatroom.ChatRoomService;
 import com.petguardian.chat.service.mapper.ChatMessageMapper;
 import com.petguardian.chat.service.status.ChatStatusService;
 import com.petguardian.chat.service.chatmessage.report.ChatReportService;
+import com.petguardian.chat.service.context.MessageSendContext;
+import com.petguardian.chat.service.context.MessageCreationContext;
 
 import com.petguardian.chat.service.chatmessage.ChatMessageService;
 

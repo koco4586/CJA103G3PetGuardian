@@ -1,12 +1,12 @@
 package com.petguardian.chat.service.chatmessage;
 
-import com.petguardian.chat.service.MessageCreationContext;
+import com.petguardian.chat.service.context.MessageCreationContext;
 import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatMessageRepository;
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataCache;
-import com.petguardian.chat.service.redis.RedisJsonMapper;
+import com.petguardian.chat.service.RedisJsonMapper;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -14,6 +14,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
 
@@ -91,7 +92,7 @@ class ChatMessagePersistenceManager {
         }
     }
 
-    @org.springframework.scheduling.annotation.Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 1000)
     public void scheduleBufferFlush() {
         // Fail-fast: If CB is OPEN, skip the entire flush cycle
         if (circuitBreaker.getState() == CircuitBreaker.State.OPEN) {
