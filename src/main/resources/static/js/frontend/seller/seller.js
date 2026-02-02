@@ -4,9 +4,8 @@
  */
 
 // 全域變數
-var existingImagesList = [];      // 現有圖片清單
-var deleteImageIdsList = [];      // 待刪除圖片ID清單
-var isEditMode = false;           // 是否為編輯模式
+var existingImagesList = [];
+var deleteImageIdsList = [];
 
 // ==================== 商品管理 ====================
 
@@ -14,9 +13,6 @@ var isEditMode = false;           // 是否為編輯模式
 function openProductModal() {
     document.getElementById('productModal').classList.add('active');
     document.getElementById('modalTitle').innerText = '新增商品';
-
-    // 設定為新增模式
-    isEditMode = false;
 
     // 清空表單
     document.getElementById('productForm').reset();
@@ -45,9 +41,6 @@ function openEditProductModal(button) {
     var proDescription = button.getAttribute('data-pro-description');
     var stockQuantity = button.getAttribute('data-stock-quantity');
     var proState = button.getAttribute('data-pro-state');
-
-    // 設定為編輯模式
-    isEditMode = true;
 
     // 開啟 Modal
     document.getElementById('productModal').classList.add('active');
@@ -81,7 +74,7 @@ function loadExistingImages(proId) {
             return response.json();
         })
         .then(function(images) {
-            existingImagesList = images || [];
+            existingImagesList = images;
             var container = document.getElementById('existingImages');
             container.innerHTML = '';
 
@@ -117,7 +110,6 @@ function loadExistingImages(proId) {
         })
         .catch(function(error) {
             console.error('載入圖片失敗:', error);
-            existingImagesList = [];
         });
 }
 
@@ -158,57 +150,24 @@ function updateDeleteImageInputs() {
 // 預覽新上傳的圖片
 function previewNewImages(input) {
     var container = document.getElementById('newImagePreview');
-    var existingContainer = document.getElementById('existingImages');
     var files = input.files;
 
     console.log('previewNewImages 被呼叫');
     console.log('選擇的檔案數量:', files ? files.length : 0);
-    console.log('是否為編輯模式:', isEditMode);
 
     if (!files || files.length === 0) {
         console.log('沒有選擇檔案');
         return;
     }
 
-    // 只處理第一張圖片
+    // 只取第一個檔案
     var file = files[0];
+    console.log('處理檔案:', file.name);
 
-    if (!file.type.startsWith('image/')) {
-        alert('請選擇圖片檔案');
-        input.value = '';
-        return;
-    }
-
-    // 檢查檔案大小（限制 10MB）
-    if (file.size > 10 * 1024 * 1024) {
-        alert('圖片檔案太大，請選擇小於 10MB 的圖片');
-        input.value = '';
-        return;
-    }
-
-    // 編輯模式下，如果有選擇新圖片，不管原本的 existingImagesList 狀態如何
-    // 直接清空舊圖片的顯示區塊，並嘗試標記刪除
-    if (isEditMode) {
-        console.log('編輯模式且已選新圖：強制隱藏現有圖片，由後端執行全覆蓋');
-
-        // 這裡我們還是盡量標記 ID，給後端參考 (雖然我們已經修改後端為強制的 Replace 模式)
-        if (existingImagesList && existingImagesList.length > 0) {
-            existingImagesList.forEach(function(img) {
-                if (deleteImageIdsList.indexOf(img.productPicId) === -1) {
-                    deleteImageIdsList.push(img.productPicId);
-                }
-            });
-            updateDeleteImageInputs();
-        }
-
-        // 重要：視覺上直接清空舊圖
-        existingImagesList = [];
-        existingContainer.innerHTML = '';
-    }
-
-    // 清空現有預覽並建立新預覽
+    // 清空舊預覽
     container.innerHTML = '';
 
+    // 讀取並顯示預覽
     var reader = new FileReader();
     reader.onload = function(e) {
         var imgWrapper = document.createElement('div');
@@ -217,7 +176,7 @@ function previewNewImages(input) {
         var img = document.createElement('img');
         img.src = e.target.result;
         img.alt = '新圖片預覽';
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #51cf66;';
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid var(--primary-color);';
 
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -234,15 +193,20 @@ function previewNewImages(input) {
         imgWrapper.appendChild(deleteBtn);
         container.appendChild(imgWrapper);
 
-        console.log('預覽圖片已建立');
+        console.log('預覽圖片已建立，file input 仍保留檔案');
     };
     reader.readAsDataURL(file);
 }
 
 // ==================== 訂單管理 ====================
 
-// 開啟訂單詳情 Modal
+/**
+ * 開啟訂單詳情 Modal
+ * 從按鈕的 data 屬性讀取訂單資料並顯示在 Modal 中
+ * 所有資料皆來自資料庫
+ */
 function openOrderDetailModal(button) {
+    // 從按鈕的 data 屬性取得訂單資料（資料來源為資料庫）
     var orderId = button.getAttribute('data-order-id');
     var buyerName = button.getAttribute('data-buyer-name');
     var orderTotal = button.getAttribute('data-order-total');
@@ -253,23 +217,104 @@ function openOrderDetailModal(button) {
     var receiverAddress = button.getAttribute('data-receiver-address');
     var specialInstructions = button.getAttribute('data-special-instructions');
 
-    // 填入資料
+    // 填入訂單編號
     document.getElementById('detailOrderId').textContent = '#' + orderId;
+
+    // 填入買家姓名（來自 member 表的 mem_name）
     document.getElementById('detailBuyerName').textContent = buyerName || '-';
+
+    // 填入訂單金額（來自 orders 表的 order_total）
     document.getElementById('detailOrderTotal').textContent = '$' + Number(orderTotal).toLocaleString();
+
+    // 填入下單時間（來自 orders 表的 order_time）
     document.getElementById('detailOrderTime').textContent = orderTime || '-';
+
+    // 填入收件人姓名（來自 orders 表的 receiver_name）
     document.getElementById('detailReceiverName').textContent = receiverName || '-';
+
+    // 填入收件人電話（來自 orders 表的 receiver_phone）
     document.getElementById('detailReceiverPhone').textContent = receiverPhone || '-';
+
+    // 填入收件人地址（來自 orders 表的 receiver_address）
     document.getElementById('detailReceiverAddress').textContent = receiverAddress || '-';
-    document.getElementById('detailSpecialInstructions').textContent = specialInstructions || '無';
 
-    // 設定訂單狀態標籤
-    var statusBadge = document.getElementById('detailOrderStatus');
-    statusBadge.textContent = getStatusText(orderStatus);
-    statusBadge.className = 'badge ' + getStatusClass(orderStatus);
+    // 訂單狀態對應表（對應資料庫 order_status 欄位）
+    // 0:已付款 1:已出貨 2:已完成 3:已取消 4:申請退貨中 5:退貨完成
+    var statusMap = {
+        '0': '<span class="badge badge-warning">已付款</span>',
+        '1': '<span class="badge badge-info">已出貨</span>',
+        '2': '<span class="badge badge-success">已完成</span>',
+        '3': '<span class="badge badge-secondary">已取消</span>',
+        '4': '<span class="badge" style="background: #ffc107; color: #333;">申請退貨中</span>',
+        '5': '<span class="badge" style="background: #6c757d; color: white;">退貨完成</span>'
+    };
 
-    // 開啟 Modal
+    // 填入訂單狀態（來自 orders 表的 order_status）
+    var statusHtml = statusMap[String(orderStatus)] || '<span class="badge">未知狀態</span>';
+    document.getElementById('detailOrderStatus').innerHTML = statusHtml;
+
+    // 處理訂單備註（來自 orders 表的 special_instructions）
+    var specialRow = document.getElementById('detailSpecialRow');
+    if (specialInstructions && specialInstructions.trim() && specialInstructions !== 'null') {
+        document.getElementById('detailSpecialInstructions').textContent = specialInstructions;
+        specialRow.style.display = 'flex';
+    } else {
+        specialRow.style.display = 'none';
+    }
+
+    // 載入訂單商品項目（從資料庫動態讀取）
+    loadOrderItems(orderId);
+
+    // 顯示 Modal
     document.getElementById('orderDetailModal').classList.add('active');
+}
+
+/**
+ * 載入訂單商品項目
+ * 透過 AJAX 從後端取得訂單的商品明細
+ */
+function loadOrderItems(orderId) {
+    var container = document.getElementById('orderItemsContainer');
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
+
+    fetch('/seller/order/' + orderId + '/items')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(items) {
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">沒有商品項目</div>';
+                return;
+            }
+
+            var html = '';
+            items.forEach(function(item) {
+                html += '<div style="display: flex; gap: 12px; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; align-items: center;">';
+
+                // 商品圖片
+                if (item.productImage) {
+                    html += '<img src="' + item.productImage + '" alt="商品圖片" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">';
+                } else {
+                    html += '<div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #ccc;"><i class="fas fa-image"></i></div>';
+                }
+
+                // 商品資訊
+                html += '<div style="flex: 1;">';
+                html += '<div style="font-weight: 600; margin-bottom: 4px;">' + (item.productName || '商品 #' + item.proId) + '</div>';
+                html += '<div style="font-size: 0.85rem; color: #666;">單價: $' + Number(item.proPrice).toLocaleString() + ' x ' + item.quantity + '</div>';
+                html += '</div>';
+
+                // 小計
+                html += '<div style="font-weight: 600; color: var(--primary-color);">$' + Number(item.subtotal).toLocaleString() + '</div>';
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+        })
+        .catch(function(error) {
+            console.error('載入訂單商品失敗:', error);
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> 載入失敗</div>';
+        });
 }
 
 // 關閉訂單詳情 Modal
@@ -277,47 +322,19 @@ function closeOrderDetailModal() {
     document.getElementById('orderDetailModal').classList.remove('active');
 }
 
-// 取得狀態文字
-function getStatusText(status) {
-    var statusMap = {
-        '0': '待付款',
-        '1': '已付款',
-        '2': '處理中',
-        '3': '已出貨',
-        '4': '已完成',
-        '5': '已取消',
-        '6': '退款中',
-        '7': '已退款'
-    };
-    return statusMap[status] || '未知';
-}
-
-// 取得狀態 CSS 類別
-function getStatusClass(status) {
-    var classMap = {
-        '0': 'badge-warning',
-        '1': 'badge-info',
-        '2': 'badge-info',
-        '3': 'badge-primary',
-        '4': 'badge-success',
-        '5': 'badge-secondary',
-        '6': 'badge-warning',
-        '7': 'badge-secondary'
-    };
-    return classMap[status] || 'badge-secondary';
-}
-
-// 訂單篩選
-function filterOrders(status) {
-    // 更新 Tab 樣式
-    var tabs = document.querySelectorAll('.order-tab');
-    tabs.forEach(function(tab) {
-        tab.classList.remove('active');
+/**
+ * 切換訂單狀態篩選
+ * 根據選擇的狀態篩選訂單列表
+ */
+function filterOrders(status, btn) {
+    // 更新按鈕狀態
+    document.querySelectorAll('.sub-tabs .sub-tab').forEach(function(t) {
+        t.classList.remove('active');
     });
-    event.target.classList.add('active');
+    btn.classList.add('active');
 
-    // 篩選訂單列表
-    var rows = document.querySelectorAll('.order-row');
+    // 篩選訂單
+    var rows = document.querySelectorAll('#ordersTable tbody tr');
     rows.forEach(function(row) {
         var orderStatus = row.getAttribute('data-status');
         if (status === 'all' || orderStatus === status) {
@@ -341,14 +358,53 @@ function confirmCancel(orderId) {
         document.getElementById('cancelForm_' + orderId).submit();
     }
 }
+
+// ==================== 評價管理 ====================
+
+// 切換評價列表顯示
 function toggleReviewsList() {
-    var reviewsList = document.getElementById('reviewsList');
-    if (reviewsList) {
-        if (reviewsList.style.display === 'none' || reviewsList.style.display === '') {
-            reviewsList.style.display = 'block';
-            reviewsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var reviewsSection = document.getElementById('reviewsListSection');
+    if (reviewsSection) {
+        if (reviewsSection.style.display === 'none' || !reviewsSection.style.display) {
+            reviewsSection.style.display = 'block';
+            reviewsSection.scrollIntoView({ behavior: 'smooth' });
         } else {
-            reviewsList.style.display = 'none';
+            reviewsSection.style.display = 'none';
         }
     }
 }
+
+// 檢舉評價 Modal
+function openReportModal(reviewId) {
+    document.getElementById('reportReviewId').value = reviewId;
+    document.getElementById('reportReason').value = '';
+    document.getElementById('reportModal').classList.add('active');
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('active');
+}
+
+// ==================== 頁面初始化 ====================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('賣家管理中心 JS 已載入');
+
+    // 點擊 Modal 外部關閉
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    });
+
+    // ESC 鍵關閉 Modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.active').forEach(function(modal) {
+                modal.classList.remove('active');
+            });
+        }
+    });
+});

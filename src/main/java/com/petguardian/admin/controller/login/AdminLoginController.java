@@ -23,27 +23,38 @@ public class AdminLoginController {
 	private AdminLoginService adminLoginService;
 
 	@PostMapping("/adminlogin")
-	 public Map<String,String> adminlogin(@RequestBody AdminLoginDTO adminLoginDTO, HttpSession session) {
-	 
-		 Map<String,String> map = new HashMap<>();
-		 
-		 Admin admin = adminLoginService.adminlogin(adminLoginDTO);
-		 
-		 if(admin == null) {
+	public Map<String, String> adminlogin(@RequestBody AdminLoginDTO adminLoginDTO, HttpSession session) {
 
-	            map.put("result", "帳號或密碼輸入錯誤");
+		Map<String, String> map = new HashMap<>();
 
-	            return map;
-	        }else {
+		Admin admin = adminLoginService.adminlogin(adminLoginDTO);
 
-	            session.setAttribute("admId", admin.getAdmId());
+		if (admin == null) {
 
-	            map.put("result", "登入成功");
+			map.put("result", "帳號或密碼輸入錯誤");
 
-	            return map;
+			return map;
+		}
 
-	        }
+		// 檢查管理員狀態 (0=停權, 1=啟用)
+		else if (admin.getAdmStatus() == 0) {
 
-	    }
+			map.put("result", "此帳號已被停權,無法登入");
+			
+			return map;
+
+		}
+
+		else {
+
+			session.setAttribute("admId", admin.getAdmId());
+
+			map.put("result", "登入成功");
+
+			return map;
+
+		}
 
 	}
+
+}
