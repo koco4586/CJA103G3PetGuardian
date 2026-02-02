@@ -129,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductPic> pics = productPicRepository.findByProduct_ProId(proId);
 
         if (pics != null && !pics.isEmpty()) {
-            // 總是回傳最新的（如果是 List，通常資料庫順序可能不一定，但若只有一張則沒差）
+            // 總是回傳最新的一張圖片作為主圖
             ProductPic firstPic = pics.get(0);
             if (firstPic.getProPic() != null && firstPic.getProPic().length > 0) {
                 return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(firstPic.getProPic());
@@ -146,7 +146,6 @@ public class ProductServiceImpl implements ProductService {
         if (images == null || images.isEmpty() || proId == null) {
             return;
         }
-        // ... (原邏輯，略，主要邏輯在 saveProductWithImages)
     }
 
     @Override
@@ -198,7 +197,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             Product product = null;
 
-            // 1. 判斷是新增還是編輯
+            // 1. 判斷新增/編輯
             if (proId != null && proId > 0) {
                 System.out.println("模式: 編輯現有商品 ID: " + proId);
                 product = productRepository.findById(proId)
@@ -228,7 +227,7 @@ public class ProductServiceImpl implements ProductService {
             Integer savedProId = savedProduct.getProId();
 
             // =================================================================
-            // 3. 圖片處理核心邏輯修復：單張圖片策略 (Replace Strategy)
+            // 3. 圖片處理
             // =================================================================
 
             // 檢查是否有上傳有效的新圖片
@@ -240,17 +239,16 @@ public class ProductServiceImpl implements ProductService {
                     if (img != null && !img.isEmpty() && img.getSize() > 0) {
                         hasNewUpload = true;
                         fileToUpload = img;
-                        break; // 只要有一張有效的，我們就認定要進行替換
+                        break;
                     }
                 }
             }
 
             if (hasNewUpload) {
-                // 【情境 A：使用者上傳了新圖】
-                // 策略：不論前端有沒有傳 deleteImageIds，直接清空該商品所有舊圖，並存入新圖。
-                // 這是確保 "單一圖片限制" 與 "覆蓋舊圖" 最穩健的寫法。
+                // 【使用者上傳了新圖】
+                // 不論前端有沒有傳 deleteImageIds，直接清空該商品所有舊圖，並存入新圖。
 
-                System.out.println("偵測到新圖片上傳，執行舊圖全數清除並寫入新圖...");
+                System.out.println("偵測到新圖片上傳，執行舊圖全數清除並寫入新圖");
 
                 // 找出該商品目前所有圖片
                 List<ProductPic> oldPics = productPicRepository.findByProduct_ProId(savedProId);
@@ -272,8 +270,8 @@ public class ProductServiceImpl implements ProductService {
                 }
 
             } else {
-                // 【情境 B：使用者沒有上傳新圖】
-                // 策略：檢查 deleteImageIds，如果使用者在前端按了 "X" 刪除舊圖，則執行刪除。
+                // 【使用者沒有上傳新圖】
+                // 檢查 deleteImageIds，如果使用者在前端按了 "X" 刪除舊圖，則執行刪除。
                 // 如果沒有 deleteImageIds，則保留原樣。
 
                 if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
