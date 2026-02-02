@@ -266,10 +266,13 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                             <a th:href="@{/forumpost/report-post(postId=${forumPostVO.postId})}">
 							    <i class="far fa-flag"></i> 檢舉文章
 							</a>
-                            <a th:href="@{/forumpost/update-post(postId=${forumPostVO.postId}, forumId=${forumId})}">
+                            <a th:href="@{/forumpost/update-post(postId=${forumPostVO.postId}, forumId=${forumId})}"
+                               th:if="${userId != null and userId == forumPostVO.member.memId}">
                                 <i class="far fa-edit"></i> 修改文章
                             </a>
-                            <a th:href="@{/forumpost/delete-post(postId=${forumPostVO.postId}, forumId=${forumId})}" style="color: #e74c3c;">
+                            <a th:href="@{/forumpost/delete-post(postId=${forumPostVO.postId}, forumId=${forumId})}" 
+                               th:if="${userId != null and userId == forumPostVO.member.memId}"
+                               style="color: #e74c3c;">
 							    <i class="far fa-trash-alt"></i> 刪除文章
 							</a>
                         </div>
@@ -308,13 +311,17 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
 					                        <i class="fas fa-ellipsis-h"></i>
 					                    </button>
 					                    <div class="dropdown-menu" th:id="|commentMenu-${iterStat.index}|">
-					                        <a href="javascript:void(0)" th:onclick="|switchToEditMode('${forumPostCommentVO.commentId}')|">
-					                            <i class="fas fa-pen"></i> 編輯留言
-					                        </a>
+					                        <a href="javascript:void(0)" 
+											   th:if="${userId != null and userId == forumPostCommentVO.member.memId}"
+											   th:onclick="|switchToEditMode('${forumPostCommentVO.commentId}')|">
+											    <i class="fas fa-pen"></i> 編輯留言
+											</a>
 					                        <a th:href="@{/forumpost/report-comment(commentId=${forumPostCommentVO.commentId})}">
 					                            <i class="fas fa-exclamation-circle"></i> 檢舉留言
 					                        </a>
-					                        <a th:href="@{/forumpost/delete-comment(commentId=${forumPostCommentVO.commentId}, postId=${forumPostVO.postId}, forumId=${forumId})}" style="color: #e74c3c;">
+					                        <a th:href="@{/forumpost/delete-comment(commentId=${forumPostCommentVO.commentId}, postId=${forumPostVO.postId}, forumId=${forumId})}" 
+					                           th:if="${userId != null and userId == forumPostCommentVO.member.memId}"
+					                           style="color: #e74c3c;">
 					                            <i class="far fa-trash-alt"></i> 刪除留言
 					                        </a>
 					                    </div>
@@ -424,6 +431,21 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
     		        showConfirmButton: false,
     		        background: '#fffcf9',
     		   });
+    	   }
+    		
+    	   // 取得 Flash Attribute 傳來的訊息
+    	   const errorMsgs = [[${errorMsgs}]];
+    		
+    	   if (errorMsgs) {
+    			
+    		   Swal.fire({
+    		       icon: 'warning',
+    		       title: '錯誤',
+    		       text: errorMsgs,
+    		       timer: 2000, // 2秒後自動消失
+    		       showConfirmButton: false,
+    		       background: '#fffcf9',
+    		  });
     	   }
             
         });

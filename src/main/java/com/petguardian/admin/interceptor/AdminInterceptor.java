@@ -24,7 +24,7 @@ public class AdminInterceptor implements HandlerInterceptor {
 
 		//
 
-		// ✅ 新增:如果是登出請求,直接放行
+		// 登出請求直接放行
 		String requestURI = request.getRequestURI();
 		if (requestURI.contains("/adminlogout")) {
 			return true;
