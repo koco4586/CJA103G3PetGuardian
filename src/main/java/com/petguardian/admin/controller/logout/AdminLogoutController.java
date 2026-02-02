@@ -19,7 +19,7 @@ public class AdminLogoutController {
 	@Autowired
 	private AdminLogoutService adminLogoutService;
 
-	@PostMapping("adminlogout")
+	@PostMapping("/adminlogout")
 	public Map<String, String> adminlogout(HttpSession session) {
 
 		Map<String, String> map = new HashMap<>();
