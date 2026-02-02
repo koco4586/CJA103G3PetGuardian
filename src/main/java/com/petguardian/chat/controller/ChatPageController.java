@@ -10,43 +10,39 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.petguardian.chat.dto.ChatMemberDTO;
 import com.petguardian.chat.dto.ChatRoomDTO;
+import com.petguardian.chat.dto.MemberProfileDTO;
+import com.petguardian.chat.service.chatroom.ChatRoomService;
 import com.petguardian.common.service.AuthStrategyService;
-import com.petguardian.chat.service.chatmessage.ChatPageService;
-import com.petguardian.chat.service.ChatService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 /**
  * MVC Controller for Chat View Rendering.
  * 
  * Responsibilities:
- * - Serves the initial HTML page (SSR with Thymeleaf)
- * - Pre-loads essential context (Current User, Contact List, Message Previews)
- * - Delegates authentication checks to strategy
+ * Serves the initial HTML page (SSR with Thymeleaf)
+ * Pre-loads essential context (Current User, Contact List, Message Previews)
+ * Delegates authentication checks to strategy
+ * 
+ * Uses {@link ChatRoomService} as the unified facade for all chatroom
+ * operations.
  */
 @Controller
+@RequiredArgsConstructor
 public class ChatPageController {
 
-    // ============================================================
-    // DEPENDENCIES
-    // ============================================================
-    private final ChatPageService chatPageService;
+    // =========================================================================
+    // DEPENDENCIES (Simplified via Facade)
+    // =========================================================================
+
+    private final ChatRoomService chatRoomService;
     private final AuthStrategyService authStrategyService;
-    private final ChatService chatService;
 
-    public ChatPageController(ChatPageService chatPageService,
-            AuthStrategyService authStrategyService,
-            ChatService chatService) {
-        this.chatPageService = chatPageService;
-        this.authStrategyService = authStrategyService;
-        this.chatService = chatService;
-    }
-
-    // ============================================================
+    // =========================================================================
     // VIEW ENDPOINTS
-    // ============================================================
+    // =========================================================================
 
     /**
      * Entry Point: Chat MVP Interface.
@@ -54,14 +50,10 @@ public class ChatPageController {
      * Endpoint: /chat
      * Methods: GET, POST
      * 
-     * Orchestrates the initial state required for the chat application.
-     * Supports POST requests to allow secure transmission of 'sessionId' (hidden
-     * from URL).
-     * 
-     * 1. Validates User Session (Redirect/Error if invalid)
-     * 2. Loads Current User Profile
-     * 3. Fetches Directory of Contacts
-     * 4. Previews Latest Messages for Sidebar
+     * Orchestrates the initial state required for the chat application:
+     * Validates User Session (Redirect/Error if invalid)
+     * Loads Current User Profile
+     * Fetches Chatroom List for Sidebar
      */
     @RequestMapping(value = "/chat", method = { RequestMethod.GET, RequestMethod.POST })
     public String chatMvpPage(HttpServletRequest request, Model model) {
@@ -73,36 +65,27 @@ public class ChatPageController {
             return "redirect:/front/loginpage";
         }
 
-        // Context Preparation
+        // 1. Optimized Batch Load (Single Round Trip)
+        com.petguardian.chat.dto.ChatPageContext pageContext = chatRoomService.getUserChatroomsWithCurrentUser(userId);
 
-        // 1. Current User (Metadata Cache First)
-        ChatMemberDTO currentUser = chatPageService.getMember(userId);
-        if (currentUser == null) {
-            // Fallback for extreme cache misses - stay minimal to avoid DB if possible
-            currentUser = new ChatMemberDTO(userId, "User " + userId);
-        }
-
-        // 2. Chatroom List (Sidebar)
-        List<ChatRoomDTO> chatrooms = chatPageService.getMyChatrooms(userId);
+        MemberProfileDTO currentUser = pageContext.getCurrentUser();
+        List<ChatRoomDTO> chatrooms = pageContext.getChatrooms();
 
         // View Model Population
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("chatrooms", chatrooms);
 
-        // [NEW] Inject activeRoomId if present in FlashMap/Model (from
-        // RedirectAttributes)
+        // Inject activeRoomId if present (from RedirectAttributes)
         if (model.containsAttribute("activeRoomId")) {
             model.addAttribute("activeRoomId", model.getAttribute("activeRoomId"));
         }
 
-        // Note: Sidebar data consolidated in ChatRoomDTO (via getMyChatrooms)
-
         return "frontend/chat/chat-mvp";
     }
 
-    // ============================================================
+    // =========================================================================
     // ACTION ENDPOINTS
-    // ============================================================
+    // =========================================================================
 
     /**
      * Handles connection requests from external modules (Store).
@@ -120,14 +103,14 @@ public class ChatPageController {
             return "redirect:/store";
         }
 
-        // Basic Security: Prevent Self-Chat
+        // Prevent Self-Chat
         if (currentUserId.equals(targetUserId)) {
             return "redirect:/store";
         }
 
-        // Reuse existing creation/find logic (Service delegated)
-        ChatRoomDTO room = chatService.findOrCreateChatroom(currentUserId, targetUserId,
-                chatroomType);
+        // Create or find chatroom (via unified facade)
+        ChatRoomDTO room = chatRoomService.findOrCreateChatroom(
+                currentUserId, targetUserId, chatroomType);
 
         redirectAttributes.addFlashAttribute("activeRoomId", room.getChatroomId());
         return "redirect:/chat";

@@ -1,8 +1,9 @@
 package com.petguardian.chat.service.chatmessage;
 
+import com.petguardian.chat.service.MessageCreationContext;
+
 import com.petguardian.chat.model.ChatMessageEntity;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,11 +26,20 @@ import java.util.Optional;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ChatMessageService {
 
     private final ChatMessagePersistenceManager persistenceManager;
     private final ChatMessageRetrievalManager retrievalManager;
+    private final com.petguardian.chat.model.ChatMessageRepository messageRepository;
+
+    public ChatMessageService(
+            ChatMessagePersistenceManager persistenceManager,
+            ChatMessageRetrievalManager retrievalManager,
+            com.petguardian.chat.model.ChatMessageRepository messageRepository) {
+        this.persistenceManager = persistenceManager;
+        this.retrievalManager = retrievalManager;
+        this.messageRepository = messageRepository;
+    }
 
     // =================================================================================
     // WRITE OPERATIONS
@@ -68,10 +78,13 @@ public class ChatMessageService {
     }
 
     protected List<ChatMessageEntity> fallbackHistory(Integer chatroomId, Pageable pageable, Throwable t) {
-        log.error("[Facade] History retrieval failed: {}", t.getMessage());
-        // In retrieval, fallback might be returning empty list or rethrowing.
-        // For now, we propagate or empty.
-        throw new RuntimeException("Chat service temporarily unavailable for history", t);
+        log.warn("[Facade] Redis unavailable for history. Falling back to MySQL. Reason: {}", t.getMessage());
+        try {
+            return messageRepository.findLatest(chatroomId, pageable);
+        } catch (Exception e) {
+            log.error("[Facade] MySQL fallback also failed: {}", e.getMessage());
+            return java.util.Collections.emptyList();
+        }
     }
 
     @CircuitBreaker(name = "messageRead", fallbackMethod = "fallbackFindById")
