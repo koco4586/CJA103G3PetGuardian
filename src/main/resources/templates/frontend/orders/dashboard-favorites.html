@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/frontend/dashboard.css">
     <link rel="stylesheet" href="/css/frontend/store.css">
+
     <style>
         /* Flash Messages */
         .flash-message {
@@ -224,8 +225,9 @@
 
                 <div class="d-flex justify-between align-center mb-2">
                     <div class="sub-tabs" style="margin-bottom: 0;">
-                        <a href="/dashboard/favorites/sitters" class="sub-tab">保母</a>
-                        <div class="sub-tab active">二手商品</div>
+                        <div class="sub-tab" onclick="filterFavorites('sitters', this)">保母</div>
+                        <div class="sub-tab active" onclick="filterFavorites('store', this)">二手商品</div>
+                        <a class="sub-tab" th:href="@{/forumpost/post-collection}">文章</a>
                     </div>
                     <span style="color: #999; font-size: 0.9rem;"
                         th:text="${favorites != null} ? '共 ' + ${#lists.size(favorites)} + ' 件商品' : '共 0 件商品'">
@@ -246,17 +248,14 @@
                 <!-- Favorites Grid (Store Style) -->
                 <div class="store-grid" th:if="${!#lists.isEmpty(favorites)}">
 
-                    <div th:each="fav : ${favorites}" class="store-product-card"
-                        th:data-product-id="${fav.proId}"
+                    <div th:each="fav : ${favorites}" class="store-product-card" th:data-product-id="${fav.proId}"
                         th:onclick="${fav.stockQuantity > 0} ? 'window.location.href=\'/product/' + ${fav.proId} + '/buy\'' : 'return false;'"
                         th:classappend="${fav.stockQuantity <= 0} ? ' sold-out' : ''">
 
                         <div class="product-image-wrapper">
                             <!-- Product Image (使用 API 端點 + 懶加載) -->
-                            <img th:src="@{'/api/product/' + ${fav.proId} + '/image'}"
-                                 th:alt="${fav.productTitle}"
-                                 class="store-product-img"
-                                 loading="lazy">
+                            <img th:src="@{'/api/product/' + ${fav.proId} + '/image'}" th:alt="${fav.productTitle}"
+                                class="store-product-img" loading="lazy">
 
                             <!-- Sold Out Badge -->
                             <div th:if="${fav.stockQuantity <= 0}" class="sold-out-badge">已售完</div>

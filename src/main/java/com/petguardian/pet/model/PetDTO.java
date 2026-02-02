@@ -19,7 +19,9 @@ public class PetDTO implements Serializable {
     private String petGenderText;    // 顯示用：將 0/1 轉換為 "公/母"
     private Integer petAge;
     private String petDescription;
-    private String base64Image;      // 顯示用：將 byte[] 轉換成 Base64 字串
+    private String createdTimeText;;    // 顯示用：例如 "2026-01-28 14:00"
+    private String updatedAtText;    // 顯示用：例如 "2026-01-28 16:30"
+   
 
     public PetDTO() {}
 
@@ -67,6 +69,9 @@ public class PetDTO implements Serializable {
     public String getPetDescription() { return petDescription; }
     public void setPetDescription(String petDescription) { this.petDescription = petDescription; }
 
-    public String getBase64Image() { return base64Image; }
-    public void setBase64Image(String base64Image) { this.base64Image = base64Image; }
+    public String getCreatedTimeText() { return createdTimeText; }
+    public void setCreatedTimeText(String createdTimeText) { this.createdTimeText = createdTimeText; }
+    public String getUpdatedAtText() { return updatedAtText; }
+    public void setUpdatedAtText(String updatedAtText) { this.updatedAtText = updatedAtText; }
+    
 }

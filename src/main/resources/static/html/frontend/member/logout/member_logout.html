@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetGuardian｜會員登出</title>
+
+    <link rel="stylesheet" href="../../../../css/frontend/style.css">
+    <link rel="stylesheet" href="../../../../css/frontend/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .outer {
+            border: 1px solid lightgray;
+            background-color: lightcyan;
+            border-radius: 30px;
+            padding: 20px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- Header 容器 -->
+    <header id="main-header" class="header"></header>
+
+    <div class="outer">
+
+        <div>PetGuardian寵護家</div>
+
+        <h1>會員登出</h1>
+        <img src="../../../../images/member/logout/memberlogout.jpg" width="200px">
+        <h3>您確定要登出嗎？</h3>
+        <button class="memberlogout">確定登出</button><br><br>
+
+    </div>
+
+    <!-- Footer 容器 -->
+    <footer id="main-footer"></footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="../../../../js/frontend/main.js"></script>
+
+    <script>
+        function init() {
+
+            function memberlogout() {
+
+                let fetch_url = "http://localhost:8080/front/memberlogout";
+
+                fetch(fetch_url, {
+                    method: "POST",
+                    credentials: "include"
+                }).then(res => res.json()).then(data => {
+                    console.log(data.result);
+                    if (data.result === "登出成功") {
+                        alert("您已登出會員帳戶～");
+                        window.location.href = "./member_logout_success.html";
+
+                    }
+                });
+
+            }
+
+            $(".memberlogout").on("click", memberlogout);
+
+        }
+
+        $(window).on("load", init);
+    </script>
+</body>
+
+</html>

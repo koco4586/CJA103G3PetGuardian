@@ -1,6 +1,7 @@
 package com.petguardian.pet.service;
 
-import java.util.Base64;
+import java.time.format.DateTimeFormatter;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,7 +17,9 @@ import com.petguardian.pet.model.PetVO;
 @Service
 public class PetServiceImpl implements PetService { // 🔴 加上 implements
 
-    @Autowired
+	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+	
+	@Autowired
     private PetRepository repository;
 
     @Override
@@ -45,9 +48,16 @@ public class PetServiceImpl implements PetService { // 🔴 加上 implements
         dto.setPetGender(vo.getPetGender());
         dto.setPetGenderText(resolveGenderText(vo.getPetGender()));
         
-        if (vo.getPetImage() != null) {
-            String base64 = java.util.Base64.getEncoder().encodeToString(vo.getPetImage());
-            dto.setBase64Image("data:image/jpeg;base64," + base64);
+        String desc = vo.getPetDescription();
+        dto.setPetDescription((desc == null || desc.trim().isEmpty()) ? "" : desc.trim());
+
+        // 📅 時間格式化 (新時代用法)
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        if (vo.getCreatedTime() != null) {
+            dto.setCreatedTimeText(vo.getCreatedTime().format(dtf));
+        }
+        if (vo.getUpdatedAt() != null) {
+            dto.setUpdatedAtText(vo.getUpdatedAt().format(dtf));
         }
         
         return dto;
@@ -113,13 +123,8 @@ public class PetServiceImpl implements PetService { // 🔴 加上 implements
                          .orElse(null);
     }
     
-    @Override
-    public byte[] getPetOriginalImage(Integer petId) {
-        return repository.findByPrimaryKey(petId)
-                         .map(PetVO::getPetImageOriginal) // 抓原圖欄位
-                         .orElse(null);
-    }//商城所需，記得打開
-
+   
+   
     @Override
     public List<PetDTO> findPetsByNameDTO(String petName) {
         List<PetVO> voList = repository.getByName(petName);
@@ -139,7 +144,11 @@ public class PetServiceImpl implements PetService { // 🔴 加上 implements
         List<PetVO> voList = repository.findByMemId(memId);
         List<PetDTO> dtoList = voList.stream().map(this::convertToDTO).collect(Collectors.toList());
 
-        int rowsPerPage = 3; // 你設定一頁 3 筆
+        if (whichPage == null || whichPage < 1) {
+            whichPage = 1;
+        }
+        
+        int rowsPerPage = 9; // 你設定一頁 3 筆
         int rowNumber = dtoList.size();
         int pageNumber = (int) Math.ceil((double) rowNumber / rowsPerPage);
         
@@ -176,67 +185,41 @@ public class PetServiceImpl implements PetService { // 🔴 加上 implements
         repository.insert(petVO);
     }
 
+    
     @Override
-    public void addPetFromBase64(String base64Str, String originalBase64, String name, String type, String sex, String age, String size, String desc, Integer memId) {
-    	
-    	String base64 = base64Str.split(",")[1];
-        byte[] image = Base64.getDecoder().decode(base64);
-        PetVO pet = new PetVO();
-        pet.setMemId(memId);
-        pet.setPetName(name);
-        pet.setPetImage(image);
-        pet.setTypeId("狗".equals(type) ? 2 : 1);
-        pet.setPetGender("母".equals(sex) ? 2 : 1);
-        pet.setPetAge(age == null || age.isEmpty() ? 0 : Integer.parseInt(age));
-        pet.setSizeId(Integer.parseInt(size));
-        pet.setPetDescription(desc);
-        
-        if (base64Str != null && base64Str.contains(",")) {
-            try {
-                String pureBase64 = base64Str.split(",")[1];
-                byte[] imageBytes = Base64.getDecoder().decode(pureBase64);
-                pet.setPetImage(imageBytes);
-            } catch (Exception e) {
-                System.err.println("合成圖解碼失敗: " + e.getMessage());
-            }
-        }
-
-        // 2. 處理「原始圖」 (判斷並解碼)
-        if (originalBase64 != null && originalBase64.contains(",")) {
-            try {
-                String pureOriginalBase64 = originalBase64.split(",")[1];
-                byte[] originalBytes = Base64.getDecoder().decode(pureOriginalBase64);
-                pet.setPetImageOriginal(originalBytes);
-                System.out.println("Service: 原圖已成功存入 pet 物件");
-            } catch (Exception e) {
-                System.err.println("原圖解碼失敗: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Service: 未收到原圖 Base64 資料");
-        }
-        
-        // 3. 執行資料庫儲存
-        repository.insert(pet);
-    }
-
-    @Override
-    public void updatePetWithCanvas(PetVO petVO, String base64Data, String originalBase64, String deleteImage) throws Exception {
+    public void updatePet(PetVO petVO, MultipartFile petImage, String deleteImage) throws Exception {
+        // 情況 1：使用者勾選了「刪除圖片」
         if ("true".equals(deleteImage)) {
             petVO.setPetImage(null);
-            petVO.setPetImageOriginal(null);
-        } else if (base64Data != null && base64Data.contains(",")) {
-        	petVO.setPetImage(Base64.getDecoder().decode(base64Data.split(",")[1]));
-        	if (originalBase64 != null && originalBase64.contains(",")) {
-                petVO.setPetImageOriginal(Base64.getDecoder().decode(originalBase64.split(",")[1]));
-            }
-        } else {
-            // 沒換圖，從資料庫撈出舊的兩張圖塞回去，避免變成空白
+        } 
+        // 情況 2：使用者上傳了新圖片
+        else if (petImage != null && !petImage.isEmpty()) {
+            petVO.setPetImage(petImage.getBytes());
+        } 
+        // 情況 3：使用者沒傳新圖，也沒刪除圖 -> 從資料庫撈出舊圖補回，防止變空白
+        else {
             repository.findByPrimaryKey(petVO.getPetId()).ifPresent(oldPet -> {
                 petVO.setPetImage(oldPet.getPetImage());
-                petVO.setPetImageOriginal(oldPet.getPetImageOriginal());
             });
-            
         }
         repository.update(petVO);
     }
+    
+    @Override
+    public void addPetBase64(PetVO petVO) {
+        // 直接呼叫你寫好的 jdbcTemplate.update(INSERT, ...)
+        repository.insert(petVO); 
+    }
+
+    @Override
+    public void updatePetBase64(PetVO petVO) {
+        // 直接呼叫你寫好的 jdbcTemplate.update(UPDATE, ...)
+        repository.update(petVO); 
+    }
+    
+    public PetVO getOnePet(Integer petId) {
+        // 呼叫 Repository 的 findByPrimaryKey，並處理 Optional
+        return repository.findByPrimaryKey(petId).orElse(null);
+    }
+    
 }

@@ -8,14 +8,17 @@
 <div th:fragment="sidebar(activePage)" class="sidebar">
     <div class="text-center mb-2">
         <div class="avatar-wrapper">
-            <img src="https://cdn01.pinkoi.com/product/aZgvB9di/3/640x530.jpg" class="avatar">
+            <img th:if="${currentMember != null and currentMember.memImage != null}" th:src="${currentMember.memImage}"
+                class="avatar" alt="會員頭像">
+            <img th:unless="${currentMember != null and currentMember.memImage != null}"
+                src="https://cdn01.pinkoi.com/product/aZgvB9di/3/640x530.jpg" class="avatar" alt="預設頭像">
         </div>
-        <h4>會員中心</h4>
+        <h4 th:text="${currentMember != null and currentMember.memName != null} ? ${currentMember.memName} : '會員中心'">
+            會員中心</h4>
         <p style="color: #999; font-size: 0.9rem;">一般會員</p>
     </div>
     <nav>
-        <a href="/html/frontend/member/management/member_management_ai.html" class="menu-item"
-            th:classappend="${activePage == 'profile'} ? ' active' : ''">
+        <a href="/front/managementpage" class="menu-item" th:classappend="${activePage == 'profile'} ? ' active' : ''">
             <i class="fas fa-user"></i> 個人資料
         </a>
         <a href="/pet/dashboard" class="menu-item" th:classappend="${activePage == 'pets'} ? ' active' : ''">
@@ -35,10 +38,6 @@
             style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
             <i class="fas fa-user-plus"></i> 成為保母
         </a>
-        <div class="menu-item" style="color: var(--danger); cursor: pointer;"
-            onclick="alert('已登出'); window.location.href='index.html'">
-            <i class="fas fa-sign-out-alt"></i> 登出
-        </div>
     </nav>
 </div>
 

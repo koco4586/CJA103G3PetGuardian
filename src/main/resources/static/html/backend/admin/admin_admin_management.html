@@ -4,82 +4,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>etGuardian｜後台中心</title>
+    <title>PetGuardian｜後台中心</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="../../../css/backend/style.css">
 
     <style>
-        /* * {
+        * {
             box-sizing: border-box;
-        } */
-
-        th {
-            color: #888;
-            font-weight: 500;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            /* 防止換行 */
         }
 
-        .nowrap {
-            color: #444;
-            white-space: nowrap;
-            /* 防止 td 內容換行 */
+        .outer {
+            border: 1px solid lightgray;
+            background-color: lightcyan;
+            border-radius: 30px;
+            padding: 20px;
         }
+
     </style>
 </head>
 
 <body>
 
+    <!-- header start -->
+
     <div class="main-content">
 
         <header>
             <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
             <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
                 alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
             <div>
-                <h1>後台管理員</h1>
-                <div class="sub">檢視管理員帳號列表與變更管理員狀態</div>
+                <h1>後台帳號管理</h1>
+                <div class="sub">檢視管理員帳號與變更管理員狀態</div>
             </div>
         </header>
 
-        <section>
+        <!-- header end -->
 
-            <div class="card">
+        <div class="outer">
 
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>管理員編號</th>
-                            <th>帳號</th>
-                            <th>密碼</th>
-                            <th>姓名</th>
-                            <th>電子郵件</th>
-                            <th>手機號碼</th>
-                            <th>狀態</th>
-                            <th>建立時間</th>
-                            <th>頭像</th>
-                            <th>修改資料</th>
-                        </tr>
-                    </thead>
+            <table>
+                <thead>
+                    <tr>
+                        <th>管理員編號</th>
+                        <th>帳號</th>
+                        <th>姓名</th>
+                        <th>電子郵件</th>
+                        <th>手機號碼</th>
+                        <th>狀態</th>
+                        <th>建立時間</th>
+                        <th>頭像</th>
+                    </tr>
+                </thead>
 
-                    <tbody class="tbody"></tbody>
+                <tbody class="tbody"></tbody>
+            </table>
 
-                </table>
+            <a href="./admin_insert.html">新增管理員</a><br><br>
+            <a href="./admin_management_updateinfo.html">修改個人資料</a><br><br>
 
-            </div>
+        </div>
 
-            <button type="button" class="btn">新增管理員</button>
-
-
-        </section>
-
-    </div>
+    </div> <!-- header最外層<div class="main-content">結束標籤 -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="/js/backend/sidebar.js"></script>
+    <script src="../../../js/backend/sidebar.js"></script>
 
     <script>
 
@@ -107,8 +99,7 @@
                         <tr>
                             <td>${data[i].admId}</td>
                             <td>${data[i].admAccount}</td>
-                            <td class="nowrap"><a href="">修改</a></td>
-                            <td class="nowrap">${data[i].admName}</td>
+                            <td >${data[i].admName}</td>
                             <td>${data[i].admEmail}</td>
                             <td>${data[i].admTel}</td>
 
@@ -121,8 +112,6 @@
                             <td>${data[i].admCreatedAt}</td>
 
                             <td><img src="${data[i].admImage}" style="width: 50px;"></td>
-
-                            <td><a href=""><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_q7W2h6ihzOiAti35boAkGjPGTb5WVZ-21A&s" style="width: 20px;"></a></td>
                             
                         </tr>
 
@@ -151,12 +140,14 @@
                         "Content-Type": "application/json"
                     }
                 }).then(res => res.json()).then(data => {
-                    alert("管理員狀態已變更");
                     console.log(data.result);
                     if (data.result === "已停用") {
+                        alert("該管理員帳號已被停用");
                         $(e.currentTarget).html("已停用");
                     } else {
+                        alert("該管理員帳號已恢復啟用");
                         $(e.currentTarget).html("已啟用");
+
                     }
                 });
 

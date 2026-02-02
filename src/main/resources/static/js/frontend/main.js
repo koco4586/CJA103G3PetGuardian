@@ -32,11 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a href="/front/loginpage" class="dropdown-item">登入 / 註冊</a>
-                        <a href="/html/frontend/member/management/member_management_ai.html" class="dropdown-item">會員中心</a>
+                        <a href="/front/loginpage" class="dropdown-item">登入</a>
+                        <a href="/front/registerpage" class="dropdown-item">註冊</a>
+                        <a href="/front/managementpage" class="dropdown-item">會員中心</a>
                         <a href="/sitter/hub" class="dropdown-item">保母專區</a>
                         <hr style="border:0; border-top:1px solid #eee; margin: 0.5rem 0;">
-                        <a href="/logout" class="dropdown-item">登出</a>
+                        <a href="/front/memberlogoutpage" class="dropdown-item">登出</a>
                     </div>
                 </div>
                 <div class="mobile-menu-btn">☰</div>
@@ -65,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>-->
                 <div class="text-center mt-2" style="border-top: 1px solid #eee; padding-top: 1rem; color: #999; font-size: 0.9rem;">
-                    &copy; 2024 PetGuardian. All rights reserved.
+                    &copy; 2026 PetGuardian. All rights reserved.
                 </div>
             </div>
         `;

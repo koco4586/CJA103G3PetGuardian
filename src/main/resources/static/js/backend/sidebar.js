@@ -21,11 +21,8 @@ window.toggleSubmenu = function (e) {
 };
 
 // 管理員登出功能
-window.adminLogout = function() {
-    if (confirm('確定要登出嗎?')) {
-        // 清除 session 並導向登入頁
-        window.location.href = '/admin/logout';
-    }
+window.adminLogout = function () {
+    window.location.href = "../../html/backend/admin/admin_logout.html";
 };
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -53,7 +50,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         <li data-page="bookings-reviews"><a href="/admin/reviews1"><i class="fa-solid fa-star"></i> 評價管理</a></li>
                     </ul>
                 </li>
-<!--                <li data-page="chat"><a href="/admin/chat-reports"><i class="fa-solid fa-comments"></i> 聊天監控</a></li>-->
                 <li data-page="chat-reports"><a href="/admin/chat-reports"><i class="fa-solid fa-comment-slash"></i> 聊天檢舉<span class="badge" id="chatReportBadge" style="display:none; margin-left:5px; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">0</span></a></li>
                 <li data-page="news"><a href="/admin/news/list"><i class="fa-solid fa-bullhorn"></i> 消息管理</a></li>
                 <li class="has-submenu" data-page="market">
@@ -90,32 +86,59 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 根據路徑判斷當前頁面
     let pageName = "index";
-    if (currentPath.includes("/admin/membermanagementpage")) {
+
+    // 會員管理 - 修正路徑判斷，支援靜態HTML頁面路徑
+    if (currentPath.includes("/admin/membermanagementpage") ||
+        currentPath.includes("/html/backend/member/admin_member_management")) {
         pageName = "members";
-    } else if (currentPath.includes("/admin/sitter/manage")) {
+    }
+    // 管理員帳號管理 - 修正路徑判斷，支援靜態HTML頁面路徑
+    else if (currentPath.includes("/admin/adminmanagementpage") ||
+        currentPath.includes("/html/backend/admin/admin_admin_management")) {
+        pageName = "accounts";
+    }
+    // 保母系統
+    else if (currentPath.includes("/admin/sitter/manage")) {
         pageName = "sitters";
-    } else if (currentPath.includes("/admin/reviews")) {
+    }
+    // 預約管理 - 評價
+    else if (currentPath.includes("/admin/reviews")) {
         pageName = "bookings-reviews";
-    } else if (currentPath.includes("/admin/bookings")) {
+    }
+    // 預約管理 - 列表
+    else if (currentPath.includes("/admin/bookings")) {
         pageName = "bookings-all";
-    } else if (currentPath.includes("/admin/chat-reports")) {
+    }
+    // 聊天檢舉
+    else if (currentPath.includes("/admin/chat-reports")) {
         pageName = "chat-reports";
-    } else if (currentPath.includes("/admin/chat")) {
+    }
+    // 聊天監控
+    else if (currentPath.includes("/admin/chat")) {
         pageName = "chat";
-    } else if (currentPath.includes("/admin/news/list")) {
+    }
+    // 消息管理
+    else if (currentPath.includes("/admin/news/list")) {
         pageName = "news";
-    } else if (currentPath.includes("/admin/store-reviews")) {
+    }
+    // 二手商城 - 評價管理
+    else if (currentPath.includes("/admin/store-reviews")) {
         pageName = "market-reviews";
-    } else if (currentPath.includes("/admin/store/manage") || currentPath.includes("/admin/store")) {
+    }
+    // 二手商城 - 商品管理
+    else if (currentPath.includes("/admin/store/manage") || currentPath.includes("/admin/store")) {
         pageName = "market-manage";
-    } else if (currentPath.includes("/admin/forum/list-all-forum")) {
+    }
+    // 討論區管理
+    else if (currentPath.includes("/admin/forum/list-all-forum")) {
         pageName = "forum";
-    } else if (currentPath.includes("/admin/adminmanagementpage")) {
-        pageName = "admin";
-    } else if (currentPath.includes("/admin/index") || currentPath === "/admin") {
+    }
+    // 首頁 (預設)
+    else if (currentPath.includes("/admin/index") || currentPath === "/admin") {
         pageName = "index";
     }
 
+    // 設定 active 狀態
     const activeItem = document.querySelector(`[data-page="${pageName}"]`);
     if (activeItem) {
         activeItem.classList.add("active");

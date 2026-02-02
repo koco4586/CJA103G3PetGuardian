@@ -11,6 +11,7 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 	<link rel="stylesheet" th:href="@{/css/frontend/sitter/dashboard.css}">
 	<link rel="stylesheet" th:href="@{/css/frontend/booking/sitter-bookings.css}">
+	<link rel="stylesheet" th:href="@{/css/frontend/evaluate-styles.css}">
 </head>
 
 <body>
@@ -154,8 +155,9 @@
 
 								<!-- 已完成/取消 -->
 								<th:block th:if="${order.orderStatus >= 2}">
-									<button class="btn btn-outline-secondary btn-sm" disabled>
-										<i class="fas fa-file-alt"></i> 詳情
+									<button class="btn btn-primary btn-sm"
+										th:onclick="|injectSitterEvalBox(this, ${order.bookingOrderId}, ${order.memId})|">
+										<i class="fas fa-paw"></i> 評價
 									</button>
 								</th:block>
 							</div>
@@ -191,6 +193,7 @@
 
 	<!-- Scripts -->
 	<script th:src="@{/js/frontend/main.js}"></script>
+	<script src="/js/frontend/evaluate-functions.js"></script>
 	<script>
 		async function updateStatus(orderId, newStatus) {
 			const statusText = {

@@ -24,6 +24,7 @@ import com.petguardian.sitter.model.SitterSearchDTO;
 import com.petguardian.sitter.model.SitterVO;
 
 @Service
+@Transactional(readOnly = true)
 public class SitterSearchServiceImpl implements SitterSearchService {
 
     @Autowired
@@ -45,7 +46,6 @@ public class SitterSearchServiceImpl implements SitterSearchService {
      * @return List<SitterSearchDTO> 符合條件的保姆列表
      */
     @Override
-    @Transactional(readOnly = true)
     public List<SitterSearchDTO> searchSitters(SitterSearchCriteria criteria) {
         // 1. 根據地區篩選取得保姆列表
         List<SitterVO> sitters;
@@ -144,7 +144,6 @@ public class SitterSearchServiceImpl implements SitterSearchService {
      * @return List<SitterSearchDTO> 所有啟用中的保姆列表
      */
     @Override
-    @Transactional(readOnly = true)
     public List<SitterSearchDTO> getAllActiveSitters() {
         List<SitterVO> sitters = repository.findBySitterStatusOrderBySitterRatingCountDesc((byte) 0);
         List<SitterSearchDTO> results = new ArrayList<>();

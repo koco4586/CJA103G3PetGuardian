@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <title>Full Image Page</title>
 
+		<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+	    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
 <style>
 /* 重點就在這裡 */
 html, body {
@@ -18,68 +22,83 @@ body {
 	background-position: center; /* 置中 */
 	background-repeat: no-repeat;
 	background-attachment: fixed;
-}
-
-/* 功能層（之後用） */
-.content {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: white;
-	font-size: 2rem;
-	text-shadow: 0 2px 10px black;
+	min-height: 100vh; /* 改用 min-height 確保背景延伸 */
+    display: flex;     /* 使用 flex 讓內容居中 */
+    flex-direction: column;
 }
 
 .info {
-	position: relative;
-	z-index: 10;
-	background-color: rgba(255, 255, 255, 0.9); /* 白色半透明 */
-	margin: 50px auto;
-	padding: 20px;
-	border-radius: 10px;
-	max-width: 800px; /* 限制寬度，不要讓它跟背景一樣大 */
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.95); /* 稍微調高不透明度增加辨識度 */
+    margin: 120px auto 50px; /* 增加上方邊距 (120px)，避開通用導覽列 */
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;            /* 行動優先 */
+    max-width: 900px;      /* 稍微放寬，讓左右兩欄式排版更鬆散 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box; /* 重要：防止 padding 撐開寬度 */
 }
 
-/* 確保預覽圖區域有明顯的外框 */
-.drop_zone {
-    min-width: 200px;
-    min-height: 200px;
-    width: fit-content;    /* 關鍵：寬度隨內容撐開 */
-    height: fit-content;   /* 關鍵：高度隨內容撐開 */
-    border: 2px dashed #ccc;
+/* 3. 修復內容物排列 (左圖右字) */
+.content_block {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap; /* 螢幕太小時自動換行 */
+    gap: 30px;
     justify-content: center;
-    cursor: pointer;
-    background-color: #f9f9f9;
-    padding: 10px;         /* 留一點邊距比較美觀 */
 }
 
-/* 讓圖片顯示原始比例，不強迫填滿 */
-.preview_img {
-    display: block;
-    max-width: 400px;      /* 建議設定一個最大寬度，避免原圖太大使頁面變形 */
-    height: auto;
+.left_block, .right_block {
+    flex: 1;
+    min-width: 300px; /* 確保小螢幕時不會縮太窄 */
 }
-#p_file { display: none; }
 
-#btn_home {
-    padding: 12px 30px;
-    font-size: 1.1rem;
-    cursor: pointer;
+/* 4. 統一表單欄位樣式，對齊組員風格 */
+.block {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column; /* 標籤在上，輸入框在下 */
+}
+
+.block label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.block input[type="text"], 
+.block input[type="number"], 
+.block select, 
+.block textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
     border-radius: 5px;
-    border: none;
-    margin-right: 10px;
-    background-color: #007bff; /* 藍色 */
-    color: white;
-    transition: 0.3s;
+    font-size: 1rem;
 }
 
-#btn_home:hover {
-    background-color: #0056b3; /* 滑鼠移上去變深藍 */
+/* 5. 確保預覽圖不會撐破容器 */
+.drop_zone {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    min-height: 250px;
+    margin: 0 auto;
+    overflow: hidden; /* 隱藏溢出部分 */
+}
+
+.preview_img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain; /* 保持比例 */
+}
+
+#p_file {
+    display: none !important;
+}
+/* 讓備註寬度與預覽圖一致 */
+.left_block .block {
+    width: 100%;
+    max-width: 400px; /* 跟預覽圖最大寬度一致 */
 }
 </style>
 </head>
@@ -99,6 +118,11 @@ body {
 						<!-- 上面直接在one後面加上on也可以 -->
 						<span class="text">預覽圖</span>
 					</div>
+					
+					<div class="block" style="margin-top: 20px;">
+		            <label>寵物備註：</label><br>
+		            <textarea id="p_desc" rows="5" style="width: 100%; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+		        </div>
 				</div>
 
 				<div class="right_block">
@@ -109,13 +133,17 @@ body {
 					</div>
 
 					<div class="block">
-						<label>寵物種類：</label> <input type="text" id="p_type"
-							placeholder="貓 或 狗">
+						<label>寵物種類：</label> <select id="p_type">
+			        <option value="1">貓</option>
+			        <option value="2">狗</option>
+			    </select>
 					</div>
 
 					<div class="block">
-						<label>寵物性別：</label> <input type="text" id="p_Gender"
-							autocomplete="off">
+						<label>寵物性別：</label> <select id="p_Gender">
+				        <option value="0">公</option>
+				        <option value="1">母</option>
+				    </select>
 					</div>
 
 					<div class="block">
@@ -131,10 +159,7 @@ body {
 						</select>
 					</div>
 
-					<div class="block">
-						<label>寵物備註：</label><br>
-						<textarea id="p_desc" rows="3"></textarea>
-					</div>
+					
 
 					<div class="block">
 						<label>經度：</label><input type="text" id="lng" readonly> <label>緯度：</label><input
@@ -185,8 +210,8 @@ body {
   var geolocation_enable_el = document.getElementById("geolocation_enable");
   var preview_el = document.getElementById("preview");
   var p_file_el = document.getElementById("p_file");
-  var canvas = document.createElement("canvas");
-  var ctx = canvas.getContext("2d");
+
+ 
   var original_base64_temp = "";
 
 
@@ -203,8 +228,39 @@ body {
           reader.addEventListener("load", function(e) {
             // 需求 1 & 3：呈現預覽圖並加上 preview_img class
             
-            original_base64_temp = e.target.result;
-            preview_el.innerHTML = '<img src="' + e.target.result + '" class="preview_img">';
+            var img = new Image();
+    img.src = e.target.result;
+
+    img.onload = function() {
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+
+        // --- 📏 等比例縮放邏輯 ---
+        var maxWidth = 800; // 設定最大寬度
+        var scale = 1;      // 預設比例為 1
+
+        if (img.width > maxWidth) {
+            scale = maxWidth / img.width; // 算出縮小比例 (例如 0.2)
+        }
+
+        // 根據比例設定畫布寬高
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale; 
+
+        // --- 🎨 繪製並壓縮 ---
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // 輸出為 JPEG (體積最輕)，0.7 代表品質
+        var compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+
+        // 更新變數與預覽
+        original_base64_temp = compressedBase64;
+        preview_el.innerHTML = '<img src="' + compressedBase64 + '" class="preview_img">';
+        
+        
+    };
+            
+           
           });
           reader.readAsDataURL(file);
         }
@@ -388,54 +444,21 @@ preview_el.addEventListener("click", function(){
         p_name_el.focus();
         return;
     }
+    
+    if (!original_base64_temp || original_base64_temp.trim() === "") {
+        alert("請上傳圖片！"); // 這就是你要的提示訊息
+        return; // 中斷執行，不跳轉到確認頁
+    }
 
     // 取得圖片 Base64 (從預覽圖的 src 拿)
-    var img_el = preview_el.querySelector(".preview_img"); if (!img_el) { alert("請先上傳照片！"); return; }
-    canvas.width = img_el.naturalWidth;
-    canvas.height = img_el.naturalHeight;
-    ctx.drawImage(img_el, 0, 0);
-
-    // 3. 設定文字樣式
-    const fontSize = Math.floor(canvas.width / 15); // 根據圖寬動態調整字體大小
-    ctx.font = `bold ${fontSize}px Arial`;
-    ctx.fillStyle = "red";       // 文字顏色
-    ctx.strokeStyle = "white";   // 文字邊框顏色（增加辨識度）
-    ctx.lineWidth = fontSize / 8;
-    ctx.textBaseline = "top";    // 重要：設定基準線在頂部，方便依序計算 Y 軸
-
-    // 4. 🔴 準備要顯示的資料陣列 (順序決定顯示順序)
-    // 請確保這些 ID 在你的 HTML 中都存在
-    const petInfo = [
-        { label: "名稱", value: p_name_el.value },
-        { label: "種類", value: document.getElementById("p_type").value },
-        { label: "性別", value: p_Gender_el.value },
-        { label: "年齡", value: p_age_el.value },
-        { label: "尺寸", value: document.getElementById("p_size").options[document.getElementById("p_size").selectedIndex].text },
-        { label: "備註", value: document.getElementById("p_desc").value }
-    ];
-
-    // 5. 🔴 依序繪製文字
-    const startX = 20;           // 左邊距
-    let currentY = 20;           // 起始高度
-    const lineHeight = fontSize * 1.3; // 設定行距 (字體大小的 1.3 倍)
-
-    petInfo.forEach((item) => {
-        const text = `${item.label}：${item.value}`;
-        
-        // 畫邊框 (避免背景太亂看不清)
-        ctx.strokeText(text, startX, currentY);
-        // 畫文字
-        ctx.fillText(text, startX, currentY);
-        
-        // 🔴 關鍵：畫完一行後，將 Y 座標往下移動一行的高度
-        currentY += lineHeight; 
-    });
+    
 
     // 6. 轉存 Base64 並跳轉
-    const final_img_base64 = canvas.toDataURL("image/jpeg", 0.7);
+   
     const form_data = {
-            img_base64: final_img_base64,
+    		petImage: original_base64_temp, 
             original_base64: original_base64_temp,
+            
             petName: p_name_el.value,          // ← 改名
             typeId: p_type_el.value,          // ← 新增
             petGender: p_Gender_el.value,            // ← 改名
@@ -467,7 +490,7 @@ preview_el.addEventListener("click", function(){
     // 2. 回填文字欄位 (使用 data 物件中的屬性名稱)
     if(p_name_el) p_name_el.value = data.petName || "";
     if(p_type_el) p_type_el.value = data.typeId || "";
-    if(p_Gender_el)  p_Gender_el.value  = data.petSex || "";
+    if(p_Gender_el)  p_Gender_el.value  = data.petGender || "";
     if(p_age_el)  p_age_el.value  = data.petAge || "";
     if(p_size_el) p_size_el.value = data.sizeId || "1";
     if(p_desc_el) p_desc_el.value = data.petDescription || "";

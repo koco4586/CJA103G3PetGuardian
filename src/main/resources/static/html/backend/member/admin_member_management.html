@@ -1,4 +1,3 @@
-<!-- 恩臨 -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 
@@ -8,64 +7,70 @@
     <title>PetGuardian｜會員管理</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="../../../css/backend/style.css">
 
     <style>
-        /* * {
+        * {
             box-sizing: border-box;
-        } */
+        }
+
+        .outer {
+            border: 1px solid lightgray;
+            background-color: lightcyan;
+            border-radius: 30px;
+            padding: 20px;
+        }
     </style>
 </head>
 
 <body>
 
+    <!-- header start -->
+
     <div class="main-content">
 
         <header>
             <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
             <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=60&auto=format&fit=crop"
                 alt="logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
             <div>
                 <h1>會員管理</h1>
-                <div class="sub">檢視與管理會員狀態</div>
+                <div class="sub">檢視會員資料與管理會員狀態</div>
             </div>
         </header>
 
-        <section>
-            <div class="card">
-                <div style="margin-bottom:16px; display:flex; gap:10px;">
-                    <form style="display:flex; gap:10px; align-items:center;">
-                        <input type="text" placeholder="搜尋會員 (請輸入會員編號)" class="searchmemid" style="max-width:300px;"
-                            required>
-                        <button type="submit" class="selectsubmit btn">點擊查詢</button>
-                    </form>
-                </div>
+        <!-- header end -->
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>會員編號</th>
-                            <th>會員姓名</th>
-                            <th>電子信箱</th>
-                            <th>會員狀態</th>
-                            <th>註冊時間</th>
-                            <th>會員頭像</th>
-                        </tr>
-                    </thead>
-                    <tbody class="tbody"></tbody>
+        <div class="outer">
 
+            <form>
+                <input type="text" placeholder="請輸入會員編號" class="searchmemid" required>
+                <button type="submit" class="selectsubmit">點擊查詢</button>
+            </form>
 
-                </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>會員編號</th>
+                        <th>會員姓名</th>
+                        <th>電子信箱</th>
+                        <th>會員狀態</th>
+                        <th>註冊時間</th>
+                        <th>會員頭像</th>
+                    </tr>
+                </thead>
+                <tbody class="tbody"></tbody>
 
-            </div>
+            </table>
 
-        </section>
+        </div>
 
-    </div>
+    </div> <!-- header最外層<div class="main-content">結束標籤 -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="/js/backend/sidebar.js"></script>
+    <script src="../../../js/backend/sidebar.js"></script>
 
     <script>
 
@@ -172,11 +177,12 @@
                         "Content-Type": "application/json"
                     }
                 }).then(res => res.json()).then(data => {
-                    alert("會員狀態已變更");
                     console.log(data.result);
                     if (data.result === "已停用") {
+                        alert("該會員帳號已被停用。");
                         $(e.currentTarget).html("已停用");
                     } else {
+                        alert("該會員帳號已恢復啟用。");
                         $(e.currentTarget).html("已啟用");
                     }
                 });

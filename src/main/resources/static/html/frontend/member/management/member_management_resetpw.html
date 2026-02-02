@@ -5,100 +5,170 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pet Guardian - 會員密碼變更</title>
+
+  <link rel="stylesheet" href="../../../../css/frontend/style.css">
+  <link rel="stylesheet" href="../../../../css/frontend/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../../../../css/frontend/components.css">
+
   <style>
     * {
       box-sizing: border-box;
+    }
+
+    .outer {
+      border: 1px solid lightgray;
+      background-color: lightcyan;
+      border-radius: 30px;
+      padding: 20px;
     }
 
     .middle {
       text-align: center;
     }
 
+    .title {
+      color: brown;
+    }
+
     .alert {
       color: gray;
     }
 
-    .rightword {
-      color: red;
-    }
-
     .inside {
       padding: 0px 0px 0px 100px;
+    }
+
+    .rightword {
+      color: red;
     }
   </style>
 
 </head>
 
 <body>
-<div class="middle">
-  <h1 class="title">Petguardian寵護家</h1>
-  <h3 class="title">會員密碼變更</h3>
-  <span class="alert">重新設定密碼，完成後請使用新密碼登入。</span><br><br>
-</div>
-<form>
-  <div class="inside">
-    <span class="word">新密碼</span><br>
-    <input type="password" class="pw" placeholder="請輸入使用者密碼" required><br>
-    <span class="rightword">說明：使用者密碼需含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
-    <span class="word">密碼確認</span><br>
-    <input type="password" class="pwcheck" placeholder="請再次輸入相同密碼" required><br><br>
-  </div>
-  <div class="middle">
-    <span class="alert">＊注意：密碼請勿與帳號及其他網站相同，以確保帳戶安全。</span><br><br>
-
-    <button type="submit" class="submit">確認變更</button>
-    <button type="reset">清除重填</button>
-  </div>
-</form>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-
-  function init() {
-
-    function resetpw(e) {
-
-      e.preventDefault();
-
-      let password = $(".pw").val();
-      let passwordcheck = $(".pwcheck").val();
-
-      let resetpwobject = {
-        "memPw": password,
-        "memPwCheck": passwordcheck
-
-      }
 
 
-      let fetch_url = "http://localhost:8080/front/resetpw";
+  <!-- Header 容器 -->
+  <header id="main-header" class="header"></header>
 
-      fetch(fetch_url, {
-        method: "PUT",
-        credentials: "include",
-        body: JSON.stringify(resetpwobject),
-        headers: {
-          "Content-Type": "application/json"
+  <!-- sidebar start -->
+  <div class="container dashboard-container">
+
+    <div class="sidebar">
+      <div class="text-center mb-2">
+        <div class="avatar-wrapper">
+          <img src="../../../../images/frontend/frontend_sidebar_image.png" class="avatar">
+        </div>
+        <h4>會員中心</h4>
+      </div>
+      <nav>
+        <a href="/front/managementpage" class="menu-item">
+          <i class="fas fa-user"></i> 個人資料
+        </a>
+        <a href="/pet/dashboard" class="menu-item">
+          <i class="fas fa-paw"></i> 我的寵物
+        </a>
+        <a href="/dashboard/orders" class="menu-item">
+          <i class="fas fa-receipt"></i> 商城訂單紀錄
+        </a>
+        <a href="/booking/memberOrders" class="menu-item">
+          <i class="fas fa-calendar-check"></i> 保母預約紀錄
+        </a>
+        <a href="/dashboard/favorites" class="menu-item">
+          <i class="fas fa-heart"></i> 收藏列表
+        </a>
+        <a href="/sitter/apply" class="menu-item"
+          style="border-top: 1px solid #eee; margin-top: 0.5rem; padding-top: 0.5rem;">
+          <i class="fas fa-user-plus"></i> 成為保母
+        </a>
+      </nav>
+    </div>
+
+    <!-- sidebar end -->
+
+    <div class="outer">
+
+      <div class="middle">
+        <h1 class="title">Petguardian寵護家</h1>
+        <h3 class="title">會員密碼變更</h3>
+        <span class="alert">重設密碼，完成後請於下一次登入時使用新密碼。</span><br><br>
+      </div>
+      <form>
+        <div class="inside">
+          <span class="word">新密碼</span><br>
+          <input type="password" class="pw" placeholder="請輸入使用者密碼" required><br>
+          <span class="rightword">說明：使用者密碼需含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
+          <span class="word">密碼確認</span><br>
+          <input type="password" class="pwcheck" placeholder="請再次輸入相同密碼" required><br><br>
+        </div>
+        <div class="middle">
+          <span class="alert">＊注意：密碼請勿與帳號及其他網站相同，以確保帳戶安全。</span><br><br>
+
+          <button type="submit" class="submit">確認變更</button>
+          <button type="reset">清除重填</button>
+        </div>
+      </form>
+
+    </div>
+
+  </div> <!-- <div class="container dashboard-container">的結尾標籤  -->
+
+  <!-- Footer 容器 -->
+  <footer id="main-footer"></footer>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script src="../../../../js/frontend/main.js"></script>
+
+
+  <script>
+
+    function init() {
+
+      function resetpw(e) {
+
+        e.preventDefault();
+
+        let password = $(".pw").val();
+        let passwordcheck = $(".pwcheck").val();
+
+        let resetpwobject = {
+          "memPw": password,
+          "memPwCheck": passwordcheck
+
         }
-      }).then(res => res.json()).then(data => {
-        console.log(data);
-        if (data.result === "密碼輸入不一致，請再次確認是否輸入正確。") {
-          alert("密碼輸入不一致，請再次確認是否輸入正確。");
-        } else if (data.result === "密碼變更成功") {
-          alert("密碼變更成功");
-          window.location.href = "/html/frontend/member/management/member_management_ai.html";
-        }
-      });
+
+
+        let fetch_url = "http://localhost:8080/front/resetpw";
+
+        fetch(fetch_url, {
+          method: "PUT",
+          credentials: "include",
+          body: JSON.stringify(resetpwobject),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }).then(res => res.json()).then(data => {
+          console.log(data);
+          if (data.result === "密碼輸入不一致，請再次確認是否輸入正確。") {
+            alert("密碼輸入不一致，請再次確認是否輸入正確。");
+          } else if (data.result === "密碼變更成功") {
+            alert("會員密碼變更成功！");
+            window.location.href = "/";
+          }
+        });
+
+      };
+
+      $(".submit").on("click", resetpw)
 
     };
 
-    $(".submit").on("click", resetpw)
-
-  };
-
-  $(window).on("load", init);
+    $(window).on("load", init);
 
 
-</script>
+  </script>
 
 </body>
 

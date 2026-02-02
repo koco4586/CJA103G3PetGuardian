@@ -3,9 +3,14 @@
 <head>
 <title>寵物資料 - listOnePet</title>
 
+	<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+
 <style>
   body {
-    background-image: url("/images/pet/full.jpg"); /* ✅ 底圖保留 */
+    background-image: url("/images/pet/83099.jpg"); /* ✅ 底圖保留 */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -53,6 +58,15 @@
     max-width: 200px;
     border-radius: 5px;
   }
+  
+  #main-footer {
+  background-color: #f9f9f9 !important;
+  margin-top: 4rem;
+}
+
+#main-footer .container {
+  background-color: transparent !important;
+}
 </style>
 </head>
 
@@ -79,7 +93,8 @@
     <th>圖片</th>
     <th>性別</th>
     <th>備註</th>
-    <th>功能</th>
+    <th>建立時間</th>
+    <th>最後更新</th>
   </tr>
 
   <tr>
@@ -98,8 +113,10 @@
     </td>
 
     <td th:text="${pet.petGender == 0 ? '母' : '公'}"></td>
-    <td th:text="${pet.petGenderText}"></td>
     <td th:text="${pet.petDescription}"></td>
+    <td th:text="${pet.createdTimeText}"></td>
+	<td th:text="${pet.updatedAtText}"></td>
+    
   </tr>
 </table>
 
@@ -132,6 +149,12 @@
     下一筆 ▶
   </a>
 </div>
+
+<footer id="main-footer" style="margin-top: 4rem;"></footer>
+
+    <script th:src="@{/js/frontend/main.js}">
+    
+    </script>
 
 </body>
 </html>
