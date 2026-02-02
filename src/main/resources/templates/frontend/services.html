@@ -26,7 +26,16 @@
             margin-bottom: 3rem;
             margin-top: 1rem;
         }
-
+		.filter-section .form-group {
+		    margin-bottom: 0 !important; 
+		}
+		.filter-section .d-flex {
+		    align-items: flex-end !important; 
+		}
+		#searchArea {
+		    height: 48px;
+		    box-sizing: border-box;
+		}
         .sitter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -90,18 +99,18 @@
         <!-- 搜尋區域 -->
         <div class="filter-section">
             <h2 class="mb-2" style="font-weight: 700; color: #333;">找尋您的完美寵物保母</h2>
-            <div class="d-flex gap-lg" style="flex-wrap: wrap;">
+            <div class="d-flex gap-lg" style="flex-wrap: wrap;align-items: flex-end;">
                 <div class="form-group mb-0" style="flex: 2; min-width: 250px;">
                     <label class="form-label">搜尋地區</label>
                     <div style="position: relative;">
                         <i class="fa-solid fa-location-dot"
                             style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #888;"></i>
                         <input type="text" class="form-control" id="searchArea" placeholder="輸入行政區，如：大安區"
-                            style="padding-left: 2.8rem;">
+                            style="padding-left: 2.8rem; height: 48px;">
                     </div>
                 </div>
-                <div class="d-flex align-end" style="flex: 0.5;">
-                    <button class="btn btn-primary" style="height: 48px; width: 100%; border-radius: 0.8rem;"
+                <div style="flex: 0.5; min-width: 120px;">
+                    <button class="btn btn-primary" style="height: 48px; width: 100%; border-radius: 0.8rem; margin: 0;"
                         onclick="searchSitters()">
                         <i class="fa-solid fa-magnifying-glass mr-xs"></i> 搜尋
                     </button>
@@ -119,37 +128,39 @@
             <!-- 動態迴圈渲染保母 -->
             <div class="card-premium" th:each="sitter : ${sitters}">
                 <div class="img-container">
-                    <a th:href="@{/frontend/public/sitter/detail/{id}(id=${sitter.sitterId})}">
+                    <a th:href="@{/frontend/public/sitter/detail/{id}(id=${sitter.sitter.sitterId})}">
                         <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
                             alt="保姆照片" class="sitter-img">
                     </a>
                     <div class="price-badge">
                         $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
                     </div>
-                    <button class="btn-like"
-                        style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
-                        <i class="far fa-heart"></i>
-                    </button>
+                    <button class="btn-like" 
+					        th:classappend="${sitter.isFavorited ? 'active' : ''}"
+					        th:onclick="'handleToggleFavorite(' + ${sitter.sitter.sitterId} + ', this)'"
+					        style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
+					    <i class="fa-heart" th:classappend="${sitter.isFavorited ? 'fa-solid text-danger' : 'fa-regular'}"></i>
+					</button>
                 </div>
                 <div class="content" style="padding: 1.5rem;">
                     <div class="d-flex justify-between align-center mb-1">
-                        <h4 th:text="${sitter.sitterName}" style="margin: 0; font-size: 1.2rem; font-weight: 700;">保母姓名
+                        <h4 th:text="${sitter.sitter.sitterName}" style="margin: 0; font-size: 1.2rem; font-weight: 700;">保母姓名
                         </h4>
                         <div style="color: #ffb800; font-size: 0.9rem;">
                             <i class="fa-solid fa-star"></i>
                             <span
-                                th:text="${sitter.sitterRatingCount != null && sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitterStarCount * 1.0 / sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
+                                th:text="${sitter.sitter.sitterRatingCount != null && sitter.sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitter.sitterStarCount * 1.0 / sitter.sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
                         </div>
                     </div>
                     <p style="color: #666; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.2rem;"
-                        th:text="${sitter.sitterAdd}">保母地址</p>
+                        th:text="${sitter.sitter.sitterAdd}">保母地址</p>
                     <div class="d-flex gap-xs mb-2">
                         <span class="category-tag"
-                            th:text="${sitter.sitterAdd != null and sitter.sitterAdd.length() >= 3 ? sitter.sitterAdd.substring(0,3) : '服務中'}">區域</span>
+                            th:text="${sitter.sitter.sitterAdd != null and sitter.sitter.sitterAdd.length() >= 3 ? sitter.sitter.sitterAdd.substring(0,3) : '服務中'}">區域</span>
                         <span class="category-tag">到府照顧</span>
                     </div>
                     <button class="btn btn-primary btn-booking-trigger" style="width: 100%; border-radius: 3rem;"
-                        th:data-name="${sitter.sitterName}" th:data-id="${sitter.sitterId}">
+                        th:data-name="${sitter.sitter.sitterName}" th:data-id="${sitter.sitter.sitterId}" th:data-services="${sitter.servicesJson}">
                         立即預約</button>
                 </div>
             </div>
@@ -174,15 +185,12 @@
                         <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
 
                         <option th:each="pet : ${myPets}" th:value="${pet.petId}"
-                            th:text="${pet.petName} + ' (種類ID: ' + ${pet.typeId} + ')'">
+                            th:text="${pet.petName} + ' (' + ${pet.petTypeName} + ')'">
                         </option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">服務項目</label> <select class="form-control" id="serviceItemId">
-                        <option value="1">散步遛狗</option>
-                        <option value="2">到府餵食</option>
-                        <option value="3">洗澡美容</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -208,13 +216,14 @@
 
     <script>
         // 1. 確保關鍵函數在最外層全域作用域，保證隨時可被呼叫
-        function openBookingModal(name, id) {
+        function openBookingModal(name, id, servicesJson) {
             console.log("正在開啟預約彈窗 (Global):", name, id);
             const modal = document.getElementById('bookingModal');
             const sitterNameSpan = document.getElementById('sitterName');
             const sitterIdInput = document.getElementById('modalSitterId');
             const startInput = document.getElementById('startTime');
             const endInput = document.getElementById('endTime');
+            const serviceSelect = document.getElementById('serviceItemId');
 
             if (!modal || !sitterNameSpan || !sitterIdInput) {
                 console.error("找不到必要的彈窗元件");
@@ -223,6 +232,26 @@
 
             sitterNameSpan.innerText = name;
             sitterIdInput.value = id;
+            serviceSelect.innerHTML = '';
+            
+            let services = [];
+            try {
+                services = JSON.parse(servicesJson || '[]');
+            } catch(e) {
+                console.error("解析服務列表失敗", e);
+            }
+            if (services.length === 0) {
+                let opt = document.createElement('option');
+                opt.text = "此保母暫無服務項目";
+                serviceSelect.add(opt);
+            } else {
+                services.forEach(svc => {
+                    let opt = document.createElement('option');
+                    opt.value = svc.id;
+                    opt.text = svc.name;
+                    serviceSelect.add(opt);
+                });
+            }
 
             // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
             const now = new Date();
@@ -270,7 +299,8 @@
                 if (btn) {
                     const name = btn.getAttribute('data-name');
                     const id = btn.getAttribute('data-id');
-                    openBookingModal(name, id);
+                    const services = btn.getAttribute('data-services');
+                    openBookingModal(name, id, services);
                 }
             });
 
@@ -331,6 +361,53 @@
         function searchSitters() {
             const area = document.getElementById('searchArea').value;
             window.location.href = `/booking/search?area=${encodeURIComponent(area)}`;
+        }
+        
+        async function handleToggleFavorite(sitterId, btn) {
+            try {
+                const response = await fetch(`/booking/toggleFavorite/${sitterId}`, {
+                    method: 'POST'
+                });
+
+                if (response.status === 401) {
+                    alert("請先登入後再收藏保姆");
+                    window.location.href = "/member/login";
+                    return;
+                }
+
+                if (response.ok) {
+                    const result = await response.text();
+                    const icon = btn.querySelector('i');
+                    
+                    if (result === "added") {
+                        // 變為已收藏狀態 (紅色實心)
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid', 'text-danger');
+                        btn.classList.add('active');
+                        showFlashMessage("已加入收藏列表");
+                    } else {
+                        // 變為未收藏狀態 (灰色空心)
+                        icon.classList.remove('fa-solid', 'text-danger');
+                        icon.classList.add('fa-regular');
+                        btn.classList.remove('active');
+                        showFlashMessage("已從收藏移除");
+                    }
+                }
+            } catch (error) {
+                console.error("收藏操作失敗:", error);
+            }
+        }
+
+        // 借用你收藏頁面的提示訊息功能
+        function showFlashMessage(text) {
+            const msg = document.createElement('div');
+            msg.className = 'flash-message success';
+            msg.innerHTML = `<i class="fas fa-check-circle"></i> <span>${text}</span>`;
+            document.body.appendChild(msg);
+            setTimeout(() => {
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            }, 2000);
         }
     </script>
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>

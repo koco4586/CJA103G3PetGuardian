@@ -2,6 +2,10 @@ package com.petguardian.pet.model;
 
 import java.io.Serializable;
 
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 public class PetserItemVO implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -14,6 +18,13 @@ public class PetserItemVO implements Serializable {
     private Integer sitterId;     // 保姆編號 (跳轉連結用)
 
     public PetserItemVO() {}
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_item_id", insertable = false, updatable = false)
+    private PetServiceItem serviceItem;
+    // [加入 Getter/Setter]
+    public PetServiceItem getServiceItem() { return serviceItem; }
+    public void setServiceItem(PetServiceItem serviceItem) { this.serviceItem = serviceItem; }
 
     // Getter and Setter
     public Integer getServiceItemId() { return serviceItemId; }
