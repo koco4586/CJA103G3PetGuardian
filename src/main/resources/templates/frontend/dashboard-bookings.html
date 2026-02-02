@@ -230,7 +230,7 @@
 	<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>
-	<script>
+	<script th:inline="javascript">
 		let currentCancelId = null;
 
 		function openCancelModal(btn) {
@@ -295,8 +295,16 @@
 
 		// 顯示會員歷史評價
 		async function showMemberReviews() {
-			const memId = Number('[[${session.memId}]]') || 0;
-			const memName = '[[${session.memName}]]' || '會員';
+			// 從 Thymeleaf Model 或 Session 取得名字，處理引號與空值
+			let memName = /*[[${memName}]]*/ '';
+			if (!memName || memName === '""' || memName === "''") {
+				memName = /*[[${session.memName}]]*/ '會員';
+			}
+			if (!memName || memName === '""' || memName === "''") {
+				memName = '會員';
+			}
+
+			const memId = Number(/*[[${session.memId}]]*/) || 0;
 			const reviewsTab = document.getElementById('reviewsTab');
 			const bookingListContainer = document.querySelector('.booking-list');
 
@@ -359,13 +367,14 @@
 						const reviewerName = review.senderName || `保母 ID: ${review.senderId}`;
 						return `
 							<div class="review-card" style="
+								border: none;
 								border-bottom: 1px solid #eee; 
 								padding: 1.5rem 1.2rem; 
 								margin-bottom: 0.5rem;
 							">
 								<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-									<div>
-										<strong>${reviewerName}</strong>
+									<div style="display: flex; align-items: center; gap: 10px;">
+										<strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
 										<button class="btn btn-sm btn-outline-danger" 
 											style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
 											onclick="openComplaintModal(${review.evaluateId || review.bookingOrderId})">

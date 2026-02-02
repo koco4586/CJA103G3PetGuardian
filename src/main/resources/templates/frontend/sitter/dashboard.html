@@ -74,6 +74,98 @@
         .submit-report-btn:hover {
             background: #ff5252;
         }
+
+        /* CSS for calendar */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            background-color: #fff;
+        }
+
+        .calendar-day {
+            border: 1px solid #eee;
+            min-height: 100px;
+            padding: 8px;
+            cursor: pointer;
+            position: relative;
+            background: #fff;
+            transition: all 0.2s;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-day:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .calendar-day.empty {
+            background: #f9f9f9;
+            pointer-events: none;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .day-summary {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            align-content: flex-start;
+        }
+
+        .small-hour-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #eee;
+        }
+
+        .small-hour-dot.active {
+            background-color: #4caf50;
+        }
+
+        .small-hour-dot.reserved {
+            background-color: #ff9800;
+        }
+
+        /* Modal Styles */
+        .hour-cell {
+            border: 1px solid #ddd;
+            padding: 10px 5px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: #f5f5f5;
+            color: #999;
+            transition: all 0.2s;
+        }
+
+        .hour-cell.available {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-color: #a5d6a7;
+            font-weight: bold;
+        }
+
+        .hour-cell:hover {
+            filter: brightness(0.95);
+        }
+
+        .hour-cell.reserved {
+            background-color: #ffe0b2;
+            color: #e65100;
+            border-color: #ffb74d;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -231,99 +323,7 @@
                 </div>
             </div>
 
-            <style>
-                /* CSS for calendar */
-                .calendar-grid {
-                    display: grid;
-                    grid-template-columns: repeat(7, 1fr);
-                    gap: 5px;
-                    background-color: #fff;
-                }
 
-                .calendar-day {
-                    border: 1px solid #eee;
-                    min-height: 100px;
-                    padding: 8px;
-                    cursor: pointer;
-                    position: relative;
-                    background: #fff;
-                    transition: all 0.2s;
-                    border-radius: 6px;
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .calendar-day:hover {
-                    border-color: var(--primary-color);
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                    transform: translateY(-2px);
-                }
-
-                .calendar-day.empty {
-                    background: #f9f9f9;
-                    pointer-events: none;
-                }
-
-                .day-number {
-                    font-weight: bold;
-                    margin-bottom: 8px;
-                    font-size: 1.1rem;
-                }
-
-                .day-summary {
-                    flex: 1;
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 2px;
-                    align-content: flex-start;
-                }
-
-                .small-hour-dot {
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    background-color: #eee;
-                }
-
-                .small-hour-dot.active {
-                    background-color: #4caf50;
-                }
-
-                .small-hour-dot.reserved {
-                    background-color: #ff9800;
-                }
-
-                /* Modal Styles */
-                .hour-cell {
-                    border: 1px solid #ddd;
-                    padding: 10px 5px;
-                    text-align: center;
-                    cursor: pointer;
-                    border-radius: 6px;
-                    font-size: 0.9rem;
-                    background-color: #f5f5f5;
-                    color: #999;
-                    transition: all 0.2s;
-                }
-
-                .hour-cell.available {
-                    background-color: #e8f5e9;
-                    color: #2e7d32;
-                    border-color: #a5d6a7;
-                    font-weight: bold;
-                }
-
-                .hour-cell:hover {
-                    filter: brightness(0.95);
-                }
-
-                .hour-cell.reserved {
-                    background-color: #ffe0b2;
-                    color: #e65100;
-                    border-color: #ffb74d;
-                    font-weight: bold;
-                }
-            </style>
 
             <!-- 詳細資訊區域 -->
             <div
@@ -387,37 +387,12 @@
                     <i class="fas fa-comments"></i> 歷史評價
                 </h3>
 
-                <div th:if="${reviews != null and !reviews.isEmpty()}">
-                    <div th:each="review : ${reviews}"
-                        style="border-bottom: 1px solid #eee; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;">
-
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <strong>會員 <span th:text="${review.memId}">ID</span></strong>
-                                <button class="btn btn-sm btn-outline-danger"
-                                    style="padding: 0px 6px; font-size: 0.8rem;"
-                                    th:onclick="'reportReview(' + ${review.bookingOrderId} + ')'">
-                                    <i class="fas fa-flag"></i> 檢舉
-                                </button>
-                                <span style="color: #ffc107;" th:if="${review.sitterRating != null}">
-                                    <i class="fas fa-star"
-                                        th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
-                                </span>
-                            </div>
-                            <small style="color: #999;"
-                                th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
-                        </div>
-
-                        <p style="margin: 0; color: #555; line-height: 1.6;" th:text="${review.sitterReview}">
-                            評價內容...
-                        </p>
+                <div id="reviewsList" data-reviews-container>
+                    <!-- 動態載入評價 -->
+                    <div style="text-align: center; color: #999; padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
+                        <p>正在載入評價...</p>
                     </div>
-                </div>
-
-                <div th:if="${reviews == null or reviews.isEmpty()}"
-                    style="text-align: center; color: #999; padding: 2rem;">
-                    <i class="far fa-comment-dots fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
-                    <p>目前尚無評價紀錄</p>
                 </div>
             </div>
 
@@ -708,9 +683,16 @@
 
         // 載入評價資料（保母主頁專用佈局）
         // 使用上面已經宣告的 sitterId 變數（第 372 行）
-if (sitterId) {
-    loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList', '[[${sitter.sitterName}]]');
-}
+
+        if (sitterId) {
+            // 處理人名，確保不出現空引號
+            let sitterName = /*[[${sitter.sitterName}]]*/ '';
+            if (!sitterName || sitterName === '""' || sitterName === "''") {
+                sitterName = '保母';
+            }
+            loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList', sitterName);
+        }
+
     </script>
 
     <script src="/js/frontend/complaint-functions.js"></script>

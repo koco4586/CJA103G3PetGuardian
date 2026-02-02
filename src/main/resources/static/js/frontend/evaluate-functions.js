@@ -405,7 +405,7 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                     const h3 = reviewsSection.querySelector('h3');
                     if (h3) {
                         // 保留 icon 和筆數 span，只改文字
-                        const safeName = (sitterName && sitterName !== '""') ? sitterName : '保母';
+                        const safeName = (sitterName && sitterName !== '""' && sitterName !== "''") ? sitterName : '保母';
                         h3.innerHTML = `
                             <i class="fas fa-comments"></i> ${safeName} 的歷史評價
                             <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
@@ -577,7 +577,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
             // 修改標題，加入人名、總筆數和收放圖示
             const h3 = reviewsCard.querySelector('h3');
             if (h3) {
-                const safeName = (sitterName && sitterName !== '""') ? sitterName : '保母';
+                const safeName = (sitterName && sitterName !== '""' && sitterName !== "''") ? sitterName : '保母';
                 h3.style.cursor = 'pointer';
                 h3.style.userSelect = 'none';
                 h3.innerHTML = `
