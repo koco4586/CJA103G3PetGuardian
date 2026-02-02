@@ -53,6 +53,8 @@
 
     <script src="../../../../js/frontend/main.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	
     <script>
 
         function init() {
@@ -98,6 +100,23 @@
 
         $(window).on("load", init);
 
+        $(window).on("load", function() {
+            // 取得網址列的參數
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorMsgs = urlParams.get('error');
+
+            if (errorMsgs) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '登入提示',
+                    text: errorMsgs,
+                    confirmButtonColor: '#ff9800'
+                });
+                
+                // (選配) 清除網址上的參數，避免重新整理又彈窗
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
     </script>
 
 </body>
