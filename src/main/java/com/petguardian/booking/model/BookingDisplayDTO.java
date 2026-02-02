@@ -4,7 +4,8 @@ import com.petguardian.sitter.model.SitterVO;
 
 public class BookingDisplayDTO {
 	private SitterVO sitter; // 包裝別人的保母資料
-	private boolean isFavorited; // 你的收藏狀態邏輯
+	private boolean isFavorited; // 收藏狀態邏輯
+	private String servicesJson; // 服務列表
 
 	public BookingDisplayDTO(SitterVO sitter, boolean isFavorited) {
 		this.sitter = sitter;
@@ -28,4 +29,10 @@ public class BookingDisplayDTO {
 	public void setIsFavorited(boolean isFavorited) {
 		this.isFavorited = isFavorited;
 	}
+	public String getServicesJson() {
+        return servicesJson;
+    }
+    public void setServicesJson(String servicesJson) {
+        this.servicesJson = servicesJson;
+    }
 }

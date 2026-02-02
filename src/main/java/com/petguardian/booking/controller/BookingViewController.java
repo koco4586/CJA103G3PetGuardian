@@ -22,6 +22,7 @@ import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.member.model.Member;
 import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
+import com.petguardian.pet.model.PetserItemrepository;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
@@ -50,6 +51,12 @@ public class BookingViewController {
     
     @Autowired
     private PetRepository petRepository;
+    
+    @Autowired
+    private PetserItemrepository petServiceItemRepository;
+    
+    @Autowired
+    private com.petguardian.petsitter.model.PetSitterServiceRepository petSitterServiceRepository;
 
     /**
      * 【顯示保姆服務列表頁面】
@@ -77,14 +84,38 @@ public class BookingViewController {
                                          .collect(Collectors.toSet());
         }
 
-        // 5. 將保姆資料包裝成顯示用的 DTO（包含是否已收藏的狀態）
+        java.util.Map<Integer, java.util.List<PetSitterServiceVO>> allServicesBySitter = petSitterServiceRepository.findAll().stream()
+                .collect(Collectors.groupingBy(svc -> svc.getSitter().getSitterId()));
         final Set<Integer> finalFavIds = favSitterIds;
-        List<BookingDisplayDTO> displayList = rawSitters.stream()
-            .map(s -> new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId())))
-            .collect(Collectors.toList());
+        List<BookingDisplayDTO> displayList = rawSitters.stream().map(s -> {
+            BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
+            
+            // 從 Map 取得該保母的服務
+            List<PetSitterServiceVO> myServices = allServicesBySitter.getOrDefault(s.getSitterId(), new java.util.ArrayList<>());
+            
+            StringBuilder json = new StringBuilder("[");
+            for (int i = 0; i < myServices.size(); i++) {
+                PetSitterServiceVO svc = myServices.get(i);
+                Integer svcId = svc.getServiceItemId();
+                
+                // [關鍵修改] 直接透過關聯取得服務名稱！不用再查表了
+                String svcName = "未知服務";
+                if (svc.getServiceItem() != null) {
+                    svcName = svc.getServiceItem().getServiceType();
+                }
+                
+                json.append(String.format("{\"id\":%d,\"name\":\"%s\"}", svcId, svcName));
+                if (i < myServices.size() - 1) json.append(",");
+            }
+            json.append("]");
+            
+            dto.setServicesJson(json.toString());
+            return dto;
+        }).collect(Collectors.toList());
 
         // 6. 將資料傳給前端頁面
         model.addAttribute("sitters", displayList);
+        addCommonAttributes(request, model);
         return "frontend/services"; 
     }
 
@@ -266,20 +297,15 @@ public class BookingViewController {
      */
     private void addCommonAttributes(HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
-        
-        // 測試用
-        PetVO dummyPet = new PetVO();
-        dummyPet.setPetId(999);
-        dummyPet.setPetName("測試小黑");
 
         // 獲取原本的寵物清單
         List<PetVO> myPets = (memId != null) 
             ? petRepository.findByMemId(memId) 
             : new java.util.ArrayList<>();
 
-        // 把假寵物塞進去
-        myPets.add(dummyPet);
-
         model.addAttribute("myPets", myPets);
+        
+//        List<PetServiceItem> serviceItems = petServiceItemRepository.findByServiceStatus(1);
+//        model.addAttribute("serviceItems", serviceItems);
     }
 }

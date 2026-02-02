@@ -26,7 +26,16 @@
             margin-bottom: 3rem;
             margin-top: 1rem;
         }
-
+		.filter-section .form-group {
+		    margin-bottom: 0 !important; 
+		}
+		.filter-section .d-flex {
+		    align-items: flex-end !important; 
+		}
+		#searchArea {
+		    height: 48px;
+		    box-sizing: border-box;
+		}
         .sitter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -90,18 +99,18 @@
         <!-- 搜尋區域 -->
         <div class="filter-section">
             <h2 class="mb-2" style="font-weight: 700; color: #333;">找尋您的完美寵物保母</h2>
-            <div class="d-flex gap-lg" style="flex-wrap: wrap;">
+            <div class="d-flex gap-lg" style="flex-wrap: wrap;align-items: flex-end;">
                 <div class="form-group mb-0" style="flex: 2; min-width: 250px;">
                     <label class="form-label">搜尋地區</label>
                     <div style="position: relative;">
                         <i class="fa-solid fa-location-dot"
                             style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #888;"></i>
                         <input type="text" class="form-control" id="searchArea" placeholder="輸入行政區，如：大安區"
-                            style="padding-left: 2.8rem;">
+                            style="padding-left: 2.8rem; height: 48px;">
                     </div>
                 </div>
-                <div class="d-flex align-end" style="flex: 0.5;">
-                    <button class="btn btn-primary" style="height: 48px; width: 100%; border-radius: 0.8rem;"
+                <div style="flex: 0.5; min-width: 120px;">
+                    <button class="btn btn-primary" style="height: 48px; width: 100%; border-radius: 0.8rem; margin: 0;"
                         onclick="searchSitters()">
                         <i class="fa-solid fa-magnifying-glass mr-xs"></i> 搜尋
                     </button>
@@ -151,7 +160,7 @@
                         <span class="category-tag">到府照顧</span>
                     </div>
                     <button class="btn btn-primary btn-booking-trigger" style="width: 100%; border-radius: 3rem;"
-                        th:data-name="${sitter.sitter.sitterName}" th:data-id="${sitter.sitter.sitterId}">
+                        th:data-name="${sitter.sitter.sitterName}" th:data-id="${sitter.sitter.sitterId}" th:data-services="${sitter.servicesJson}">
                         立即預約</button>
                 </div>
             </div>
@@ -176,15 +185,12 @@
                         <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
 
                         <option th:each="pet : ${myPets}" th:value="${pet.petId}"
-                            th:text="${pet.petName} + ' (種類ID: ' + ${pet.typeId} + ')'">
+                            th:text="${pet.petName} + ' (' + ${pet.petTypeName} + ')'">
                         </option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">服務項目</label> <select class="form-control" id="serviceItemId">
-                        <option value="1">散步遛狗</option>
-                        <option value="2">到府餵食</option>
-                        <option value="3">洗澡美容</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -210,13 +216,14 @@
 
     <script>
         // 1. 確保關鍵函數在最外層全域作用域，保證隨時可被呼叫
-        function openBookingModal(name, id) {
+        function openBookingModal(name, id, servicesJson) {
             console.log("正在開啟預約彈窗 (Global):", name, id);
             const modal = document.getElementById('bookingModal');
             const sitterNameSpan = document.getElementById('sitterName');
             const sitterIdInput = document.getElementById('modalSitterId');
             const startInput = document.getElementById('startTime');
             const endInput = document.getElementById('endTime');
+            const serviceSelect = document.getElementById('serviceItemId');
 
             if (!modal || !sitterNameSpan || !sitterIdInput) {
                 console.error("找不到必要的彈窗元件");
@@ -225,6 +232,26 @@
 
             sitterNameSpan.innerText = name;
             sitterIdInput.value = id;
+            serviceSelect.innerHTML = '';
+            
+            let services = [];
+            try {
+                services = JSON.parse(servicesJson || '[]');
+            } catch(e) {
+                console.error("解析服務列表失敗", e);
+            }
+            if (services.length === 0) {
+                let opt = document.createElement('option');
+                opt.text = "此保母暫無服務項目";
+                serviceSelect.add(opt);
+            } else {
+                services.forEach(svc => {
+                    let opt = document.createElement('option');
+                    opt.value = svc.id;
+                    opt.text = svc.name;
+                    serviceSelect.add(opt);
+                });
+            }
 
             // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
             const now = new Date();
@@ -272,7 +299,8 @@
                 if (btn) {
                     const name = btn.getAttribute('data-name');
                     const id = btn.getAttribute('data-id');
-                    openBookingModal(name, id);
+                    const services = btn.getAttribute('data-services');
+                    openBookingModal(name, id, services);
                 }
             });
 

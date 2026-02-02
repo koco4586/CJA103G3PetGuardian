@@ -55,7 +55,7 @@ public class SitterBookingController {
         Integer sitterId = sitter.getSitterId();
 
         List<BookingOrderVO> bookingList = (status != null)
-                ? bookingService.findBySitterAndStatus(sitterId, status)
+                ? bookingService.findOrdersBySitterAndStatus(sitterId, status)
                 : bookingService.getOrdersBySitterId(sitterId);
 
         var member = dataService.getMemberInfo(memId);

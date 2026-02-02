@@ -1,14 +1,19 @@
 package com.petguardian.booking.controller;
 
-import com.petguardian.booking.model.BookingOrderRepository;
-import com.petguardian.booking.model.BookingOrderVO;
-import com.petguardian.booking.service.BookingService;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.List;
+import com.petguardian.booking.model.BookingOrderRepository;
+import com.petguardian.booking.model.BookingOrderVO;
+import com.petguardian.booking.service.BookingService;
 
 @Controller
 @RequestMapping("/admin/bookings") // 設定後台管理路徑
@@ -31,14 +36,23 @@ public class AdminBookingController {
         // 3. 將資料存入 model 傳給 Thymeleaf
         model.addAttribute("allBookings", allBookings);
         model.addAttribute("refundRequests", refundRequests);
+        model.addAttribute("bookingService", bookingService);
 
         return "backend/bookings"; // 對應 HTML 檔案位置
     }
     @PostMapping("/approveRefund")
     @ResponseBody // 代表回傳的是純文字或 JSON，而不是跳轉頁面
-    public String approveRefund(@RequestParam Integer orderId, @RequestParam(defaultValue = "1.0") Double ratio) {
-        try {
-            bookingService.approveRefund(orderId, ratio);
+    public String approveRefund(@RequestParam Integer orderId) {
+    	try {
+            // 1. 撈出訂單
+            BookingOrderVO order = orderRepository.findById(orderId).orElseThrow();
+            
+            // 2. 讓系統計算比例
+            Double calculatedRatio = bookingService.calculateRefundRatio(order.getStartTime(), order.getCancelTime());
+            
+            // 3. 呼叫 Service 執行 (使用計算後的比例)
+            bookingService.approveRefund(orderId, calculatedRatio);
+            
             return "success";
         } catch (Exception e) {
             return "error: " + e.getMessage();
@@ -76,6 +90,24 @@ public class AdminBookingController {
             order.setOrderStatus(2);
             // 清除取消原因，避免混淆（選配）
             order.setCancelReason(order.getCancelReason() + " (逾期退款，管理員強制完成)");
+            orderRepository.save(order);
+            return "success";
+        } catch (Exception e) {
+            return "error: " + e.getMessage();
+        }
+    }
+    
+    @PostMapping("/forceCompleteRefund")
+    @ResponseBody
+    public String forceCompleteRefund(@RequestParam Integer orderId) {
+        try {
+            BookingOrderVO order = orderRepository.findById(orderId).orElseThrow();
+            // 自動計算比例
+            Double ratio = bookingService.calculateRefundRatio(order.getStartTime(), order.getCancelTime());
+            // 執行退款邏輯
+            bookingService.approveRefund(orderId, ratio);
+            // 狀態改為 5 (已結案)，使其從狀態 3 的列表中消失
+            order.setOrderStatus(5);
             orderRepository.save(order);
             return "success";
         } catch (Exception e) {
