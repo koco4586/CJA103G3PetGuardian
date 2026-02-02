@@ -92,7 +92,15 @@ public class ForumPostController {
 	}
 
 	@GetMapping("add-post")
-	public String addPost(ModelMap model) {
+	public String addPost(ModelMap model, HttpServletRequest request,
+			RedirectAttributes ra) {
+		
+		Integer userId = authStrategyService.getCurrentUserId(request);
+		if (userId == null) {
+			ra.addAttribute("error", "請先登入後再發表文章");
+			return "redirect:/html/frontend/member/login/login.html";
+		}
+		
 		ForumPostVO forumPostVO = new ForumPostVO();
 
 		// 從 Model 中取得剛才 @ModelAttribute 塞進去的 forumId
