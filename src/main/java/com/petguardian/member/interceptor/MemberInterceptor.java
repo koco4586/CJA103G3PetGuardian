@@ -26,42 +26,22 @@ public class MemberInterceptor implements HandlerInterceptor {
 
 		Integer memId = (session != null) ? (Integer) session.getAttribute("memId") : null;
 
-		// if(memId != null){
-
 		if (memId == null) {
 
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);// 401
+//			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);// 401
 
-			response.setContentType("application/json;charset=UTF-8");
+//			response.setContentType("application/json;charset=UTF-8");
 
-			response.getWriter().write("{\"message\":\"請先登入\",\"code\":\"UNAUTHORIZED\"}");
+//			response.getWriter().write("{\"message\":\"請先登入\",\"code\":\"UNAUTHORIZED\"}");
 
+			response.sendRedirect(request.getContextPath() + "/html/frontend/member/login/login.html");  //request.getContextPath():應用程式部署的路徑前綴,這裡取到的是 "" (空字串)
+			
 			return false;
 
-		}
-
-		// 檢查會員當前狀態
-		Member member = memberLoginRepository.findById(memId).orElse(null);
-		if (member == null || member.getMemStatus() == 0) {
-			session.invalidate(); // 清除 session
-			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			response.setContentType("application/json;charset=UTF-8");
-			response.getWriter().write("{\"message\":\"帳號已被停權\",\"code\":\"ACCOUNT_SUSPENDED\"}");
-			return false;
 		}
 
 		return true;
 
-//            return true;
-//        }
-
-		// response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//401
-
-		// response.setContentType("application/json;charset=UTF-8");
-
-		// response.getWriter().write("{\"message\":\"請先登入\",\"code\":\"UNAUTHORIZED\"}");
-
-		// return false;
 	}
 
 }

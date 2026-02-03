@@ -22,48 +22,22 @@ public class AdminInterceptor implements HandlerInterceptor {
 	public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler)
 			throws Exception {
 
-		//
-
-		// 登出請求直接放行
-		String requestURI = request.getRequestURI();
-		if (requestURI.contains("/adminlogout")) {
-			return true;
-		}
-
-		//
-
 		HttpSession session = request.getSession(false);
 
 		Integer admId = (session != null) ? (Integer) session.getAttribute("admId") : null;
 
 		if (admId == null) {
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.setContentType("application/json;charset=UTF-8");
-			response.getWriter().write("{\"message\":\"請先登入\",\"code\":\"UNAUTHORIZED\"}");
+//			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//			response.setContentType("application/json;charset=UTF-8");
+//			response.getWriter().write("{\"message\":\"請先登入\",\"code\":\"UNAUTHORIZED\"}");
+//			
+			response.sendRedirect(request.getContextPath() + "/html/backend/admin/admin_login.html");  //request.getContextPath():應用程式部署的路徑前綴,這裡取到的是 "" (空字串)
+
+			
 			return false;
 		}
 
-		// 檢查管理員當前狀態
-		Admin admin = adminLoginRepository.findById(admId).orElse(null);
-		if (admin == null || admin.getAdmStatus() == 0) {
-			session.invalidate(); // 清除 session
-			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			response.setContentType("application/json;charset=UTF-8");
-			response.getWriter().write("{\"message\":\"帳號已被停權\",\"code\":\"ACCOUNT_SUSPENDED\"}");
-			return false;
-		}
-
-//        if (admId != null) {
-//            return true;
-//        }
-
-//        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);// 401
-//
-//        response.setContentType("application/json;charset=UTF-8");
-//
-//        response.getWriter().write("{\"message\":\"請先登入\",\"code\":\"UNAUTHORIZED\"}");
-
-		return true;// 讓正常的管理員通過
+		return true;
 	}
 
 }

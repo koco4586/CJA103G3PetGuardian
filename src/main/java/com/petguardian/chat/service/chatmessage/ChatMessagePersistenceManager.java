@@ -17,6 +17,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Internal Worker for Message Persistence.
@@ -40,6 +42,8 @@ class ChatMessagePersistenceManager {
     private final CircuitBreaker circuitBreaker;
 
     private static final String CIRCUIT_NAME = "redisCacheCircuit";
+    private static final int MESSAGE_FLUSH_BATCH_SIZE = 500;
+    private static final int METADATA_SYNC_BATCH_SIZE = 50;
 
     public ChatMessagePersistenceManager(
             ChatMessageRepository mysqlRepository,
@@ -96,7 +100,7 @@ class ChatMessagePersistenceManager {
     public void scheduleBufferFlush() {
         // Fail-fast: If CB is OPEN, skip the entire flush cycle
         if (circuitBreaker.getState() == CircuitBreaker.State.OPEN) {
-            return; // Silent skip - no log spam
+            return;
         }
 
         for (int i = 0; i < SHARD_COUNT; i++) {
@@ -135,16 +139,16 @@ class ChatMessagePersistenceManager {
     }
 
     private void flushShard(int shardId) {
-        List<Object> rawBatch = messageCache.pollPersistenceBatch(shardId, 500);
+        List<Object> rawBatch = messageCache.pollPersistenceBatch(shardId, MESSAGE_FLUSH_BATCH_SIZE);
         if (rawBatch.isEmpty())
             return;
 
         try {
             List<ChatMessageEntity> entities = rawBatch.stream()
                     .map(item -> redisJsonMapper.convertValue(item, MessageCreationContext.class))
-                    .filter(java.util.Objects::nonNull)
+                    .filter(Objects::nonNull)
                     .map(MessageCreationContext::toEntity)
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
 
             if (!entities.isEmpty()) {
                 mysqlRepository.saveAll(entities);
@@ -161,7 +165,7 @@ class ChatMessagePersistenceManager {
     }
 
     private void flushDirtyMetadata() {
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < METADATA_SYNC_BATCH_SIZE; i++) {
             Integer roomId = messageCache.popDirtyRoom();
             if (roomId == null)
                 break;

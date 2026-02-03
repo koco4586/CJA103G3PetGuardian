@@ -22,7 +22,7 @@ window.toggleSubmenu = function (e) {
 
 // 管理員登出功能
 window.adminLogout = function () {
-    window.location.href = "../../html/backend/admin/admin_logout.html";
+    window.location.href = "/admin/adminlogoutpage";
 };
 
 document.addEventListener("DOMContentLoaded", function () {

@@ -17,13 +17,13 @@ import lombok.Data;
 @Table(name = "booking_order")
 @Data
 public class BookingOrderVO {
-	
-	@Transient
-	private String memName;
-	@Transient
-	private String petName;
-	
-	@Id
+
+    @Transient
+    private String memName;
+    @Transient
+    private String petName;
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_order_id")
     private Integer bookingOrderId;
@@ -64,10 +64,10 @@ public class BookingOrderVO {
     // 檢舉與取消
     @Column(name = "report_status")
     private Integer reportStatus = 0;
-    
+
     private String cancelReason;
     private LocalDateTime cancelTime;
-    
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -75,5 +75,8 @@ public class BookingOrderVO {
     private LocalDateTime updatedAt;
     @jakarta.persistence.Transient // 告訴 JPA 不要把這個存進資料庫
     private String sitterName;
-    
+
+    @jakarta.persistence.Transient
+    private Integer sitterMemId;
+
 }
