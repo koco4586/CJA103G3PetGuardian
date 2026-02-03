@@ -121,13 +121,18 @@ public class PetController {
     public String insertBase64(@ModelAttribute PetVO petVO, @RequestParam("petImageBase64") String petImageBase64,
             HttpSession session) {
         try {
-            Integer testMemId = 1001;
-            petVO.setMemId(testMemId);
+            Integer memId = (Integer) session.getAttribute("memId");
+            if (memId == null) {
+                return "error: 請先登入";
+            }
+            petVO.setMemId(memId);
             if (petImageBase64 != null && petImageBase64.contains(",")) {
                 String base64Data = petImageBase64.split(",")[1];
                 petVO.setPetImage(java.util.Base64.getDecoder().decode(base64Data));
             }
+            System.out.println("準備新增寵物: " + petVO.getPetName() + ", memId=" + memId);
             petService.addPetBase64(petVO);
+            System.out.println("寵物新增成功!");
             return "success";
         } catch (Exception e) {
             e.printStackTrace();

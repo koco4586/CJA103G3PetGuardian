@@ -130,6 +130,37 @@ public class PetEvaluateController {
     }
 
     /**
+     * 新增：支持保姆評價會員的 API (傳統表單格式)
+     */
+    @PostMapping("/sitter/evaluate/save")
+    @ResponseBody
+    public String saveSitterEvaluate(
+            @RequestParam Integer bookingOrderId,
+            @RequestParam Integer starRating,
+            @RequestParam String content,
+            HttpSession session) {
+        try {
+            BookingOrderVO order = bookingOrderSvc.getOrderById(bookingOrderId);
+            if (order == null)
+                return "error: 找不到訂單";
+
+            EvaluateVO vo = new EvaluateVO();
+            vo.setBookingOrderId(bookingOrderId);
+            vo.setSenderId(order.getSitterId());
+            vo.setReceiverId(order.getMemId());
+            vo.setRoleType(0); // SITTER
+            vo.setStarRating(starRating);
+            vo.setContent(content);
+
+            evaluateService.handleSubmission(vo, "SITTER");
+            return "success";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "error: " + e.getMessage();
+        }
+    }
+
+    /**
      * API 端點：根據會員 ID 撈取所有保姆對該會員的評價
      */
     @GetMapping("/evaluate/member/{memberId}")

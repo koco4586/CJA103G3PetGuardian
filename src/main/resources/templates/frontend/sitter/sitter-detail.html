@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>保母詳情 - PetGuardian</title>
-
-    <!-- 統一樣式 -->
-    <link rel="stylesheet" href="/css/frontend/style.css">
-    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -410,11 +408,13 @@
     <footer id="main-footer" class="footer"></footer>
 
     <!-- JS -->
-    <script src="/js/frontend/main.js"></script>
-    <script src="/js/frontend/evaluate-functions.js"></script>
-    <script src="/js/frontend/complaint-functions.js"></script>
+    <!-- Scripts moved to bottom for consistency -->
 
-    <script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const contextPath = /*[[@{/}]]*/ '';
+        /*]]>*/
+
         // 1. 開啟預約彈窗
         function openBookingModal(name, id) {
             console.log("正在開啟預約彈窗 (SitterDetail):", name, id);
@@ -521,23 +521,25 @@
                 alert("發生系統錯誤");
             }
         }
-
-        // 註：檢舉功能已改用 complaint-functions.js 的 injectReportBox()
-
-        // 5. 載入評價資料（從 DOM 讀取 sitterId，避免 Lint 警告）
-        const reviewsCard = document.getElementById('reviews');
-        if (reviewsCard) {
-            const sitterId = reviewsCard.getAttribute('data-sitter-id');
-            const sitterName = reviewsCard.getAttribute('data-sitter-name');
-            if (sitterId) {
-                loadAndDisplayReviews(sitterId, '#reviewsList', 'span', sitterName);
-            }
-        }
     </script>
 
-    <script src="/js/frontend/complaint-functions.js"></script>
-    <script src="/js/frontend/evaluate-functions.js"></script>
+    <script th:src="@{/js/frontend/main.js}"></script>
+    <script th:src="@{/js/frontend/evaluate-functions.js}"></script>
+    <script th:src="@{/js/frontend/complaint-functions.js}"></script>
 
+    <script th:inline="javascript">
+        // 5. 載入評價資料 (延遲到 DOM 與 JS 檔案載入完成)
+        document.addEventListener('DOMContentLoaded', function () {
+            const reviewsCard = document.getElementById('reviews');
+            if (reviewsCard) {
+                const sitterId = reviewsCard.getAttribute('data-sitter-id');
+                const sitterName = reviewsCard.getAttribute('data-sitter-name');
+                if (sitterId && typeof loadAndDisplayReviews === 'function') {
+                    loadAndDisplayReviews(sitterId, '#reviewsList', 'span', sitterName);
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

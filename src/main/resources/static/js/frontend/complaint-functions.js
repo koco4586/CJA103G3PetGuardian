@@ -169,14 +169,15 @@ window.submitComplaint = function (bookingOrderId) {
     formData.append('reportReason', reason);
     formData.append('bookingOrderId', bookingOrderId);
 
+    const base = typeof contextPath !== 'undefined' ? contextPath : '';
     // 送出到後端
-    fetch('/pet/submitComplaint', {
+    fetch(base + '/pet/submitComplaint', {
         method: 'POST',
         body: formData
     })
         .then(response => {
             if (response.ok || response.redirected) {
-                alert('✅ 申訴成功！\n您的申訴已收到，請耐心等待管理員審核。');
+                alert('✅ 申訴成功！\n您的申訴已收到，管理員將進行審核。');
                 closeComplaintModal();
                 // 可選：重新載入頁面
                 // window.location.reload();
@@ -196,13 +197,9 @@ window.submitComplaint = function (bookingOrderId) {
  * @param {number} orderId - 訂單 ID
  */
 window.reportReview = function (button, orderId) {
-    // 檢查第一個參數是否為按鈕（相容舊版呼叫）
-    if (typeof button === 'number') {
-        // 如果傳入的是 ID 而非按鈕，則嘗試開啟彈窗（後台或特殊頁面）
-        openComplaintModal(button);
-    } else {
-        injectReportBox(button, orderId);
-    }
+    // 統一改為彈窗模式 (不論第一個參數是按鈕還是 ID)
+    const finalOrderId = typeof button === 'number' ? button : orderId;
+    openComplaintModal(finalOrderId);
 }
 
 /**
@@ -333,26 +330,31 @@ function sendReportToBackend(orderId, reason, reportBox, isModal = false) {
     formData.append('reportReason', reason);
     formData.append('bookingOrderId', orderId);
 
-    fetch('/pet/submitComplaint', {
+    const base = typeof contextPath !== 'undefined' ? contextPath : '';
+    let finalBase = base;
+    if (finalBase === '/') finalBase = '';
+
+    if (!confirm('確定要提交您的檢舉嗎？')) return;
+
+    fetch(finalBase + '/pet/submitComplaint', {
         method: 'POST',
         body: formData
     })
-        .then(response => {
+        .then(async response => {
             if (response.ok || response.redirected) {
-                alert('✅ 檢舉已送出！\n您的檢舉已收到，請耐心等待管理員審核。');
+                alert('✅ 檢舉已送出！\n您的檢舉已收到，管理員將進行審核。');
 
                 if (isModal) {
                     closeComplaintModal();
                 } else if (reportBox) {
-                    // 收合內嵌式輸入框
                     reportBox.classList.remove('active');
-                    // 清空內容
                     const textarea = reportBox.querySelector('.report-content');
                     if (textarea) textarea.value = '';
                     reportBox.querySelectorAll('.report-tag.selected').forEach(tag => tag.classList.remove('selected'));
                 }
             } else {
-                alert('❌ 送出失敗，請稍後再試');
+                const errorMsg = await response.text();
+                alert('❌ 送出失敗：' + (errorMsg || '請稍後再試'));
             }
         })
         .catch(error => {
