@@ -1,8 +1,9 @@
 package com.petguardian.pet.model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
+
+import com.petguardian.petsitter.model.PetType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
@@ -76,7 +77,12 @@ public class PetVO implements Serializable {
     
     public byte[] getPetImage() { return petImage; }
     public void setPetImage(byte[] petImage) { this.petImage = petImage; }
-
+    
+    public String getPetTypeName() {
+        if (this.typeId == null) return "未知";
+        PetType type = PetType.fromId(this.typeId);
+        return type != null ? type.getLabel() : String.valueOf(this.typeId);
+    }
     
 }
 

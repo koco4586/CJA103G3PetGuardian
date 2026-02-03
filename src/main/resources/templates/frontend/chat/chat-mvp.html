@@ -17,8 +17,8 @@
 
 <body>
     <!-- Hidden inputs for current user (Thymeleaf) -->
-    <input type="hidden" id="currentUserId" th:value="${currentUser.memId}">
-    <input type="hidden" id="currentUserName" th:value="${currentUser.memName}">
+    <input type="hidden" id="currentUserId" th:value="${currentUser.memberId}">
+    <input type="hidden" id="currentUserName" th:value="${currentUser.memberName}">
     <!-- [NEW] Flash Attribute for auto-selecting room -->
     <input type="hidden" id="initialChatroomId" th:value="${activeRoomId}">
 
@@ -28,8 +28,8 @@
         <!-- Current user badge -->
         <div class="current-user-badge">
             <i class="fas fa-user"></i>
-            當前用戶：<strong th:text="${currentUser.memName}">User</strong>
-            (ID: <span th:text="${currentUser.memId}">0</span>)
+            當前用戶：<strong th:text="${currentUser.memberName}">User</strong>
+            (ID: <span th:text="${currentUser.memberId}">0</span>)
         </div>
 
         <div class="chat-container">

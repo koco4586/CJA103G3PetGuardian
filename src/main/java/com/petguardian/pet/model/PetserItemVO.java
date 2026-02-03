@@ -2,6 +2,12 @@ package com.petguardian.pet.model;
 
 import java.io.Serializable;
 
+
+
+
+
+
+
 public class PetserItemVO implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -14,7 +20,10 @@ public class PetserItemVO implements Serializable {
     private Integer sitterId;     // 保姆編號 (跳轉連結用)
 
     public PetserItemVO() {}
-
+    
+   
+    // [加入 Getter/Setter]
+    
     // Getter and Setter
     public Integer getServiceItemId() { return serviceItemId; }
     public void setServiceItemId(Integer serviceItemId) { this.serviceItemId = serviceItemId; }

@@ -9,29 +9,59 @@ import com.petguardian.pet.model.PetServiceItem;
 import com.petguardian.pet.model.PetserItemVO;
 import com.petguardian.pet.model.PetserItemrepository;
 
-@Service // 註解要放在實作類別上
+@Service
 public class PetserItemSerImpl implements PetserItemService {
-
+	
     @Autowired
-    private PetserItemrepository repo; // 這裡可以放 repo
+    private PetserItemrepository repo;
 
-    @Override // 表示這是實作介面的方法
+    // 1. 顯示所有上架服務
+    @Override
     public List<PetserItemVO> getAllItemsForDisplay() {
-        // 從資料庫撈取資料
-        List<PetServiceItem> entities = repo.findByServiceStatus(1); // 或是 repo.findByServiceStatus(1)
+        List<PetServiceItem> entities = repo.findByServiceStatus(1);
+        return convertToVOList(entities);
+    }
 
-        return entities.stream().map(e -> {
-            PetserItemVO vo = new PetserItemVO();
-            vo.setServiceItemId(e.getServiceItemId());
-            vo.setServiceType(e.getServiceType());
+    // 2. 實作關鍵字搜尋 (解決 Method must implement 報錯)
+    @Override
+    public List<PetserItemVO> searchItemsByKeyword(String keyword) {
+        List<PetServiceItem> entities = repo.findByServiceTypeContaining(keyword);
+        return convertToVOList(entities);
+    }
 
-            // // 處理 Null 檢查
-            // vo.setServiceDesc(e.getServiceDetail() != null ? e.getServiceDetail() :
-            // "暫無描述");
-            // vo.setPriceText("NT$ " + (e.getServicePrice() != null ? e.getServicePrice() :
-            // 0));
+    // 3. 取得單一項目細節 (解決 Method must implement 報錯)
+    @Override
+    public PetserItemVO getOneItemDetail(Integer serviceItemId) {
+        PetServiceItem entity = repo.findById(serviceItemId).orElse(null);
+        if (entity != null) {
+            return convertToVO(entity);
+        }
+        return null;
+    }
 
-            return vo;
-        }).collect(Collectors.toList());
+    // --- 封裝轉換邏輯，避免代碼重複與 Type mismatch 錯誤 ---
+    private List<PetserItemVO> convertToVOList(List<PetServiceItem> entities) {
+        return entities.stream()
+                       .map(this::convertToVO)
+                       .collect(Collectors.toList());
+    }
+
+    private PetserItemVO convertToVO(PetServiceItem e) {
+        PetserItemVO vo = new PetserItemVO();
+        vo.setServiceItemId(e.getServiceItemId());
+        vo.setServiceType(e.getServiceType());
+        
+        // 處理價格 (動態抓取)
+        Integer price = e.getServicePrice();
+        vo.setPriceText(price != null ? "NT$ " + price : "價格依保姆而定");
+
+        // 處理描述
+        vo.setServiceDesc(e.getServiceDesc() != null ? e.getServiceDesc() : "詳細服務內容以保母頁面為主");
+        
+        // 如果未來有 Sitter ID 關聯，代碼寫在這裡
+        // vo.setSitterId(e.getSitterId());
+        
+        return vo;
     }
 }
+

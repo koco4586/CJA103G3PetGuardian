@@ -13,8 +13,8 @@ public interface PetserItemrepository extends JpaRepository<PetServiceItem, Inte
 
     // 2. 根據關鍵字搜尋服務 (搜尋框功能)
     List<PetServiceItem> findByServiceTypeContaining(String keyword);
-    
+
     // 3. 根據服務類型尋找 (如果你有分類，例如：散步類、洗澡類)
     // List<PetServiceItem> findByServiceCategory(String category);
-    
+
 }

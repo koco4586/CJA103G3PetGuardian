@@ -14,6 +14,15 @@ public class PetServiceItem {
     @Column(name = "service_type", nullable = false)
     private String serviceType;
 
+    @Column(name = "service_desc")
+    private String serviceDesc;
+
+    @Column(name = "service_price")
+    private Integer servicePrice;
+
+    @Column(name = "service_status")
+    private Integer serviceStatus;
+
     // 必須與類別名稱完全一致的建構子
     public PetServiceItem() {
     }
@@ -35,4 +44,12 @@ public class PetServiceItem {
         this.serviceType = serviceType;
     }
 
+    public String getServiceDesc() { return serviceDesc; }
+    public void setServiceDesc(String serviceDesc) { this.serviceDesc = serviceDesc; }
+
+    public Integer getServicePrice() { return servicePrice; }
+    public void setServicePrice(Integer servicePrice) { this.servicePrice = servicePrice; }
+
+    public Integer getServiceStatus() { return serviceStatus; }
+    public void setServiceStatus(Integer serviceStatus) { this.serviceStatus = serviceStatus; }
 }

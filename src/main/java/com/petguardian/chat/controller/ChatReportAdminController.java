@@ -42,20 +42,7 @@ public class ChatReportAdminController {
         model.addAttribute("reports", reports);
         model.addAttribute("currentTab", tab);
 
-        // Pre-fetch reporter names to avoid N+1 in template (though we have @ManyToOne,
-        // batch fetching or simple map lookup is safer for consistency with previous
-        // controller style)
-        // Note: ChatReport has direct Member relation, so we could technically use
-        // report.reporter.memName
-        // but let's stick to the map pattern used in existing codebase if Lazy Loading
-        // is an issue.
-        // Actually, for simplicity and performance with existing
-        // OpenEntityManagerInView,
-        // we can rely on Lazy Loading or use a simple Fetch below.
-
-        // Let's populate a map for safety if entities are detached or Lazy Init
-        // exception risks
-        // Collecting Reporter IDs
+        // Pre-fetch reporter names to avoid N+1 in template
         List<Integer> memberIds = reports.stream()
                 .map(ChatReport::getReporterId)
                 .distinct()

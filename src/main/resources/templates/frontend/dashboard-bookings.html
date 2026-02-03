@@ -189,12 +189,10 @@
 										取消預約</button>
 								</th:block>
 
-								<th:block
-									th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
-									<button class="btn btn-outline btn-sm">查看照顧紀錄</button>
-									<button class="btn btn-outline btn-sm"
-										th:onclick="'injectEvalBox(this, ' + ${order.bookingOrderId} + ', ' + ${order.sitterId} + ')'">評價保母</button>
-								</th:block>
+							<th:block th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
+							<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->
+								<button class="btn btn-outline btn-sm">評價保母</button>
+							</th:block>
 
 								<th:block th:if="${order.orderStatus == 3}">
 									<span style="color: #ccc; font-size: 0.9rem; margin-right: 1rem;">訂單已結束</span>

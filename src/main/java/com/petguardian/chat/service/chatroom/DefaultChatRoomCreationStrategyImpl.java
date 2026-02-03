@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomEntity;
+import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 
 /**
  * Default implementation for 1-on-1 chatroom creation.
@@ -30,10 +31,10 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
         Integer type = chatroomType != null ? chatroomType : 0;
 
         // High-Performance Lookup: Cache First via Metadata Service
-        java.util.Optional<com.petguardian.chat.dto.ChatRoomMetadataDTO> cachedRoom = metadataService
+        Optional<ChatRoomMetadataDTO> cachedRoom = metadataService
                 .findRoomByMembers(memId1, memId2);
         if (cachedRoom.isPresent()) {
-            com.petguardian.chat.dto.ChatRoomMetadataDTO meta = cachedRoom.get();
+            ChatRoomMetadataDTO meta = cachedRoom.get();
             ChatRoomEntity entity = new ChatRoomEntity();
             entity.setChatroomId(meta.getChatroomId());
             entity.setMemId1(memId1);
@@ -62,9 +63,10 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
 
         ChatRoomEntity saved = chatroomRepository.save(newRoom);
 
-        // Push to Cache List
+        // Push to Cache List & Lookup Cache
         metadataService.addUserToRoom(saved.getMemId1(), saved.getChatroomId());
         metadataService.addUserToRoom(saved.getMemId2(), saved.getChatroomId());
+        metadataService.cacheRoomLookup(saved.getMemId1(), saved.getMemId2(), saved.getChatroomId());
 
         return saved;
     }

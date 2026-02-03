@@ -275,7 +275,13 @@
                     </div>
                     <div class="card-body">
                         <h4 th:text="${service.serviceType}">服務名稱</h4>
-                        <p>我們提供專業的 [[${service.serviceType}]] 服務，點擊下方按鈕查看提供此服務的優質保姆。</p>
+                        <p
+                            th:text="${service.serviceDesc != null ? service.serviceDesc : '我們提供專業的 ' + service.serviceType + ' 服務，點擊下方按鈕查看提供此服務的優質保姆。'}">
+                            服務描述內容</p>
+                        <div style="margin-top: 10px; font-weight: bold; color: #f57c00;"
+                            th:if="${service.priceText != null}">
+                            參考價格: <span th:text="${service.priceText}">$0</span>
+                        </div>
 
                         <div class="card-footer">
                             <a th:href="@{/pet/sitters/search(service=${service.serviceType})}"
