@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-
 /**
  * 保姆 Repository
  * 
@@ -26,6 +25,21 @@ public interface SitterRepository extends JpaRepository<SitterVO, Integer> {
          * @return SitterVO 該會員的保姆資料 (一個會員只能有一個保姆身分)
          */
         SitterVO findByMemId(Integer memId);
+
+        /**
+         * 依會員編號查詢保姆 (優化版 - 使用 JOIN FETCH 避免 N+1)
+         * 
+         * 一次性載入 Sitter、ServiceArea 和 Area 的資料
+         * 用於 Dashboard 等需要完整關聯資料的場景
+         * 
+         * @param memId 會員編號
+         * @return SitterVO 該會員的保姆資料，包含已載入的服務地區與地區資訊
+         */
+        @Query("SELECT s FROM SitterVO s " +
+                        "LEFT JOIN FETCH s.serviceAreas sa " +
+                        "LEFT JOIN FETCH sa.area " +
+                        "WHERE s.memId = :memId")
+        SitterVO findByMemIdWithAreas(@Param("memId") Integer memId);
 
         /**
          * 依保姆狀態查詢

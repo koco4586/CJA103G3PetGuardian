@@ -112,7 +112,10 @@ public class ChatRoomMetadataCache {
 
     public void markAsDirty(Integer roomId) {
         try {
-            redisJsonMapper.getTemplate().opsForSet().add(DIRTY_ROOMS_SET, roomId);
+            circuitBreaker.executeRunnable(
+                    () -> redisJsonMapper.getTemplate().opsForSet().add(DIRTY_ROOMS_SET, roomId));
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping markAsDirty for room {}.", circuitBreaker.getState(), roomId);
         } catch (Exception e) {
             log.warn("[Cache] Failed to mark room {} as dirty: {}", roomId, e.getMessage());
         }
@@ -120,6 +123,7 @@ public class ChatRoomMetadataCache {
 
     /**
      * Updates read status in cache and returns whether update was successful.
+     * 
      * @return true if cache was updated, false if cache read failed (Redis down)
      */
     public boolean updateReadStatusInCache(Integer roomId, Integer userId, LocalDateTime time) {
@@ -127,7 +131,7 @@ public class ChatRoomMetadataCache {
         if (meta.isEmpty()) {
             return false; // Cache unavailable - caller should fallback to DB
         }
-        
+
         ChatRoomMetadataDTO dto = meta.get();
         List<Integer> members = dto.getMemberIds();
         if (members != null && !members.isEmpty()) {
@@ -147,12 +151,15 @@ public class ChatRoomMetadataCache {
     // =================================================================================
 
     /**
-     * Finds a chatroomId by member IDs using a lookup cache.
+     * Finds a chatroomId by member IDs using a lookup cache (Type-Aware).
      */
-    public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2) {
+    public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2, Integer type) {
         int id1 = Math.min(memId1, memId2);
         int id2 = Math.max(memId1, memId2);
-        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2;
+        int safeType = type != null ? type : 0;
+
+        // New Key Format: chat:room_lookup:{id1}:{id2}:{type}
+        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2 + ":" + safeType;
 
         try {
             Object id = redisJsonMapper.getTemplate().opsForValue().get(lookupKey);
@@ -164,11 +171,33 @@ public class ChatRoomMetadataCache {
         }
     }
 
-    public void setRoomIdLookup(Integer memId1, Integer memId2, Integer chatroomId) {
+    // Deprecated legacy method
+    public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2) {
+        return getRoomIdByMembers(memId1, memId2, 0); // Default to 0 if not specified
+    }
+
+    public void setRoomIdLookup(Integer memId1, Integer memId2, Integer type, Integer chatroomId) {
         int id1 = Math.min(memId1, memId2);
         int id2 = Math.max(memId1, memId2);
-        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2;
-        redisJsonMapper.getTemplate().opsForValue().set(lookupKey, chatroomId, Duration.ofDays(DEFAULT_TTL_DAYS));
+        int safeType = type != null ? type : 0;
+
+        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2 + ":" + safeType;
+
+        try {
+            circuitBreaker.executeRunnable(
+                    () -> redisJsonMapper.getTemplate().opsForValue().set(lookupKey, chatroomId,
+                            Duration.ofDays(DEFAULT_TTL_DAYS)));
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping cache write for room lookup {}.", circuitBreaker.getState(),
+                    lookupKey);
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to cache room lookup {}: {}", lookupKey, e.getMessage());
+        }
+    }
+
+    // Deprecated legacy method
+    public void setRoomIdLookup(Integer memId1, Integer memId2, Integer chatroomId) {
+        setRoomIdLookup(memId1, memId2, 0, chatroomId);
     }
 
     public List<Integer> getUserRoomIds(Integer userId) {
@@ -189,21 +218,39 @@ public class ChatRoomMetadataCache {
     public void setUserRoomIds(Integer userId, List<Integer> roomIds) {
         String key = REDIS_USER_ROOMS_KEY + userId;
         try {
-            redisJsonMapper.delete(key);
-            if (!roomIds.isEmpty()) {
-                redisJsonMapper.getTemplate().opsForList().rightPushAll(key, roomIds.toArray());
-                redisJsonMapper.expire(key, Duration.ofDays(DEFAULT_TTL_DAYS));
-            }
+            circuitBreaker.executeRunnable(() -> {
+                redisJsonMapper.delete(key);
+                if (!roomIds.isEmpty()) {
+                    redisJsonMapper.getTemplate().opsForList().rightPushAll(key, roomIds.toArray());
+                    redisJsonMapper.expire(key, Duration.ofDays(DEFAULT_TTL_DAYS));
+                }
+            });
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping cache set for user rooms {}.", circuitBreaker.getState(), userId);
         } catch (Exception e) {
             log.debug("[Cache] Failed to set room IDs for user {}: {}", userId, e.getMessage());
         }
     }
 
     public void invalidateUserRoomList(Integer userId) {
-        redisJsonMapper.delete(REDIS_USER_ROOMS_KEY + userId);
+        try {
+            circuitBreaker.executeRunnable(
+                    () -> redisJsonMapper.delete(REDIS_USER_ROOMS_KEY + userId));
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping invalidation for user {}.", circuitBreaker.getState(), userId);
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to invalidate user room list {}: {}", userId, e.getMessage());
+        }
     }
 
     public void invalidate(String key) {
-        redisJsonMapper.delete(key);
+        try {
+            circuitBreaker.executeRunnable(
+                    () -> redisJsonMapper.delete(key));
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping invalidation for key {}.", circuitBreaker.getState(), key);
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to invalidate key {}: {}", key, e.getMessage());
+        }
     }
 }

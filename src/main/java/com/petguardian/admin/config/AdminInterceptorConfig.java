@@ -17,25 +17,13 @@ public class AdminInterceptorConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
 
         registry.addInterceptor(adminInterceptor)
-                .addPathPatterns("/admin/**")//"/admin/**"
+                .addPathPatterns("/admin/**")
                 .excludePathPatterns(
                         "/admin/adminloginpage",
                         "/admin/adminlogin",
-//                        "/html/backend/admin/admin_login_success.html",
                         "/css/**",
                         "/js/**",
                         "/images/**",
-//                        "/admin/index",
-//                        "/admin-member-managementpage",
-//                        "/admin/admin-admin-managementpage",
-//                        "/admin/adminlogoutpage",
-//                        "/admin/adminresetpwpage",
-//                        "/adminupdateinfopage",
-//                        "/admin/admin-member-management",
-//                        "/admin/admin-member-management-searchmember",
-//                        "/admin/admin-member-management-updatestatus",
-//                        "/admin/admin-admin-management",
-//                        "/admin/admin-admin-management-updatestatus",
                         "/admin/adminlogout",
                         "/html/backend/admin/admin_logout.html",
                         "/html/**"

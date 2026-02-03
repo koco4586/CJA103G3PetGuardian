@@ -167,10 +167,13 @@
                 </th:block>
 
                 <!-- 聊天按鈕 -->
-                <a th:href="@{/chat(targetUserId=${order.buyerMemId})}" class="btn"
-                    style="background: #17a2b8; color: white;">
-                    <i class="fas fa-comments"></i> 聯繫買家
-                </a>
+                <form th:action="@{/chat/connect/store}" method="post" style="display:inline;">
+                    <input type="hidden" name="targetUserId" th:value="${order.buyerMemId}" />
+                    <input type="hidden" name="chatroomType" value="1" />
+                    <button type="submit" class="btn" style="background: #17a2b8; color: white;">
+                        <i class="fas fa-comments"></i> 聯繫買家
+                    </button>
+                </form>
             </div>
         </div>
     </div>
