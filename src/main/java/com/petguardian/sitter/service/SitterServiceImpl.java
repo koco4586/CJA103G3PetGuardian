@@ -263,8 +263,8 @@ public class SitterServiceImpl implements SitterService {
     @Override
     @Transactional(readOnly = true)
     public SitterDashboardDTO getDashboardData(Integer memId) {
-        // 1. 查詢保姆資料
-        SitterVO sitter = repository.findByMemId(memId);
+        // 1. 查詢保姆資料 (使用優化版查詢，一次載入關聯的 ServiceArea 和 Area)
+        SitterVO sitter = repository.findByMemIdWithAreas(memId);
         if (sitter == null) {
             return null;
         }
