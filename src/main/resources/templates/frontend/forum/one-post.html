@@ -295,7 +295,7 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                 <section class="comment-section">
                     <h4><i class="far fa-comments"></i> 留言回覆</h4>
                     
-                    <th:block th:each="forumPostCommentVO, iterStat : ${commentList}">
+                    <th:block th:each="forumPostCommentVO, iterStat : ${forumPostVO.forumPostComments}">
 					    <div class="comment-item">
 					        <img src="https://via.placeholder.com/50" class="comment-user-mini-img">
 					        <div class="comment-body">

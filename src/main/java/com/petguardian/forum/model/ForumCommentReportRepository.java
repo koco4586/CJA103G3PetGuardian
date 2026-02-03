@@ -39,7 +39,7 @@ public interface ForumCommentReportRepository extends JpaRepository<ForumComment
 			from ForumCommentReportVO r
 			join r.forumComment c
 			join c.forumPost p
-			where c.commentStatus = 1 and r.reportStatus = 2
+			where r.reportStatus = 2
 			order by r.handleTime desc
 	""")
 	public List<RejectedCommentDTO> findAllRejectedComments();

@@ -1,9 +1,7 @@
 package com.petguardian.forum.service;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.forum.model.ForumRepository;
@@ -12,9 +10,13 @@ import com.petguardian.forum.model.ForumVO;
 @Service
 public class ForumService {
 	
-	@Autowired
-	ForumRepository repository;
+	private final ForumRepository repository;
 	
+	public ForumService(ForumRepository repository) {
+		super();
+		this.repository = repository;
+	}
+
 	public void addForum(ForumVO forumVO) {
 		repository.save(forumVO);
 	}
@@ -24,8 +26,9 @@ public class ForumService {
 	}
 	
 	public ForumVO getOneForum(Integer forumId) {
-		Optional<ForumVO> optional = repository.findById(forumId);
-		return optional.orElseThrow(() -> new RuntimeException("找不到此討論區，編號：" + forumId));
+		ForumVO forumVO = repository.findById(forumId)
+				.orElseThrow(() -> new RuntimeException("找不到此討論區，編號：" + forumId));	
+		return forumVO;
 	}
 	
 	public List<ForumVO> getAll(){

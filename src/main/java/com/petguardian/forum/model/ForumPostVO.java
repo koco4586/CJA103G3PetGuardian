@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Set;
 
+import org.hibernate.annotations.Where;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -69,6 +70,9 @@ public class ForumPostVO implements Serializable{
 	@Column(name = "post_status", insertable = false)
 	private Integer postStatus;
 	
+	@Column(name = "post_views", nullable = true, insertable = false)
+	private Integer postViews;
+	
 	@Transient
 	private MultipartFile upFile;
 	
@@ -77,6 +81,7 @@ public class ForumPostVO implements Serializable{
 	private Set<ForumPostPicsVO> forumPostPics;
 	
 	@OneToMany(mappedBy = "forumPost")
+	@Where(clause = "comment_status = 1")
 	@OrderBy("commentId asc")
 	private Set<ForumCommentVO> forumPostComments;
 	
@@ -208,6 +213,14 @@ public class ForumPostVO implements Serializable{
 		this.postStatus = postStatus;
 	}
 	
+	public Integer getPostViews() {
+		return postViews;
+	}
+
+	public void setPostViews(Integer postViews) {
+		this.postViews = postViews;
+	}
+
 	//	驗證上傳檔案是否為圖片檔 || 驗證圖片大小不得超過1MB
 	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif），且主頁圖片大小不得超過 1MB")
 	public boolean isValidImage() {		
