@@ -426,6 +426,8 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                 if (reviewsSection) {
                     const h3 = reviewsSection.querySelector('h3');
                     if (h3) {
+                        // 計算平均星數
+                        const avg = calculateAvgRating(reviews);
                         // 保留 icon 和筆數 span，只改文字
                         const safeName = (sitterName && sitterName !== '""' && sitterName !== "''") ? sitterName : '保母';
                         h3.innerHTML = `
@@ -434,6 +436,9 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                                 (共 <span id="sitterReviewCount">${reviews.length}</span> 筆)
                             </span>
                             <i id="toggleIcon" class="fas fa-chevron-down" style="float: right; transition: transform 0.3s;"></i>
+                            <span class="avg-rating" style="float: right; margin-right: 15px; color: #f39c12; font-weight: bold;">
+                                <i class="fas fa-star"></i> ${avg}
+                            </span>
                         `;
                     }
                 }
@@ -601,6 +606,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
             // 修改標題，加入人名、總筆數和收放圖示
             const h3 = reviewsCard.querySelector('h3');
             if (h3) {
+                const avg = calculateAvgRating(reviews);
                 const safeName = (sitterName && sitterName !== '""' && sitterName !== "''") ? sitterName : '保母';
                 h3.style.cursor = 'pointer';
                 h3.style.userSelect = 'none';
@@ -610,6 +616,9 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                         (共 <span id="dashboardReviewCount">${reviews.length}</span> 筆)
                     </span>
                     <i id="dashboardToggleIcon" class="fas fa-chevron-down" style="float: right; transition: transform 0.3s;"></i>
+                    <span class="avg-rating" style="float: right; margin-right: 15px; color: #f39c12; font-weight: bold;">
+                        <i class="fas fa-star"></i> ${avg}
+                    </span>
                 `;
 
                 // 綁定點擊事件

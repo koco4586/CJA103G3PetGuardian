@@ -198,12 +198,12 @@
 								<th:block
 									th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
 									<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->
-<<<<<<< HEAD
-									<button class="btn btn-outline btn-sm"
-										th:onclick="injectEvalBox(this, [[${order.bookingOrderId}]], [[${order.sitterId}]])">評價保母</button>
-=======
-									<button class="btn btn-outline btn-sm">評價保母</button>
->>>>>>> master
+									<<<<<<< HEAD <button class="btn btn-outline btn-sm"
+										th:onclick="injectEvalBox(this, [[${order.bookingOrderId}]], [[${order.sitterId}]])">
+										評價保母</button>
+										=======
+										<button class="btn btn-outline btn-sm">評價保母</button>
+										>>>>>>> master
 								</th:block>
 
 								<th:block th:if="${order.orderStatus == 3}">
@@ -336,6 +336,7 @@
 				bookingListContainer.innerHTML = '';
 
 				// 建立評價顯示區域（含收放功能）
+				const avg = calculateAvgRating(reviews);
 				let reviewsHTML = `
 					<div style="background: white; border-radius: 1.5rem; padding: 2rem; margin-bottom: 1.5rem;">
 						<h3 style="cursor: pointer; user-select: none; margin-bottom: 1.5rem; color: #333;"
@@ -344,6 +345,9 @@
 							<span style="color: #999; font-size: 0.9rem; margin-left: 10px;">(共 ${reviews.length} 筆)</span>
 							<i id="memberToggleIcon" class="fas fa-chevron-down" 
 								style="float: right; transition: transform 0.3s;"></i>
+							<span class="avg-rating" style="float: right; margin-right: 15px; color: #f39c12; font-weight: bold;">
+								<i class="fas fa-star"></i> ${avg}
+							</span>
 						</h3>
 						<div id="memberReviewsList" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease;">
 							<div id="memberReviewsContainer" class="reviews-container"></div>
