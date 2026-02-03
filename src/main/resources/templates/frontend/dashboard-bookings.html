@@ -181,13 +181,15 @@
 
 						<div class="d-flex gap-sm">
 							<th:block th:with="isPast=${order.startTime.isBefore(#temporals.createNow())}">
-								<th:block th:if="${(order.orderStatus == 0 or order.orderStatus == 1) and !isPast}">
-									<button class="btn btn-primary btn-sm">聯絡保母</button>
-									<button type="button" th:data-id="${order.bookingOrderId}"
-										th:data-start="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"
-										onclick="openCancelModal(this)" class="btn btn-danger">
-										取消預約</button>
-								</th:block>
+						    <th:block th:if="${order.orderStatus == 0 or order.orderStatus == 1}">
+						        <button class="btn btn-primary btn-sm" onclick="alert('聯絡功能開發中')">聯絡保母</button>
+						    </th:block>
+						    <th:block th:if="${(order.orderStatus == 0 or order.orderStatus == 1) and !isPast}">
+						        <button type="button" th:data-id="${order.bookingOrderId}"
+						            th:data-start="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"
+						            onclick="openCancelModal(this)" class="btn btn-danger">
+						            取消預約</button>
+						    </th:block>
 
 							<th:block th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
 							<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->

@@ -131,16 +131,20 @@
 
 							<div class="card-actions">
 								<!-- 待處理 -->
-								<th:block th:if="${order.orderStatus == 0}">
-									<button class="btn btn-primary btn-sm"
-										th:onclick="'acceptOrder(' + ${order.bookingOrderId} + ')'">
-										<i class="fas fa-check"></i> 接受
-									</button>
-									<button class="btn btn-outline-danger btn-sm"
-										th:onclick="'rejectOrder(' + ${order.bookingOrderId} + ')'">
-										<i class="fas fa-times"></i> 拒絕
-									</button>
-								</th:block>
+							<th:block th:if="${order.orderStatus == 0}">
+							    <!-- [新增] 聯絡按鈕 (新增這段) -->
+							    <button class="btn btn-outline-secondary btn-sm" onclick="alert('聯絡功能開發中')">
+							        <i class="far fa-comment-dots"></i> 聯絡
+							    </button>
+							    
+							    <!-- 原有的接受/拒絕按鈕 -->
+							    <button class="btn btn-primary btn-sm" th:onclick="'acceptOrder(' + ${order.bookingOrderId} + ')'">
+							        <i class="fas fa-check"></i> 接受
+							    </button>
+							    <button class="btn btn-outline-danger btn-sm" th:onclick="'rejectOrder(' + ${order.bookingOrderId} + ')'">
+							        <i class="fas fa-times"></i> 拒絕
+							    </button>
+							</th:block>
 
 								<!-- 進行中 -->
 								<th:block th:if="${order.orderStatus == 1}">
