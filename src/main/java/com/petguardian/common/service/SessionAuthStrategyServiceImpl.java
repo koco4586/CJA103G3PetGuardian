@@ -1,5 +1,6 @@
 package com.petguardian.common.service;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.member.model.Member;
@@ -18,6 +19,7 @@ import jakarta.servlet.http.HttpSession;
  * 2. Add @Primary to this class
  */
 @Service
+@Primary
 public class SessionAuthStrategyServiceImpl implements AuthStrategyService {
 
     private static final String SESSION_MEMBER_ID = "memId";

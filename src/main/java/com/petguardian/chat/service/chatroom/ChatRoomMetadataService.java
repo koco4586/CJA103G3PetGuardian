@@ -143,21 +143,26 @@ public class ChatRoomMetadataService {
         return dtos;
     }
 
-    public Optional<ChatRoomMetadataDTO> findRoomByMembers(Integer memId1, Integer memId2) {
+    public Optional<ChatRoomMetadataDTO> findRoomByMembersAndType(Integer memId1, Integer memId2, Integer type) {
         if (memId1 == null || memId2 == null)
             return Optional.empty();
 
+        int safeType = type != null ? type : 0;
+
         // 1. Check Lookup Cache
-        return metadataCache.getRoomIdByMembers(memId1, memId2)
+        return metadataCache.getRoomIdByMembers(memId1, memId2, safeType)
                 .map(this::getRoomMetadata)
                 .or(() -> {
                     // 2. Fallback to DB
                     int id1 = Math.min(memId1, memId2);
                     int id2 = Math.max(memId1, memId2);
-                    return chatRoomRepository.findByMemId1AndMemId2AndChatroomType(id1, id2, 1)
+
+                    return chatRoomRepository.findByMemId1AndMemId2AndChatroomType(id1, id2, safeType)
                             .map(entity -> {
                                 ChatRoomMetadataDTO dto = mapper.toMetadataDto(entity);
-                                metadataCache.setRoomIdLookup(memId1, memId2, dto.getChatroomId());
+                                metadataCache.setRoomIdLookup(memId1, memId2, safeType, dto.getChatroomId()); // Type-Aware
+                                                                                                              // Cache
+                                                                                                              // Set
                                 metadataCache.setRoomMeta(dto.getChatroomId(), dto);
                                 return dto;
                             });
@@ -166,8 +171,19 @@ public class ChatRoomMetadataService {
                 .orElse(Optional.empty());
     }
 
+    // Deprecated legacy method
+    public Optional<ChatRoomMetadataDTO> findRoomByMembers(Integer memId1, Integer memId2) {
+        return findRoomByMembersAndType(memId1, memId2, 0);
+    }
+
+    public void cacheRoomLookup(Integer memId1, Integer memId2, Integer type, Integer chatroomId) {
+        int safeType = type != null ? type : 0;
+        metadataCache.setRoomIdLookup(memId1, memId2, safeType, chatroomId);
+    }
+
+    // Deprecated legacy method
     public void cacheRoomLookup(Integer memId1, Integer memId2, Integer chatroomId) {
-        metadataCache.setRoomIdLookup(memId1, memId2, chatroomId);
+        cacheRoomLookup(memId1, memId2, 0, chatroomId);
     }
 
     // =================================================================================
