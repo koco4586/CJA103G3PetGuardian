@@ -8,6 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
+import com.petguardian.member.model.Member;
+import com.petguardian.pet.model.PetVO;
+import com.petguardian.petsitter.model.PetSitterServiceRepository;
 
 /**
  * 訂單查詢服務
@@ -25,6 +28,14 @@ public class BookingOrderQueryService {
 
     @Autowired
     private BookingDataIntegrationService dataService;
+    
+    @Autowired
+    private PetSitterServiceRepository petSitterServiceRepository;
+    
+    @Autowired
+    private com.petguardian.member.repository.login.MemberLoginRepository memberRepository;
+    @Autowired
+    private com.petguardian.pet.model.PetRepository petRepository;
 
     /**
      * 查詢會員的所有訂單
@@ -34,7 +45,9 @@ public class BookingOrderQueryService {
         // 借用排程服務的修正邏輯，自動更新已過期但狀態未更新的訂單
         scheduleInternalService.autoUpdateExpiredOrders(list);
         // 訂單相關資訊（會員名稱、寵物名稱等）
-        list.forEach(this::enrichOrderInfo);
+        if (!list.isEmpty()) {
+            batchEnrichOrderInfo(list);
+        }
         return list;
     }
 
@@ -79,7 +92,9 @@ public class BookingOrderQueryService {
         // 狀態修正：更新已過期的訂單
         scheduleInternalService.autoUpdateExpiredOrders(list);
         // 訂單相關資訊（會員名稱、寵物名稱等）
-        list.forEach(this::enrichOrderInfo);
+        if (!list.isEmpty()) {
+            batchEnrichOrderInfo(list);
+        }
         return list;
     }
 
@@ -91,29 +106,104 @@ public class BookingOrderQueryService {
         // 直接呼叫 Repository 進行查詢
         List<BookingOrderVO> list = orderRepository.findBySitterIdAndOrderStatus(sitterId, status);
         // 訂單相關資訊（如會員名稱、寵物名稱等）
-        list.forEach(this::enrichOrderInfo);
+        if (!list.isEmpty()) {
+            batchEnrichOrderInfo(list);
+        }
         return list;
     }
+    
 
     /**
      * 補充訂單的完整資訊
      */
-    private void enrichOrderInfo(BookingOrderVO order) {
-        // 1. 會員名稱
-        if (order.getMemId() != null) {
-            var member = dataService.getMemberInfo(order.getMemId());
-            order.setMemName(member != null ? member.getMemName() : "未知會員");
+//    private void enrichOrderInfo(BookingOrderVO order) {
+//        // 1. 會員名稱
+//        if (order.getMemId() != null) {
+//            var member = dataService.getMemberInfo(order.getMemId());
+//            order.setMemName(member != null ? member.getMemName() : "未知會員");
+//        }
+//
+//        // 2. 寵物名稱
+//        if (order.getPetId() != null) {
+//            var pet = dataService.getPetInfo(order.getPetId());
+//            order.setPetName(pet != null ? pet.getPetName() : "未知寵物");
+//        }
+//
+//        // 3. 取消原因預設文字（當訂單被取消但未填寫原因時）
+//        if (order.getOrderStatus() == 3 && (order.getCancelReason() == null || order.getCancelReason().isBlank())) {
+//            order.setCancelReason("保母忙碌中，暫時無法接單");
+//        }
+//    }
+    
+    /**
+     * 批次補充訂單資訊 (解決 N+1 問題)
+     */
+    private void batchEnrichOrderInfo(List<BookingOrderVO> orderList) {
+        // 1. 蒐集所有 ID (使用 Set 避免重複)
+        java.util.Set<Integer> memIds = new java.util.HashSet<>();
+        java.util.Set<Integer> petIds = new java.util.HashSet<>();
+        java.util.Set<Integer> serviceIds = new java.util.HashSet<>();
+        
+        for (BookingOrderVO order : orderList) {
+            if (order.getMemId() != null) memIds.add(order.getMemId());
+            if (order.getPetId() != null) petIds.add(order.getPetId());
+            if (order.getServiceItemId() != null) serviceIds.add(order.getServiceItemId()); // 蒐集服務 ID
+        }
+        
+        // 2. 批次查詢保母與服務詳細資訊
+        java.util.Map<String, com.petguardian.petsitter.model.PetSitterServiceVO> svcDetailMap = new java.util.HashMap<>();
+        if (!serviceIds.isEmpty()) { // 修正為 serviceIds
+            List<com.petguardian.petsitter.model.PetSitterServiceVO> services = 
+                petSitterServiceRepository.findByServiceItemIdIn(serviceIds); // 修正為 serviceIds
+            for (com.petguardian.petsitter.model.PetSitterServiceVO s : services) {
+                if (s.getSitter() != null) {
+                    String key = s.getSitter().getSitterId() + "_" + s.getServiceItemId();
+                    svcDetailMap.put(key, s);
+                }
+            }
         }
 
-        // 2. 寵物名稱
-        if (order.getPetId() != null) {
-            var pet = dataService.getPetInfo(order.getPetId());
-            order.setPetName(pet != null ? pet.getPetName() : "未知寵物");
+        // 3. 批次查詢會員名稱
+        java.util.Map<Integer, String> memNameMap = new java.util.HashMap<>();
+        if (!memIds.isEmpty()) {
+            List<com.petguardian.member.model.Member> members = memberRepository.findAllById(memIds);
+            for (com.petguardian.member.model.Member m : members) memNameMap.put(m.getMemId(), m.getMemName());
         }
 
-        // 3. 取消原因預設文字（當訂單被取消但未填寫原因時）
-        if (order.getOrderStatus() == 3 && (order.getCancelReason() == null || order.getCancelReason().isBlank())) {
-            order.setCancelReason("保母忙碌中，暫時無法接單");
+        // 4. 批次查詢寵物名稱
+        java.util.Map<Integer, String> petNameMap = new java.util.HashMap<>();
+        if (!petIds.isEmpty()) {
+            List<PetVO> pets = petRepository.findAllById(petIds);
+            for (PetVO p : pets) petNameMap.put(p.getPetId(), p.getPetName());
+        }
+        
+        // 5. 填回 BookingOrderVO 暫存欄位 (Transient)
+        for (BookingOrderVO order : orderList) {
+            // A. 填入保母與服務相關資訊
+            String key = order.getSitterId() + "_" + order.getServiceItemId();
+            com.petguardian.petsitter.model.PetSitterServiceVO detail = svcDetailMap.get(key);
+            if (detail != null) {
+                order.setServiceName(detail.getServiceItem() != null ? detail.getServiceItem().getServiceType() : "一般服務");
+                if (detail.getSitter() != null) {
+                    order.setSitterName(detail.getSitter().getSitterName());
+                    order.setSitterMemId(detail.getSitter().getMemId());
+                }
+            } else {
+                order.setServiceName("一般服務");
+            }
+
+            // B. 填入會員名稱
+            order.setMemName(memNameMap.getOrDefault(order.getMemId(), "未知會員"));
+
+            // C. 填入寵物名稱
+            order.setPetName(petNameMap.getOrDefault(order.getPetId(), "未知寵物"));
+
+            // D. 處理取消原因預設值
+            if (order.getOrderStatus() != null && order.getOrderStatus() == 3 && 
+                (order.getCancelReason() == null || order.getCancelReason().isBlank())) {
+                order.setCancelReason("保母忙碌中，暫時無法接單");
+            }
         }
     }
 }
+        

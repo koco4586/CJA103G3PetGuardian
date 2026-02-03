@@ -67,10 +67,19 @@ public class BookingViewController {
      */
     @GetMapping("/services")
     public String listSitters(HttpServletRequest request, Model model) {
-        // 1. 取得所有保母資料
-        List<SitterVO> rawSitters = sitterRepository.findAll();
+        List<Object[]> rawData = sitterRepository.findSitterBasicInfo();
 
-        // 2. 取得當前登入使用者 ID
+        List<SitterVO> rawSitters = rawData.stream().map(row -> {
+            SitterVO s = new SitterVO();
+            s.setSitterId((Integer) row[0]);
+            s.setSitterName((String) row[1]);
+            s.setSitterAdd((String) row[2]);
+            s.setSitterStarCount((Integer) row[3]);
+            s.setSitterRatingCount((Integer) row[4]);
+            s.setMemId((Integer) row[5]);
+            return s;
+        }).collect(Collectors.toList());
+
         Integer memId = authStrategyService.getCurrentUserId(request);
 
         // 3. 建立收藏保姆 ID 的集合
@@ -90,33 +99,35 @@ public class BookingViewController {
         final Set<Integer> finalFavIds = favSitterIds;
         List<BookingDisplayDTO> displayList = rawSitters.stream().map(s -> {
             BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
+            dto.setServicesJson("[]");
 
             // 從 Map 取得該保母的服務
-            List<PetSitterServiceVO> myServices = allServicesBySitter.getOrDefault(s.getSitterId(),
-                    new java.util.ArrayList<>());
-
-            StringBuilder json = new StringBuilder("[");
-            for (int i = 0; i < myServices.size(); i++) {
-                PetSitterServiceVO svc = myServices.get(i);
-                Integer svcId = svc.getServiceItemId();
-
-                // [關鍵修改] 直接透過關聯取得服務名稱！不用再查表了
-                String svcName = "未知服務";
-                if (svc.getServiceItem() != null) {
-                    svcName = svc.getServiceItem().getServiceType();
-                }
-
-                json.append(String.format("{\"id\":%d,\"name\":\"%s\"}", svcId, svcName));
-                if (i < myServices.size() - 1)
-                    json.append(",");
-            }
-            json.append("]");
-
-            dto.setServicesJson(json.toString());
+            // List<PetSitterServiceVO> myServices =
+            // allServicesBySitter.getOrDefault(s.getSitterId(), new
+            // java.util.ArrayList<>());
+            //
+            // StringBuilder json = new StringBuilder("[");
+            // for (int i = 0; i < myServices.size(); i++) {
+            // PetSitterServiceVO svc = myServices.get(i);
+            // Integer svcId = svc.getServiceItemId();
+            //
+            // // 直接透過關聯取得服務名稱！不用再查表了
+            // String svcName = "未知服務";
+            // if (svc.getServiceItem() != null) {
+            // svcName = svc.getServiceItem().getServiceType();
+            // }
+            //
+            // json.append(String.format("{\"id\":%d,\"name\":\"%s\"}", svcId, svcName));
+            // if (i < myServices.size() - 1) json.append(",");
+            // }
+            // json.append("]");
+            //
+            // dto.setServicesJson(json.toString());
             return dto;
         }).collect(Collectors.toList());
 
         // 6. 將資料傳給前端頁面
+        model.addAttribute("currentMemId", memId);
         model.addAttribute("sitters", displayList);
         addCommonAttributes(request, model);
         return "frontend/services";
@@ -166,88 +177,6 @@ public class BookingViewController {
     }
 
     /**
-     * 【顯示預約表單頁面】
-     * 1. 檢查使用者是否登入
-     * 2. 根據參數載入會員、寵物資料
-     * 3. 建立空白的預約單物件
-     * 4. 顯示預約表單頁面
-     */
-    @GetMapping("/add")
-    public String showAddForm(
-            @RequestParam Integer sitterId,
-            @RequestParam Integer petId,
-            @RequestParam Integer serviceItemId,
-            HttpServletRequest request,
-            Model model) {
-
-        try {
-            // 1. 檢查是否登入
-            Integer memId = authStrategyService.getCurrentUserId(request);
-            if (memId == null) {
-                return "redirect:/front/loginpage"; // 未登入，導向登入頁
-            }
-
-            // 2. 載入會員和寵物資料
-            Member member = dataService.getMemberInfo(memId);
-            PetVO pet = dataService.getPetInfo(petId);
-
-            // 3. 建立預約單物件並填入參數
-            BookingOrderVO order = new BookingOrderVO();
-            order.setSitterId(sitterId);
-            order.setMemId(memId);
-            order.setPetId(petId);
-            order.setServiceItemId(serviceItemId);
-
-            // 4. 將資料傳給前端表單
-            model.addAttribute("order", order);
-            model.addAttribute("memberName", member.getMemName());
-            model.addAttribute("petName", pet.getPetName());
-            model.addAttribute("errorMessage", null);
-
-        } catch (Exception e) {
-            // 5. 如果資料載入失敗，顯示錯誤訊息
-            model.addAttribute("errorMessage", "資料讀取失敗。");
-            model.addAttribute("order", new BookingOrderVO());
-        }
-
-        return "frontend/booking/add-booking";
-    }
-
-    /**
-     * 【顯示會員的預約列表】
-     * 路徑：GET /booking/list/member/{memId}
-     * 功能：
-     * 1. 查詢該會員所有進行中的預約
-     * 2. 為每筆預約載入保姆姓名
-     * 3. 顯示預約列表頁面
-     */
-    @GetMapping("/list/member/{memId}")
-    public String memberBookingList(@PathVariable Integer memId, Model model) {
-
-        // 1. 查詢該會員所有進行中的預約
-        List<BookingOrderVO> list = bookingService.getActiveOrdersByMemberId(memId);
-
-        // 2. 為每筆預約補上保姆姓名
-        for (BookingOrderVO order : list) {
-            try {
-                PetSitterServiceVO service = dataService.getSitterServiceInfo(
-                        order.getSitterId(),
-                        order.getServiceItemId());
-                order.setSitterName(service.getSitter().getSitterName());
-                order.setSitterMemId(service.getSitter().getMemId());
-            } catch (Exception e) {
-                order.setSitterName("未知保母");
-            }
-        }
-
-        // 3. 傳遞資料給前端
-        model.addAttribute("bookingList", list);
-        model.addAttribute("memId", memId);
-
-        return "frontend/booking/list-booking";
-    }
-
-    /**
      * 【顯示會員中心的預約管理頁面】
      * 1. 檢查使用者是否登入
      * 2. 根據狀態參數過濾預約（可選）
@@ -271,20 +200,7 @@ public class BookingViewController {
                 ? bookingService.findByMemberAndStatus(memId, status)
                 : bookingService.getOrdersByMemberId(memId);
 
-        // 3. 為每筆預約補上保姆姓名
-        for (BookingOrderVO order : bookingList) {
-            try {
-                PetSitterServiceVO service = dataService.getSitterServiceInfo(
-                        order.getSitterId(),
-                        order.getServiceItemId());
-                order.setSitterName(service.getSitter().getSitterName());
-                order.setSitterMemId(service.getSitter().getMemId());
-            } catch (Exception e) {
-                order.setSitterName("未知保母");
-            }
-        }
-
-        // 4. 傳遞資料給前端
+        // 3.傳遞資料給前端
         model.addAttribute("bookingList", bookingList);
         model.addAttribute("currentStatus", status);
         model.addAttribute("memId", memId);
@@ -311,5 +227,25 @@ public class BookingViewController {
         // List<PetServiceItem> serviceItems =
         // petServiceItemRepository.findByServiceStatus(1);
         // model.addAttribute("serviceItems", serviceItems);
+    }
+
+    /**
+     * [新增] API: 動態查詢保母的服務項目
+     * 用途：當使用者點擊「立即預約」時才呼叫此 API，避免一開始載入過多資料
+     */
+    @GetMapping("/api/sitter/{sitterId}/services")
+    @org.springframework.web.bind.annotation.ResponseBody // 回傳 JSON 資料
+    public List<java.util.Map<String, Object>> getSitterServices(@PathVariable Integer sitterId) {
+        // 使用既有的 Repository 查詢該保母的服務
+        return petSitterServiceRepository.findBySitter_SitterId(sitterId).stream()
+                .map(svc -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", svc.getServiceItemId());
+                    // 透過關聯取得服務名稱 (若無關聯則顯示預設文字)
+                    String name = (svc.getServiceItem() != null) ? svc.getServiceItem().getServiceType() : "一般服務";
+                    map.put("name", name);
+                    return map;
+                })
+                .collect(Collectors.toList());
     }
 }

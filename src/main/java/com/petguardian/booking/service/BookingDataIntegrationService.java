@@ -56,13 +56,23 @@ public class BookingDataIntegrationService {
         wallet.setBalance(wallet.getBalance() + amount);
         walletRepository.save(wallet);
     }
+    
+ // 批次查詢服務項目
+    public java.util.Map<Integer, String> getServiceNamesMap(java.util.Set<Integer> serviceItemIds) {
+        if (serviceItemIds == null || serviceItemIds.isEmpty()) return java.util.Collections.emptyMap();
+
+        return serviceRepository.findByServiceItemIdIn(serviceItemIds).stream()
+            .collect(java.util.stream.Collectors.toMap(
+                PetSitterServiceVO::getServiceItemId,
+                s -> s.getServiceItem() != null ? s.getServiceItem().getServiceType() : "一般服務",
+                (existing, replacement) -> existing // 避免重複 Key 
+            ));
+    }
 
     //服務定價
     public PetSitterServiceVO getSitterServiceInfo(Integer sitterId, Integer serviceItemId) {
-        return serviceRepository.findBySitter_SitterId(sitterId).stream()
-                .filter(s -> s.getServiceItemId().equals(serviceItemId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("該保母不提供此項服務或保母不存在"));
+        return serviceRepository.findBySitterIdAndServiceItemId(sitterId, serviceItemId)
+        		.orElseThrow(() -> new RuntimeException("該保母不提供此項服務或保母不存在"));
     }
 
     //會員資料
