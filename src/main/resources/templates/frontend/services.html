@@ -216,8 +216,8 @@
 
     <script>
         // 1. 確保關鍵函數在最外層全域作用域，保證隨時可被呼叫
-        function openBookingModal(name, id, servicesJson) {
-            console.log("正在開啟預約彈窗 (Global):", name, id);
+        async function openBookingModal(name, id) {
+            console.log("正在開啟預約彈窗 (Async):", name, id);
             const modal = document.getElementById('bookingModal');
             const sitterNameSpan = document.getElementById('sitterName');
             const sitterIdInput = document.getElementById('modalSitterId');
@@ -226,24 +226,31 @@
             const serviceSelect = document.getElementById('serviceItemId');
 
             if (!modal || !sitterNameSpan || !sitterIdInput) {
-                console.error("找不到必要的彈窗元件");
+                console.error("找不到服務");
                 return;
             }
 
             sitterNameSpan.innerText = name;
             sitterIdInput.value = id;
-            serviceSelect.innerHTML = '';
             
-            let services = [];
+            serviceSelect.innerHTML = '<option>正在載入服務...</option>';
+            serviceSelect.disabled = true;
+            
             try {
-                services = JSON.parse(servicesJson || '[]');
-            } catch(e) {
-                console.error("解析服務列表失敗", e);
-            }
-            if (services.length === 0) {
-                let opt = document.createElement('option');
-                opt.text = "此保母暫無服務項目";
-                serviceSelect.add(opt);
+            	// 發送請求去後端 API 抓取服務資料
+                const response = await fetch(`/booking/api/sitter/${id}/services`);
+                if (!response.ok) throw new Error("資料讀取失敗");
+                
+                const services = await response.json();
+                
+                //  載入完成，重置選單
+                serviceSelect.innerHTML = '';
+                serviceSelect.disabled = false; 
+
+                if (services.length === 0) {
+                    let opt = document.createElement('option');
+                    opt.text = "此保母暫無服務項目";
+                    serviceSelect.add(opt);
             } else {
                 services.forEach(svc => {
                     let opt = document.createElement('option');
@@ -252,8 +259,13 @@
                     serviceSelect.add(opt);
                 });
             }
+            } catch (error) {
+                console.error("載入服務失敗:", error);
+                serviceSelect.innerHTML = '<option>載入失敗，請重試</option>';
+                serviceSelect.disabled = false;
+            }
 
-            // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
+            // 自動設定時間限制 
             const now = new Date();
             const minDate = new Date(now.getTime());
             const maxDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
@@ -299,8 +311,7 @@
                 if (btn) {
                     const name = btn.getAttribute('data-name');
                     const id = btn.getAttribute('data-id');
-                    const services = btn.getAttribute('data-services');
-                    openBookingModal(name, id, services);
+                    openBookingModal(name, id);
                 }
             });
 

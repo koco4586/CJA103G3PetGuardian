@@ -76,4 +76,13 @@ public interface SitterRepository extends JpaRepository<SitterVO, Integer> {
                         "AND s.sitterStatus = :sitterStatus")
         List<SitterVO> findByServiceAreas(@Param("areaIds") List<Integer> areaIds,
                         @Param("sitterStatus") Byte sitterStatus);
+
+        
+        /**
+         * [新增] 只查詢列表頁需要的欄位，避免觸發 N+1 關聯查詢
+         * 回傳順序: id, name, add, star, count, memId
+         */
+        @Query("SELECT s.sitterId, s.sitterName, s.sitterAdd, s.sitterStarCount, s.sitterRatingCount, s.memId " +
+               "FROM SitterVO s WHERE s.sitterStatus = 0")
+        List<Object[]> findSitterBasicInfo();
 }
