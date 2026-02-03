@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>保姆主頁 | PetGuardian</title>
-    <link rel="stylesheet" href="/css/frontend/style.css">
-    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/frontend/sitter/dashboard.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/sitter/dashboard.css}">
     <style>
         /* 檢舉輸入框樣式 */
         .dynamic-report-wrapper {
@@ -401,12 +401,11 @@
 
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
-    <script src="/js/frontend/main.js"></script>
-    <script src="/js/frontend/evaluate-functions.js"></script>
-    <script src="/js/frontend/complaint-functions.js"></script>
+    <!-- Scripts moved to bottom for better performance and to avoid ID issues -->
 
     <script th:inline="javascript">
-        // 全域變數
+        /*<![CDATA[*/
+        const contextPath = /*[[@{/}]]*/ '';
         const sitterId = /*[[${sitter.sitterId}]]*/ 0;
         const currentServiceTime = /*[[${serviceTime != null ? serviceTime : '000000000000000000000000'}]]*/ '000000000000000000000000';
 
@@ -437,6 +436,26 @@
             // 綁定按鈕事件
             document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
             document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+
+            // 載入評價資料（保母主頁專用佈局）
+            if (sitterId) {
+                // 處理人名，確保不出現空引號
+                let sitterName = /*[[${sitter.sitterName}]]*/ '';
+                if (!sitterName || sitterName === '""' || sitterName === "''") {
+                    sitterName = '保母';
+                }
+                // 確保函數已由外部腳本載入
+                if (typeof loadAndDisplayReviewsForDashboard === 'function') {
+                    loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList', sitterName);
+                } else {
+                    console.warn('loadAndDisplayReviewsForDashboard not yet loaded');
+                    window.addEventListener('load', () => {
+                        if (typeof loadAndDisplayReviewsForDashboard === 'function') {
+                            loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList', sitterName);
+                        }
+                    });
+                }
+            }
         });
 
         // 切換月份
@@ -681,25 +700,12 @@
 
         // 註：檢舉功能已改用 complaint-functions.js 的 injectReportBox()
 
-
-        // 載入評價資料（保母主頁專用佈局）
-        // 使用上面已經宣告的 sitterId 變數（第 372 行）
-
-        if (sitterId) {
-            // 處理人名，確保不出現空引號
-            let sitterName = /*[[${sitter.sitterName}]]*/ '';
-            if (!sitterName || sitterName === '""' || sitterName === "''") {
-                sitterName = '保母';
-            }
-            loadAndDisplayReviewsForDashboard(sitterId, '#reviewsList', sitterName);
-        }
-
-
     </script>
 
-    <script src="/js/frontend/complaint-functions.js"></script>
-    <script src="/js/frontend/sitter-evaluate-functions.js"></script>
-    <script src="/js/frontend/main.js"></script>
+    <script th:src="@{/js/frontend/main.js}"></script>
+    <script th:src="@{/js/frontend/evaluate-functions.js}"></script>
+    <script th:src="@{/js/frontend/complaint-functions.js}"></script>
+    <script th:src="@{/js/frontend/sitter-evaluate-functions.js}"></script>
 
 </body>
 
