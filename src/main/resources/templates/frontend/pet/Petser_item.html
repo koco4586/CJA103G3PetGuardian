@@ -258,115 +258,28 @@
             <h3 class="section-title"><i class="fas fa-star"></i> 我們的服務項目</h3>
 
             <div class="service-grid">
-                <div class="service-card" data-search="寵物保姆照顧餵食 保母 ">
+                <!-- 動態抓取資料庫服務項目 -->
+                <div class="service-card" th:each="service : ${serviceList}"
+                    th:attr="data-search=${service.serviceType}">
                     <div class="card-image">
-                        <img src="/images/pet/images2.jpg" alt="照顧餵食"
-                            onerror="this.src='https://placehold.co/400x250?text=Feeding';">
-                        <div class="card-tag">保母</div>
+                        <!-- 根據服務名稱判斷圖片，若無匹配則使用預設圖 -->
+                        <img th:src="@{${service.serviceType.contains('餵食') ? '/images/pet/images2.jpg' : 
+                                       (service.serviceType.contains('清潔') ? '/images/pet/petgo.jpg' : 
+                                       (service.serviceType.contains('散步') ? '/images/pet/petwalk.jpg' : 
+                                       (service.serviceType.contains('洗澡') ? '/images/pet/petru.jpg' : 
+                                       (service.serviceType.contains('訓練') ? '/images/pet/pettra.jpg' : 
+                                       (service.serviceType.contains('照護') ? '/images/pet/peth.jpg' : '/images/pet/petol.jpg')))))}"
+                            th:alt="${service.serviceType}"
+                            onerror="this.src='https://placehold.co/400x250?text=Service';">
+                        <div class="card-tag" th:text="${service.serviceType}">服務類型</div>
                     </div>
                     <div class="card-body">
-                        <h4>寵物保姆照顧餵食</h4>
-                        <p>照顧您家中毛孩，提供安心陪伴、互動玩樂，協助定時餵食與安撫。</p>
+                        <h4 th:text="${service.serviceType}">服務名稱</h4>
+                        <p>我們提供專業的 [[${service.serviceType}]] 服務，點擊下方按鈕查看提供此服務的優質保姆。</p>
 
                         <div class="card-footer">
-                            <a href="/pet/sitters/search?service=照顧" class="btn-sitter-detail">查看保姆 <i
-                                    class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="service-card" data-search="寵物家事清潔 到府服務 ">
-                    <div class="card-image">
-                        <img src="/images/pet/petgo.jpg" alt="家事清潔"
-                            onerror="this.src='https://placehold.co/400x250?text=Cleaning';">
-                        <div class="card-tag">到府服務</div>
-                    </div>
-                    <div class="card-body">
-                        <h4>寵物家事清潔</h4>
-                        <p>協助清理以毛孩為主的住臥環境，包括床墊、尿褥墊及玩具用品、寵物餐具清潔等。</p>
-
-                        <div class="card-footer">
-                            <a href="/pet/sitters/search?service=清潔" class="btn-sitter-detail">查看保姆 <i
-                                    class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="service-card" data-search="寵物散步 ">
-                    <div class="card-image">
-                        <img src="/images/pet/petwalk.jpg" alt="鄰近散步"
-                            onerror="this.src='https://placehold.co/400x250?text=Walking';">
-                        <div class="card-tag">協助散步</div>
-                    </div>
-                    <div class="card-body">
-                        <h4>寵物散步</h4>
-                        <p>可以幫忙雇主在住家附近的公園綠地，避開溫度高或車流多的時段，帶毛孩出外愉快地散步活動。</p>
-
-                        <div class="card-footer">
-                            <a href="/pet/sitters/search?service=散步" class="btn-sitter-detail">查看保姆 <i
-                                    class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="service-card" data-search="洗澡護理服務 寵物洗護 ">
-                    <div class="card-image">
-                        <img src="/images/pet/petru.jpg" alt="特約服務"
-                            onerror="this.src='https://placehold.co/400x250?text=Special';">
-                        <div class="card-tag">寵物洗護</div>
-                    </div>
-                    <div class="card-body">
-                        <h4>洗澡護理服務</h4>
-                        <p>針對特殊需求的毛孩提供一對一深度照顧方案，包含老犬長照、術後護理，協助就醫等專屬服務。</p>
-                        <div class="card-footer">
-                            <a href="/pet/sitters/search?service=洗澡" class="btn-sitter-detail">查看保姆 <i
-                                    class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="service-card" data-search="基礎訓練 一般訓練 ">
-                    <div class="card-image">
-                        <img src="/images/pet/pettra.jpg" alt="基礎訓練"
-                            onerror="this.src='https://placehold.co/400x250?text=Training';">
-                        <div class="card-tag">一般訓練</div>
-                    </div>
-                    <div class="card-body">
-                        <h4>基礎訓練</h4>
-                        <p>透過誘導的方式來讓寵物學習，也能顯著提升毛孩的服從性與穩定性，增進飼主與寵物間的信任感、刺激精神健康，並讓寵物生活得更快樂、自信</p>
-
-                        <div class="card-footer">
-                            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="service-card" data-search="健康照護 護理專業 ">
-                    <div class="card-image">
-                        <img src="/images/pet/peth.jpg" alt="健康照護"
-                            onerror="this.src='https://placehold.co/400x250?text=Health';">
-                        <div class="card-tag">護理專業</div>
-                    </div>
-                    <div class="card-body">
-                        <h4>健康照護</h4>
-                        <p>協助日常身體檢查、給藥、傷口護理觀察，並提供專業的營養建議與健康狀態追蹤。</p>
-                        <div class="card-footer">
-                            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="service-card" data-search="特約客製化服務 客製化服務 ">
-                    <div class="card-image">
-                        <img src="/images/pet/petol.jpg" alt="特約服務"
-                            onerror="this.src='https://placehold.co/400x250?text=Special';">
-                        <div class="card-tag">寵物客製化</div>
-                    </div>
-                    <div class="card-body">
-                        <h4>特約客製化服務</h4>
-                        <p>針對特殊需求的毛孩提供一對一深度照顧方案，包含老犬長照、術後護理，協助就醫等專屬服務。</p>
-                        <div class="card-footer">
-                            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
+                            <a th:href="@{/pet/sitters/search(service=${service.serviceType})}"
+                                class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>

@@ -19,16 +19,18 @@ public class PetserItemSerImpl implements PetserItemService {
     public List<PetserItemVO> getAllItemsForDisplay() {
         // 從資料庫撈取資料
         List<PetServiceItem> entities = repo.findByServiceStatus(1); // 或是 repo.findByServiceStatus(1)
-        
+
         return entities.stream().map(e -> {
             PetserItemVO vo = new PetserItemVO();
-            vo.setServiceItemId(e.getServiceItemId()); 
-            vo.setServiceType(e.getServiceType()); 
-            
-            // 處理 Null 檢查
-            vo.setServiceDesc(e.getServiceDetail() != null ? e.getServiceDetail() : "暫無描述");
-            vo.setPriceText("NT$ " + (e.getServicePrice() != null ? e.getServicePrice() : 0));
-            
+            vo.setServiceItemId(e.getServiceItemId());
+            vo.setServiceType(e.getServiceType());
+
+            // // 處理 Null 檢查
+            // vo.setServiceDesc(e.getServiceDetail() != null ? e.getServiceDetail() :
+            // "暫無描述");
+            // vo.setPriceText("NT$ " + (e.getServicePrice() != null ? e.getServicePrice() :
+            // 0));
+
             return vo;
         }).collect(Collectors.toList());
     }

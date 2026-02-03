@@ -15,6 +15,9 @@ import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.petsitter.model.PetSitterServiceRepository;
+import com.petguardian.pet.model.PetServiceItem;
+import com.petguardian.pet.model.PetserItemrepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -30,6 +33,12 @@ public class BookingFrontendController {
 
     @Autowired
     private AuthStrategyService authStrategyService;
+
+    @Autowired
+    private PetserItemrepository petserItemrepository; // 注入搜尋服務項目的 Repo
+
+    @Autowired
+    private PetSitterServiceRepository petSitterServiceRepo; // 注入保姆服務關聯的 Repo
 
     private void addCommonAttributes(HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
@@ -58,22 +67,48 @@ public class BookingFrontendController {
     }
 
     @GetMapping("/search")
-    public String searchSitters(@RequestParam(required = false) String area, HttpServletRequest request, Model model) {
-        // 從資料庫撈出所有保姆 (排除手動擴充的 Repository 方法，直接使用 findAll)
-        List<SitterVO> allSitters = sitterRepository.findAll();
+    public String searchSitters(
+            @RequestParam(required = false) String area,
+            @RequestParam(required = false) String service, // 新增服務參數
+            HttpServletRequest request, Model model) {
 
-        Integer currentMemId = authStrategyService.getCurrentUserId(request);//// 取得目前登入者 ID
-        // 執行複核過濾：
-        // 1. 必須是啟用中 (sitterStatus == 0)
-        // 2. 如果有傳入地區關鍵字，則地址必須包含該關鍵字
+        // 1. 抓取所有保姆
+        List<SitterVO> allSitters = sitterRepository.findAll();
+        Integer currentMemId = authStrategyService.getCurrentUserId(request);
+
+        // 2. 處理服務過濾：如果傳入服務名稱，先找出對應的 ID
+        List<Integer> sitterIdsProvidingService = null;
+        if (service != null && !service.trim().isEmpty()) {
+            List<PetServiceItem> items = petserItemrepository.findByServiceTypeContaining(service);
+            if (!items.isEmpty()) {
+                Integer serviceId = items.get(0).getServiceItemId();
+                // 找出有提供這項服務的保姆 ID 列表
+                sitterIdsProvidingService = petSitterServiceRepo.findByServiceItemId(serviceId)
+                        .stream()
+                        .map(ps -> ps.getSitter().getSitterId())
+                        .toList();
+            } else {
+                // 如果查不到該服務名稱，預設給一個空列表
+                sitterIdsProvidingService = List.of();
+            }
+        }
+
+        // 3. 執行複合過濾
+        final List<Integer> finalSitterIds = sitterIdsProvidingService;
         List<SitterVO> filteredSitters = allSitters.stream()
-                .filter(s -> s.getSitterStatus() == 0)
-                .filter(s -> currentMemId == null || !s.getMemId().equals(currentMemId))
+                .filter(s -> s.getSitterStatus() == 0) // 必須啟用
+                .filter(s -> currentMemId == null || !s.getMemId().equals(currentMemId)) // 排除自己
                 .filter(s -> {
-                    if (area == null || area.trim().isEmpty()) {
+                    // 地區過濾
+                    if (area == null || area.trim().isEmpty())
                         return true;
-                    }
                     return s.getSitterAdd() != null && s.getSitterAdd().contains(area);
+                })
+                .filter(s -> {
+                    // 服務過濾
+                    if (finalSitterIds == null)
+                        return true; // 沒傳服務參數就不過濾
+                    return finalSitterIds.contains(s.getSitterId());
                 })
                 .toList();
 

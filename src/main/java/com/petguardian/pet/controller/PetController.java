@@ -24,6 +24,8 @@ import com.petguardian.evaluate.service.EvaluateService;
 //import com.petguardian.evaluate.model.EvaluateRepository;
 
 import com.petguardian.pet.model.PetDTO; // 引入 DTO
+import com.petguardian.pet.model.PetServiceItem;
+import com.petguardian.pet.model.PetserItemrepository;
 import com.petguardian.pet.service.PetService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,6 +47,9 @@ public class PetController {
 
     @Autowired
     private BookingService bookingOrderSvc; // 🔴 必須加上這一行，變數名稱要對齊你呼叫的名字
+
+    @Autowired
+    private PetserItemrepository petserItemrepository;
 
     // @Autowired
     // private EvaluateRepository evaluateRepository; // 注入實例，解決 static 報錯問題
@@ -143,10 +148,10 @@ public class PetController {
 
     @GetMapping("/dashboard") // 這是網址路徑，對應 window.location.href
     public String showDashboard(Model model, @RequestParam(defaultValue = "1") Integer whichPage, HttpSession session) {
-        // 假設你從 session 拿 memId
         Integer memId = (Integer) session.getAttribute("memId");
-        if (memId == null)
-            memId = 1001; // 測試用
+        if (memId == null) {
+            return "redirect:/html/frontend/member/login/login.html";
+        }
 
         // 抓取該會員的所有寵物清單
 
@@ -159,12 +164,12 @@ public class PetController {
 
     }
 
-    @GetMapping("/select_page")
-    public String showPetSelectPage(Model model) {
-        // 如果頁面需要預載資料，可以在這裡 model.addAttribute
-        // 注意：回傳字串必須與 templates 下的檔案路徑一致
-        return "frontend/pet/petselect";
-    }
+    // @GetMapping("/select_page")
+    // public String showPetSelectPage(Model model) {
+    // // 如果頁面需要預載資料，可以在這裡 model.addAttribute
+    // // 注意：回傳字串必須與 templates 下的檔案路徑一致
+    // return "frontend/pet/petselect";
+    // }
 
     @GetMapping("/listone")
     public String getPetDetail(@RequestParam("petId") Integer petId, Model model) {
@@ -181,64 +186,65 @@ public class PetController {
 
     // 2. 更新：列出所有（現在使用 DTO 讓 HTML 能顯示類型名稱）
     @GetMapping("/all")
-    public String getAll(@RequestParam(defaultValue = "1") Integer whichPage, Model model,
-            HttpSession session) {
-
-        // 暫時加上這一行來模擬會員編號為 1 的人登入
-        // 這樣 HTML 判斷 memId == 1 的寵物時，就會出現修改按鈕
-        // if (session.getAttribute("memId") == null) {
-        // session.setAttribute("memId", 1);
-        // }
-
-        session.setAttribute("memId", 1001);
-        Integer memId = 1001;
-        // Integer memId = (Integer) session.getAttribute("memId");
+    public String getAll(@RequestParam(defaultValue = "1") Integer whichPage, Model model, HttpSession session) {
+        Integer memId = (Integer) session.getAttribute("memId");
+        if (memId == null) {
+            return "redirect:/html/frontend/member/login/login.html";
+        }
         Map<String, Object> pageData = petService.getPetsPageData(whichPage, memId);
         System.out.println("資料筆數: " + pageData.get("petlist"));
-        model.addAllAttributes(pageData); // 確保 pageData 裡面有一個 key 叫做 "petList"
+        model.addAllAttributes(pageData);
         model.addAttribute("whichPage", whichPage);
-        return "frontend/pet/petlistallpet2_getfromsession"; // 回傳你修正過後的「清單頁」
+        return "frontend/pet/petlistallpet2_getfromsession";
     }
 
     // 3. 保留：首頁導向
 
-    // 4. 更新：依名稱查詢（使用 DTO 確保清單顯示正常）
-    @PostMapping("/byName")
-    public String getByName(@RequestParam String petName, Model model, HttpSession session) {
-        if (petName == null || petName.trim().isEmpty()) {
-            model.addAttribute("errorMsgs", List.of("請輸入寵物姓名"));
-            return "frontend/pet/petselect";
-        }
-
-        // 從 session 拿真實 ID
-        Integer currentMemId = (Integer) session.getAttribute("memId");
-
-        List<PetDTO> list = petService.findPetsByNameDTO(petName);
-        if (list.isEmpty()) {
-            model.addAttribute("errorMsgs", List.of("查無此寵物姓名"));
-            return "frontend/pet/petselect";
-        }
-
-        PetDTO pet = list.get(0);
-
-        // 🔴 只在這裡加入判斷：如果不是本人，且也不是保姆（有訂單），就擋掉
-        if (!pet.getMemId().equals(currentMemId) && !petService.hasOrderRelation(currentMemId, pet.getPetId())) {
-            model.addAttribute("errorMsgs", List.of("您無權查看此寵物資料"));
-            return "frontend/pet/petselect";
-        }
-
-        // --- 以下完全維持你原本的邏輯 (分頁/導航) ---
-        Integer petId = pet.getPetId();
-        List<Integer> allIds = petService.getAllPetIds(currentMemId);
-        int currentIndex = allIds.indexOf(petId);
-        int total = allIds.size();
-        model.addAttribute("pet", pet);
-        model.addAttribute("prevId", (currentIndex > 0) ? allIds.get(currentIndex - 1) : null);
-        model.addAttribute("nextId", (currentIndex < total - 1) ? allIds.get(currentIndex + 1) : null);
-        model.addAttribute("currentIndex", currentIndex);
-        model.addAttribute("total", total);
-        return "frontend/pet/petlistonepet";
-    }
+    // @PostMapping("/byName")
+    // public String getByName(@RequestParam String petName, Model model,
+    // HttpSession session) {
+    // if (petName == null || petName.trim().isEmpty()) {
+    // model.addAttribute("errorMsgs", List.of("請輸入寵物姓名"));
+    // return "frontend/pet/petselect";
+    // }
+    //
+    // // 從 session 拿真實 ID
+    // Integer currentMemId = (Integer) session.getAttribute("memId");
+    //
+    // // 如果沒登入，踢回登入頁
+    // if (currentMemId == null) {
+    // return "redirect:/html/frontend/member/login/login.html";
+    // }
+    //
+    // List<PetDTO> list = petService.findPetsByNameDTO(petName);
+    // if (list.isEmpty()) {
+    // model.addAttribute("errorMsgs", List.of("查與此寵物姓名"));
+    // return "frontend/pet/petselect";
+    // }
+    //
+    // PetDTO pet = list.get(0);
+    //
+    // // 🔴 只在這裡加入判斷：如果不是本人，且也不是保姆（有訂單），就擋掉
+    // if (!pet.getMemId().equals(currentMemId) &&
+    // !petService.hasOrderRelation(currentMemId, pet.getPetId())) {
+    // model.addAttribute("errorMsgs", List.of("您無權查看此寵物資料"));
+    // return "frontend/pet/petselect";
+    // }
+    //
+    // // --- 以下完全維持你原本的邏輯 (分頁/導航) ---
+    // Integer petId = pet.getPetId();
+    // List<Integer> allIds = petService.getAllPetIds(currentMemId);
+    // int currentIndex = allIds.indexOf(petId);
+    // int total = allIds.size();
+    // model.addAttribute("pet", pet);
+    // model.addAttribute("prevId", (currentIndex > 0) ? allIds.get(currentIndex -
+    // 1) : null);
+    // model.addAttribute("nextId", (currentIndex < total - 1) ?
+    // allIds.get(currentIndex + total - 1) : null);
+    // model.addAttribute("currentIndex", currentIndex);
+    // model.addAttribute("total", total);
+    // return "frontend/pet/petlistonepet";
+    // }
 
     // 5. 更新：單筆查詢 (維持你原本的結構)
     @GetMapping("/one")
@@ -268,6 +274,12 @@ public class PetController {
 
         // 🔴 關鍵判斷：從 session 拿 ID 並比對權限
         Integer currentMemId = (Integer) session.getAttribute("memId");
+
+        // 如果沒登入，踢回登入頁
+        if (currentMemId == null) {
+            return "redirect:/html/frontend/member/login/login.html";
+        }
+
         if (!petDTO.getMemId().equals(currentMemId) && !petService.hasOrderRelation(currentMemId, petId)) {
             errorMsgs.add("您無權查看此寵物資料");
             return "frontend/pet/petselect";
@@ -685,7 +697,9 @@ public class PetController {
      * URL: GET /pet/services
      */
     @GetMapping("/services")
-    public String showPetServices() {
+    public String showPetServices(Model model) {
+        List<PetServiceItem> serviceList = petserItemrepository.findAll();
+        model.addAttribute("serviceList", serviceList);
         return "frontend/pet/Petser_item";
     }
 

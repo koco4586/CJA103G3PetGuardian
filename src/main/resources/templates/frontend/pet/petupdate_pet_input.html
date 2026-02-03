@@ -1,429 +1,432 @@
 <!DOCTYPE html>
 <html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-<title>修改寵物資料</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>修改寵物資料</title>
 
-		<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
-	    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
-	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-	    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+  <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+  <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
 
- <style>
-  body {
-  background-image: url("/images/pet/images1.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  display: block;
-}
+  <style>
+    body {
+      background-image: url("/images/pet/images1.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
 
-.pet-form-wrapper {
-  background-color: #ffffff !important;
-  width: 90%;
-  max-width: 600px; /* 可以調整寬度 */
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  border: 2px solid #ddd;
- margin: 120px auto 30px auto;
-}
+    .pet-form-wrapper {
+      background-color: #ffffff !important;
+      width: 90%;
+      max-width: 600px;
+      /* 可以調整寬度 */
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border: 2px solid #ddd;
+      margin: 120px auto 30px auto;
+    }
 
-.pet-form-wrapper table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0 auto;
-}
+    .pet-form-wrapper table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+    }
 
-.pet-form-wrapper table td,
-.pet-form-wrapper table th {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: left;
-  vertical-align: middle;
-}
+    .pet-form-wrapper table td,
+    .pet-form-wrapper table th {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+      vertical-align: middle;
+    }
 
-/* 讓第一欄（標籤欄）寬度固定 */
-.pet-form-wrapper table td:first-child {
-  width: 120px;
-  font-weight: 600;
-  background-color: #f9f9f9;
-}
+    /* 讓第一欄（標籤欄）寬度固定 */
+    .pet-form-wrapper table td:first-child {
+      width: 120px;
+      font-weight: 600;
+      background-color: #f9f9f9;
+    }
 
-/* 保持原本的 header 設定不變 */
-#main-header, .header {
-  width: 100% !important;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 999;
-}
+    /* 保持原本的 header 設定不變 */
+    #main-header,
+    .header {
+      width: 100% !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 999;
+    }
 
-.submit_wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-    width: 100%;
-}
+    .submit_wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      width: 100%;
+    }
 
-.submit_wrap input[type="submit"] {
-    padding: 10px 30px;
-    font-size: 1rem;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
+    .submit_wrap input[type="submit"] {
+      padding: 10px 30px;
+      font-size: 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-.submit_wrap input[type="submit"]:hover {
-    background-color: #45a049;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-  
-</style>
+    .submit_wrap input[type="submit"]:hover {
+      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
 </head>
 
 <body>
 
-<header id="main-header" class="header"></header>
+  <header id="main-header" class="header"></header>
 
 
-<div class="container pet-form-wrapper">
-<table id="table-1">
-  <tr>
-    <td><h3>修改寵物資料</h3></td>
-    <td>
-      <h4>
-        <a th:href="@{/pet/select_page}">回首頁</a>
-      </h4>
-    </td>
-  </tr>
-</table>
+  <div class="container pet-form-wrapper">
+    <table id="table-1">
+      <tr>
+        <td>
+          <h3>修改寵物資料</h3>
+        </td>
+        <td>
+          <h4>
+            <a th:href="@{/pet/dashboard}">回首頁</a>
+          </h4>
+        </td>
+      </tr>
+    </table>
 
-<!-- 錯誤訊息 -->
-<div th:if="${errorMsgs != null}">
-  <ul>
-    <li th:each="msg : ${errorMsgs}"
-        th:text="${msg}"
-        style="color:red"></li>
-  </ul>
-</div>
-
-<form th:action="@{/pet/update}"
-      method="post"
-      enctype="multipart/form-data">
-
-<table>
-  <tr>
-    <td>寵物編號:</td>
-    <td th:text="${pet.petId}"></td>
-  </tr>
-
-  <tr>
-    <td>會員編號:</td>
-    <td>
-<!--       /*/<input type="text"/*/ -->
-<!--             /*/ name="memId"/*/ -->
-<!--             /*/ th:value="${pet.memId}/*/" -->
-<!--             /*/ readonly/*/ -->
-<!--             /*/ style="background-color:#eee;"/*/ > -->
-    </td>
-  </tr>
-
-  <tr>
-    <td>寵物類型:</td>
-    <td>
-      <select name="typeId">
-        <option value="1" th:selected="${pet.typeId == 1}">貓</option>
-        <option value="2" th:selected="${pet.typeId == 2}">狗</option>
-      </select>
-    </td>
-  </tr>
-
-  <tr>
-    <td>寵物尺寸:</td>
-    <td>
-      <select name="sizeId">
-        <option value="1" th:selected="${pet.sizeId == 1}">小型</option>
-        <option value="2" th:selected="${pet.sizeId == 2}">中型</option>
-        <option value="3" th:selected="${pet.sizeId == 3}">大型</option>
-      </select>
-    </td>
-  </tr>
-
-  <tr>
-    <td>寵物姓名:</td>
-    <td>
-      <input type="text" name="petName"
-             th:value="${pet.petName}" required/>
-    </td>
-  </tr>
-
-  <tr>
-    <td>寵物性別:</td>
-    <td>
-      <select name="petGender">
-        <option value="0" th:selected="${pet.petGender == 0}">母</option>
-        <option value="1" th:selected="${pet.petGender == 1}">公</option>
-      </select>
-    </td>
-  </tr>
-
-  <tr>
-    <td>寵物年齡:</td>
-    <td>
-      <input type="text" name="petAge"
-             th:value="${pet.petAge}" />
-    </td>
-  </tr>
-
-  <tr>
-    <td>寵物備註:</td>
-    <td>
-      <textarea name="petDescription" rows="4" cols="45"
-                th:text="${pet.petDescription != null ? pet.petDescription : ''}"></textarea>
-    </td>
-  </tr>
-
-  <tr>
-  <td>寵物圖片:</td>
-  <td>
-    <div style="margin-bottom: 10px;">
-      <img id="preview_img"
-       style="max-width: 200px; border: 1px solid #ccc; cursor: pointer;" 
-           th:src="@{/pet/img/{id}(id=${pet.petId})}"
-           title="點擊更換圖片"
-           onclick="document.getElementById('petImage').click();">
+    <!-- 錯誤訊息 -->
+    <div th:if="${errorMsgs != null}">
+      <ul>
+        <li th:each="msg : ${errorMsgs}" th:text="${msg}" style="color:red"></li>
+      </ul>
     </div>
 
-    <input type="file" name="upFiles" id="petImage" accept="image/*" style="display: none;">
-    <button type="button" onclick="document.getElementById('petImage').click();">選擇圖片</button>
-    <button type="button" id="deleteImageBtn" style="background-color: #ff4d4d; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 2px 8px;">
-      刪除圖片
-    </button>
-  </td>
-</tr>
-</table>
+    <form th:action="@{/pet/update}" method="post" enctype="multipart/form-data">
 
-<input type="hidden" name="memId" th:value="${pet.memId}">
-<input type="hidden" name="petId" th:value="${pet.petId}">
+      <table>
+        <tr>
+          <td>寵物編號:</td>
+          <td th:text="${pet.petId}"></td>
+        </tr>
+
+        <tr>
+          <td>會員編號:</td>
+          <td>
+            <!--       /*/<input type="text"/*/ -->
+            <!--             /*/ name="memId"/*/ -->
+            <!--             /*/ th:value="${pet.memId}/*/" -->
+            <!--             /*/ readonly/*/ -->
+            <!--             /*/ style="background-color:#eee;"/*/ > -->
+          </td>
+        </tr>
+
+        <tr>
+          <td>寵物類型:</td>
+          <td>
+            <select name="typeId">
+              <option value="1" th:selected="${pet.typeId == 1}">貓</option>
+              <option value="2" th:selected="${pet.typeId == 2}">狗</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>寵物尺寸:</td>
+          <td>
+            <select name="sizeId">
+              <option value="1" th:selected="${pet.sizeId == 1}">小型</option>
+              <option value="2" th:selected="${pet.sizeId == 2}">中型</option>
+              <option value="3" th:selected="${pet.sizeId == 3}">大型</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>寵物姓名:</td>
+          <td>
+            <input type="text" name="petName" th:value="${pet.petName}" required />
+          </td>
+        </tr>
+
+        <tr>
+          <td>寵物性別:</td>
+          <td>
+            <select name="petGender">
+              <option value="0" th:selected="${pet.petGender == 0}">母</option>
+              <option value="1" th:selected="${pet.petGender == 1}">公</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>寵物年齡:</td>
+          <td>
+            <input type="text" name="petAge" th:value="${pet.petAge}" />
+          </td>
+        </tr>
+
+        <tr>
+          <td>寵物備註:</td>
+          <td>
+            <textarea name="petDescription" rows="4" cols="45"
+              th:text="${pet.petDescription != null ? pet.petDescription : ''}"></textarea>
+          </td>
+        </tr>
+
+        <tr>
+          <td>寵物圖片:</td>
+          <td>
+            <div style="margin-bottom: 10px;">
+              <img id="preview_img" style="max-width: 200px; border: 1px solid #ccc; cursor: pointer;"
+                th:src="@{/pet/img/{id}(id=${pet.petId})}" title="點擊更換圖片"
+                onclick="document.getElementById('petImage').click();">
+            </div>
+
+            <input type="file" name="upFiles" id="petImage" accept="image/*" style="display: none;">
+            <button type="button" onclick="document.getElementById('petImage').click();">選擇圖片</button>
+            <button type="button" id="deleteImageBtn"
+              style="background-color: #ff4d4d; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 2px 8px;">
+              刪除圖片
+            </button>
+          </td>
+        </tr>
+      </table>
+
+      <input type="hidden" name="memId" th:value="${pet.memId}">
+      <input type="hidden" name="petId" th:value="${pet.petId}">
 
 
-<div class="submit_wrap">
-  <input type="submit" value="送出修改">
-</div>
+      <div class="submit_wrap">
+        <input type="submit" value="送出修改">
+      </div>
 
-</form>
+    </form>
 
-<div id="successOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; color:white; text-align:center; flex-direction:column; justify-content:center; align-items:center;">
-    <h2 style="color: #4CAF50; margin-bottom: 10px;">更新確認</h2>
-    
-    <div id="previewContainer" style="margin: 20px auto; border: 3px solid #555; background: #222; min-width: 300px; min-height: 200px; display: flex; align-items:center; justify-content:center;">
+    <div id="successOverlay"
+      style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; color:white; text-align:center; flex-direction:column; justify-content:center; align-items:center;">
+      <h2 style="color: #4CAF50; margin-bottom: 10px;">更新確認</h2>
+
+      <div id="previewContainer"
+        style="margin: 20px auto; border: 3px solid #555; background: #222; min-width: 300px; min-height: 200px; display: flex; align-items:center; justify-content:center;">
         <img id="finalPreview" style="max-width: 450px; max-height: 350px; display: none;">
         <div id="noImageText" style="display: none; padding: 40px; color: #aaa;">(此寵物目前無圖片)</div>
+      </div>
+
+      <p style="font-size: 20px;">系統將在 <span id="countdownText"
+          style="font-size: 36px; font-weight: bold; color: yellow;">10</span> 秒後自動儲存並跳轉</p>
+
+      <div style="margin-top: 20px;">
+        <button type="button" onclick="finalizeSubmitNow()"
+          style="padding: 12px 25px; font-size: 18px; cursor: pointer; background:#4CAF50; color:white; border:none; border-radius:5px; margin-right: 15px;">立即更新</button>
+        <button type="button" onclick="cancelSubmission()"
+          style="padding: 12px 25px; font-size: 18px; cursor: pointer; background:#666; color:white; border:none; border-radius:5px;">返回修改</button>
+      </div>
     </div>
+  </div>
 
-    <p style="font-size: 20px;">系統將在 <span id="countdownText" style="font-size: 36px; font-weight: bold; color: yellow;">10</span> 秒後自動儲存並跳轉</p>
-    
-    <div style="margin-top: 20px;">
-        <button type="button" onclick="finalizeSubmitNow()" style="padding: 12px 25px; font-size: 18px; cursor: pointer; background:#4CAF50; color:white; border:none; border-radius:5px; margin-right: 15px;">立即更新</button>
-        <button type="button" onclick="cancelSubmission()" style="padding: 12px 25px; font-size: 18px; cursor: pointer; background:#666; color:white; border:none; border-radius:5px;">返回修改</button>
-    </div>
-</div>
-</div>
 
-  
-<!-- <div th:unless="${session.memId == pet.memId}" style="text-align: center; margin-top: 50px;"> -->
-<!--     <div style="background: white; display: inline-block; padding: 20px; border-radius: 10px;"> -->
-<!--         <h2 style="color: red;">抱歉！您不是此寵物的主人，無法進行修改。</h2> -->
-<!--         <p>請確認您的登入帳號是否正確。</p> -->
-<!--         <a th:href="@{/pet/all}">返回寵物列表</a> -->
-<!--     </div> -->
-<!-- </div> -->
+  <!-- <div th:unless="${session.memId == pet.memId}" style="text-align: center; margin-top: 50px;"> -->
+  <!--     <div style="background: white; display: inline-block; padding: 20px; border-radius: 10px;"> -->
+  <!--         <h2 style="color: red;">抱歉！您不是此寵物的主人，無法進行修改。</h2> -->
+  <!--         <p>請確認您的登入帳號是否正確。</p> -->
+  <!--         <a th:href="@{/pet/all}">返回寵物列表</a> -->
+  <!--     </div> -->
+  <!-- </div> -->
 
-<script th:inline="javascript">
+  <script th:inline="javascript">
     /* 1. 初始化資料：透過 Thymeleaf 取得原始數值供 JS 比對變動 */
-    
-    
+
+
     const oriData = {
-        name: /*[[${pet.petName}]]*/ '',
-        age: /*[[${pet.petAge}]]*/ '',
-        gender: /*[[${pet.petGender}]]*/ ''
+      name: /*[[${pet.petName}]]*/ '',
+      age: /*[[${pet.petAge}]]*/ '',
+      gender: /*[[${pet.petGender}]]*/ ''
     };
-    const hasOldImage = /*[[${pet.petId != null}]]*/ false; 
+    const hasOldImage = /*[[${pet.petId != null}]]*/ false;
 
     const fileInput = document.getElementById("petImage");
     const previewImg = document.getElementById("preview_img");
     const updateForm = document.querySelector('form');
     let isDeleted = false; // 追蹤使用者是否點擊了刪除按鈕
 
-    window.onload = function() {
-    	updateForm.dataset.submitting = 'false';
-        const savedData = JSON.parse(sessionStorage.getItem("pending_data"));
-        if (savedData) {
-            // 回填文字欄位
-            document.querySelector('input[name="petName"]').value = savedData.petName;
-            document.querySelector('input[name="petAge"]').value = savedData.petAge;
-            document.querySelector('select[name="petGender"]').value = savedData.petGender;
-            document.querySelector('textarea[name="petDescription"]').value = savedData.petDescription;
-            document.querySelector('select[name="typeId"]').value = savedData.typeId;
-            document.querySelector('select[name="sizeId"]').value = savedData.sizeId;
-            
-            // 處理圖片回填：如果是刪除狀態，就隱藏圖片；如果有暫存圖，就顯示暫存圖
-            if (savedData.deleteImage === "true") {
-                isDeleted = true;
-                previewImg.src = "";
-                previewImg.style.display = 'none';
-            } else if (savedData.img_base64 && savedData.img_base64.startsWith("data:image")) {
-                previewImg.src = savedData.img_base64;
-                previewImg.style.display = 'block';
+    window.onload = function () {
+      updateForm.dataset.submitting = 'false';
+      const savedData = JSON.parse(sessionStorage.getItem("pending_data"));
+      if (savedData) {
+        // 回填文字欄位
+        document.querySelector('input[name="petName"]').value = savedData.petName;
+        document.querySelector('input[name="petAge"]').value = savedData.petAge;
+        document.querySelector('select[name="petGender"]').value = savedData.petGender;
+        document.querySelector('textarea[name="petDescription"]').value = savedData.petDescription;
+        document.querySelector('select[name="typeId"]').value = savedData.typeId;
+        document.querySelector('select[name="sizeId"]').value = savedData.sizeId;
+
+        // 處理圖片回填：如果是刪除狀態，就隱藏圖片；如果有暫存圖，就顯示暫存圖
+        if (savedData.deleteImage === "true") {
+          isDeleted = true;
+          previewImg.src = "";
+          previewImg.style.display = 'none';
+        } else if (savedData.img_base64 && savedData.img_base64.startsWith("data:image")) {
+          previewImg.src = savedData.img_base64;
+          previewImg.style.display = 'block';
+        }
+      }
+    };
+
+    // 1. 圖片預覽功能
+    fileInput.onchange = function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = function () {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            // 設定等比例縮放 (最大寬度 800px)
+            const maxWidth = 800;
+            let scale = 1;
+            if (img.width > maxWidth) {
+              scale = maxWidth / img.width;
             }
-        }
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            // 繪製到畫布
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            // 轉成壓縮後的 Base64 (JPEG 品質 0.7)
+            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+
+            previewImg.src = compressedBase64;
+            previewImg.style.display = 'block';
+            isDeleted = false;
+          };
+        };
+        reader.readAsDataURL(file);
+      }
     };
-    
- // 1. 圖片預覽功能
-    fileInput.onchange = function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-            	
-            	const img = new Image();
-                img.src = e.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
 
-                    // 設定等比例縮放 (最大寬度 800px)
-                    const maxWidth = 800;
-                    let scale = 1;
-                    if (img.width > maxWidth) {
-                        scale = maxWidth / img.width;
-                    }
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-
-                    // 繪製到畫布
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    // 轉成壓縮後的 Base64 (JPEG 品質 0.7)
-                    const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-            	
-                    previewImg.src = compressedBase64;
-                    previewImg.style.display = 'block';
-                isDeleted = false;
-            };
-            reader.readAsDataURL(file);
-        }
-    };
- };
-    
     // 2. 監聽刪除按鈕 (假設你有一個 id="deleteImageBtn" 的按鈕)
     const deleteBtn = document.getElementById("deleteImageBtn");
     if (deleteBtn) {
-        deleteBtn.onclick = function() {
-            if (confirm("確定要移除這張圖片嗎？")) {
-                isDeleted = true;
-                if (previewImg) {
-                    previewImg.src = "";
-                    previewImg.alt = "已刪除圖片";
-                }
-                fileInput.value = ""; // 清空檔案選擇器
-            }
-        };
+      deleteBtn.onclick = function () {
+        if (confirm("確定要移除這張圖片嗎？")) {
+          isDeleted = true;
+          if (previewImg) {
+            previewImg.src = "";
+            previewImg.alt = "已刪除圖片";
+          }
+          fileInput.value = ""; // 清空檔案選擇器
+        }
+      };
     }
 
-    updateForm.addEventListener('submit', function(e) {
-        e.preventDefault(); 
-        if (this.dataset.submitting === 'true') return;
+    updateForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (this.dataset.submitting === 'true') return;
 
-        const nameInput = document.querySelector('input[name="petName"]');
-        if (!nameInput.value.trim()) {
-            alert("請輸入寵物姓名！");
-            nameInput.focus();
-            return;
+      const nameInput = document.querySelector('input[name="petName"]');
+      if (!nameInput.value.trim()) {
+        alert("請輸入寵物姓名！");
+        nameInput.focus();
+        return;
+      }
+
+      const hasNewFile = fileInput.files.length > 0;
+      let finalImageToSave = "";
+
+      // --- 核心邏輯分支 ---
+      if (isDeleted || hasNewFile) {
+        // 【路徑：已刪除 或 已選新圖】 -> 單次詢問
+        if (confirm("確認送出修改嗎？")) {
+          this.dataset.submitting = 'true';
+          // 如果點了刪除，傳送 "NONE" 字串；否則傳送預覽圖 src
+          finalImageToSave = isDeleted ? "NONE" : (previewImg.src || "");
+          handleDataTransfer(finalImageToSave);
         }
-
-        const hasNewFile = fileInput.files.length > 0;
-        let finalImageToSave = ""; 
-
-        // --- 核心邏輯分支 ---
-        if (isDeleted || hasNewFile) { 
-            // 【路徑：已刪除 或 已選新圖】 -> 單次詢問
-            if (confirm("確認送出修改嗎？")) {
-                this.dataset.submitting = 'true';
-                // 如果點了刪除，傳送 "NONE" 字串；否則傳送預覽圖 src
-                finalImageToSave = isDeleted ? "NONE" : (previewImg.src || "");
-                handleDataTransfer(finalImageToSave);
-            }
+      } else {
+        // 【路徑：沒動圖片】 -> 二階段詢問
+        if (confirm("您尚未選擇新圖片，是否保留原圖？")) {
+          // 第一階按「是」
+          if (confirm("確認保留原圖並送出修改嗎？")) {
+            this.dataset.submitting = 'true';
+            finalImageToSave = previewImg.src; // 保留原圖
+            handleDataTransfer(finalImageToSave);
+          }
         } else {
-            // 【路徑：沒動圖片】 -> 二階段詢問
-            if (confirm("您尚未選擇新圖片，是否保留原圖？")) {
-                // 第一階按「是」
-                if (confirm("確認保留原圖並送出修改嗎？")) {
-                    this.dataset.submitting = 'true';
-                    finalImageToSave = previewImg.src; // 保留原圖
-                    handleDataTransfer(finalImageToSave);
-                }
-            } else {
-                // 第一階按「否」(不想保留原圖)
-                if (confirm("確認不帶圖片(僅更新文字)並送出修改嗎？")) {
-                    this.dataset.submitting = 'true';
-                    finalImageToSave = "NONE"; // 傳送 NONE 代表要在下一頁顯示「暫無圖片」
-                    handleDataTransfer(finalImageToSave);
-                }
-            }
+          // 第一階按「否」(不想保留原圖)
+          if (confirm("確認不帶圖片(僅更新文字)並送出修改嗎？")) {
+            this.dataset.submitting = 'true';
+            finalImageToSave = "NONE"; // 傳送 NONE 代表要在下一頁顯示「暫無圖片」
+            handleDataTransfer(finalImageToSave);
+          }
         }
+      }
     });
 
-        
+
     function handleDataTransfer(imageData) {
-    	
-    	const descValue = document.querySelector('textarea[name="petDescription"]').value.trim();
-        const pendingData = {
-            petId: document.querySelector('input[name="petId"]').value,
-            memId: document.querySelector('input[name="memId"]').value,
-            petName: document.querySelector('input[name="petName"]').value,
-            petAge: document.querySelector('input[name="petAge"]').value,
-            petGender: document.querySelector('select[name="petGender"]').value,
-            typeId: document.querySelector('select[name="typeId"]').value,
-            sizeId: document.querySelector('select[name="sizeId"]').value,
-            petDescription: document.querySelector('textarea[name="petDescription"]').value,
-            
-            // 重要：這兩個 Key 都存入決定後的 imageData ("NONE" 或 Base64)
-            petImage: imageData, 
-            original_base64: imageData, 
-            
-            fromPage: window.location.href
-        };
 
-        sessionStorage.setItem("pending_data", JSON.stringify(pendingData));
-        window.location.href = "/pet/confirm";
+      const descValue = document.querySelector('textarea[name="petDescription"]').value.trim();
+      const pendingData = {
+        petId: document.querySelector('input[name="petId"]').value,
+        memId: document.querySelector('input[name="memId"]').value,
+        petName: document.querySelector('input[name="petName"]').value,
+        petAge: document.querySelector('input[name="petAge"]').value,
+        petGender: document.querySelector('select[name="petGender"]').value,
+        typeId: document.querySelector('select[name="typeId"]').value,
+        sizeId: document.querySelector('select[name="sizeId"]').value,
+        petDescription: document.querySelector('textarea[name="petDescription"]').value,
+
+        // 重要：這兩個 Key 都存入決定後的 imageData ("NONE" 或 Base64)
+        petImage: imageData,
+        original_base64: imageData,
+
+        fromPage: window.location.href
+      };
+
+      sessionStorage.setItem("pending_data", JSON.stringify(pendingData));
+      window.location.href = "/pet/confirm";
     }
-    
-        
-        
-  // 修改：原本的核心功能
-    
-   
 
-    
+
+
+    // 修改：原本的核心功能
 
 
 
 
-</script>
 
 
-<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
- <script th:src="@{/js/frontend/main.js}"></script>
+
+
+  </script>
+
+
+  <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+  <script th:src="@{/js/frontend/main.js}"></script>
 </body>
+
 </html>
