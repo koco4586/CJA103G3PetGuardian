@@ -322,30 +322,32 @@ function subscribeToReadReceipts(chatroomId) {
     if (ChatState.stompClient && ChatState.stompClient.connected) {
         ChatState.readSubscription = ChatState.stompClient.subscribe(
             '/topic/chatroom.' + chatroomId + '.read',
-            function () {
-                markLastMessageAsRead();
+            function (message) {
+                const receipt = JSON.parse(message.body);
+                // Only act if the OTHER person read it
+                if (receipt.readerId !== ChatState.currentUserId) {
+                    markAllSentMessagesAsRead();
+                }
             }
         );
     }
 }
 
 /**
- * Shows 已讀 on the last sent message only.
- * Removes any existing read status first.
+ * Marks all sent messages in the current view as "Read".
+ * Does not remove existing ones to prevent "vanishing indicator" effect.
  */
-function markLastMessageAsRead() {
-    // Remove all existing read status
-    document.querySelectorAll('.read-status').forEach(el => el.remove());
-
+function markAllSentMessagesAsRead() {
     const messages = document.querySelectorAll('.message.sent');
-    if (messages.length === 0) return;
-    const lastSent = messages[messages.length - 1];
-    if (lastSent) {
-        const span = document.createElement('span');
-        span.className = 'read-status';
-        span.textContent = '已讀';
-        lastSent.appendChild(span);
-    }
+    messages.forEach(msg => {
+        // Only add if not already present
+        if (!msg.querySelector('.read-status')) {
+            const span = document.createElement('span');
+            span.className = 'read-status';
+            span.textContent = '已讀';
+            msg.appendChild(span);
+        }
+    });
 }
 
 // ============================================================
@@ -433,11 +435,6 @@ async function loadChatHistory(chatroomId, isLoadMore = false) {
             } else {
                 renderMessagesBatch(messages, DOM.messageList, true);
                 attachScrollListener(DOM.messageList, chatroomId); // Attach to room ID
-
-                // Check if partner has read (any message has isRead=true)
-                if (messages.some(m => m.isRead)) {
-                    markLastMessageAsRead();
-                }
             }
         } else if (messages.length > 0) {
             renderMessagesBatch(messages, DOM.messageList, false);
@@ -561,6 +558,14 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
     // Message body (XSS-safe)
     msgDiv.appendChild(document.createTextNode(content));
 
+    // Precise Read Status Rendering
+    if (isSent && isRead) {
+        const span = document.createElement('span');
+        span.className = 'read-status';
+        span.textContent = '已讀';
+        msgDiv.appendChild(span);
+    }
+
     return msgDiv;
 }
 
@@ -581,7 +586,7 @@ function appendMessage(content, isSent, senderName, messageId, replyToContent, r
         emptyState.remove();
     }
 
-    const msgDiv = createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName);
+    const msgDiv = createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, false); // New messages are unread by default
 
     // Smart scroll: only auto-scroll if user is near bottom or just sent a message
     const isNearBottom = (DOM.messageList.scrollHeight - DOM.messageList.scrollTop - DOM.messageList.clientHeight) < CONFIG.SCROLL_THRESHOLD_PX;

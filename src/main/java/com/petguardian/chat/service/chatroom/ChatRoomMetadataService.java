@@ -119,9 +119,10 @@ public class ChatRoomMetadataService {
         List<Integer> roomIds = metadataCache.getUserRoomIds(userId);
         if (!roomIds.isEmpty()) {
             List<ChatRoomMetadataDTO> cached = metadataCache.getRoomMetaBatch(roomIds);
-            // CRITICAL: If cache returned data, use it. Otherwise fallback to DB.
-            // This handles the case where Redis goes down after we got room IDs.
-            if (!cached.isEmpty()) {
+            // CRITICAL:
+            // In migration/outage scenarios, partial data is dangerous. Fallback to DB if
+            // counts mismatch.
+            if (!cached.isEmpty() && cached.size() == roomIds.size()) {
                 return cached;
             }
             // Cache failed to return data - fall through to DB
@@ -219,6 +220,12 @@ public class ChatRoomMetadataService {
             log.debug("[MetadataService] Redis unavailable, updating read status directly in MySQL for room {}",
                     chatroomId);
             chatRoomRepository.updateMemberReadStatus(chatroomId, userId, time);
+
+            // Only queue for recovery if Redis is actually down (CB Open)
+            // A simple cache miss (CB Closed) should not trigger invalidation
+            if (metadataCache.isCircuitBreakerOpen()) {
+                metadataCache.queueForRecovery(chatroomId);
+            }
         }
     }
 

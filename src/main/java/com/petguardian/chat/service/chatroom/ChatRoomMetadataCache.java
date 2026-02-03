@@ -14,12 +14,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
- * Domain Cache for ChatRoom Metadata and Member Profiles.
- * Uses RedisJsonMapper for type-safe storage in Hash structures.
- */
 @Slf4j
 @Component
 public class ChatRoomMetadataCache {
@@ -32,6 +30,9 @@ public class ChatRoomMetadataCache {
     private static final String CIRCUIT_NAME = "redisCacheCircuit";
     private static final long DEFAULT_TTL_DAYS = 7;
 
+    // Track rooms that need cache invalidation after Redis recovery
+    private final Set<Integer> pendingRecoveryRooms = ConcurrentHashMap.newKeySet();
+
     private final RedisJsonMapper redisJsonMapper;
     private final CircuitBreaker circuitBreaker;
 
@@ -42,14 +43,20 @@ public class ChatRoomMetadataCache {
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
     }
 
+    public boolean isCircuitBreakerOpen() {
+        return circuitBreaker.getState() == CircuitBreaker.State.OPEN;
+    }
+
     // =================================================================================
     // READ OPERATIONS
     // =================================================================================
 
     public Optional<ChatRoomMetadataDTO> getRoomMeta(Integer roomId) {
         try {
-            return circuitBreaker.executeSupplier(
-                    () -> redisJsonMapper.getHash(ROOM_KEY + roomId, ChatRoomMetadataDTO.class));
+            return circuitBreaker.executeSupplier(() -> {
+                String json = redisJsonMapper.getStringTemplate().opsForValue().get(ROOM_KEY + roomId);
+                return Optional.ofNullable(redisJsonMapper.fromJson(json, ChatRoomMetadataDTO.class));
+            });
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping cache read for room {}.", circuitBreaker.getState(), roomId);
             return Optional.empty();
@@ -61,8 +68,10 @@ public class ChatRoomMetadataCache {
 
     public Optional<MemberProfileDTO> getMemberProfile(Integer memberId) {
         try {
-            return circuitBreaker.executeSupplier(
-                    () -> redisJsonMapper.getHash(MEMBER_KEY + memberId, MemberProfileDTO.class));
+            return circuitBreaker.executeSupplier(() -> {
+                String json = redisJsonMapper.getStringTemplate().opsForValue().get(MEMBER_KEY + memberId);
+                return Optional.ofNullable(redisJsonMapper.fromJson(json, MemberProfileDTO.class));
+            });
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping cache read for member {}.", circuitBreaker.getState(), memberId);
             return Optional.empty();
@@ -76,7 +85,6 @@ public class ChatRoomMetadataCache {
         if (ids == null || ids.isEmpty())
             return Collections.emptyList();
 
-        // Multi-fetching hashes via pipeline or individual calls (simplified for now)
         return ids.stream()
                 .map(this::getRoomMeta)
                 .filter(Optional::isPresent)
@@ -90,8 +98,13 @@ public class ChatRoomMetadataCache {
 
     public void setRoomMeta(Integer roomId, ChatRoomMetadataDTO dto) {
         try {
-            circuitBreaker.executeRunnable(
-                    () -> redisJsonMapper.setHash(ROOM_KEY + roomId, dto, Duration.ofDays(DEFAULT_TTL_DAYS)));
+            circuitBreaker.executeRunnable(() -> {
+                String json = redisJsonMapper.toJson(dto);
+                redisJsonMapper.getStringTemplate().opsForValue().set(
+                        ROOM_KEY + roomId,
+                        json,
+                        Duration.ofDays(DEFAULT_TTL_DAYS));
+            });
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping cache write for room {}.", circuitBreaker.getState(), roomId);
         } catch (Exception e) {
@@ -101,8 +114,13 @@ public class ChatRoomMetadataCache {
 
     public void setMemberProfile(Integer memberId, MemberProfileDTO dto) {
         try {
-            circuitBreaker.executeRunnable(
-                    () -> redisJsonMapper.setHash(MEMBER_KEY + memberId, dto, Duration.ofDays(DEFAULT_TTL_DAYS)));
+            circuitBreaker.executeRunnable(() -> {
+                String json = redisJsonMapper.toJson(dto);
+                redisJsonMapper.getStringTemplate().opsForValue().set(
+                        MEMBER_KEY + memberId,
+                        json,
+                        Duration.ofDays(DEFAULT_TTL_DAYS));
+            });
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping cache write for member {}.", circuitBreaker.getState(), memberId);
         } catch (Exception e) {
@@ -113,7 +131,7 @@ public class ChatRoomMetadataCache {
     public void markAsDirty(Integer roomId) {
         try {
             circuitBreaker.executeRunnable(
-                    () -> redisJsonMapper.getTemplate().opsForSet().add(DIRTY_ROOMS_SET, roomId));
+                    () -> redisJsonMapper.getStringTemplate().opsForSet().add(DIRTY_ROOMS_SET, String.valueOf(roomId)));
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping markAsDirty for room {}.", circuitBreaker.getState(), roomId);
         } catch (Exception e) {
@@ -121,15 +139,10 @@ public class ChatRoomMetadataCache {
         }
     }
 
-    /**
-     * Updates read status in cache and returns whether update was successful.
-     * 
-     * @return true if cache was updated, false if cache read failed (Redis down)
-     */
     public boolean updateReadStatusInCache(Integer roomId, Integer userId, LocalDateTime time) {
         Optional<ChatRoomMetadataDTO> meta = getRoomMeta(roomId);
         if (meta.isEmpty()) {
-            return false; // Cache unavailable - caller should fallback to DB
+            return false;
         }
 
         ChatRoomMetadataDTO dto = meta.get();
@@ -150,42 +163,37 @@ public class ChatRoomMetadataCache {
     // LOOKUP & LIST OPERATIONS
     // =================================================================================
 
-    /**
-     * Finds a chatroomId by member IDs using a lookup cache (Type-Aware).
-     */
     public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2, Integer type) {
         int id1 = Math.min(memId1, memId2);
         int id2 = Math.max(memId1, memId2);
         int safeType = type != null ? type : 0;
-
-        // New Key Format: chat:room_lookup:{id1}:{id2}:{type}
         String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2 + ":" + safeType;
 
         try {
-            Object id = redisJsonMapper.getTemplate().opsForValue().get(lookupKey);
-            if (id instanceof Number)
-                return Optional.of(((Number) id).intValue());
+            // Now returns String
+            String idStr = redisJsonMapper.getStringTemplate().opsForValue().get(lookupKey);
+            if (idStr != null) {
+                return Optional.of(Integer.parseInt(idStr));
+            }
             return Optional.empty();
         } catch (Exception e) {
             return Optional.empty();
         }
     }
 
-    // Deprecated legacy method
     public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2) {
-        return getRoomIdByMembers(memId1, memId2, 0); // Default to 0 if not specified
+        return getRoomIdByMembers(memId1, memId2, 0);
     }
 
     public void setRoomIdLookup(Integer memId1, Integer memId2, Integer type, Integer chatroomId) {
         int id1 = Math.min(memId1, memId2);
         int id2 = Math.max(memId1, memId2);
         int safeType = type != null ? type : 0;
-
         String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2 + ":" + safeType;
 
         try {
             circuitBreaker.executeRunnable(
-                    () -> redisJsonMapper.getTemplate().opsForValue().set(lookupKey, chatroomId,
+                    () -> redisJsonMapper.getStringTemplate().opsForValue().set(lookupKey, String.valueOf(chatroomId),
                             Duration.ofDays(DEFAULT_TTL_DAYS)));
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping cache write for room lookup {}.", circuitBreaker.getState(),
@@ -195,7 +203,6 @@ public class ChatRoomMetadataCache {
         }
     }
 
-    // Deprecated legacy method
     public void setRoomIdLookup(Integer memId1, Integer memId2, Integer chatroomId) {
         setRoomIdLookup(memId1, memId2, 0, chatroomId);
     }
@@ -203,11 +210,12 @@ public class ChatRoomMetadataCache {
     public List<Integer> getUserRoomIds(Integer userId) {
         String key = REDIS_USER_ROOMS_KEY + userId;
         try {
-            List<Object> ids = redisJsonMapper.getTemplate().opsForList().range(key, 0, -1);
+            List<String> ids = redisJsonMapper.getStringTemplate().opsForList().range(key, 0, -1);
             if (ids == null)
                 return Collections.emptyList();
+
             return ids.stream()
-                    .map(o -> o instanceof Number ? ((Number) o).intValue() : Integer.parseInt(o.toString()))
+                    .map(Integer::parseInt)
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.debug("[Cache] Failed to read room IDs for user {}: {}", userId, e.getMessage());
@@ -221,7 +229,8 @@ public class ChatRoomMetadataCache {
             circuitBreaker.executeRunnable(() -> {
                 redisJsonMapper.delete(key);
                 if (!roomIds.isEmpty()) {
-                    redisJsonMapper.getTemplate().opsForList().rightPushAll(key, roomIds.toArray());
+                    List<String> stringIds = roomIds.stream().map(String::valueOf).toList();
+                    redisJsonMapper.getStringTemplate().opsForList().rightPushAll(key, stringIds);
                     redisJsonMapper.expire(key, Duration.ofDays(DEFAULT_TTL_DAYS));
                 }
             });
@@ -233,14 +242,7 @@ public class ChatRoomMetadataCache {
     }
 
     public void invalidateUserRoomList(Integer userId) {
-        try {
-            circuitBreaker.executeRunnable(
-                    () -> redisJsonMapper.delete(REDIS_USER_ROOMS_KEY + userId));
-        } catch (CallNotPermittedException e) {
-            log.debug("[Cache] CB is {}. Skipping invalidation for user {}.", circuitBreaker.getState(), userId);
-        } catch (Exception e) {
-            log.warn("[Cache] Failed to invalidate user room list {}: {}", userId, e.getMessage());
-        }
+        invalidate(REDIS_USER_ROOMS_KEY + userId);
     }
 
     public void invalidate(String key) {
@@ -252,5 +254,21 @@ public class ChatRoomMetadataCache {
         } catch (Exception e) {
             log.warn("[Cache] Failed to invalidate key {}: {}", key, e.getMessage());
         }
+    }
+
+    public void invalidateRoom(Integer roomId) {
+        redisJsonMapper.delete(ROOM_KEY + roomId);
+    }
+
+    // =================================================================================
+    // RECOVERY OPERATIONS
+    // =================================================================================
+
+    public void queueForRecovery(Integer roomId) {
+        this.pendingRecoveryRooms.add(roomId);
+    }
+
+    public Set<Integer> getRecoveryQueue() {
+        return this.pendingRecoveryRooms;
     }
 }
