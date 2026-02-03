@@ -226,21 +226,22 @@ public class ChatServiceImpl implements ChatService {
             return;
         }
 
+        // Correct Partner Identification: If I am member 0, partner is member 1.
         LocalDateTime partnerLastReadAt = currentUserId.equals(chatroom.getMemberIds().get(0))
-                ? chatroom.getMem1LastReadAt() // Assuming mapped correctly in metadataService
-                : chatroom.getMem2LastReadAt();
+                ? chatroom.getMem2LastReadAt() // Partner is Member 2
+                : chatroom.getMem1LastReadAt(); // Partner is Member 1
 
         if (partnerLastReadAt == null) {
             return;
         }
 
-        for (int i = dtos.size() - 1; i >= 0; i--) {
-            ChatMessageDTO msg = dtos.get(i);
+        // Mark all messages as read if sent by current user and chatTime <=
+        // partnerLastReadAt
+        for (ChatMessageDTO msg : dtos) {
             if (currentUserId.equals(msg.getSenderId())) {
                 if (msg.getChatTime() != null && !msg.getChatTime().isAfter(partnerLastReadAt)) {
                     msg.setIsRead(true);
                 }
-                break;
             }
         }
     }

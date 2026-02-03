@@ -2,11 +2,11 @@ package com.petguardian.chat.service.chatmessage.report;
 
 import com.petguardian.chat.model.ChatReport;
 import com.petguardian.chat.model.ChatReportRepository;
+import com.petguardian.chat.service.RedisJsonMapper;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -37,15 +36,15 @@ public class ChatReportService {
     private static final String CIRCUIT_NAME = "reportCircuit";
 
     private final ChatReportRepository chatReportRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisJsonMapper redisJsonMapper;
     private final CircuitBreaker circuitBreaker;
 
     public ChatReportService(
             ChatReportRepository chatReportRepository,
-            RedisTemplate<String, Object> redisTemplate,
+            RedisJsonMapper redisJsonMapper,
             CircuitBreakerRegistry circuitBreakerRegistry) {
         this.chatReportRepository = chatReportRepository;
-        this.redisTemplate = redisTemplate;
+        this.redisJsonMapper = redisJsonMapper;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
     }
 
@@ -158,7 +157,11 @@ public class ChatReportService {
         hashKeys.addAll(messageIds);
         hashKeys.add("_init");
 
-        List<Object> values = redisTemplate.opsForHash().multiGet(key, hashKeys);
+        // Use MultiGet via String Template (returns Strings)
+        // Note: GenericJackson2JsonRedisSerializer might have been used before.
+        // If we switched to StringRedisTemplate, multiGet returns List<String>.
+        // We cast to List<Object> here just to iterate, but values are Strings.
+        List<Object> values = redisJsonMapper.getStringTemplate().opsForHash().multiGet(key, hashKeys);
 
         if (values == null || values.size() != hashKeys.size()) {
             return null;
@@ -174,13 +177,9 @@ public class ChatReportService {
             Object val = values.get(i);
             if (val != null) {
                 try {
-                    if (val instanceof Integer intVal) {
-                        result.put(messageIds.get(i), intVal);
-                    } else if (val instanceof String strVal) {
-                        result.put(messageIds.get(i), Integer.parseInt(strVal));
-                    } else if (val instanceof Number num) {
-                        result.put(messageIds.get(i), num.intValue());
-                    }
+                    // It should be a string now (from StringRedisTemplate)
+                    String strVal = val.toString();
+                    result.put(messageIds.get(i), Integer.parseInt(strVal));
                 } catch (NumberFormatException e) {
                     log.warn("[Report] Failed to parse Redis value: {}", val);
                 }
@@ -222,17 +221,19 @@ public class ChatReportService {
     }
 
     public void performInvalidation(Integer reporterId) {
-        redisTemplate.delete(getRedisKey(reporterId));
+        redisJsonMapper.delete(getRedisKey(reporterId));
     }
 
     public void repopulateRedis(Integer reporterId, Map<String, Integer> statusMap) {
         String key = getRedisKey(reporterId);
-        Map<String, Object> writeMap = new HashMap<>();
+        // We need Map<String, String> for StringRedisTemplate
+        Map<String, String> writeMap = new HashMap<>();
         if (statusMap != null) {
-            writeMap.putAll(statusMap);
+            statusMap.forEach((k, v) -> writeMap.put(k, String.valueOf(v)));
         }
-        writeMap.put("_init", 1);
-        redisTemplate.opsForHash().putAll(key, writeMap);
-        redisTemplate.expire(key, TTL_DAYS, TimeUnit.DAYS);
+        writeMap.put("_init", "1");
+
+        redisJsonMapper.getStringTemplate().opsForHash().putAll(key, writeMap);
+        redisJsonMapper.expire(key, java.time.Duration.ofDays(TTL_DAYS));
     }
 }
