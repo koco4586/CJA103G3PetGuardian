@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.Optional;
 
 /**
@@ -51,15 +52,16 @@ class ChatMessageRetrievalManager {
 
         // Optimization: Write-back to Redis for Page 0 (fire-and-forget)
         if (pageable.getPageNumber() == 0 && !dbResults.isEmpty()) {
-            try {
-                log.info("[Retrieval] Warming up Redis cache for room {} with {} messages.", chatroomId,
-                        dbResults.size());
-                messageCache.warmUpHistory(chatroomId, dbResults);
-            } catch (Exception e) {
-                log.warn("[Retrieval] Cache warm-up failed for room {}. Skipping. Reason: {}", chatroomId,
-                        e.getMessage());
-                // Continue - do not propagate exception, data is already retrieved from DB
-            }
+            CompletableFuture.runAsync(() -> {
+                try {
+                    log.info("[Retrieval] Warming up Redis cache for room {} with {} messages.", chatroomId,
+                            dbResults.size());
+                    messageCache.warmUpHistory(chatroomId, dbResults);
+                } catch (Exception e) {
+                    log.warn("[Retrieval] Cache warm-up failed for room {}. Skipping. Reason: {}", chatroomId,
+                            e.getMessage());
+                }
+            });
         }
 
         return dbResults;
