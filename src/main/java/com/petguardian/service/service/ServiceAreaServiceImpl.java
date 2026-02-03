@@ -113,7 +113,8 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
     @Override
     @Transactional(readOnly = true)
     public List<ServiceAreaVO> getServiceAreasBySitter(Integer sitterId) {
-        return repository.findBySitter_SitterId(sitterId);
+        // 使用優化版查詢，一次載入 ServiceArea 和 Area，避免 N+1 問題
+        return repository.findBySitterIdWithArea(sitterId);
     }
 
     @Override
