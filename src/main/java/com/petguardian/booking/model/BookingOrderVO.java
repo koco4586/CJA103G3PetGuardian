@@ -18,11 +18,6 @@ import lombok.Data;
 @Data
 public class BookingOrderVO {
 
-    @Transient
-    private String memName;
-    @Transient
-    private String petName;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_order_id")
@@ -73,10 +68,21 @@ public class BookingOrderVO {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
-    @jakarta.persistence.Transient // 告訴 JPA 不要把這個存進資料庫
+    
+    // 顯示用的額外資訊 (不存入資料庫)
+    @Transient
+    private String memName;     // 透過 batchEnrichOrderInfo 填入
+
+    @Transient
+    private String petName;     // 透過 batchEnrichOrderInfo 填入
+
+    @Transient
+    private String serviceName; // 透過 batchEnrichOrderInfo 填入
+    
+    @Transient
     private String sitterName;
 
-    @jakarta.persistence.Transient
+    @Transient
     private Integer sitterMemId;
 
 }
