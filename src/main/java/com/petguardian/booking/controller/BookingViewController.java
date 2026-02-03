@@ -45,16 +45,16 @@ public class BookingViewController {
 
     @Autowired
     private AuthStrategyService authStrategyService;
-    
+
     @Autowired
     private SitterRepository sitterRepository;
-    
+
     @Autowired
     private PetRepository petRepository;
-    
+
     @Autowired
     private PetserItemrepository petServiceItemRepository;
-    
+
     @Autowired
     private com.petguardian.petsitter.model.PetSitterServiceRepository petSitterServiceRepository;
 
@@ -68,47 +68,50 @@ public class BookingViewController {
     @GetMapping("/services")
     public String listSitters(HttpServletRequest request, Model model) {
         // 1. 取得所有保母資料
-        List<SitterVO> rawSitters = sitterRepository.findAll(); 
-        
+        List<SitterVO> rawSitters = sitterRepository.findAll();
+
         // 2. 取得當前登入使用者 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
-        
+
         // 3. 建立收藏保姆 ID 的集合
         Set<Integer> favSitterIds = new HashSet<>();
-        
+
         // 4. 如果使用者已登入，查詢他收藏了哪些保姆
         if (memId != null) {
             favSitterIds = bookingService.getSitterFavoritesByMember(memId)
-                                         .stream()
-                                         .map(BookingFavoriteVO::getSitterId)
-                                         .collect(Collectors.toSet());
+                    .stream()
+                    .map(BookingFavoriteVO::getSitterId)
+                    .collect(Collectors.toSet());
         }
 
-        java.util.Map<Integer, java.util.List<PetSitterServiceVO>> allServicesBySitter = petSitterServiceRepository.findAll().stream()
+        java.util.Map<Integer, java.util.List<PetSitterServiceVO>> allServicesBySitter = petSitterServiceRepository
+                .findAll().stream()
                 .collect(Collectors.groupingBy(svc -> svc.getSitter().getSitterId()));
         final Set<Integer> finalFavIds = favSitterIds;
         List<BookingDisplayDTO> displayList = rawSitters.stream().map(s -> {
             BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
-            
+
             // 從 Map 取得該保母的服務
-            List<PetSitterServiceVO> myServices = allServicesBySitter.getOrDefault(s.getSitterId(), new java.util.ArrayList<>());
-            
+            List<PetSitterServiceVO> myServices = allServicesBySitter.getOrDefault(s.getSitterId(),
+                    new java.util.ArrayList<>());
+
             StringBuilder json = new StringBuilder("[");
             for (int i = 0; i < myServices.size(); i++) {
                 PetSitterServiceVO svc = myServices.get(i);
                 Integer svcId = svc.getServiceItemId();
-                
+
                 // [關鍵修改] 直接透過關聯取得服務名稱！不用再查表了
                 String svcName = "未知服務";
                 if (svc.getServiceItem() != null) {
                     svcName = svc.getServiceItem().getServiceType();
                 }
-                
+
                 json.append(String.format("{\"id\":%d,\"name\":\"%s\"}", svcId, svcName));
-                if (i < myServices.size() - 1) json.append(",");
+                if (i < myServices.size() - 1)
+                    json.append(",");
             }
             json.append("]");
-            
+
             dto.setServicesJson(json.toString());
             return dto;
         }).collect(Collectors.toList());
@@ -116,7 +119,7 @@ public class BookingViewController {
         // 6. 將資料傳給前端頁面
         model.addAttribute("sitters", displayList);
         addCommonAttributes(request, model);
-        return "frontend/services"; 
+        return "frontend/services";
     }
 
     /**
@@ -127,20 +130,20 @@ public class BookingViewController {
      */
     @GetMapping("/search")
     public String searchSitters(
-            @RequestParam(required = false) String area, 
-            HttpServletRequest request, 
+            @RequestParam(required = false) String area,
+            HttpServletRequest request,
             Model model) {
-        
+
         // 1. 從資料庫撈出所有保姆
         List<SitterVO> allSitters = sitterRepository.findAll();
 
         // 2. 取得目前登入者 ID
         Integer currentMemId = authStrategyService.getCurrentUserId(request);
-        
+
         // 3. 執行過濾條件：
-        //    - 必須是啟用中 (sitterStatus == 0)
-        //    - 排除登入者本人
-        //    - 如果有地區參數，地址必須包含該關鍵字
+        // - 必須是啟用中 (sitterStatus == 0)
+        // - 排除登入者本人
+        // - 如果有地區參數，地址必須包含該關鍵字
         List<SitterVO> filteredSitters = allSitters.stream()
                 .filter(s -> s.getSitterStatus() == 0) // 只顯示啟用中的保姆
                 .filter(s -> currentMemId == null || !s.getMemId().equals(currentMemId)) // 不顯示自己
@@ -158,7 +161,7 @@ public class BookingViewController {
         model.addAttribute("sitters", filteredSitters);
         model.addAttribute("order", new BookingOrderVO());
         addCommonAttributes(request, model); // 加入共用資料（如寵物清單）
-        
+
         return "frontend/services";
     }
 
@@ -176,7 +179,7 @@ public class BookingViewController {
             @RequestParam Integer serviceItemId,
             HttpServletRequest request,
             Model model) {
-        
+
         try {
             // 1. 檢查是否登入
             Integer memId = authStrategyService.getCurrentUserId(request);
@@ -206,7 +209,7 @@ public class BookingViewController {
             model.addAttribute("errorMessage", "資料讀取失敗。");
             model.addAttribute("order", new BookingOrderVO());
         }
-        
+
         return "frontend/booking/add-booking";
     }
 
@@ -220,27 +223,27 @@ public class BookingViewController {
      */
     @GetMapping("/list/member/{memId}")
     public String memberBookingList(@PathVariable Integer memId, Model model) {
-        
+
         // 1. 查詢該會員所有進行中的預約
         List<BookingOrderVO> list = bookingService.getActiveOrdersByMemberId(memId);
-        
+
         // 2. 為每筆預約補上保姆姓名
         for (BookingOrderVO order : list) {
             try {
                 PetSitterServiceVO service = dataService.getSitterServiceInfo(
-                    order.getSitterId(), 
-                    order.getServiceItemId()
-                );
+                        order.getSitterId(),
+                        order.getServiceItemId());
                 order.setSitterName(service.getSitter().getSitterName());
+                order.setSitterMemId(service.getSitter().getMemId());
             } catch (Exception e) {
                 order.setSitterName("未知保母");
             }
         }
-        
+
         // 3. 傳遞資料給前端
         model.addAttribute("bookingList", list);
         model.addAttribute("memId", memId);
-        
+
         return "frontend/booking/list-booking";
     }
 
@@ -253,34 +256,34 @@ public class BookingViewController {
      */
     @GetMapping("/memberOrders")
     public String listMemberOrders(
-            @RequestParam(required = false) Integer status, 
-            HttpServletRequest request, 
+            @RequestParam(required = false) Integer status,
+            HttpServletRequest request,
             Model model) {
-        
+
         // 1. 取得當前登入使用者 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
         if (memId == null) {
             return "redirect:/front/loginpage"; // 未登入，導向登入頁
         }
-        
+
         // 2. 根據狀態查詢預約（有 status 參數則過濾，沒有則查全部）
-        List<BookingOrderVO> bookingList = (status != null) 
-            ? bookingService.findByMemberAndStatus(memId, status)
-            : bookingService.getOrdersByMemberId(memId);
-        
+        List<BookingOrderVO> bookingList = (status != null)
+                ? bookingService.findByMemberAndStatus(memId, status)
+                : bookingService.getOrdersByMemberId(memId);
+
         // 3. 為每筆預約補上保姆姓名
         for (BookingOrderVO order : bookingList) {
             try {
                 PetSitterServiceVO service = dataService.getSitterServiceInfo(
-                    order.getSitterId(),
-                    order.getServiceItemId()
-                );
+                        order.getSitterId(),
+                        order.getServiceItemId());
                 order.setSitterName(service.getSitter().getSitterName());
+                order.setSitterMemId(service.getSitter().getMemId());
             } catch (Exception e) {
                 order.setSitterName("未知保母");
             }
         }
-        
+
         // 4. 傳遞資料給前端
         model.addAttribute("bookingList", bookingList);
         model.addAttribute("currentStatus", status);
@@ -299,13 +302,14 @@ public class BookingViewController {
         Integer memId = authStrategyService.getCurrentUserId(request);
 
         // 獲取原本的寵物清單
-        List<PetVO> myPets = (memId != null) 
-            ? petRepository.findByMemId(memId) 
-            : new java.util.ArrayList<>();
+        List<PetVO> myPets = (memId != null)
+                ? petRepository.findByMemId(memId)
+                : new java.util.ArrayList<>();
 
         model.addAttribute("myPets", myPets);
-        
-//        List<PetServiceItem> serviceItems = petServiceItemRepository.findByServiceStatus(1);
-//        model.addAttribute("serviceItems", serviceItems);
+
+        // List<PetServiceItem> serviceItems =
+        // petServiceItemRepository.findByServiceStatus(1);
+        // model.addAttribute("serviceItems", serviceItems);
     }
 }

@@ -120,6 +120,7 @@ public class ChatRoomMetadataCache {
 
     /**
      * Updates read status in cache and returns whether update was successful.
+     * 
      * @return true if cache was updated, false if cache read failed (Redis down)
      */
     public boolean updateReadStatusInCache(Integer roomId, Integer userId, LocalDateTime time) {
@@ -127,7 +128,7 @@ public class ChatRoomMetadataCache {
         if (meta.isEmpty()) {
             return false; // Cache unavailable - caller should fallback to DB
         }
-        
+
         ChatRoomMetadataDTO dto = meta.get();
         List<Integer> members = dto.getMemberIds();
         if (members != null && !members.isEmpty()) {
@@ -147,12 +148,15 @@ public class ChatRoomMetadataCache {
     // =================================================================================
 
     /**
-     * Finds a chatroomId by member IDs using a lookup cache.
+     * Finds a chatroomId by member IDs using a lookup cache (Type-Aware).
      */
-    public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2) {
+    public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2, Integer type) {
         int id1 = Math.min(memId1, memId2);
         int id2 = Math.max(memId1, memId2);
-        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2;
+        int safeType = type != null ? type : 0;
+
+        // New Key Format: chat:room_lookup:{id1}:{id2}:{type}
+        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2 + ":" + safeType;
 
         try {
             Object id = redisJsonMapper.getTemplate().opsForValue().get(lookupKey);
@@ -164,11 +168,23 @@ public class ChatRoomMetadataCache {
         }
     }
 
-    public void setRoomIdLookup(Integer memId1, Integer memId2, Integer chatroomId) {
+    // Deprecated legacy method
+    public Optional<Integer> getRoomIdByMembers(Integer memId1, Integer memId2) {
+        return getRoomIdByMembers(memId1, memId2, 0); // Default to 0 if not specified
+    }
+
+    public void setRoomIdLookup(Integer memId1, Integer memId2, Integer type, Integer chatroomId) {
         int id1 = Math.min(memId1, memId2);
         int id2 = Math.max(memId1, memId2);
-        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2;
+        int safeType = type != null ? type : 0;
+
+        String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2 + ":" + safeType;
         redisJsonMapper.getTemplate().opsForValue().set(lookupKey, chatroomId, Duration.ofDays(DEFAULT_TTL_DAYS));
+    }
+
+    // Deprecated legacy method
+    public void setRoomIdLookup(Integer memId1, Integer memId2, Integer chatroomId) {
+        setRoomIdLookup(memId1, memId2, 0, chatroomId);
     }
 
     public List<Integer> getUserRoomIds(Integer userId) {
