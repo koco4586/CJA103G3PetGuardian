@@ -119,11 +119,11 @@
 							th:text="'$' + ${#numbers.formatDecimal(order.reservationFee, 0, 'COMMA', 0, 'POINT')}">
 						</td>
 						<td style="text-align: right;">
-							<button th:if="${order.orderStatus == 2}" class="btn btn-primary btn-sm"
+					<!--  		<button th:if="${order.orderStatus == 2}" class="btn btn-primary btn-sm"
 								style="border-radius: 2rem;"
 								th:onclick="'executePayout(' + ${order.bookingOrderId} + ')'">
 								執行撥款
-							</button>
+							</button> -->
 							<button th:if="${order.orderStatus == 0}" class="btn btn-outline btn-sm"
 								style="border-radius: 2rem;">
 								提醒保母

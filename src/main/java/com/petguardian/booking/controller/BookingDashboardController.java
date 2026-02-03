@@ -22,9 +22,9 @@ public class BookingDashboardController {
     	// 1. 取得當前登入會員 ID
     	Integer memId = authStrategyService.getCurrentUserId(request);
         
-        if (memId == null) {
-            return "redirect:/front/loginpage";
-        }
+//        if (memId == null) {
+//            return "redirect:/front/loginpage";
+//        }
         // 2. 取得收藏清單 (建議在 Service 處理好「補完保母資料」的邏輯)
         List<BookingFavoriteVO> favorites = bookingService.getSitterFavoritesByMember(memId);
         // 3. 傳遞給前端
