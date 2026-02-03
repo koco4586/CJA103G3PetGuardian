@@ -39,7 +39,7 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 			from ForumPostReportVO r
 			join r.forumPost p
 			join p.forum f
-			where p.postStatus = 1 and r.reportStatus = 2
+			where r.reportStatus = 2
 			order by r.handleTime desc
 	""")
 	public List<RejectedPostDTO> findAllRejectedPosts();

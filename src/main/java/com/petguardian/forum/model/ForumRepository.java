@@ -6,8 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface ForumRepository extends JpaRepository<ForumVO, Integer>{
 	
@@ -23,8 +22,8 @@ public interface ForumRepository extends JpaRepository<ForumVO, Integer>{
 	public List<ForumVO> getAllActive();
 	
 	//	更新討論區狀態
-	@Transactional
 	@Modifying
+	@Transactional
 	@Query(value = "update ForumVO f set f.forumStatus = :forumStatus where f.forumId = :forumId")
 	public void updateStatus(@Param("forumStatus") Integer forumStatus, @Param("forumId") Integer forumId);
 	

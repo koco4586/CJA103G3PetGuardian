@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,15 +19,18 @@ import com.petguardian.member.repository.management.MemberManagementRepository;
 @Service
 public class ForumPostService {
 	
-	@Autowired
-	ForumPostRepository repo;
+	private final ForumPostRepository repo;	
+	private final ForumPostPicsRepository picRepo;
+	private final MemberManagementRepository memRepo;
 	
-	@Autowired
-	ForumPostPicsRepository picRepo;
-	
-	@Autowired
-	MemberManagementRepository memRepo;
-	
+	public ForumPostService(ForumPostRepository repo, ForumPostPicsRepository picRepo,
+			MemberManagementRepository memRepo) {
+		super();
+		this.repo = repo;
+		this.picRepo = picRepo;
+		this.memRepo = memRepo;
+	}
+
 	public void addPost(ForumPostVO forumPostVO) {
 		repo.save(forumPostVO);
 	}
@@ -84,6 +86,10 @@ public class ForumPostService {
 		ForumPostVO forumPostVO = repo.findById(postId)
 				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
 		return forumPostVO;
+	}
+	
+	public ForumPostVO getOnePostWithCommentAndMember(Integer postId) {
+		return repo.findOnePostWithCommentAndMember(postId);
 	}
 	
 	public List<ForumPostVO> getAllActiveByForumId(Integer forumId){

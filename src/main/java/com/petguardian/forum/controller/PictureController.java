@@ -3,7 +3,6 @@ package com.petguardian.forum.controller;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,14 +20,17 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("/forum")
 public class PictureController {
 
-	@Autowired
-	ForumService forumService;
+	private final ForumService forumService;
+	private final ForumPostService forumPostService;
+	private final ForumPostPicsService forumPostPicsService;
 
-	@Autowired
-	ForumPostService forumPostService;
-
-	@Autowired
-	ForumPostPicsService forumPostPicsService;
+	public PictureController(ForumService forumService, ForumPostService forumPostService,
+			ForumPostPicsService forumPostPicsService) {
+		super();
+		this.forumService = forumService;
+		this.forumPostService = forumPostService;
+		this.forumPostPicsService = forumPostPicsService;
+	}
 
 	@GetMapping("picture")
 	public void picture(@RequestParam("forumId") Integer forumId, HttpServletRequest req, HttpServletResponse res)

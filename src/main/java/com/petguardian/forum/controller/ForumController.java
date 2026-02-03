@@ -3,7 +3,6 @@ package com.petguardian.forum.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -18,8 +17,12 @@ import com.petguardian.forum.model.ForumVO;
 @RequestMapping("/forum")
 public class ForumController {
 
-	@Autowired
-	ForumService forumService;
+	private final ForumService forumService;
+
+	public ForumController(ForumService forumService) {
+		super();
+		this.forumService = forumService;
+	}
 
 	@GetMapping("list-all-active-forum")
 	public String listAllActiveForum(Model model) {
