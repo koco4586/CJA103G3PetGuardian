@@ -109,7 +109,7 @@ public class BookingViewController {
 //                PetSitterServiceVO svc = myServices.get(i);
 //                Integer svcId = svc.getServiceItemId();
 //                
-//                // [關鍵修改] 直接透過關聯取得服務名稱！不用再查表了
+//                // 直接透過關聯取得服務名稱！不用再查表了
 //                String svcName = "未知服務";
 //                if (svc.getServiceItem() != null) {
 //                    svcName = svc.getServiceItem().getServiceType();
@@ -124,7 +124,9 @@ public class BookingViewController {
             return dto;
         }).collect(Collectors.toList());
 
+        
         // 6. 將資料傳給前端頁面
+        model.addAttribute("currentMemId", memId);
         model.addAttribute("sitters", displayList);
         addCommonAttributes(request, model);
         return "frontend/services";

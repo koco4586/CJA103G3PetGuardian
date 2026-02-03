@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
+import com.petguardian.member.model.Member;
+import com.petguardian.pet.model.PetVO;
 
 /**
  * 訂單查詢服務
@@ -136,44 +138,43 @@ public class BookingOrderQueryService {
         // 1. 蒐集所有 ID (使用 Set 避免重複)
         java.util.Set<Integer> memIds = new java.util.HashSet<>();
         java.util.Set<Integer> petIds = new java.util.HashSet<>();
+        java.util.Set<Integer> serviceIds = new java.util.HashSet<>();
         
         for (BookingOrderVO order : orderList) {
             if (order.getMemId() != null) memIds.add(order.getMemId());
             if (order.getPetId() != null) petIds.add(order.getPetId());
+            if (order.getServiceItemId() != null) serviceIds.add(order.getServiceItemId()); // 蒐集服務 ID
         }
         
         // 2. 建立 ID 對照表 (Map)
+        java.util.Map<Integer, String> serviceNameMap = dataService.getServiceNamesMap(serviceIds);
         java.util.Map<Integer, String> memNameMap = new java.util.HashMap<>();
         java.util.Map<Integer, String> petNameMap = new java.util.HashMap<>();
         
         // 3. 批次查詢會員資料 (SQL: WHERE mem_id IN (...))
         if (!memIds.isEmpty()) {
-            List<com.petguardian.member.model.Member> members = memberRepository.findAllById(memIds);
-            for (com.petguardian.member.model.Member m : members) {
-                memNameMap.put(m.getMemId(), m.getMemName());
-            }
+        	List<Member> members = memberRepository.findAllById(memIds);
+        	for (Member m : members) memNameMap.put(m.getMemId(), m.getMemName());
         }
         
+        
         // 4. 批次查詢寵物資料 (SQL: WHERE pet_id IN (...))
-//        if (!petIds.isEmpty()) {
-//            List<com.petguardian.pet.model.PetVO> pets = petRepository.findAllById(petIds);
-//            for (com.petguardian.pet.model.PetVO p : pets) {
-//                petNameMap.put(p.getPetId(), p.getPetName());
-//            }
-//        }
+        if (!petIds.isEmpty()) {
+        	List<PetVO> pets = petRepository.findAllById(petIds);
+        	for (PetVO p : pets) petNameMap.put(p.getPetId(), p.getPetName());
+        }
         
         // 5. 將查到的名字填回訂單物件
         for (BookingOrderVO order : orderList) {
+        	order.setServiceName(serviceNameMap.getOrDefault(order.getServiceItemId(), "一般服務"));
             // 填入會員名稱
             if (order.getMemId() != null) {
-                String name = memNameMap.getOrDefault(order.getMemId(), "未知會員");
-                order.setMemName(name);
+            	order.setMemName(memNameMap.getOrDefault(order.getMemId(), "未知會員"));
             }
             
             // 填入寵物名稱
             if (order.getPetId() != null) {
-                String name = petNameMap.getOrDefault(order.getPetId(), "未知寵物");
-                order.setPetName(name);
+            	order.setPetName(petNameMap.getOrDefault(order.getPetId(), "未知寵物"));
             }
             // 處理取消原因的預設值
             if (order.getOrderStatus() != null && order.getOrderStatus() == 3 && 

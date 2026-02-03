@@ -126,7 +126,7 @@
 
         <div class="sitter-grid" id="sitter-list">
             <!-- 動態迴圈渲染保母 -->
-            <div class="card-premium" th:each="sitter : ${sitters}">
+            <div class="card-premium" th:each="sitter : ${sitters}" th:if="${currentMemId == null or sitter.sitter.memId != currentMemId}">
                 <div class="img-container">
                     <a th:href="@{/frontend/public/sitter/detail/{id}(id=${sitter.sitter.sitterId})}">
                         <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
