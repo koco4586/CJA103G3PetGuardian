@@ -162,6 +162,7 @@
 								<span th:if="${order.orderStatus == 1}" class="badge-pill status-ongoing">進行中</span>
 								<span th:if="${order.orderStatus == 2}" class="badge-pill status-completed">服務完成</span>
 								<span th:if="${order.orderStatus == 3}" class="badge-pill status-cancelled">已取消</span>
+								<span th:if="${order.orderStatus == 4}" class="badge-pill status-cancelled">已退款</span>
 								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>
 							</div>
 							<div style="color: #666; font-size: 0.9rem;">

@@ -19,11 +19,9 @@ import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.booking.service.BookingDataIntegrationService;
 import com.petguardian.booking.service.BookingService;
 import com.petguardian.common.service.AuthStrategyService;
-import com.petguardian.member.model.Member;
 import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
 import com.petguardian.pet.model.PetserItemrepository;
-import com.petguardian.petsitter.model.PetSitterServiceVO;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
@@ -93,9 +91,9 @@ public class BookingViewController {
                     .collect(Collectors.toSet());
         }
 
-        java.util.Map<Integer, java.util.List<PetSitterServiceVO>> allServicesBySitter = petSitterServiceRepository
-                .findAll().stream()
-                .collect(Collectors.groupingBy(svc -> svc.getSitter().getSitterId()));
+//        java.util.Map<Integer, java.util.List<PetSitterServiceVO>> allServicesBySitter = petSitterServiceRepository
+//                .findAll().stream()
+//                .collect(Collectors.groupingBy(svc -> svc.getSitter().getSitterId()));
         final Set<Integer> finalFavIds = favSitterIds;
         List<BookingDisplayDTO> displayList = rawSitters.stream().map(s -> {
             BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
@@ -131,6 +129,17 @@ public class BookingViewController {
         model.addAttribute("sitters", displayList);
         addCommonAttributes(request, model);
         return "frontend/services";
+    }
+    
+    @GetMapping("/member/favorites")
+    public String listMyFavorites(HttpServletRequest request, Model model) {
+        Integer memId = authStrategyService.getCurrentUserId(request);
+        
+        // 這裡才呼叫詳細版，因為這頁就是要看保母名字
+        List<BookingFavoriteVO> detailFavs = bookingService.getSitterFavoritesWithDetail(memId);
+        
+        model.addAttribute("sitterFavorites", detailFavs);
+        return "frontend/member-favorites";
     }
 
     /**
