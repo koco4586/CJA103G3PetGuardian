@@ -42,6 +42,9 @@ public class SellerOrderServiceImpl implements SellerOrderService {
     private static final int STATUS_SHIPPED = 1;    // 已出貨
     private static final int STATUS_COMPLETED = 2;  // 已完成
     private static final int STATUS_CANCELED = 3;   // 已取消
+    private static final int STATUS_REFUNDING = 4;  // 申請退貨中
+    private static final int STATUS_REFUNDED = 5;   // 退貨完成
+    private static final int STATUS_PAIDOUT = 6;    // 已撥款給賣家
 
     // ==================== 基本查詢 ====================
 
@@ -170,9 +173,13 @@ public class SellerOrderServiceImpl implements SellerOrderService {
             String buyerName = getBuyerName(order.getBuyerMemId());
             orderData.put("buyerName", buyerName);
 
-            // 判斷是否可出貨（狀態為0）
+            // 判斷是否可出貨（狀態為0：已付款）
             boolean canShip = (order.getOrderStatus() != null && order.getOrderStatus() == STATUS_PAID);
             orderData.put("canShip", canShip);
+
+            // 判斷是否已收到撥款（狀態為6：已撥款）
+            boolean isPaidOut = (order.getOrderStatus() != null && order.getOrderStatus() == STATUS_PAIDOUT);
+            orderData.put("isPaidOut", isPaidOut);
 
             result.add(orderData);
         }
@@ -208,6 +215,10 @@ public class SellerOrderServiceImpl implements SellerOrderService {
         String buyerName = getBuyerName(order.getBuyerMemId());
         result.put("buyerName", buyerName);
 
+        // 判斷是否已收到撥款（狀態為6：已撥款）
+        boolean isPaidOut = (order.getOrderStatus() != null && order.getOrderStatus() == STATUS_PAIDOUT);
+        result.put("isPaidOut", isPaidOut);
+
         return result;
     }
 
@@ -225,14 +236,14 @@ public class SellerOrderServiceImpl implements SellerOrderService {
     @Override
     @Transactional(readOnly = true)
     public int calculateTotalRevenue(Integer sellerId) {
+        // 計算已完成及已撥款的訂單總營收
         List<OrdersVO> orders = getSellerOrders(sellerId);
         return orders.stream()
-                .filter(o -> o.getOrderStatus() != null && o.getOrderStatus() == STATUS_COMPLETED)
+                .filter(o -> o.getOrderStatus() != null &&
+                        (o.getOrderStatus() == STATUS_COMPLETED || o.getOrderStatus() == STATUS_PAIDOUT))
                 .mapToInt(o -> o.getOrderTotal() != null ? o.getOrderTotal() : 0)
                 .sum();
     }
-
-    // ==================== 私有方法 ====================
 
     /**
      * 根據會員ID取得名稱
@@ -248,3 +259,7 @@ public class SellerOrderServiceImpl implements SellerOrderService {
         return "買家 #" + memId;
     }
 }
+
+
+
+
