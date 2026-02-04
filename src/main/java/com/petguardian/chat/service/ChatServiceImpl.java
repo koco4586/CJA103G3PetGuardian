@@ -29,6 +29,7 @@ import com.petguardian.chat.service.context.MessageSendContext;
 import com.petguardian.chat.service.context.MessageCreationContext;
 
 import com.petguardian.chat.service.chatmessage.ChatMessageService;
+import com.petguardian.chat.service.chatmessage.ChatMessageRetrievalManager;
 
 import io.hypersistence.tsid.TSID;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +56,7 @@ public class ChatServiceImpl implements ChatService {
 
     private final ChatRoomService chatRoomService; // Chatroom Facade
     private final ChatMessageService chatMessageService; // Message Facade
+    private final ChatMessageRetrievalManager retrievalManager; // Retrieval Manager (for Search)
     private final ChatStatusService statusService; // Status + Notification Facade
     private final ChatMessageMapper messageMapper; // Mapper
     private final TSID.Factory tsidFactory; // ID Generator
@@ -278,7 +280,7 @@ public class ChatServiceImpl implements ChatService {
             return Collections.emptyMap();
         }
 
-        // Optimization: Try to find reply messages in the current batch first
+        // Try to find reply messages in the current batch first
         Map<String, ChatMessageEntity> foundInBatch = messages.stream()
                 .filter(msg -> replyIds.contains(msg.getMessageId()))
                 .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity()));
@@ -311,5 +313,53 @@ public class ChatServiceImpl implements ChatService {
 
         // Use Strategy for efficient Batch Retrieval (Cache-Aside Zero SQL)
         return reportService.getBatchStatus(currentUserId, messageIds);
+    }
+    // ============================================================
+    // SEARCH & JUMP HELPERS
+    // ============================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChatMessageDTO> searchChatHistory(Integer chatroomId, String keyword, Integer requesterId) {
+        // 1. Validate membership AND get metadata
+        ChatRoomMetadataDTO chatroom = chatRoomService.verifyMembership(chatroomId, requesterId);
+
+        // 2. Search messages (RetrievalManager -> Repository)
+        List<ChatMessageEntity> entities = retrievalManager.searchMessage(chatroomId, keyword);
+
+        if (entities.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 4. Convert to DTOs
+        // Using Mapper for consistency.
+        // We need 'partnerId' for the mapper.
+        // Reusing 'chatroom' metadata from step 1
+
+        Integer partnerId = chatroom.getMemberIds().stream()
+                .filter(id -> !id.equals(requesterId))
+                .findFirst()
+                .orElse(null);
+
+        // We also need replyMap for proper DTO structure if we want consistency
+        // But for search results, reply context might be optional or we can fetch it.
+        // Let's resolve context to be safe.
+        Map<String, ChatMessageEntity> replyMap = resolveReplyMap(entities); // Reuse private helper
+        Map<Integer, MemberProfileDTO> memberMap = resolveMemberMap(entities, replyMap); // Reuse private helper
+        Map<String, Integer> reportStatusMap = Collections.emptyMap();
+
+        return messageMapper.toDtoList(entities, requesterId, partnerId, memberMap, replyMap, reportStatusMap);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getMessagePosition(Integer chatroomId, String messageId, Integer pageSize) {
+        // 1. Calculate page index
+        int page = retrievalManager.getMessagePage(chatroomId, messageId, pageSize);
+
+        // Return as map
+        Map<String, Integer> result = new HashMap<>();
+        result.put("page", page);
+        return result;
     }
 }

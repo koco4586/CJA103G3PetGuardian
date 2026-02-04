@@ -3,6 +3,8 @@ package com.petguardian.chat.controller;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import com.petguardian.chat.dto.ChatMessageDTO;
@@ -64,8 +66,8 @@ public class ChatWSController {
      * Captures IllegalArgumentException from Service layer (Fail Fast Strategy)
      * and sends feedback to the user.
      */
-    @org.springframework.messaging.handler.annotation.MessageExceptionHandler
-    @org.springframework.messaging.simp.annotation.SendToUser("/queue/errors")
+    @MessageExceptionHandler
+    @SendToUser("/queue/errors")
     public String handleException(IllegalArgumentException e) {
         return "Error: " + e.getMessage();
     }

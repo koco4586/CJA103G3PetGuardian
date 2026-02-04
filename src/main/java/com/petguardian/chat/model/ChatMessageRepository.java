@@ -19,4 +19,15 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessageEntity, 
      */
     @Query("SELECT m FROM ChatMessageEntity m WHERE m.chatroomId = :chatroomId ORDER BY m.chatTime DESC")
     List<ChatMessageEntity> findLatest(Integer chatroomId, Pageable pageable);
+
+    /**
+     * Full-Text Search using MySQL ngram parser.
+     * Native Query required for MATCH() AGAINST().
+     */
+    List<ChatMessageEntity> searchByMessage(Integer chatroomId, String keyword);
+
+    /**
+     * Count messages after a specific time (for page calculation).
+     */
+    long countByChatroomIdAndChatTimeAfter(Integer chatroomId, java.time.LocalDateTime chatTime);
 }
