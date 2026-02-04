@@ -37,4 +37,7 @@ public interface NewsRepository extends JpaRepository<News, Integer> {
 
     // 計算某類別下的消息數量
     long countByNewsType_NewsTypeId(Integer newsTypeId);
+
+    // 計算已發布的消息數量
+    long countByIsPublished(Integer isPublished);
 }
