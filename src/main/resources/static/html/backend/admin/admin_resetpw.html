@@ -8,44 +8,35 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="../../../css/backend/style.css">
+    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .selfouter {
+            width: 600px;
+            height: 450px;
+            margin-top: 50px;
         }
 
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
-        }
-
-        .middle {
+        .centerword {
             text-align: center;
         }
 
-        .alert {
-            color: gray;
+        .innerword {
+            margin-top: 25px;
         }
 
-        .rightword {
-            color: red;
+        .leftword1 {
+            margin-left: 17px;
         }
 
-        .inside {
-            padding: 0px 0px 0px 100px;
-        }
-
-        .brown {
-            color: brown;
+        .leftword2 {
+            margin-left: 15px;
         }
     </style>
 
 </head>
 
 <body>
-
 
     <!-- header start -->
 
@@ -64,31 +55,35 @@
 
         <!-- header end -->
 
-        <div class="outer">
+        <div class="outer selfouter">
+            <div class="innerword">
 
-            <div class="middle">
 
-                <h3 class="title">管理員密碼變更</h3>
-                <span class="alert">重設密碼，完成後請於下一次登入時使用新密碼。</span><br><br>
+                <h2 class="titlecenter">管理員密碼變更</h2>
+                <div class="centerword">
+                    <span class="hintword">重設密碼，完成後請於下一次登入時使用新密碼。</span>
+                </div>
+
+                <form>
+
+                    <span class="leftword1">新密碼</span><br>
+                    <input type="password" class="pw input" placeholder="請輸入管理員密碼" required><br>
+                    <span class="hintword leftword2">＊注意：管理員密碼需含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
+                    <span class="leftword1">密碼確認</span><br>
+                    <input type="password" class="pwcheck input" placeholder="請再次輸入相同密碼" required><br>
+
+
+                    <span class="hintword leftword2">＊注意：密碼請勿與帳號及其他網站相同，以確保帳戶安全。</span><br><br><br>
+
+                    <div class="centerword">
+                        <button type="submit" class="submit mybutton">確認變更</button>
+                        <button type="reset" class="mybutton">清除重填</button>
+                        <a class="a_tag" href="./admin_management_updateinfo.html">回上頁</a>
+                    </div>
+
+                </form>
+
             </div>
-            <form>
-                <div class="inside">
-                    <span class="word">新密碼</span><br>
-                    <input type="password" class="pw" placeholder="請輸入管理員密碼" required><br>
-                    <span class="rightword">說明：管理員密碼需含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
-                    <span class="word">密碼確認</span><br>
-                    <input type="password" class="pwcheck" placeholder="請再次輸入相同密碼" required><br><br>
-                </div>
-                <div class="middle">
-                    <span class="alert">＊注意：密碼請勿與帳號及其他網站相同，以確保帳戶安全。</span><br><br>
-
-                    <button type="submit" class="submit">確認變更</button>
-                    <button type="reset">清除重填</button><br><br>
-
-                    <a class="brown" href="./admin_management_updateinfo.html">回上頁</a>
-
-                </div>
-            </form>
 
         </div>
 

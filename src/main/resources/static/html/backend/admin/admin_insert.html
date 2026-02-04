@@ -8,29 +8,22 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="../../../css/backend/style.css">
+    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .selfouter {
+            width: 600px;
         }
 
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
+        .centerbutton {
+            text-align: center;
         }
 
-        .mustbe {
-            color: red;
+        .myatag {
+            text-align: right;
         }
-
-        .rightword {
-            color: rgb(57, 191, 236);
-        }
-
-        .brown {
-            color: brown;
+        .leftword{
+            margin-left: 16px;
         }
     </style>
 </head>
@@ -54,45 +47,48 @@
 
         <!-- header end -->
 
-        <div class="outer">
+        <div class="outer selfouter">
 
             <form>
 
-                <span>管理員頭像：</span><br>
-                <input type="file" class="adm_image"><br>
+                <span>管理員頭像：</span>
+                <input type="file" id="image" class="adm_image image_input"><br>
+                <label for="image"><img src="../../../images/backend/admin/admin_insert_image.png" width="40px"></label><br>
+                <span class="hintword">↑↑↑請點擊相機圖案上傳照片</span><br><br>
+
 
                 <span class="mustbe">*必填</span>
                 <span>管理員姓名：</span><br>
-                <input type="text" class="insertname" placeholder="請輸入管理員姓名" required><br><br>
+                <input type="text" class="insertname input" placeholder="請輸入管理員姓名" required><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>管理員帳號：</span><br>
-                <input type="text" class="insertaccount" placeholder="請輸入管理員帳號" required>
-                <span class="rightword">說明：管理員帳號長度應介於8-16碼，不含特殊符號</span><br><br>
+                <input type="text" class="insertaccount input" placeholder="請輸入管理員帳號" required><br>
+                <span class="hintword leftword">＊說明：管理員帳號長度應介於8-16碼，不含特殊符號</span><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>管理員電子信箱：</span><br>
-                <input type="email" class="insertemail" placeholder="請輸入管理員電子信箱" required><br><br>
+                <input type="email" class="insertemail input long" placeholder="請輸入管理員電子信箱" required><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>管理員手機號碼：</span><br>
-                <input type="tel" class="inserttel" placeholder="請輸入管理員手機號碼" required><br><br>
+                <input type="tel" class="inserttel input" placeholder="請輸入管理員手機號碼" required><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>密碼設定：</span><br>
-                <input type="password" class="insertpassword" placeholder="請輸入管理員密碼" required>
-                <span class="rightword">說明：密碼設定應含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
+                <input type="password" class="insertpassword input" placeholder="請輸入管理員密碼" required><br>
+                <span class="hintword leftword">＊說明：密碼設定應含英文大小寫+數字，長度介於8-16碼，不含特殊符號</span><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>密碼確認：</span><br>
-                <input type="password" class="insertpasswordcheck" placeholder="請再次輸入相同密碼" required><br><br><br>
-
-                <button type="submit" class="submit">確認新增</button>
-
-                <button type="reset">清除重填</button><br><br>
-
-                <a class="brown" href="./admin_admin_management.html">回上頁</a>
-
+                <input type="password" class="insertpasswordcheck input" placeholder="請再次輸入相同密碼" required><br><br>
+                <div class="centerbutton">
+                    <button type="submit" class="submit mybutton">確認新增</button>
+                    <button type="reset" class="mybutton">清除重填</button><br><br>
+                </div>
+                <div class="myatag">
+                    <a class="a_tag" href="./admin_admin_management.html">回上頁</a>
+                </div>
             </form>
 
         </div>

@@ -9,31 +9,7 @@
   <link rel="stylesheet" href="../../../../css/frontend/dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../../../../css/frontend/components.css">
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    .outer {
-      border: 1px solid lightgray;
-      background-color: lightcyan;
-      border-radius: 30px;
-      padding: 20px;
-    }
-
-    .middle {
-      text-align: center;
-    }
-
-    .title {
-      color: brown;
-    }
-
-    .rightone {
-      text-align: right;
-    }
-  </style>
+  <link rel="stylesheet" href="../../../../css/frontend/member/member.css">
 
 </head>
 
@@ -79,19 +55,16 @@
 
     <div class="outer">
 
-      <div class="middle">
-        <h1 class="title">Petguardian寵護家</h1>
-        <h3 class="title">停用您的會員帳號</h3>
-      </div>
+      <h1 class="titlecenter">Petguardian寵護家</h1>
+      <h3 class="titlecenter">停用您的會員帳號</h3>
+
       <span>以下內容攸關您的權益，請務必仔細閱讀：</span><br>
       <span>您正在嘗試停用自己的會員帳號，</span><br>
       <span>由於該帳號提供了各種服務的使用權限，</span><br>
       <span>一旦將它停用，您就無法再使用這些服務，您的帳號和當中的資料也會永久封存。</span><br><br>
-      <input class="sure" type="checkbox">
-      <span>是，我想永久停用這個會員帳號和封存當中的所有資料。</span><br><br>
-      <button type="button" class="button" disabled>停用帳號</button>
-      <div class="rightone">
-      </div>
+      <input class="sure mycheckbox" type="checkbox">
+      <span class="hintword">是，我想永久停用這個會員帳號和封存當中的所有資料。</span><br><br>
+      <button type="button" class="button mybutton" disabled>停用帳號</button>
 
     </div>
 
