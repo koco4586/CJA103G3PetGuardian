@@ -94,6 +94,7 @@
 						<span th:if="${order.orderStatus == 1}" class="status-badge ongoing">進行中</span>
 						<span th:if="${order.orderStatus == 2}" class="status-badge completed">服務完成</span>
 						<span th:if="${order.orderStatus == 3}" class="status-badge cancelled">已取消</span>
+						<span th:if="${order.orderStatus == 4}" class="status-badge cancelled">已退款</span>
 						<span th:if="${order.orderStatus == 5}" class="status-badge completed">已結案</span>
 					</div>
 

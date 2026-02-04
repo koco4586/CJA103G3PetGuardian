@@ -1,18 +1,10 @@
 package com.petguardian.booking.service;
 
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.petguardian.booking.model.BookingOrderRepository;
+import com.petguardian.booking.model.BookingFavoriteVO;
 import com.petguardian.booking.model.BookingOrderVO;
-import com.petguardian.booking.model.BookingScheduleRepository;
-import com.petguardian.booking.model.BookingScheduleVO;
 
 /**
  * 負責處理預約訂單的建立、退款審核、撥款流程以及同步更新保母排程。
@@ -53,6 +45,7 @@ public interface BookingService {
 	//收藏
 	boolean toggleSitterFavorite(Integer memId, Integer sitterId);
 
+	List<BookingFavoriteVO> getSitterFavoritesWithDetail(Integer memId);
 	
-	List<com.petguardian.booking.model.BookingFavoriteVO> getSitterFavoritesByMember(Integer memId);
+	List<BookingFavoriteVO> getSitterFavoritesByMember(Integer memId);
 }

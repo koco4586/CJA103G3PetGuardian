@@ -167,4 +167,9 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingFavoriteVO> getSitterFavoritesByMember(Integer memId) {
         return favoriteService.getSitterFavoritesByMember(memId);
     }
+    
+    @Override
+    public List<BookingFavoriteVO> getSitterFavoritesWithDetail(Integer memId) {
+        return favoriteService.getSitterFavoritesWithDetail(memId);
+    }
 }

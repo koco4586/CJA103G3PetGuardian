@@ -46,7 +46,7 @@ public class BookingOrderVO {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    // 訂單狀態(0:待確認, 1:進行中, 2:已完成, 3:已取消)
+    // // 訂單狀態(0:待確認, 1:進行中, 2:已完成, 3:申請退款中, 4:已退款, 5:已撥款)
     @Column(name = "order_status")
     private Integer orderStatus = 0;
 
