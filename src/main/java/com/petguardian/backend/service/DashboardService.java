@@ -10,7 +10,7 @@ public interface DashboardService {
 
     /**
      * 取得儀表板統計數據
-     * 包含: 會員總數、待審保母、待處理退款、待處理評價
+     * 回傳包含 11 項關鍵指標的 Map
      */
     Map<String, Object> getDashboardStatistics();
 }

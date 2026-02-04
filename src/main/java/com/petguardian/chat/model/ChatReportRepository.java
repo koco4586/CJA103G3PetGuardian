@@ -41,4 +41,8 @@ public interface ChatReportRepository extends JpaRepository<ChatReport, Integer>
      * Batch Optimization: Find reports for a specific user and list of messages.
      */
     List<ChatReport> findByReporterIdAndMessageIdIn(Integer reporterId, Collection<String> messageIds);
+
+    // 後台dashboard統計用：計算指定檢舉狀態的檢舉單數量
+    long countByReportStatus(Integer returnStatus);
+
 }
