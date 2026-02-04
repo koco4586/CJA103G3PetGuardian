@@ -374,7 +374,7 @@
                         <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
 
                         <option th:each="pet : ${myPets}" th:value="${pet.petId}"
-                            th:text="${pet.petName} + ' (種類ID: ' + ${pet.typeId} + ')'">
+                            th:text="${pet.petName} + ' (' + ${pet.petTypeName} + ')'">
                         </option>
                     </select>
                 </div>
