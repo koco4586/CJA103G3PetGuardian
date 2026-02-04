@@ -18,10 +18,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**test
+/**
+ * test
  * 保姆 Entity
  * 對應資料表: sitter
- * 
+ * 註解測試
  * 包含保姆基本資料、服務狀態、評價統計與排程資訊
  */
 @Entity

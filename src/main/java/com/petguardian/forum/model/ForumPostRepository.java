@@ -3,10 +3,23 @@ package com.petguardian.forum.model;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer> {
+	
+	//	優化讀取貼文時的N+1問題
+	@Query("""
+			select distinct p 
+			from ForumPostVO p
+			join fetch p.member m
+			left join fetch p.forumPostComments c
+			left join fetch c.member cm
+			where p.postId = :postId
+	""")
+	public ForumPostVO findOnePostWithCommentAndMember(@Param("postId") Integer postId);
 	
 	//	關鍵字查詢
 	@Query(value = "select p from ForumPostVO p where p.postStatus = 1 and p.forum.forumId = :forumId and (p.postTitle like concat('%', :keyword, '%') or p.postContent like concat('%', :keyword, '%')) order by p.postId desc")
@@ -19,9 +32,11 @@ public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer>
 	@Query(value = "select p from ForumPostVO p where p.forum.forumId = :forumId and p.postStatus = 1 order by p.postId desc")
 	public List<ForumPostVO> findPostsByForumId(@Param("forumId") Integer forumId);
 	
-	//	找所有被發文者刪除的貼文 (改用DTO)
-//	@Query(value = "select p from ForumPostVO p join fetch p.forum f join fetch p.member m where p.postStatus = 2 order by p.lastEditedAt desc")
-//	public List<ForumPostVO> findAllDeletedPosts();
+	//	將Redis裡存的文章瀏覽次數寫回MySQL
+	@Modifying
+	@Transactional
+	@Query(value = "update forumpost set post_views = :postViewCount where post_id = :postId", nativeQuery = true)
+	public void savePostViewCountToDatabase(@Param("postId") Integer postId, @Param("postViewCount") Integer postViewCount);
 	
 	@Query("""
 			select new com.petguardian.forum.model.DeletedPostDTO(

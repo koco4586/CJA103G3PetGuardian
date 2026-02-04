@@ -2,7 +2,6 @@ package com.petguardian.forum.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +15,15 @@ import com.petguardian.member.model.Member;
 @Service
 public class ForumCommentService {
 
-	@Autowired
-	ForumCommentRepository repo;
-
-	@Autowired
-	ForumPostRepository postRepo;
+	private final ForumCommentRepository repo;
+	private final ForumPostRepository postRepo;
 	
+	public ForumCommentService(ForumCommentRepository repo, ForumPostRepository postRepo) {
+		super();
+		this.repo = repo;
+		this.postRepo = postRepo;
+	}
+
 	@Transactional
 	public void deleteComment(Integer commentId) {
 		ForumCommentVO forumCommentVO = repo.findById(commentId)
@@ -49,7 +51,7 @@ public class ForumCommentService {
 	}
 	
 	@Transactional
-	public void addCommentByPostId(String commentContent, Integer postId, Integer memberId) {
+	public void addCommentByPostId(String commentContent, Integer postId, Integer memId) {
 
 		ForumPostVO forumPostVO = postRepo.findById(postId)
 				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
@@ -58,9 +60,9 @@ public class ForumCommentService {
 		forumCommentVO.setCommentContent(commentContent);
 		forumCommentVO.setForumPost(forumPostVO);
 
-		// 使用傳入的 memberId
+		// 使用傳入的 memId
 		Member member = new Member();
-		member.setMemId(memberId);
+		member.setMemId(memId);
 		forumCommentVO.setMember(member);
 
 		repo.save(forumCommentVO);
@@ -68,16 +70,16 @@ public class ForumCommentService {
 	}
 	
 	@Transactional
-	public void updateCommentByPostId(String commentContent, Integer commentId, Integer memberId) {
+	public void updateCommentByPostId(String commentContent, Integer commentId, Integer memId) {
 		
 		ForumCommentVO forumCommentVO = repo.findById(commentId)
 				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
 		
 		forumCommentVO.setCommentContent(commentContent);
 		
-		// 使用傳入的 memberId
+		// 使用傳入的 memId
 		Member member = new Member();
-		member.setMemId(memberId);
+		member.setMemId(memId);
 		forumCommentVO.setMember(member);
 
 		repo.save(forumCommentVO);

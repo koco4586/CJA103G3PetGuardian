@@ -5,272 +5,231 @@ import com.petguardian.chat.dto.MemberProfileDTO;
 import com.petguardian.chat.model.ChatMemberRepository;
 import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
+import com.petguardian.chat.service.mapper.ChatRoomMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Collections;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Optional;
-import java.util.Arrays;
-
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Unified Service for Chat Room and Member Metadata.
- * Consolidates Reader/Writer logic and replaces ResilienceProxies.
- * Uses Resilience4j Functional API for circuit breaking.
+ * Service for Chat Room and Member Metadata (Domain Layer).
+ * Responsibilities:
+ * - ChatRoom metadata operations (read/write)
+ * - Member profile operations (read/write)
+ * - Business logic delegation to ChatRoomMapper and RedisCacheHelper
+ * Delegates to:
+ * - {@link RedisCacheHelper} - Infrastructure layer (Redis operations)
+ * - {@link ChatRoomMapper} - Transformation layer (Entity ↔ DTO)
  */
+@Slf4j
 @Service
 public class ChatRoomMetadataService {
 
-    private static final Logger log = LoggerFactory.getLogger(ChatRoomMetadataService.class);
-    private static final String REDIS_ROOM_KEY = "chat:room_meta:";
-    private static final String REDIS_MEMBER_KEY = "chat:member_meta:";
-    private static final String REDIS_ROOM_LIST_KEY = "chat:user_rooms:";
-    private static final String CIRCUIT_NAME = "metadataCircuit";
-    private static final long TTL_DAYS = 7;
-
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMemberRepository memberRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final CircuitBreaker circuitBreaker;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final ChatRoomMetadataCache metadataCache;
+    private final ChatRoomMapper mapper;
 
     public ChatRoomMetadataService(
             ChatRoomRepository chatRoomRepository,
             ChatMemberRepository memberRepository,
-            RedisTemplate<String, Object> redisTemplate,
-            CircuitBreakerRegistry circuitBreakerRegistry,
-            com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+            ChatRoomMetadataCache metadataCache,
+            ChatRoomMapper mapper) {
         this.chatRoomRepository = chatRoomRepository;
         this.memberRepository = memberRepository;
-        this.redisTemplate = redisTemplate;
-        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
-        this.objectMapper = objectMapper;
+        this.metadataCache = metadataCache;
+        this.mapper = mapper;
     }
 
     // =================================================================================
     // READ OPERATIONS
     // =================================================================================
 
+    /**
+     * Gets room metadata with Hash-first caching strategy.
+     */
     public ChatRoomMetadataDTO getRoomMetadata(Integer chatroomId) {
         if (chatroomId == null)
             return null;
-        try {
-            return circuitBreaker.executeSupplier(() -> fetchRoomMetadata(chatroomId));
-        } catch (Exception e) {
-            log.warn("[Meta] Circuit Open/Error ({}): fallback to DB for room {}", e.toString(), chatroomId);
-            return chatRoomRepository.findById(chatroomId).map(this::convertToDto).orElse(null);
-        }
+
+        return metadataCache.getRoomMeta(chatroomId)
+                .orElseGet(() -> {
+                    ChatRoomMetadataDTO dbDto = chatRoomRepository.findById(chatroomId)
+                            .map(mapper::toMetadataDto)
+                            .orElse(null);
+                    if (dbDto != null) {
+                        metadataCache.setRoomMeta(chatroomId, dbDto);
+                    }
+                    return dbDto;
+                });
     }
 
     public MemberProfileDTO getMemberProfile(Integer memberId) {
         if (memberId == null)
             return null;
-        try {
-            return circuitBreaker.executeSupplier(() -> fetchMemberProfile(memberId));
-        } catch (Exception e) {
-            log.warn("[Meta] Circuit Open/Error ({}): fallback to DB for member {}", e.toString(), memberId);
-            return memberRepository.findById(memberId)
-                    .map(m -> new MemberProfileDTO(m.getMemId(), m.getMemName(), null))
-                    .orElse(null);
-        }
+
+        return metadataCache.getMemberProfile(memberId)
+                .orElseGet(() -> {
+                    MemberProfileDTO dbDto = memberRepository.findById(memberId)
+                            .map(mapper::toMemberProfileDto)
+                            .orElse(null);
+                    if (dbDto != null) {
+                        metadataCache.setMemberProfile(memberId, dbDto);
+                    }
+                    return dbDto;
+                });
     }
 
     public Map<Integer, MemberProfileDTO> getMemberProfiles(List<Integer> memberIds) {
         if (memberIds == null || memberIds.isEmpty())
             return Collections.emptyMap();
 
-        Map<Integer, MemberProfileDTO> result = new HashMap<>();
+        // 1. Try Cache
+        Map<Integer, MemberProfileDTO> resultMap = new java.util.HashMap<>();
+        List<Integer> missingIds = new java.util.ArrayList<>();
+
         for (Integer id : memberIds) {
-            MemberProfileDTO profile = getMemberProfile(id);
-            if (profile != null) {
-                result.put(id, profile);
-            }
+            metadataCache.getMemberProfile(id).ifPresentOrElse(
+                    dto -> resultMap.put(id, dto),
+                    () -> missingIds.add(id));
         }
-        return result;
+
+        // 2. DB Fallback for misses
+        if (!missingIds.isEmpty()) {
+            memberRepository.findAllByMemIdIn(missingIds).forEach(entity -> {
+                MemberProfileDTO dto = mapper.toMemberProfileDto(entity);
+                metadataCache.setMemberProfile(dto.getMemberId(), dto);
+                resultMap.put(dto.getMemberId(), dto);
+            });
+        }
+
+        return resultMap;
     }
 
     public List<ChatRoomMetadataDTO> getUserChatrooms(Integer userId) {
         if (userId == null)
             return Collections.emptyList();
 
-        // Try Cache first (List of Integers)
-        String key = REDIS_ROOM_LIST_KEY + userId;
-        try {
-            List<Object> roomIds = circuitBreaker.executeSupplier(() -> redisTemplate.opsForList().range(key, 0, -1));
-            if (roomIds != null && !roomIds.isEmpty()) {
-                List<Integer> ids = roomIds.stream()
-                        .map(o -> (Integer) o)
-                        .collect(Collectors.toList());
-                // Fetch details for each room (which will hit their own caches)
-                List<ChatRoomMetadataDTO> results = new ArrayList<>();
-                for (Integer rid : ids) {
-                    ChatRoomMetadataDTO meta = getRoomMetadata(rid);
-                    if (meta != null)
-                        results.add(meta);
-                }
-                return results;
+        // 1. Try Cache List
+        List<Integer> roomIds = metadataCache.getUserRoomIds(userId);
+        if (!roomIds.isEmpty()) {
+            List<ChatRoomMetadataDTO> cached = metadataCache.getRoomMetaBatch(roomIds);
+            // CRITICAL:
+            // In migration/outage scenarios, partial data is dangerous. Fallback to DB if
+            // counts mismatch.
+            if (!cached.isEmpty() && cached.size() == roomIds.size()) {
+                return cached;
             }
-        } catch (Exception e) {
-            log.warn("[Meta] Redis List read failed: {}", e.getMessage());
+            // Cache failed to return data - fall through to DB
         }
 
-        // Fallback to DB
+        // 2. Fallback to DB
         List<ChatRoomEntity> entities = chatRoomRepository.findByMemId1OrMemId2(userId, userId);
-
         List<ChatRoomMetadataDTO> dtos = entities.stream()
-                .map(this::convertToDto)
+                .map(mapper::toMetadataDto)
                 .collect(Collectors.toList());
 
-        // Cache Refill (Fire and Forget)
+        // 3. Re-fill cache (best effort)
         if (!dtos.isEmpty()) {
-            try {
-                circuitBreaker.executeRunnable(() -> {
-                    redisTemplate.delete(key);
-                    List<Integer> ids = dtos.stream().map(ChatRoomMetadataDTO::getChatroomId)
-                            .collect(Collectors.toList());
-                    redisTemplate.opsForList().rightPushAll(key, ids.toArray());
-                    redisTemplate.expire(key, TTL_DAYS, TimeUnit.DAYS);
-                });
-            } catch (Exception e) {
-                log.warn("[Meta] Cache refill failed: {}", e.getMessage());
-            }
+            metadataCache.setUserRoomIds(userId,
+                    dtos.stream().map(ChatRoomMetadataDTO::getChatroomId).collect(Collectors.toList()));
+            dtos.forEach(dto -> metadataCache.setRoomMeta(dto.getChatroomId(), dto));
         }
+
         return dtos;
     }
 
+    public Optional<ChatRoomMetadataDTO> findRoomByMembersAndType(Integer memId1, Integer memId2, Integer type) {
+        if (memId1 == null || memId2 == null)
+            return Optional.empty();
+
+        int safeType = type != null ? type : 0;
+
+        // 1. Check Lookup Cache
+        return metadataCache.getRoomIdByMembers(memId1, memId2, safeType)
+                .map(this::getRoomMetadata)
+                .or(() -> {
+                    // 2. Fallback to DB
+                    int id1 = Math.min(memId1, memId2);
+                    int id2 = Math.max(memId1, memId2);
+
+                    return chatRoomRepository.findByMemId1AndMemId2AndChatroomType(id1, id2, safeType)
+                            .map(entity -> {
+                                ChatRoomMetadataDTO dto = mapper.toMetadataDto(entity);
+                                metadataCache.setRoomIdLookup(memId1, memId2, safeType, dto.getChatroomId()); // Type-Aware
+                                                                                                              // Cache
+                                                                                                              // Set
+                                metadataCache.setRoomMeta(dto.getChatroomId(), dto);
+                                return dto;
+                            });
+                })
+                .map(Optional::ofNullable) // Flatten possible null from getRoomMetadata
+                .orElse(Optional.empty());
+    }
+
+    // Deprecated legacy method
     public Optional<ChatRoomMetadataDTO> findRoomByMembers(Integer memId1, Integer memId2) {
-        List<ChatRoomEntity> rooms = chatRoomRepository.findByMemId1OrMemId2(memId1, memId1);
-        return rooms.stream()
-                .filter(r -> (r.getMemId1().equals(memId1) && r.getMemId2().equals(memId2)) ||
-                        (r.getMemId1().equals(memId2) && r.getMemId2().equals(memId1)))
-                .findFirst()
-                .map(this::convertToDto);
+        return findRoomByMembersAndType(memId1, memId2, 0);
+    }
+
+    public void cacheRoomLookup(Integer memId1, Integer memId2, Integer type, Integer chatroomId) {
+        int safeType = type != null ? type : 0;
+        metadataCache.setRoomIdLookup(memId1, memId2, safeType, chatroomId);
+    }
+
+    // Deprecated legacy method
+    public void cacheRoomLookup(Integer memId1, Integer memId2, Integer chatroomId) {
+        cacheRoomLookup(memId1, memId2, 0, chatroomId);
     }
 
     // =================================================================================
     // WRITE OPERATIONS
     // =================================================================================
 
-    @Async
-    @Transactional
     public void syncRoomMetadata(Integer chatroomId, String preview, LocalDateTime time, Integer senderId) {
-        chatRoomRepository.updateRoomMetadataAtomic(chatroomId, preview, time, senderId);
-        // Fire-and-forget invalidation with circuit protection
-        invalidateRoomCache(chatroomId);
+        metadataCache.getRoomMeta(chatroomId).ifPresent(dto -> {
+            dto.setLastMessagePreview(preview);
+            dto.setLastMessageAt(time);
+
+            // Sync sender's read status
+            List<Integer> members = dto.getMemberIds();
+            if (members != null && !members.isEmpty()) {
+                if (senderId.equals(members.get(0))) {
+                    dto.setMem1LastReadAt(time);
+                } else if (members.size() > 1 && senderId.equals(members.get(1))) {
+                    dto.setMem2LastReadAt(time);
+                }
+            }
+
+            metadataCache.setRoomMeta(chatroomId, dto);
+            metadataCache.markAsDirty(chatroomId);
+        });
     }
 
-    @Async
-    @Transactional
     public void updateLastReadAt(Integer chatroomId, Integer userId, LocalDateTime time) {
-        chatRoomRepository.updateMemberReadStatus(chatroomId, userId, time);
-        invalidateRoomCache(chatroomId);
+        boolean cacheUpdated = metadataCache.updateReadStatusInCache(chatroomId, userId, time);
+
+        // CRITICAL: If cache update failed (Redis down), directly update MySQL
+        // This ensures read status is persisted even without Redis
+        if (!cacheUpdated) {
+            log.debug("[MetadataService] Redis unavailable, updating read status directly in MySQL for room {}",
+                    chatroomId);
+            chatRoomRepository.updateMemberReadStatus(chatroomId, userId, time);
+
+            // Only queue for recovery if Redis is actually down (CB Open)
+            // A simple cache miss (CB Closed) should not trigger invalidation
+            if (metadataCache.isCircuitBreakerOpen()) {
+                metadataCache.queueForRecovery(chatroomId);
+            }
+        }
     }
 
     public void addUserToRoom(Integer userId, Integer chatroomId) {
-        try {
-            circuitBreaker.executeRunnable(() -> {
-                redisTemplate.delete(REDIS_ROOM_LIST_KEY + userId);
-            });
-        } catch (Exception e) {
-            log.warn("[Meta] Failed to invalidate user room list cache: {}", e.getMessage());
-        }
-    }
-
-    // =================================================================================
-    // INTERNAL HELPERS
-    // =================================================================================
-
-    private ChatRoomMetadataDTO fetchRoomMetadata(Integer chatroomId) {
-        return getFromCacheOrDb(
-                REDIS_ROOM_KEY + chatroomId,
-                ChatRoomMetadataDTO.class,
-                () -> chatRoomRepository.findById(chatroomId).map(this::convertToDto).orElse(null));
-    }
-
-    private MemberProfileDTO fetchMemberProfile(Integer memberId) {
-        return getFromCacheOrDb(
-                REDIS_MEMBER_KEY + memberId,
-                MemberProfileDTO.class,
-                () -> memberRepository.findById(memberId)
-                        .map(m -> new MemberProfileDTO(m.getMemId(), m.getMemName(), null))
-                        .orElse(null));
-    }
-
-    /**
-     * Generic Cache-Aside Helper.
-     * Tries Redis -> Fallback to DB -> Writes back to Redis.
-     */
-    private <T> T getFromCacheOrDb(String key, Class<T> type, java.util.function.Supplier<T> dbLoader) {
-        // 1. Try Cache (Propagate DB/Redis Exceptions to Trip Circuit)
-        Object cached = redisTemplate.opsForValue().get(key);
-        if (cached != null) {
-            if (type.isInstance(cached)) {
-                return type.cast(cached);
-            } else {
-                // Fallback: Handle LinkedHashMap from Redis (Jackson default)
-                try {
-                    return objectMapper.convertValue(cached, type);
-                } catch (IllegalArgumentException e) {
-                    log.warn("[Meta] Cache Type Mismatch & Conversion Failed. Expected {}, Got {}",
-                            type.getSimpleName(), cached.getClass().getSimpleName());
-                    // This is a data error, not an infrastructure error.
-                    // Treat as cache miss, do not trip circuit.
-                }
-            }
-        }
-
-        // 2. Fallback to DB (Only reached if Cache Miss or Data Error)
-        T data = dbLoader.get();
-
-        // 3. Write Back (Only if DB found data)
-        if (data != null) {
-            try {
-                redisTemplate.opsForValue().set(key, data, TTL_DAYS, TimeUnit.DAYS);
-            } catch (Exception e) {
-                // Determine if we should trip the circuit for Write failures too.
-                // For now, logging allows partial degradation (Read DB + Write Skip).
-                log.warn("[Meta] Redis write failed for {}: {}", key, e.getMessage());
-            }
-        }
-
-        return data;
-    }
-
-    private void invalidateRoomCache(Integer chatroomId) {
-        try {
-            circuitBreaker.executeRunnable(() -> {
-                redisTemplate.delete(REDIS_ROOM_KEY + chatroomId);
-            });
-        } catch (Exception e) {
-            // Circuit Open (CallNotPermittedException) or Redis Timeout falls here
-            // Logs a warning but allows flow to proceed (Fail Safe)
-            if (log.isDebugEnabled()) {
-                log.debug("[Meta] Invalidation skipped: {}", e.getMessage());
-            }
-        }
-    }
-
-    private ChatRoomMetadataDTO convertToDto(ChatRoomEntity e) {
-        ChatRoomMetadataDTO dto = new ChatRoomMetadataDTO();
-        dto.setChatroomId(e.getChatroomId());
-        dto.setChatroomName(e.getChatroomName() != null ? e.getChatroomName() : "Chat");
-        dto.setLastMessagePreview(e.getLastMessagePreview());
-        dto.setLastMessageAt(e.getLastMessageAt());
-        dto.setMemberIds(Arrays.asList(e.getMemId1(), e.getMemId2()));
-        dto.setMem1LastReadAt(e.getMem1LastReadAt());
-        dto.setMem2LastReadAt(e.getMem2LastReadAt());
-        return dto;
+        metadataCache.invalidateUserRoomList(userId);
     }
 }

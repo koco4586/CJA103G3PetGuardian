@@ -2,15 +2,17 @@ package com.petguardian.chat.service;
 
 import java.util.List;
 
+import com.petguardian.chat.service.chatroom.ChatRoomService;
 import com.petguardian.chat.dto.ChatMessageDTO;
-import com.petguardian.chat.dto.ChatRoomDTO;
 
 /**
- * Service Interface for Core Chat Operations.
- * 
+ * Service Interface for Core Chat Message Operations.
  * Defines the contract for:
- * - Handling incoming real-time messages
- * - Retrieving historical conversation data
+ * Handling incoming real-time messages
+ * Retrieving historical conversation data
+ * Managing read status
+ * Note: Chatroom creation/lookup is handled by
+ * {@link ChatRoomService}.
  */
 public interface ChatService {
 
@@ -36,22 +38,17 @@ public interface ChatService {
 
     /**
      * Checks if the user has any unread messages across all chatrooms.
+     *
+     * @param userId User ID
+     * @return true if there are unread messages
      */
     boolean hasUnreadMessages(Integer userId);
 
     /**
      * Marks a specific chatroom as read for the user.
+     *
+     * @param chatroomId Chatroom ID
+     * @param userId     User ID
      */
     void markRoomAsRead(Integer chatroomId, Integer userId);
-
-    /**
-     * Finds an existing chatroom between two users or creates a chatroom.
-     * 
-     * @param currentUserId Current user ID
-     * @param partnerId     Target partner ID
-     * @param chatroomType  Room type (0=Service, 1=Product)
-     * @return ChatRoomDTO (Never null)
-     */
-    ChatRoomDTO findOrCreateChatroom(Integer currentUserId, Integer partnerId,
-            Integer chatroomType);
 }

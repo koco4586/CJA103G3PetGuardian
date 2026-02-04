@@ -9,17 +9,30 @@
     <link rel="stylesheet" href="../../../../css/frontend/style.css">
     <link rel="stylesheet" href="../../../../css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../../../css/frontend/member/member.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .selfouter {
+            width: 500px;
+            height: 500px;
+            margin-top: 50px;
         }
 
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
+        .innerword {
+            margin-top: 30px;
+        }
+
+        .myimg {
+            width: 300px;
+            margin: auto;
+        }
+
+        .sureword {
+            text-align: center;
+        }
+
+        .centerword {
+            text-align: center;
         }
     </style>
 
@@ -30,16 +43,18 @@
     <!-- Header 容器 -->
     <header id="main-header" class="header"></header>
 
-    <div class="outer">
+    <div class="outer selfouter">
+        <div class="innerword">
+            <h1 class="titlecenter">PetGuardian寵護家</h1>
 
-        <div>PetGuardian寵護家</div>
-
-        <h1>會員登出</h1>
-        <img src="../../../../images/member/logout/memberlogout.jpg" width="200px">
-        <h3>您確定要登出嗎？</h3>
-        <button class="memberlogout">確定登出</button><br><br>
-        
-
+            <h3 class="titlecenter">會員登出</h3>
+            <img src="../../../../images/member/logout/memberlogout.jpg" class="myimg"><br>
+            <h3 class="hintword sureword">您確定要登出嗎？</h3>
+            <div class="centerword">
+                <button class="memberlogout mybutton">確定登出</button>
+                <a class="a_tag" href="../management/member_management.html">取消</a>
+            </div>
+        </div>
     </div>
 
     <!-- Footer 容器 -->

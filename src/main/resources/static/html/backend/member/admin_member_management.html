@@ -8,17 +8,11 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="../../../css/backend/style.css">
+    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
+        .myatag {
+            text-align: center;
         }
     </style>
 </head>
@@ -45,9 +39,9 @@
         <div class="outer">
 
             <form>
-                <input type="text" placeholder="請輸入會員編號" class="searchmemid" required>
-                <button type="submit" class="selectsubmit">點擊查詢</button>
-            </form>
+                <input type="text" placeholder="請輸入會員編號" class="searchmemid input" required>
+                <button type="submit" class="selectsubmit mybutton">點擊查詢</button>
+            </form><br>
 
             <table>
                 <thead>
@@ -63,8 +57,12 @@
                 <tbody class="tbody"></tbody>
 
             </table>
-
+            <div class="myatag">
+                <br><br><a class="a_tag" href="/admin/index">回上頁</a>
+            </div>
         </div>
+
+
 
     </div> <!-- header最外層<div class="main-content">結束標籤 -->
 
@@ -101,7 +99,7 @@
                             <td>${data[i].memEmail}</td>
                             <td>
                                 <form>
-                                    <button type="submit" class="btn statussubmit" data-memid="${data[i].memId}">${memchinesestatus}</button>
+                                    <button type="submit" class="mybutton statussubmit" data-memid="${data[i].memId}">${memchinesestatus}</button>
                                  </form>  
                             </td>
                             <td>${data[i].memCreatedAt}</td>
@@ -142,7 +140,7 @@
                             <td>${data.memEmail}</td>
                             <td>
                                 <form>
-                                    <button type="submit" class="statussubmit" data-memid="${data.memId}">${memchinesestatus}</button>
+                                    <button type="submit" class="mybutton statussubmit" data-memid="${data.memId}">${memchinesestatus}</button>
                                  </form>  
                             </td>
                             <td>${data.memCreatedAt}</td>

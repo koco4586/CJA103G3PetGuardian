@@ -8,19 +8,12 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="../../../css/backend/style.css">
+    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .myatag {
+            text-align: center;
         }
-
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
-        }
-
     </style>
 </head>
 
@@ -60,10 +53,12 @@
                 </thead>
 
                 <tbody class="tbody"></tbody>
-            </table>
-
-            <a href="./admin_insert.html">新增管理員</a><br><br>
-            <a href="./admin_management_updateinfo.html">修改個人資料</a><br><br>
+            </table><br>
+            <div class="myatag">
+                <a href="./admin_insert.html" class="a_tag">新增管理員</a>
+                <a href="./admin_management_updateinfo.html" class="a_tag">修改個人資料</a>
+                <a href="/admin/index" class="a_tag">回上頁</a>
+            </div>
 
         </div>
 
@@ -105,7 +100,7 @@
 
                             <td>
                                 <form>
-                                    <button type="submit" class="btn statussubmit" data-admid="${data[i].admId}">${admchinesestatus}</button>
+                                    <button type="submit" class="mybutton statussubmit" data-admid="${data[i].admId}">${admchinesestatus}</button>
                                  </form>  
                             </td>
 

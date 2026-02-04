@@ -2,7 +2,6 @@ package com.petguardian.forum.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +18,15 @@ import com.petguardian.forum.model.RejectedPostDTO;
 @Service
 public class ForumPostReportService {
 	
-	@Autowired
-	ForumPostRepository postRepo;
+	private final ForumPostRepository postRepo;
+	private final ForumPostReportRepository repo;
 	
-	@Autowired
-	ForumPostReportRepository repo;
-	
+	public ForumPostReportService(ForumPostRepository postRepo, ForumPostReportRepository repo) {
+		super();
+		this.postRepo = postRepo;
+		this.repo = repo;
+	}
+
 	@Transactional
 	public void addReport(ForumPostReportVO forumPostReportVO, Integer postId) {
 		ForumPostVO forumPostVO = postRepo.findById(postId)

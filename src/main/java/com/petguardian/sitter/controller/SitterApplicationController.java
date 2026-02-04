@@ -35,7 +35,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/sitter")
 public class SitterApplicationController {
 
-    @Autowired
+    @Autowired  //AuthStrategyService做介面做登入驗證 登入驗證的規格書
     private AuthStrategyService authStrategyService;
 
     @Autowired

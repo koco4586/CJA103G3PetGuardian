@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>寵物保姆服務介紹 | PetGuardian</title>
@@ -23,8 +23,8 @@
         .banner {
             width: 100%;
             height: 300px;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('/images/pet/banner.jpg') center/cover no-repeat;
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+                url('/images/pet/banner.jpg') center/cover no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -35,23 +35,27 @@
 
         /* 右側主要內容區塊 */
         .main-content {
-	    max-width: 1000px; /* 限制最大寬度，避免在寬螢幕上太散 */
-	    margin: 0 auto;    /* 關鍵：左右自動間距達成置中 */
-	    padding: 40px 20px; 
-	    flex: none;        /* 取消 flex 佈局的伸展 */
-	    width: 100%;
-	}
-	.filter-section {
-	    text-align: center;
-	    margin-bottom: 40px;
-	}
-	
-	.search-box {
-	    display: flex;
-	    justify-content: center;
-	    gap: 10px;
-	    margin-bottom: 15px;
-	}
+            max-width: 1000px;
+            /* 限制最大寬度，避免在寬螢幕上太散 */
+            margin: 0 auto;
+            /* 關鍵：左右自動間距達成置中 */
+            padding: 40px 20px;
+            flex: none;
+            /* 取消 flex 佈局的伸展 */
+            width: 100%;
+        }
+
+        .filter-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
 
         /* 類似圖片中的卡片樣式 */
         .sitter-card {
@@ -59,7 +63,7 @@
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
         }
@@ -113,290 +117,314 @@
         .btn-outline:hover {
             background: #f8f9fa;
         }
-        
+
         /* 標題樣式 */
-.section-title {
-    font-size: 1.8rem;
-    color: #444;
-    text-align: center;
-    margin-bottom: 30px;
-}
+        .section-title {
+            font-size: 1.8rem;
+            color: #444;
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-/* 網格佈局：一行三格 */
-.service-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    padding: 10px;
-}
+        /* 網格佈局：一行三格 */
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 10px;
+        }
 
-/* 卡片本體 */
-.service-card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
+        /* 卡片本體 */
+        .service-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
 
-.service-card:hover {
-    transform: translateY(-5px);
-}
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
 
-/* 圖片區域 */
-.card-image {
-    position: relative;
-    height: 200px;
-    width: 100%;
-}
+        /* 圖片區域 */
+        .card-image {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
 
-.card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-/* 左上角標籤 (Lv.x 居服員) */
-.card-tag {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background: rgba(139, 94, 60, 0.8); /* 咖啡色半透明 */
-    color: white;
-    padding: 5px 12px;
-    font-size: 0.85rem;
-    border-radius: 4px;
-}
+        /* 左上角標籤 (Lv.x 居服員) */
+        .card-tag {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(139, 94, 60, 0.8);
+            /* 咖啡色半透明 */
+            color: white;
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
 
-/* 文字區域 */
-.card-body {
-    padding: 20px;
-    text-align: left;
-}
+        /* 文字區域 */
+        .card-body {
+            padding: 20px;
+            text-align: left;
+        }
 
-.card-body h4 {
-    margin: 0 0 10px 0;
-    font-size: 1.25rem;
-    color: #333;
-    font-weight: 600;
-}
+        .card-body h4 {
+            margin: 0 0 10px 0;
+            font-size: 1.25rem;
+            color: #333;
+            font-weight: 600;
+        }
 
-.card-body p {
-    margin: 0;
-    font-size: 0.95rem;
-    color: #666;
-    line-height: 1.6;
-}
+        .card-body p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.6;
+        }
 
-/* 卡片底部區塊，使用 flex 讓按鈕靠右 */
-.card-footer {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end; /* 關鍵：讓內容靠右 */
-}
+        /* 卡片底部區塊，使用 flex 讓按鈕靠右 */
+        .card-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            /* 關鍵：讓內容靠右 */
+        }
 
-/* 查看保姆按鈕樣式 */
-.btn-sitter-detail {
-    background-color: transparent;
-    color: #4db6ac; /* 與標籤顏色一致 */
-    border: 1.5px solid #4db6ac;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px; /* 文字與箭頭的間距 */
-}
+        /* 查看保姆按鈕樣式 */
+        .btn-sitter-detail {
+            background-color: transparent;
+            color: #4db6ac;
+            /* 與標籤顏色一致 */
+            border: 1.5px solid #4db6ac;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            /* 文字與箭頭的間距 */
+        }
 
-/* 滑鼠移上去的視覺效果 */
-.btn-sitter-detail:hover {
-    background-color: #4db6ac;
-    color: white;
-    box-shadow: 0 4px 8px rgba(77, 182, 172, 0.3);
-    transform: translateX(3px); /* 輕微向右移動增加動態感 */
-}
+        /* 滑鼠移上去的視覺效果 */
+        .btn-sitter-detail:hover {
+            background-color: #4db6ac;
+            color: white;
+            box-shadow: 0 4px 8px rgba(77, 182, 172, 0.3);
+            transform: translateX(3px);
+            /* 輕微向右移動增加動態感 */
+        }
     </style>
 </head>
+
 <body>
 
     <header id="main-header" class="header"></header>
 
     <main class="main-content">
-    <section class="filter-section">
-        <div class="search-box">
-            <input type="text" id="serviceSearch" placeholder="想找什麼？例如：散步、安親、洗澡...">
-            <button id="btnSearch"><i class="fas fa-search"></i> 搜尋</button>
-        </div>
-        <div class="tags-group">
-            <span>熱門關鍵字：</span>
-            <button class="tag">#到府餵食</button>
-            <button class="tag">#狗狗散步</button>
-            <button class="tag">#寵物洗護</button>
-        </div>
-        <div id="noServiceMsg" style="display: none; text-align: center; padding: 50px; color: #888;">
-        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px;"></i>
-        <p style="font-size: 1.2rem;">暫無此服務查詢，請嘗試其他關鍵字</p>
-    </div>
-    </section>
+        <section class="filter-section">
+            <div class="search-box">
+                <input type="text" id="serviceSearch" placeholder="想找什麼？例如：散步、安親、洗澡...">
+                <button id="btnSearch"><i class="fas fa-search"></i> 搜尋</button>
+            </div>
+            <div class="tags-group">
+                <span>熱門關鍵字：</span>
+                <button class="tag">#到府餵食</button>
+                <button class="tag">#狗狗散步</button>
+                <button class="tag">#寵物洗護</button>
+            </div>
+            <div id="noServiceMsg" style="display: none; text-align: center; padding: 50px; color: #888;">
+                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                <p style="font-size: 1.2rem;">暫無此服務查詢，請嘗試其他關鍵字</p>
+            </div>
+        </section>
 
-    <section class="service-intro-section">
-    <h3 class="section-title"><i class="fas fa-star"></i> 我們的服務項目</h3>
-    
-    <div class="service-grid">
-        <div class="service-card" data-search="寵物保姆照顧餵食 保母 ">
-            <div class="card-image">
-                <img src="/images/pet/images2.jpg" alt="照顧餵食" onerror="this.src='https://placehold.co/400x250?text=Feeding';">
-                <div class="card-tag">保母</div>
-            </div>
-            <div class="card-body">
-                <h4>寵物保姆照顧餵食</h4>
-                <p>照顧您家中毛孩，提供安心陪伴、互動玩樂，協助定時餵食與安撫。</p>
-                
-                <div class="card-footer">
-            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-        </div>
-            </div>
-        </div>
+        <section class="service-intro-section">
+            <h3 class="section-title"><i class="fas fa-star"></i> 我們的服務項目</h3>
 
-        <div class="service-card" data-search="寵物家事清潔 到府服務 ">
-            <div class="card-image">
-                <img src="/images/pet/petgo.jpg" alt="家事清潔" onerror="this.src='https://placehold.co/400x250?text=Cleaning';">
-                <div class="card-tag">到府服務</div>
-            </div>
-            <div class="card-body">
-                <h4>寵物家事清潔</h4>
-                <p>協助清理以毛孩為主的住臥環境，包括床墊、尿褥墊及玩具用品、寵物餐具清潔等。</p>
-                
-                <div class="card-footer">
-            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-        </div>
-            </div>
-        </div>
+            <div class="service-grid">
+                <!-- 1. 寵物保姆照顧餵食 -->
+                <div class="service-card" data-search="寵物保姆照顧餵食 保母 ">
+                    <div class="card-image">
+                        <img th:src="@{/images/pet/images2.jpg}" alt="照顧餵食"
+                            onerror="this.src='https://placehold.co/400x250?text=Feeding';">
+                        <div class="card-tag">保母</div>
+                    </div>
+                    <div class="card-body">
+                        <h4>寵物保姆照顧餵食</h4>
+                        <p>照顧您家中毛孩，提供安心陪伴、互動玩樂，協助定時餵食與安撫。</p>
+                        <div class="card-footer">
+                            <a th:href="@{/pet/sitters/search(service='寵物保姆照顧餵食')}" class="btn-sitter-detail">查看保姆 <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="service-card" data-search="寵物散步 ">
-            <div class="card-image">
-                <img src="/images/pet/petwalk.jpg" alt="鄰近散步" onerror="this.src='https://placehold.co/400x250?text=Walking';">
-                <div class="card-tag">協助散步</div>
-            </div>
-            <div class="card-body">
-                <h4>寵物散步</h4>
-                <p>可以幫忙雇主在住家附近的公園綠地，避開溫度高或車流多的時段，帶毛孩出外愉快地散步活動。</p>
-                
-                <div class="card-footer">
-            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-        </div>
-            </div>
-        </div>
+                <!-- 2. 寵物家事清潔 -->
+                <div class="service-card" data-search="寵物家事清潔 到府服務 ">
+                    <div class="card-image">
+                        <img th:src="@{/images/pet/petgo.jpg}" alt="家事清潔"
+                            onerror="this.src='https://placehold.co/400x250?text=Cleaning';">
+                        <div class="card-tag">到府服務</div>
+                    </div>
+                    <div class="card-body">
+                        <h4>寵物家事清潔</h4>
+                        <p>協助清理以毛孩為主的住臥環境，包括床墊、尿褥墊及玩具用品、寵物餐具清潔等。</p>
+                        <div class="card-footer">
+                            <a th:href="@{/pet/sitters/search(service='寵物家事清潔')}" class="btn-sitter-detail">查看保姆 <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
 
-		<div class="service-card" data-search="洗澡護理服務 寵物洗護 ">
-            <div class="card-image">
-                <img src="/images/pet/petru.jpg" alt="特約服務" onerror="this.src='https://placehold.co/400x250?text=Special';">
-                <div class="card-tag">寵物洗護</div>
-            </div>
-            <div class="card-body">
-                <h4>洗澡護理服務</h4>
-                <p>針對特殊需求的毛孩提供一對一深度照顧方案，包含老犬長照、術後護理，協助就醫等專屬服務。</p>
-                <div class="card-footer">
-            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-        </div>
-            </div>
-        </div>
+                <!-- 3. 寵物散步 -->
+                <div class="service-card" data-search="寵物散步 ">
+                    <div class="card-image">
+                        <img th:src="@{/images/pet/petwalk.jpg}" alt="鄰近散步"
+                            onerror="this.src='https://placehold.co/400x250?text=Walking';">
+                        <div class="card-tag">協助散步</div>
+                    </div>
+                    <div class="card-body">
+                        <h4>寵物散步</h4>
+                        <p>可以幫忙雇主在住家附近的公園綠地，避開溫度高或車流多的時段，帶毛孩出外愉快地散步活動。</p>
+                        <div class="card-footer">
+                            <a th:href="@{/pet/sitters/search(service='寵物散步')}" class="btn-sitter-detail">查看保姆 <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="service-card" data-search="基礎訓練 一般訓練 ">
-            <div class="card-image">
-                <img src="/images/pet/pettra.jpg" alt="基礎訓練" onerror="this.src='https://placehold.co/400x250?text=Training';">
-                <div class="card-tag">一般訓練</div>
-            </div>
-            <div class="card-body">
-                <h4>基礎訓練</h4>
-                <p>透過誘導的方式來讓寵物學習，也能顯著提升毛孩的服從性與穩定性，增進飼主與寵物間的信任感、刺激精神健康，並讓寵物生活得更快樂、自信</p>
-                
-                <div class="card-footer">
-            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-        </div>
-            </div>
-        </div>
+                <!-- 4. 洗澡護理服務 -->
+                <div class="service-card" data-search="洗澡護理服務 寵物洗護 ">
+                    <div class="card-image">
+                        <img th:src="@{/images/pet/petru.jpg}" alt="洗髮護理"
+                            onerror="this.src='https://placehold.co/400x250?text=Bath';">
+                        <div class="card-tag">寵物洗護</div>
+                    </div>
+                    <div class="card-body">
+                        <h4>洗澡護理服務</h4>
+                        <p>提供寵物基礎洗護，溫柔呵護肌膚毛髮，讓寶貝煥發清爽光采。包含洗澡、吹毛及基本理容。</p>
+                        <div class="card-footer">
+                            <a th:href="@{/pet/sitters/search(service='洗澡護理服務')}" class="btn-sitter-detail">查看保姆 <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="service-card" data-search="健康照護 護理專業 ">
-            <div class="card-image">
-                <img src="/images/pet/peth.jpg" alt="健康照護" onerror="this.src='https://placehold.co/400x250?text=Health';">
-                <div class="card-tag">護理專業</div>
+                <!-- 5. 基礎訓練 -->
+                <div class="service-card" data-search="基礎訓練 一般訓練 ">
+                    <div class="card-image">
+                        <img th:src="@{/images/pet/pettra.jpg}" alt="基礎訓練"
+                            onerror="this.src='https://placehold.co/400x250?text=Training';">
+                        <div class="card-tag">一般訓練</div>
+                    </div>
+                    <div class="card-body">
+                        <h4>基礎訓練</h4>
+                        <p>透過誘導的方式來讓寵物學習，也能顯著提升毛孩的服從性與穩定性，增進飼主與寵物間的信任感。</p>
+                        <div class="card-footer">
+                            <a th:href="@{/pet/sitters/search(service='基礎訓練')}" class="btn-sitter-detail">查看保姆 <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. 健康照護 -->
+                <div class="service-card" data-search="健康照護 護理專業 ">
+                    <div class="card-image">
+                        <img th:src="@{/images/pet/peth.jpg}" alt="健康照護"
+                            onerror="this.src='https://placehold.co/400x250?text=Health';">
+                        <div class="card-tag">護理專業</div>
+                    </div>
+                    <div class="card-body">
+                        <h4>健康照護</h4>
+                        <p>協助日常身體檢查、給藥、傷口護理觀察，並提供專業的營養建議與健康狀態追蹤。</p>
+                        <div class="card-footer">
+                            <a th:href="@{/pet/sitters/search(service='健康照護')}" class="btn-sitter-detail">查看保姆 <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. 特約客製化服務 -->
+                <div class="service-card" data-search="特約客製化服務 客製化服務 ">
+                    <div class="card-image">
+                        <img th:src="@{/images/pet/petol.jpg}" alt="特約服務"
+                            onerror="this.src='https://placehold.co/400x250?text=Special';">
+                        <div class="card-tag">寵物客製化</div>
+                    </div>
+                    <div class="card-body">
+                        <h4>特約客製化服務</h4>
+                        <p>針對特殊需求的毛孩提供一對一深度照顧方案，包含老犬長照、術後護理，協助就醫等專屬服務。</p>
+                        <div class="card-footer">
+                            <a th:href="@{/pet/sitters/search(service='特約客製化服務')}" class="btn-sitter-detail">查看保姆 <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <h4>健康照護</h4>
-                <p>協助日常身體檢查、給藥、傷口護理觀察，並提供專業的營養建議與健康狀態追蹤。</p>
-                <div class="card-footer">
-            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-        </div>
-            </div>
-        </div>
-        
-        <div class="service-card" data-search="特約客製化服務 客製化服務 ">
-            <div class="card-image">
-                <img src="/images/pet/petol.jpg" alt="特約服務" onerror="this.src='https://placehold.co/400x250?text=Special';">
-                <div class="card-tag">寵物客製化</div>
-            </div>
-            <div class="card-body">
-                <h4>特約客製化服務</h4>
-                <p>針對特殊需求的毛孩提供一對一深度照顧方案，包含老犬長照、術後護理，協助就醫等專屬服務。</p>
-                <div class="card-footer">
-            <a href="#" class="btn-sitter-detail">查看保姆 <i class="fas fa-arrow-right"></i></a>
-        </div>
-            </div>
-        </div>
-    </div>
-</section>
-</main>
-   
-   <script type="text/javascript">
-   
-   document.getElementById('btnSearch').addEventListener('click', function() {
-	    const keyword = document.getElementById('serviceSearch').value.trim().toLowerCase();
-	    const cards = document.querySelectorAll('.service-card');
-	    const noMsg = document.getElementById('noServiceMsg');
-	    let hasMatch = false;
+        </section>
+    </main>
 
-	    cards.forEach(card => {
-	        // 抓取卡片內的標題 (h4) 與 描述 (p)
-	       	const searchData = card.getAttribute('data-search').toLowerCase();
-	        const title = card.querySelector('h4').innerText.toLowerCase();
-	        const desc = card.querySelector('p').innerText.toLowerCase();
+    <script type="text/javascript">
 
-	        // 如果標題或描述包含關鍵字，就顯示，否則隱藏
-	        if (searchData.includes(keyword) || title.includes(keyword) || desc.includes(keyword)) {
-	            card.style.display = "block";
-	            hasMatch = true; // 代表至少找到一筆
-	        } else {
-	            card.style.display = "none";
-	        }
-	    });
+        document.getElementById('btnSearch').addEventListener('click', function () {
+            const keyword = document.getElementById('serviceSearch').value.trim().toLowerCase();
+            const cards = document.querySelectorAll('.service-card');
+            const noMsg = document.getElementById('noServiceMsg');
+            let hasMatch = false;
 
-	    // 如果 keyword 是空的，就顯示全部
-	    if (keyword === "") {
-	        cards.forEach(c => c.style.display = "block");
-	        noMsg.style.display = "none";
-	        return;
-	    }
+            cards.forEach(card => {
+                // 抓取卡片內的標題 (h4) 與 描述 (p)
+                const searchData = card.getAttribute('data-search').toLowerCase();
+                const title = card.querySelector('h4').innerText.toLowerCase();
+                const desc = card.querySelector('p').innerText.toLowerCase();
 
-	    // 顯示或隱藏「暫無此服務」訊息
-	    noMsg.style.display = hasMatch ? "none" : "block";
-	});
+                // 如果標題或描述包含關鍵字，就顯示，否則隱藏
+                if (searchData.includes(keyword) || title.includes(keyword) || desc.includes(keyword)) {
+                    card.style.display = "block";
+                    hasMatch = true; // 代表至少找到一筆
+                } else {
+                    card.style.display = "none";
+                }
+            });
 
-	// 額外功能：按下 Enter 鍵也能搜尋
-	document.getElementById('serviceSearch').addEventListener('keypress', function(e) {
-	    if (e.key === 'Enter') {
-	        document.getElementById('btnSearch').click();
-	    }
-	});
-   </script>
+            // 如果 keyword 是空的，就顯示全部
+            if (keyword === "") {
+                cards.forEach(c => c.style.display = "block");
+                noMsg.style.display = "none";
+                return;
+            }
+
+            // 顯示或隱藏「暫無此服務」訊息
+            noMsg.style.display = hasMatch ? "none" : "block";
+        });
+
+        // 額外功能：按下 Enter 鍵也能搜尋
+        document.getElementById('serviceSearch').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                document.getElementById('btnSearch').click();
+            }
+        });
+    </script>
 
     <footer id="main-footer" class="footer"></footer>
 
     <script th:src="@{/js/frontend/main.js}"></script>
 </body>
+
 </html>

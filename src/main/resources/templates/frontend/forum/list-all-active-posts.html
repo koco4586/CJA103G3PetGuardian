@@ -228,6 +228,31 @@
             transition: color 0.2s;
         }
         .sidebar ul li a:hover { color: var(--primary-orange) !important; }
+        
+        /* --- 新增：數據與動作區塊 --- */
+		.post-actions {
+		    display: flex;
+		    align-items: center;
+		    gap: 15px;
+		    margin-right: 15px;
+		    white-space: nowrap;
+		}
+		
+		.stat-item {
+		    display: flex;
+		    align-items: center;
+		    gap: 5px;
+		    color: #888;
+		    font-size: 0.9rem;
+		    font-weight: 600;
+		}
+			
+		/* 修正標題容器避免被擠壓 */
+		.post-main-info {
+		    flex: 1;
+		    min-width: 0;
+		    padding-right: 10px;
+		}
 
         @media (max-width: 850px) {
             .container.d-flex { 
@@ -280,14 +305,21 @@
                         </div>
 
                         <div class="post-main-info">
-                            <h3 class="post-title" th:text="${forumPostVO.postTitle}"></h3>
-                            <p class="post-preview" th:text="${forumPostVO.postContent}"></p>
-                        </div>
-
-                        <div class="post-meta">
-                            <i class="far fa-clock"></i>
-                            <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span>
-                        </div>
+						    <h3 class="post-title" th:text="${forumPostVO.postTitle}"></h3>
+						    <p class="post-preview" th:text="${forumPostVO.postContent}"></p>
+						</div>
+					
+						<div class="post-actions">
+						    <div class="stat-item">
+						        <i class="far fa-eye"></i>
+						        <span th:text="${forumPostVO.postViews ?: 0}"></span>
+						    </div>
+						</div>
+					
+						<div class="post-meta">
+						    <i class="far fa-clock"></i>
+						    <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span>
+						</div>
                     </a>
                 </th:block>
             </div>

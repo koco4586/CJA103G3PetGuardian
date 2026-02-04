@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomEntity;
+import com.petguardian.chat.dto.ChatRoomMetadataDTO;
 
 /**
  * Default implementation for 1-on-1 chatroom creation.
@@ -29,17 +30,21 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
         Integer memId2 = Math.max(userA, userB);
         Integer type = chatroomType != null ? chatroomType : 0;
 
-        // High-Performance Lookup: Cache First via Metadata Service
-        java.util.Optional<com.petguardian.chat.dto.ChatRoomMetadataDTO> cachedRoom = metadataService
-                .findRoomByMembers(memId1, memId2);
+        // High-Performance Lookup: Cache First via Metadata Service (Type-Aware)
+        Optional<ChatRoomMetadataDTO> cachedRoom = metadataService
+                .findRoomByMembersAndType(memId1, memId2, type);
+
         if (cachedRoom.isPresent()) {
-            com.petguardian.chat.dto.ChatRoomMetadataDTO meta = cachedRoom.get();
-            ChatRoomEntity entity = new ChatRoomEntity();
-            entity.setChatroomId(meta.getChatroomId());
-            entity.setMemId1(memId1);
-            entity.setMemId2(memId2);
-            entity.setChatroomType(type.byteValue());
-            return entity;
+            ChatRoomMetadataDTO meta = cachedRoom.get();
+            // Double check type consistency just in case
+            if (meta.getChatroomType().intValue() == type.intValue()) {
+                ChatRoomEntity entity = new ChatRoomEntity();
+                entity.setChatroomId(meta.getChatroomId());
+                entity.setMemId1(memId1);
+                entity.setMemId2(memId2);
+                entity.setChatroomType(type.byteValue());
+                return entity;
+            }
         }
 
         // Fallback: Secondary Storage Lookup (Cold Start)
@@ -62,10 +67,14 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
 
         ChatRoomEntity saved = chatroomRepository.save(newRoom);
 
-        // Push to Cache List
+        // Push to Cache List & Lookup Cache
         metadataService.addUserToRoom(saved.getMemId1(), saved.getChatroomId());
         metadataService.addUserToRoom(saved.getMemId2(), saved.getChatroomId());
 
+        // Type-Aware Cache Set
+        metadataService.cacheRoomLookup(saved.getMemId1(), saved.getMemId2(), type, saved.getChatroomId());
+        // Note: The above cacheRoomLookup is deprecated and likely only sets the
+        // type-less or default type key
         return saved;
     }
 

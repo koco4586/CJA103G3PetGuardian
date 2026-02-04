@@ -3,6 +3,7 @@ package com.petguardian.petsitter.model;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.petguardian.pet.model.PetServiceItem;
 import com.petguardian.sitter.model.SitterVO;
 
 import jakarta.persistence.Column;
@@ -44,6 +45,10 @@ public class PetSitterServiceVO implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "sitter_id", nullable = false, updatable = false)
 	private SitterVO sitter;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "service_item_id", insertable = false, updatable = false)
+	private PetServiceItem serviceItem;
 
 	/** 規範價格 */
 	@Column(name = "default_price")
@@ -91,5 +96,12 @@ public class PetSitterServiceVO implements Serializable {
 
 	public LocalDateTime getUpdatedAt() {
 		return updatedAt;
+	}
+	
+	public PetServiceItem getServiceItem() {
+	    return serviceItem;
+	}
+	public void setServiceItem(PetServiceItem serviceItem) {
+	    this.serviceItem = serviceItem;
 	}
 }

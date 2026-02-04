@@ -277,9 +277,14 @@ document.addEventListener('DOMContentLoaded', function () {
         stomp.connect({}, function () {
             stomp.subscribe('/topic/messages.' + currentUserId, function (msg) {
                 try {
-                    const body = JSON.parse(msg.body);
-                    // Only show dot if message is NOT sent by me
-                    if (String(body.senderId) !== String(currentUserId)) {
+                    const data = JSON.parse(msg.body);
+
+                    if (data.readerId) {
+                        // Case A: I read a room (potentially in another tab)
+                        // Refresh the dot based on exact server state
+                        refreshUnreadDot();
+                    } else if (String(data.senderId) !== String(currentUserId)) {
+                        // Case B: Someone else sent a message
                         dotEl.style.display = 'block';
                     }
                 } catch (e) {
@@ -287,5 +292,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+
+        function refreshUnreadDot() {
+            fetch(`/api/chatrooms/unread-count?userId=${currentUserId}`)
+                .then(res => res.json())
+                .then(data => {
+                    dotEl.style.display = data.hasUnread ? 'block' : 'none';
+                })
+                .catch(console.error);
+        }
     }
 });

@@ -3,7 +3,6 @@ package com.petguardian.forum.controller;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -39,34 +38,30 @@ import com.petguardian.forum.model.PostReviewDetailDTO;
 import com.petguardian.forum.model.RejectedCommentDTO;
 import com.petguardian.forum.model.RejectedPostDTO;
 
-import com.petguardian.common.service.AuthStrategyService;
-
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin/forum")
 public class AdminForumController {
 
-	@Autowired
-	AuthStrategyService authStrategyService;
+	private final ForumService forumService;
+	private final ForumPostService forumPostService;
+	private final ForumCommentService forumCommentService;
+	private final ForumPostPicsService forumPostPicsService;
+	private final ForumPostReportService forumPostReportService;
+	private final ForumCommentReportService forumCommentReportService;
 
-	@Autowired
-	ForumService forumService;
-
-	@Autowired
-	ForumPostService forumPostService;
-	
-	@Autowired
-	ForumCommentService forumCommentService;
-	
-	@Autowired
-	ForumPostPicsService forumPostPicsService;
-	
-	@Autowired
-	ForumPostReportService forumPostReportService;
-
-	@Autowired
-	ForumCommentReportService forumCommentReportService;
+	public AdminForumController(ForumService forumService, ForumPostService forumPostService,
+			ForumCommentService forumCommentService, ForumPostPicsService forumPostPicsService,
+			ForumPostReportService forumPostReportService, ForumCommentReportService forumCommentReportService) {
+		super();
+		this.forumService = forumService;
+		this.forumPostService = forumPostService;
+		this.forumCommentService = forumCommentService;
+		this.forumPostPicsService = forumPostPicsService;
+		this.forumPostReportService = forumPostReportService;
+		this.forumCommentReportService = forumCommentReportService;
+	}
 
 	@GetMapping("list-all-forum")
 	public String listAllForum(Model model) {

@@ -266,13 +266,6 @@ public class SitterPublicController {
                 myPets = petRepository.findByMemId(memId);
             }
 
-            // --- 測試用代碼：手動加入一隻假寵物 (保持與 BookingFrontendController 一致邏輯) ---
-            PetVO dummyPet = new PetVO();
-            dummyPet.setPetId(999);
-            dummyPet.setPetName("測試小黑");
-            myPets.add(dummyPet);
-            // -------------------------------------------------------------
-
             // 4. 將所有資料加入 Model 傳遞給前端
             model.addAttribute("sitter", sitter);
             model.addAttribute("services", services);
