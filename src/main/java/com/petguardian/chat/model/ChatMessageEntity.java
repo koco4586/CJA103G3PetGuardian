@@ -8,6 +8,7 @@ import org.springframework.data.domain.Persistable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,10 +23,8 @@ import jakarta.persistence.Index;
  * Key Design Decisions:
  * - Uses String (CHAR(13)) for IDs to store TSIDs (Time-Sorted Unique
  * Identifiers)
- * - Decoupled from ChatRoom/Member via ID references (No JPA Relations) to
- * allow
- * independent scaling or microservice extraction.
  */
+@NamedNativeQuery(name = "ChatMessageEntity.searchByMessage", query = "SELECT * FROM chat_message WHERE chatroom_id = :chatroomId AND MATCH(message) AGAINST(:keyword IN BOOLEAN MODE) ORDER BY chat_time DESC", resultClass = ChatMessageEntity.class)
 @Entity
 @Table(name = "chat_message", indexes = {
         @Index(name = "idx_chatroom_tsid", columnList = "chatroom_id, message_id DESC"),
@@ -79,7 +78,8 @@ public class ChatMessageEntity implements Persistable<String>, Serializable {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        // TSID
+        return messageId != null ? messageId.hashCode() : getClass().hashCode();
     }
 
 }

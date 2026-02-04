@@ -2,9 +2,10 @@ package com.petguardian.chat.service.chatmessage;
 
 import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatMessageRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -17,18 +18,12 @@ import java.util.Optional;
  * Package-Private: Should only be accessed by ChatMessageService.
  */
 @Slf4j
-@Component
-class ChatMessageRetrievalManager {
+@Service
+@RequiredArgsConstructor
+public class ChatMessageRetrievalManager {
 
     private final ChatMessageRepository messageRepository;
     private final ChatMessageCache messageCache;
-
-    public ChatMessageRetrievalManager(
-            ChatMessageRepository messageRepository,
-            ChatMessageCache messageCache) {
-        this.messageRepository = messageRepository;
-        this.messageCache = messageCache;
-    }
 
     /**
      * Fetches message history with Redis-first strategy.
@@ -80,5 +75,32 @@ class ChatMessageRetrievalManager {
     @Transactional(readOnly = true)
     List<ChatMessageEntity> findAllById(Iterable<String> messageIds) {
         return messageRepository.findAllById(messageIds);
+    }
+
+    /**
+     * Search messages using Full-Text Search.
+     * Direct DB access, no caching.
+     */
+    @Transactional(readOnly = true)
+    public List<ChatMessageEntity> searchMessage(Integer chatroomId, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        return messageRepository.searchByMessage(chatroomId, keyword);
+    }
+
+    /**
+     * Calculate which page a message belongs to.
+     * Returns 0-based page index.
+     */
+    @Transactional(readOnly = true)
+    public int getMessagePage(Integer chatroomId, String messageId, int pageSize) {
+        return messageRepository.findById(messageId)
+                .map(msg -> {
+                    long countAfter = messageRepository.countByChatroomIdAndChatTimeAfter(chatroomId,
+                            msg.getChatTime());
+                    return (int) (countAfter / pageSize);
+                })
+                .orElse(0); // Default to first page if not found
     }
 }

@@ -1,6 +1,7 @@
 package com.petguardian.chat.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.petguardian.chat.service.chatroom.ChatRoomService;
 import com.petguardian.chat.dto.ChatMessageDTO;
@@ -51,4 +52,16 @@ public interface ChatService {
      * @param userId     User ID
      */
     void markRoomAsRead(Integer chatroomId, Integer userId);
+
+    /**
+     * Search chat history for a keyword.
+     * Returns all matching messages (non-paginated).
+     */
+    List<ChatMessageDTO> searchChatHistory(Integer chatroomId, String keyword, Integer requesterId);
+
+    /**
+     * Calculate the page number and index for a specific message.
+     * Used for "Jump to Message" functionality.
+     */
+    Map<String, Integer> getMessagePosition(Integer chatroomId, String messageId, Integer pageSize);
 }

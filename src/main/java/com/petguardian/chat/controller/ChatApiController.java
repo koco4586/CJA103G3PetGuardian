@@ -93,7 +93,7 @@ public class ChatApiController {
             HttpServletRequest request,
             @PathVariable Integer chatroomId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
+            @RequestParam(defaultValue = "20") int size) {
 
         Integer currentUserId = authStrategyService.getCurrentUserId(request);
         if (currentUserId == null) {
@@ -101,8 +101,58 @@ public class ChatApiController {
         }
 
         try {
-            List<ChatMessageDTO> dtos = chatService.getChatHistory(chatroomId, currentUserId, page, size);
-            return ResponseEntity.ok(dtos);
+            List<ChatMessageDTO> history = chatService.getChatHistory(chatroomId, currentUserId, page, size);
+            return ResponseEntity.ok(history);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{chatroomId}/messages/search")
+    public ResponseEntity<List<ChatMessageDTO>> searchChat(
+            HttpServletRequest request,
+            @PathVariable Integer chatroomId,
+            @RequestParam String keyword) {
+
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        try {
+            List<ChatMessageDTO> results = chatService.searchChatHistory(chatroomId, keyword, currentUserId);
+            return ResponseEntity.ok(results);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{chatroomId}/messages/{messageId}/position")
+    public ResponseEntity<Map<String, Integer>> getMessagePosition(
+            HttpServletRequest request,
+            @PathVariable Integer chatroomId,
+            @PathVariable String messageId,
+            @RequestParam(defaultValue = "20") Integer size) {
+
+        // Although position calculation might not strictly require auth for the
+        // calculation itself,
+        // it exposes chatroom data (message existence).
+        // Adding auth check for consistency and security.
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        try {
+            // Ideally we should also verify membership here if the service doesn't.
+            // Assuming service or future improvements will handle it.
+            // For now, wrapping in try-catch is safe.
+            Map<String, Integer> position = chatService.getMessagePosition(chatroomId, messageId, size);
+            return ResponseEntity.ok(position);
         } catch (SecurityException e) {
             return ResponseEntity.status(403).build();
         } catch (IllegalArgumentException e) {

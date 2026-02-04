@@ -3,6 +3,7 @@ package com.petguardian.chat.model;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import java.util.Objects;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -116,11 +117,14 @@ public class ChatRoomEntity implements Serializable {
         if (!(object instanceof ChatRoomEntity))
             return false;
         ChatRoomEntity that = (ChatRoomEntity) object;
-        return chatroomId != null && chatroomId.equals(that.chatroomId);
+        // Use Business Key (Natural ID) for equality
+        return Objects.equals(getMemId1(), that.getMemId1()) &&
+                Objects.equals(getMemId2(), that.getMemId2()) &&
+                Objects.equals(getChatroomType(), that.getChatroomType());
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(getMemId1(), getMemId2(), getChatroomType());
     }
 }
