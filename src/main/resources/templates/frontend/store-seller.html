@@ -304,14 +304,7 @@
                                         onclick="openEditProductModal(this)" title="編輯">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <form th:action="@{/seller/product/delete}" method="post"
-                                      style="display: inline;">
-                                    <input type="hidden" name="proId" th:value="${item.product.proId}">
-                                    <button type="submit" class="btn btn-sm btn-outline" style="color: #dc3545;"
-                                            onclick="return confirm('確定要刪除此商品嗎？')" title="刪除">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <!-- 刪除按鈕已移除 -->
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(productsWithImages)}">

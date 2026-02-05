@@ -239,14 +239,15 @@ function openOrderDetailModal(button) {
     document.getElementById('detailReceiverAddress').textContent = receiverAddress || '-';
 
     // 訂單狀態對應表（對應資料庫 order_status 欄位）
-    // 0:已付款 1:已出貨 2:已完成 3:已取消 4:申請退貨中 5:退貨完成
+    // 0:已付款 1:已出貨 2:已完成 3:已取消 4:申請退貨中 5:退貨完成 6:已撥款
     var statusMap = {
         '0': '<span class="badge badge-warning">已付款</span>',
         '1': '<span class="badge badge-info">已出貨</span>',
         '2': '<span class="badge badge-success">已完成</span>',
         '3': '<span class="badge badge-secondary">已取消</span>',
         '4': '<span class="badge" style="background: #ffc107; color: #333;">申請退貨中</span>',
-        '5': '<span class="badge" style="background: #6c757d; color: white;">退貨完成</span>'
+        '5': '<span class="badge" style="background: #6c757d; color: white;">退貨完成</span>',
+        '6': '<span class="badge badge-success">已完成</span>'
     };
 
     // 填入訂單狀態（來自 orders 表的 order_status）
@@ -398,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ESC 鍵關閉 Modal
+    // ESC 鍵關閉 Modalz
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal.active').forEach(function(modal) {
