@@ -19,18 +19,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.petguardian.booking.model.BookingDisplayDTO;
 import com.petguardian.booking.model.BookingFavoriteVO;
 import com.petguardian.booking.model.BookingOrderVO;
-import com.petguardian.booking.service.BookingDataIntegrationService;
 import com.petguardian.booking.service.BookingService;
 import com.petguardian.common.service.AuthStrategyService;
+import com.petguardian.member.model.Member;
+import com.petguardian.member.repository.register.MemberRegisterRepository;
 import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
-import com.petguardian.pet.model.PetserItemrepository;
+import com.petguardian.petsitter.model.PetSitterServiceRepository;
 import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
-import com.petguardian.member.repository.register.MemberRegisterRepository;
-import com.petguardian.member.model.Member;
-import com.petguardian.petsitter.model.PetSitterServiceRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -46,9 +44,6 @@ public class BookingViewController {
     private BookingService bookingService;
 
     @Autowired
-    private BookingDataIntegrationService dataService;
-
-    @Autowired
     private AuthStrategyService authStrategyService;
 
     @Autowired
@@ -58,16 +53,13 @@ public class BookingViewController {
     private PetRepository petRepository;
 
     @Autowired
-    private MemberRegisterRepository memberRepository;
-
-    @Autowired
-    private PetserItemrepository petServiceItemRepository;
-
-    @Autowired
     private PetSitterServiceRepository petSitterServiceRepository;
 
     @Autowired
     private SitterMemberRepository sitterMemberRepository;
+    
+    @Autowired
+    private MemberRegisterRepository memberRepository;
     /**
      * 【顯示保姆服務列表頁面】
      * 1. 從資料庫撈取所有保姆資料
@@ -87,12 +79,14 @@ public class BookingViewController {
         
         // 2. 蒐集這 6 位保母的 ID 並補齊「服務地區」
         List<Integer> sitterIds = sitterPage.getContent().stream()
-                .map(SitterVO::getSitterId).collect(Collectors.toList());
+                .map(SitterVO::getSitterId)
+                .collect(Collectors.toList());
+        // 3. 蒐集這 6 位保母的會員 ID 並補齊「頭像」
         List<SitterVO> fullSitters = sitterRepository.findAllWithAreasByIds(sitterIds);
         
-        // 3. 蒐集這 6 位保母的會員 ID 並補齊「頭像」
         List<Integer> memIds = fullSitters.stream()
-                .map(SitterVO::getMemId).collect(Collectors.toList());
+                .map(SitterVO::getMemId)
+                .collect(Collectors.toList());
         
         Map<Integer, String> memberImageMap = new HashMap<>();
         sitterMemberRepository.findAllById(memIds).forEach(m -> {
@@ -117,9 +111,13 @@ public class BookingViewController {
         List<BookingDisplayDTO> displayList = fullSitters.stream()
                 .filter(s -> currentMemId == null || !s.getMemId().equals(currentMemId))
                 .map(s -> {
-                    com.petguardian.booking.model.BookingDisplayDTO dto = 
-                        new com.petguardian.booking.model.BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
+                    BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
                     dto.setMemImage(memberImageMap.getOrDefault(s.getMemId(), "/images/default-avatar.png"));
+                    
+                    dto.setMemImage(memberImageMap.getOrDefault(
+                            s.getMemId(), 
+                            "/images/default-avatar.png"
+                        ));
                     
                     String city = "沒有設定服務";
                     if (s.getServiceAreas() != null && !s.getServiceAreas().isEmpty()) {
@@ -225,7 +223,7 @@ public class BookingViewController {
         model.addAttribute("memId", memId);
         model.addAttribute("memName", authStrategyService.getCurrentUserName(request));
 
-        // [NEW] 查詢會員資料供側邊欄顯示頭像
+        // 查詢會員資料供側邊欄顯示頭像
         Member currentMember = memberRepository.findById(memId).orElse(null);
         if (currentMember != null) {
             model.addAttribute("currentMember", currentMember);
@@ -248,13 +246,10 @@ public class BookingViewController {
 
         model.addAttribute("myPets", myPets);
 
-        // List<PetServiceItem> serviceItems =
-        // petServiceItemRepository.findByServiceStatus(1);
-        // model.addAttribute("serviceItems", serviceItems);
     }
 
     /**
-     * [新增] API: 動態查詢保母的服務項目
+     * API: 動態查詢保母的服務項目
      * 用途：當使用者點擊「立即預約」時才呼叫此 API，避免一開始載入過多資料
      */
     @GetMapping("/api/sitter/{sitterId}/services")

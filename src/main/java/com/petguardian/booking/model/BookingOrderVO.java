@@ -68,24 +68,30 @@ public class BookingOrderVO {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
-    
+
     // 顯示用的額外資訊 (不存入資料庫)
     @Transient
-    private String memName;     // 透過 batchEnrichOrderInfo 填入
+    private String memName; // 透過 batchEnrichOrderInfo 填入
 
     @Transient
-    private String petName;     // 透過 batchEnrichOrderInfo 填入
+    private String petName; // 透過 batchEnrichOrderInfo 填入
 
     @Transient
     private String serviceName; // 透過 batchEnrichOrderInfo 填入
-    
+
     @Transient
     private String sitterName;
 
     @Transient
     private Integer sitterMemId;
-    
+
     @Transient
     private Byte sitterStatus; // 0=啟用, 1=停用
+
+    @Transient
+    private String petImage;
+
+    @Transient
+    private String petImageUrl;
 
 }
