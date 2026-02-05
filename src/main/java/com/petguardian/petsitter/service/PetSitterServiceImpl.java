@@ -89,7 +89,7 @@ public class PetSitterServiceImpl implements PetSitterService {
      */
     @Override
     public List<PetSitterServiceVO> getServicesBySitter(Integer sitterId) {
-        return repository.findBySitter_SitterId(sitterId);
+        return repository.findBySitterIdWithSitter(sitterId);
     }
 
     @Override

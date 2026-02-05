@@ -44,4 +44,13 @@ public interface PetSitterServiceRepository extends JpaRepository<PetSitterServi
     Optional<PetSitterServiceVO> findBySitterIdAndServiceItemId(
             @Param("sitterId") Integer sitterId,
             @Param("serviceItemId") Integer serviceItemId);
+
+    /**
+     * 查詢某保姆的所有服務項目 (優化版，使用 JOIN FETCH 避免 N+1)
+     * 
+     * @param sitterId 保姆編號
+     * @return List<PetSitterServiceVO> 該保姆的所有服務項目
+     */
+    @Query("SELECT ps FROM PetSitterServiceVO ps JOIN FETCH ps.sitter WHERE ps.sitter.sitterId = :sitterId")
+    List<PetSitterServiceVO> findBySitterIdWithSitter(@Param("sitterId") Integer sitterId);
 }

@@ -184,9 +184,11 @@
             <div class="col-md-4">
                 <div class="profile-card">
                     <!-- 預設頭像或保母上傳的頭像 -->
-                    <!-- 預設頭像或保母上傳的頭像 -->
-                    <img th:src="${sitterMember != null && sitterMember.memImage != null ? 'data:image/jpeg;base64,' + sitterMember.memImage : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + sitter.sitterId}"
-                        class="profile-avatar" alt="保母頭像">
+                    <img th:if="${sitterMember != null and sitterMember.memImage != null}"
+                        th:src="${sitterMember.memImage}" class="profile-avatar" alt="保母頭像">
+                    <img th:unless="${sitterMember != null and sitterMember.memImage != null}"
+                        th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
+                        class="profile-avatar" alt="預設頭像">
 
                     <!-- B. 保母名稱 -->
                     <h2 class="mb-2" th:text="${sitter.sitterName}">保母名稱</h2>
