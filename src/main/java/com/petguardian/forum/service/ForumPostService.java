@@ -2,7 +2,9 @@ package com.petguardian.forum.service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,6 +88,29 @@ public class ForumPostService {
 		ForumPostVO forumPostVO = repo.findById(postId)
 				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
 		return forumPostVO;
+	}
+	
+	public List<ForumPostVO> getTopHotPostsByPostIds(List<Integer> postIds){
+		
+		// 1. 先從資料庫一次抓回所有需要的貼文
+	    List<ForumPostVO> posts = repo.findAllById(postIds);
+
+	    // 2. 將抓回來的資料轉成 Map，方便快速尋找 (Key 是 ID, Value 是物件)
+	    Map<Integer, ForumPostVO> postMap = posts.stream()
+	            .collect(Collectors.toMap(post -> post.getPostId(), post -> post));
+
+	    // 3. 按照傳入的 postIds 順序，「對號入座」重新組裝成 List
+	    return postIds.stream()
+	    		// 根據 ID 去 Map 裡抓出對應的物件
+	            .map(id -> {
+	            	return postMap.get(id);
+	            })
+	            .filter(post -> post != null)
+	            .collect(Collectors.toList());
+	}
+	
+	public List<ForumPostVO> getAllPosts(){
+		return repo.findAll();
 	}
 	
 	public ForumPostVO getOnePostWithCommentAndMember(Integer postId) {

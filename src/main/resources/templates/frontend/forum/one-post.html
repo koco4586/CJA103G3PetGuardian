@@ -241,10 +241,9 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
     </div>
 
     <div class="main-container">
-        <aside class="post-user-sidebar">
-            <img src="https://via.placeholder.com/90" class="user-avatar" alt="Avatar">
-            <div class="user-name">原PO大大</div>
-            <div style="font-size: 13px; color: #8d6e63; font-weight: 700;">LV.10寵物達人</div>
+        <aside class="post-user-sidebar" th:if="${forumPostVO.member.memId}">
+            <img th:src="@{'/images' + ${forumPostVO.member.memImage}}" class="user-avatar" alt="Avatar">
+            <div th:text="${forumPostVO.member.memName}" class="user-name">原PO大大</div>
         </aside>
 
         <main class="post-article-area">
@@ -281,7 +280,7 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
 
                 <h1 class="post-title" th:text="${forumPostVO.postTitle}"></h1>
                 <div class="post-meta-top">
-                    <span><i class="far fa-clock"></i> <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span></span>
+                    <span><i class="far fa-clock"></i> <span class="need-timeago" th:datetime="${forumPostVO.createdAt}"></span></span>
                 </div>
                 <div class="post-main-text" th:text="${forumPostVO.postContent}"></div>
                 
@@ -297,11 +296,11 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                     
                     <th:block th:each="forumPostCommentVO, iterStat : ${forumPostVO.forumPostComments}">
 					    <div class="comment-item">
-					        <img src="https://via.placeholder.com/50" class="comment-user-mini-img">
+					        <img th:src="@{'/images' + ${forumPostCommentVO.member.memImage}}" class="comment-user-mini-img">
 					        <div class="comment-body">
 					            <div class="comment-header">
 					                <div class="comment-info">
-					                    <span class="comment-user-name">會員名稱</span> 
+					                    <span class="comment-user-name" th:text="${forumPostCommentVO.member.memName}">會員名稱</span> 
 					                    <span class="comment-time need-timeago" th:datetime="${forumPostCommentVO.lastEditedAt}"></span>
 					                </div>
 					                
