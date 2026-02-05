@@ -281,7 +281,7 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
 
                 <h1 class="post-title" th:text="${forumPostVO.postTitle}"></h1>
                 <div class="post-meta-top">
-                    <span><i class="far fa-clock"></i> <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span></span>
+                    <span><i class="far fa-clock"></i> <span class="need-timeago" th:datetime="${forumPostVO.createdAt}"></span></span>
                 </div>
                 <div class="post-main-text" th:text="${forumPostVO.postContent}"></div>
                 
