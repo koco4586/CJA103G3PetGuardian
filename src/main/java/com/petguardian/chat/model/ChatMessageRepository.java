@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface ChatMessageRepository extends JpaRepository<ChatMessageEntity, String> {
+public interface ChatMessageRepository extends JpaRepository<ChatMessageEntity, Long> {
 
     /**
      * Find all messages in a chatroom, ordered by time ascending

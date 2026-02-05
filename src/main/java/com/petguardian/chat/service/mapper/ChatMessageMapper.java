@@ -34,6 +34,6 @@ public interface ChatMessageMapper {
          */
         List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> entities, Integer currentUserId, Integer partnerId,
                         Map<Integer, MemberProfileDTO> memberMap,
-                        Map<String, ChatMessageEntity> replyMap,
-                        Map<String, Integer> reportStatusMap);
+                        Map<Long, ChatMessageEntity> replyMap,
+                        Map<Long, Integer> reportStatusMap);
 }
