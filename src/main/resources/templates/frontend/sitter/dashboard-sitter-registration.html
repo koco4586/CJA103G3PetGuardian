@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/frontend/dashboard.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 
 <body>
@@ -61,7 +63,9 @@
                             <label class="form-label">個人簡介 <span style="color: red;">*</span></label>
                             <textarea th:field="*{appIntro}" class="form-control" rows="4"
                                 placeholder="請簡單介紹您自己，例如：您的背景、為什麼想成為寵物保姆等（10-500字）" required></textarea>
-                            <small style="color: #666;">請輸入 10-500 字</small>
+                            <small style="color: #666;">請輸入 5-500 字</small>
+                            <small id="introCount" style="display: block; margin-top: 0.25rem; color: #999;">目前字數: 0 /
+                                500</small>
                             <div th:if="${#fields.hasErrors('appIntro')}"
                                 style="color: red; font-size: 0.9rem; margin-top: 0.25rem;">
                                 <span th:errors="*{appIntro}"></span>
@@ -72,7 +76,9 @@
                             <label class="form-label">相關經驗說明 <span style="color: red;">*</span></label>
                             <textarea th:field="*{appExperience}" class="form-control" rows="4"
                                 placeholder="請描述您照顧寵物的相關經驗，例如：曾經照顧過的寵物類型、時間長度、特殊技能等（10-500字）" required></textarea>
-                            <small style="color: #666;">請輸入 10-500 字</small>
+                            <small style="color: #666;">請輸入 5-500 字</small>
+                            <small id="experienceCount" style="display: block; margin-top: 0.25rem; color: #999;">目前字數:
+                                0 / 500</small>
                             <div th:if="${#fields.hasErrors('appExperience')}"
                                 style="color: red; font-size: 0.9rem; margin-top: 0.25rem;">
                                 <span th:errors="*{appExperience}"></span>
@@ -92,18 +98,116 @@
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
     <script src="/js/frontend/main.js"></script>
+    <!-- SweetAlert2 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        // 即時字數統計
+        document.addEventListener('DOMContentLoaded', function () {
+            // 使用 name 屬性選取 textarea (Thymeleaf 會將 th:field="*{appIntro}" 轉換為 name="appIntro")
+            const introTextarea = document.querySelector('textarea[name="appIntro"]');
+            const experienceTextarea = document.querySelector('textarea[name="appExperience"]');
+            const introCount = document.getElementById('introCount');
+            const experienceCount = document.getElementById('experienceCount');
+
+            // 更新字數統計的函數
+            function updateCount(textarea, countElement) {
+                const length = textarea.value.length;
+                const maxLength = 500;
+                const minLength = 5;
+
+                countElement.textContent = `目前字數: ${length} / ${maxLength}`;
+
+                // 根據字數改變顏色
+                if (length < minLength) {
+                    countElement.style.color = '#dc3545'; // 紅色 - 字數不足
+                } else if (length > maxLength) {
+                    countElement.style.color = '#dc3545'; // 紅色 - 超過限制
+                } else {
+                    countElement.style.color = '#28a745'; // 綠色 - 正常範圍
+                }
+            }
+
+            // 監聽輸入事件
+            if (introTextarea && introCount) {
+                introTextarea.addEventListener('input', function () {
+                    updateCount(this, introCount);
+                });
+                // 初始化字數統計
+                updateCount(introTextarea, introCount);
+            }
+
+            if (experienceTextarea && experienceCount) {
+                experienceTextarea.addEventListener('input', function () {
+                    updateCount(this, experienceCount);
+                });
+                // 初始化字數統計
+                updateCount(experienceTextarea, experienceCount);
+            }
+        });
+
         function confirmSubmit() {
-            // 1. 跳出詢問視窗
-            if (confirm('確定要提交申請成為保母嗎？')) {
-                // 2. 使用者按確定 -> 跳出感謝視窗
-                // alert('感謝您的申請，請耐心等候審核結果！'); // [修正] 移除前端假提示，改由後端回傳正確訊息與提示框
-                // 3. 回傳 true -> 表單送出
+            try {
+                // 使用 name 屬性取得欄位值
+                const introTextarea = document.querySelector('textarea[name="appIntro"]');
+                const experienceTextarea = document.querySelector('textarea[name="appExperience"]');
+
+                if (!introTextarea || !experienceTextarea) {
+                    console.error('找不到表單欄位');
+                    return true; // 如果找不到欄位,讓後端處理驗證
+                }
+
+                const introValue = introTextarea.value;
+                const experienceValue = experienceTextarea.value;
+
+                // 驗證個人簡介
+                if (introValue.length < 5) {
+                    showError('個人簡介字數不足', '個人簡介至少需要 5 個字,目前只有 ' + introValue.length + ' 個字');
+                    return false;
+                }
+
+                if (introValue.length > 500) {
+                    showError('個人簡介字數超過限制', '個人簡介最多 500 個字,目前有 ' + introValue.length + ' 個字');
+                    return false;
+                }
+
+                // 驗證相關經驗
+                if (experienceValue.length < 5) {
+                    showError('相關經驗字數不足', '相關經驗至少需要 5 個字,目前只有 ' + experienceValue.length + ' 個字');
+                    return false;
+                }
+
+                if (experienceValue.length > 500) {
+                    showError('相關經驗字數超過限制', '相關經驗最多 500 個字,目前有 ' + experienceValue.length + ' 個字');
+                    return false;
+                }
+
+                // 所有驗證通過,跳出確認視窗
+                if (confirm('確定要提交申請成為保姆嗎?')) {
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('驗證函數執行錯誤:', error);
+                // 如果驗證函數出錯,讓後端處理
                 return true;
             }
-            // 使用者按取消 -> 回傳 false -> 停留在原頁面，資料保留
-            return false;
+        }
+
+        // 顯示錯誤訊息的輔助函數
+        function showError(title, text) {
+            // 檢查 SweetAlert2 是否載入
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: title,
+                    text: text,
+                    confirmButtonText: '確認'
+                });
+            } else {
+                // Fallback: 使用原生 alert
+                alert(title + '\n\n' + text);
+            }
         }
     </script>
 
