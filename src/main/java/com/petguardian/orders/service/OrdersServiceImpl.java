@@ -447,6 +447,12 @@ public class OrdersServiceImpl implements OrdersService {
         order.setOrderStatus(STATUS_CANCELED);
         ordersDAO.save(order);
 
+        // 還原庫存
+        List<OrderItemVO> orderItems = orderItemDAO.findByOrderId(orderId);
+        for (OrderItemVO item : orderItems) {
+            productService.restoreStock(item.getProId(), item.getQuantity());
+        }
+
         // 退款到買家錢包
         refundToBuyerWallet(orderId);
 

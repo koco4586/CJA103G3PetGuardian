@@ -7,15 +7,18 @@
 
 <div th:fragment="sidebar(activePage)" class="sidebar">
     <div class="text-center mb-2">
-        <div class="avatar-wrapper">
-            <img th:if="${currentMember != null and currentMember.memImage != null}" th:src="${currentMember.memImage}"
-                class="avatar" alt="會員頭像">
-            <img th:unless="${currentMember != null and currentMember.memImage != null}"
-                src="https://cdn01.pinkoi.com/product/aZgvB9di/3/640x530.jpg" class="avatar" alt="預設頭像">
+        <div class="avatar-wrapper" th:switch="${currentMember?.memId}">
+            <!-- 會員頭像：根據 memId 對應預設圖片 -->
+            <img th:case="1001" th:src="@{/images/member/aed4ec81-2887-41e6-8ed3-cd4cd6aa17f3_petguardianMember01.png}" class="avatar" alt="會員頭像">
+            <img th:case="1002" th:src="@{/images/member/f087dc7d-e8f6-4141-9f3f-7bf348eed1dd_petguardianMember02.png}" class="avatar" alt="會員頭像">
+            <img th:case="1003" th:src="@{/images/member/5339505b-43fc-4742-b105-d3007f4e368e_petguardianMember03.png}" class="avatar" alt="會員頭像">
+            <img th:case="1004" th:src="@{/images/member/ef9c5c24-11d8-4a72-9f9c-d7a7414c845f_petguardianMember04.png}" class="avatar" alt="會員頭像">
+            <img th:case="1005" th:src="@{/images/member/59fdf1f1-030c-4b20-bc42-83d0a25c40d6_petguardianMember05.png}" class="avatar" alt="會員頭像">
+            <img th:case="*" src="/images/member/aed4ec81-2887-41e6-8ed3-cd4cd6aa17f3_petguardianMember01.png" class="avatar" alt="預設頭像">
         </div>
         <h4 th:text="${currentMember != null and currentMember.memName != null} ? ${currentMember.memName} : '會員中心'">
             會員中心</h4>
-<!--        <p style="color: #999; font-size: 0.9rem;">一般會員</p>-->
+        <!--        <p style="color: #999; font-size: 0.9rem;">一般會員</p>-->
     </div>
     <nav>
         <a href="/html/frontend/member/management/member_management.html" class="menu-item"
