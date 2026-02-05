@@ -18,7 +18,11 @@ public class PostRankingSetupListener {
 	
 	@EventListener(ApplicationReadyEvent.class)
 	public void onApplicationReady() {
-		redisService.setPostViewsToRedis();
-	}
+		try {	
+			redisService.setPostViewsToRedis();
+		}catch(Exception e) {
+			System.err.println("Redis 連線失敗，請檢查 Redis 是否已啟動。");
+		}
+	}	
 	
 }
