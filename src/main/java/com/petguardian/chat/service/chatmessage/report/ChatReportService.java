@@ -52,14 +52,14 @@ public class ChatReportService {
      * Batch retrieves report status for multiple messages.
      * Uses HMGET to fetch only requested fields.
      */
-    public Map<String, Integer> getBatchStatus(Integer reporterId, List<String> messageIds) {
+    public Map<Long, Integer> getBatchStatus(Integer reporterId, List<Long> messageIds) {
         if (reporterId == null || messageIds == null || messageIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
         // 1. Try Cache
         try {
-            Map<String, Integer> cached = circuitBreaker.executeSupplier(() -> getFromRedis(reporterId, messageIds));
+            Map<Long, Integer> cached = circuitBreaker.executeSupplier(() -> getFromRedis(reporterId, messageIds));
             if (cached != null) {
                 return cached;
             }
@@ -69,7 +69,7 @@ public class ChatReportService {
 
         // 2. Cache Miss: Fetch FULL state for this user to simplify cache structure
         try {
-            Map<String, Integer> fullState = getAllFromMysql(reporterId);
+            Map<Long, Integer> fullState = getAllFromMysql(reporterId);
 
             // Repopulate Cache (Functional API)
             try {
@@ -79,8 +79,8 @@ public class ChatReportService {
             }
 
             // Filter results for requested messageIds
-            Map<String, Integer> results = new HashMap<>();
-            for (String mid : messageIds) {
+            Map<Long, Integer> results = new HashMap<>();
+            for (Long mid : messageIds) {
                 if (fullState.containsKey(mid)) {
                     results.put(mid, fullState.get(mid));
                 }
@@ -94,13 +94,14 @@ public class ChatReportService {
 
     @Transactional
     public void submitReport(Integer reporterId, String messageId, int type, String reason) {
-        if (chatReportRepository.existsByReporterIdAndMessageId(reporterId, messageId)) {
+        Long messageIdLong = io.hypersistence.tsid.TSID.from(messageId).toLong();
+        if (chatReportRepository.existsByReporterIdAndMessageId(reporterId, messageIdLong)) {
             throw new IllegalStateException("Message already reported by this user.");
         }
 
         ChatReport report = new ChatReport();
         report.setReporterId(reporterId);
-        report.setMessageId(messageId);
+        report.setMessageId(messageIdLong);
         report.setReportType(type);
         report.setReportReason(reason);
         report.setReportStatus(1); // Pending
@@ -150,11 +151,11 @@ public class ChatReportService {
         return REDIS_KEY_PREFIX + reporterId;
     }
 
-    public Map<String, Integer> getFromRedis(Integer reporterId, List<String> messageIds) {
+    public Map<Long, Integer> getFromRedis(Integer reporterId, List<Long> messageIds) {
         String key = getRedisKey(reporterId);
 
         List<Object> hashKeys = new ArrayList<>(messageIds.size() + 1);
-        hashKeys.addAll(messageIds);
+        messageIds.forEach(id -> hashKeys.add(io.hypersistence.tsid.TSID.from(id).toString()));
         hashKeys.add("_init");
 
         // Use MultiGet via String Template (returns Strings)
@@ -172,7 +173,7 @@ public class ChatReportService {
             return null;
         }
 
-        Map<String, Integer> result = new HashMap<>();
+        Map<Long, Integer> result = new HashMap<>();
         for (int i = 0; i < messageIds.size(); i++) {
             Object val = values.get(i);
             if (val != null) {
@@ -188,7 +189,7 @@ public class ChatReportService {
         return result;
     }
 
-    private Map<String, Integer> getAllFromMysql(Integer reporterId) {
+    private Map<Long, Integer> getAllFromMysql(Integer reporterId) {
         try {
             List<ChatReport> reports = chatReportRepository.findByReporterId(reporterId);
             return reports.stream()
@@ -224,12 +225,12 @@ public class ChatReportService {
         redisJsonMapper.delete(getRedisKey(reporterId));
     }
 
-    public void repopulateRedis(Integer reporterId, Map<String, Integer> statusMap) {
+    public void repopulateRedis(Integer reporterId, Map<Long, Integer> statusMap) {
         String key = getRedisKey(reporterId);
         // We need Map<String, String> for StringRedisTemplate
         Map<String, String> writeMap = new HashMap<>();
         if (statusMap != null) {
-            statusMap.forEach((k, v) -> writeMap.put(k, String.valueOf(v)));
+            statusMap.forEach((k, v) -> writeMap.put(io.hypersistence.tsid.TSID.from(k).toString(), String.valueOf(v)));
         }
         writeMap.put("_init", "1");
 

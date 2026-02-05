@@ -119,9 +119,9 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // Prepare Batch Data
-        Map<String, ChatMessageEntity> replyMap = resolveReplyMap(messages);
+        Map<Long, ChatMessageEntity> replyMap = resolveReplyMap(messages);
         Map<Integer, MemberProfileDTO> memberMap = resolveMemberMap(messages, replyMap);
-        Map<String, Integer> reportStatusMap = resolveReportStatusMap(currentUserId, messages);
+        Map<Long, Integer> reportStatusMap = resolveReportStatusMap(currentUserId, messages);
 
         // Delegate DTO conversion to mapper
         Integer partnerId = chatroom.getMemberIds().stream()
@@ -175,12 +175,12 @@ public class ChatServiceImpl implements ChatService {
                 dto.getChatroomId(), senderId, receiverId);
 
         // 2. Generate TSID (distributed-safe ID)
-        String messageId = tsidFactory.generate().toString();
+        long messageId = tsidFactory.generate().toLong();
 
         // 3. Resolve Reply Message (if exists)
         ChatMessageEntity replyMessage = null;
         if (dto.getReplyToId() != null) {
-            replyMessage = chatMessageService.findById(dto.getReplyToId()).orElse(null);
+            replyMessage = chatMessageService.findById(TSID.from(dto.getReplyToId()).toLong()).orElse(null);
         }
 
         // 4. Batch Fetch Member Profiles (sender + reply sender)
@@ -253,7 +253,7 @@ public class ChatServiceImpl implements ChatService {
     // ============================================================
 
     private Map<Integer, MemberProfileDTO> resolveMemberMap(List<ChatMessageEntity> messages,
-            Map<String, ChatMessageEntity> replyMap) {
+            Map<Long, ChatMessageEntity> replyMap) {
         Set<Integer> memberIds = new HashSet<>();
 
         // 1. Collect IDs from current batch
@@ -270,8 +270,8 @@ public class ChatServiceImpl implements ChatService {
         return chatRoomService.getMemberProfiles(new ArrayList<>(memberIds));
     }
 
-    private Map<String, ChatMessageEntity> resolveReplyMap(List<ChatMessageEntity> messages) {
-        Set<String> replyIds = messages.stream()
+    private Map<Long, ChatMessageEntity> resolveReplyMap(List<ChatMessageEntity> messages) {
+        Set<Long> replyIds = messages.stream()
                 .map(ChatMessageEntity::getReplyToMessageId)
                 .filter(id -> id != null)
                 .collect(Collectors.toSet());
@@ -281,11 +281,11 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // Try to find reply messages in the current batch first
-        Map<String, ChatMessageEntity> foundInBatch = messages.stream()
+        Map<Long, ChatMessageEntity> foundInBatch = messages.stream()
                 .filter(msg -> replyIds.contains(msg.getMessageId()))
                 .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity()));
 
-        Set<String> missingIds = replyIds.stream()
+        Set<Long> missingIds = replyIds.stream()
                 .filter(id -> !foundInBatch.containsKey(id))
                 .collect(Collectors.toSet());
 
@@ -294,20 +294,20 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // Only query the facade (which might hit MySQL) for missing IDs
-        Map<String, ChatMessageEntity> results = new HashMap<>(foundInBatch);
+        Map<Long, ChatMessageEntity> results = new HashMap<>(foundInBatch);
         results.putAll(chatMessageService.findAllById(missingIds).stream()
                 .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity())));
 
         return results;
     }
 
-    private Map<String, Integer> resolveReportStatusMap(Integer currentUserId, List<ChatMessageEntity> messages) {
+    private Map<Long, Integer> resolveReportStatusMap(Integer currentUserId, List<ChatMessageEntity> messages) {
         // Resolve report status for the current user to display in the UI
         if (messages.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        List<String> messageIds = messages.stream()
+        List<Long> messageIds = messages.stream()
                 .map(ChatMessageEntity::getMessageId)
                 .collect(Collectors.toList());
 
@@ -344,9 +344,9 @@ public class ChatServiceImpl implements ChatService {
         // We also need replyMap for proper DTO structure if we want consistency
         // But for search results, reply context might be optional or we can fetch it.
         // Let's resolve context to be safe.
-        Map<String, ChatMessageEntity> replyMap = resolveReplyMap(entities); // Reuse private helper
+        Map<Long, ChatMessageEntity> replyMap = resolveReplyMap(entities); // Reuse private helper
         Map<Integer, MemberProfileDTO> memberMap = resolveMemberMap(entities, replyMap); // Reuse private helper
-        Map<String, Integer> reportStatusMap = Collections.emptyMap();
+        Map<Long, Integer> reportStatusMap = Collections.emptyMap();
 
         return messageMapper.toDtoList(entities, requesterId, partnerId, memberMap, replyMap, reportStatusMap);
     }
@@ -355,7 +355,7 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public Map<String, Integer> getMessagePosition(Integer chatroomId, String messageId, Integer pageSize) {
         // 1. Calculate page index
-        int page = retrievalManager.getMessagePage(chatroomId, messageId, pageSize);
+        int page = retrievalManager.getMessagePage(chatroomId, TSID.from(messageId).toLong(), pageSize);
 
         // Return as map
         Map<String, Integer> result = new HashMap<>();

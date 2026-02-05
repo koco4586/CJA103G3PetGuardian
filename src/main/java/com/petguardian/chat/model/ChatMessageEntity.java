@@ -21,7 +21,7 @@ import jakarta.persistence.Index;
  * Represents an individual message in a chat conversation.
  * 
  * Key Design Decisions:
- * - Uses String (CHAR(13)) for IDs to store TSIDs (Time-Sorted Unique
+ * - Uses 64bit Long for IDs to store TSIDs (Time-Sorted Unique
  * Identifiers)
  */
 @NamedNativeQuery(name = "ChatMessageEntity.searchByMessage", query = "SELECT * FROM chat_message WHERE chatroom_id = :chatroomId AND MATCH(message) AGAINST(:keyword IN BOOLEAN MODE) ORDER BY chat_time DESC", resultClass = ChatMessageEntity.class)
@@ -32,11 +32,11 @@ import jakarta.persistence.Index;
 })
 @Data
 @NoArgsConstructor
-public class ChatMessageEntity implements Persistable<String>, Serializable {
+public class ChatMessageEntity implements Persistable<Long>, Serializable {
 
     @Id
     @Column(name = "message_id", length = 13, updatable = false)
-    private String messageId; // Strategy: TSID (Application Generated)
+    private Long messageId; // Strategy: TSID (Application Generated 64bit Long)
 
     @Column(name = "chatroom_id")
     private Integer chatroomId;
@@ -51,10 +51,10 @@ public class ChatMessageEntity implements Persistable<String>, Serializable {
     private LocalDateTime chatTime;
 
     @Column(name = "reply_to_message_id", length = 13)
-    private String replyToMessageId; // Reference to parent message ID
+    private Long replyToMessageId; // Reference to parent message ID
 
     @Override
-    public String getId() {
+    public Long getId() {
         return messageId;
     }
 

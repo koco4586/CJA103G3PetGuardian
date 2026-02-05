@@ -4,9 +4,9 @@ import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatMessageRepository;
 import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.service.RedisJsonMapper;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataCache;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
+import com.petguardian.chat.dto.ChatMessageRedisDTO;
 import com.petguardian.chat.service.context.MessageCreationContext;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -37,7 +37,6 @@ class ChatMessagePersistenceManager {
     private final ChatRoomMetadataService metadataService;
     private final ChatRoomMetadataCache metadataCache;
     private final ChatMessageCache messageCache;
-    private final RedisJsonMapper redisJsonMapper;
     private final TransactionTemplate transactionTemplate;
     private final CircuitBreaker circuitBreaker;
 
@@ -51,7 +50,6 @@ class ChatMessagePersistenceManager {
             ChatRoomMetadataService metadataService,
             ChatRoomMetadataCache metadataCache,
             ChatMessageCache messageCache,
-            RedisJsonMapper redisJsonMapper,
             TransactionTemplate transactionTemplate,
             CircuitBreakerRegistry circuitBreakerRegistry) {
         this.mysqlRepository = mysqlRepository;
@@ -59,7 +57,6 @@ class ChatMessagePersistenceManager {
         this.metadataService = metadataService;
         this.metadataCache = metadataCache;
         this.messageCache = messageCache;
-        this.redisJsonMapper = redisJsonMapper;
         this.transactionTemplate = transactionTemplate;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
     }
@@ -172,22 +169,22 @@ class ChatMessagePersistenceManager {
     }
 
     private void flushShard(int shardId) {
-        // Fix: Use typed return from cache (List<MessageCreationContext>)
-        List<MessageCreationContext> batch = messageCache.pollPersistenceBatch(shardId, MESSAGE_FLUSH_BATCH_SIZE);
+        // Fix: Use typed return from cache (List<ChatMessageRedisDTO>)
+        List<ChatMessageRedisDTO> batch = messageCache.pollPersistenceBatch(shardId, MESSAGE_FLUSH_BATCH_SIZE);
         if (batch == null || batch.isEmpty())
             return;
 
         List<ChatMessageEntity> validEntities = new ArrayList<>();
-        List<MessageCreationContext> validContexts = new ArrayList<>();
+        List<ChatMessageRedisDTO> validDTOs = new ArrayList<>();
 
         // Fix: Process items individually to identify and drop poison messages
-        for (MessageCreationContext ctx : batch) {
+        for (ChatMessageRedisDTO dto : batch) {
             try {
-                if (ctx != null) {
-                    ChatMessageEntity entity = ctx.toEntity();
+                if (dto != null) {
+                    ChatMessageEntity entity = dto.toEntity();
                     if (entity != null) {
                         validEntities.add(entity);
-                        validContexts.add(ctx);
+                        validDTOs.add(dto);
                     }
                 }
             } catch (Exception e) {
@@ -206,11 +203,11 @@ class ChatMessagePersistenceManager {
                         shardId, e.getMessage());
 
                 // Fix: Fallback to single-item processing to isolate poison messages
-                List<MessageCreationContext> toRequeue = new ArrayList<>();
+                List<ChatMessageRedisDTO> toRequeue = new ArrayList<>();
 
                 for (int i = 0; i < validEntities.size(); i++) {
                     ChatMessageEntity entity = validEntities.get(i);
-                    MessageCreationContext ctx = validContexts.get(i);
+                    ChatMessageRedisDTO dto = validDTOs.get(i);
                     try {
                         mysqlRepository.save(entity);
                     } catch (DataIntegrityViolationException dive) {
@@ -219,7 +216,7 @@ class ChatMessagePersistenceManager {
                     } catch (Exception ex) {
                         log.warn("[Persistence] Save failed for message id={}, adding to retry. Error: {}",
                                 entity.getMessageId(), ex.getMessage());
-                        toRequeue.add(ctx);
+                        toRequeue.add(dto);
                     }
                 }
 
@@ -276,13 +273,11 @@ class ChatMessagePersistenceManager {
             return circuitBreaker.executeSupplier(() -> {
                 int shardId = context.chatroomId() % SHARD_COUNT;
 
-                // Fix: Use explicit JSON serialization
-                String json = redisJsonMapper.toJson(context);
+                // Fix: Use DTO for Redis
+                ChatMessageRedisDTO redisDTO = ChatMessageRedisDTO.fromContext(context);
 
                 try {
-                    // Fix: Use getStringTemplate
-                    redisJsonMapper.getStringTemplate().opsForList().leftPush(
-                            String.format("chat:write_queue:%d", shardId), json);
+                    messageCache.enqueueForPersistence(shardId, redisDTO);
                 } catch (Exception e) {
                     throw new RuntimeException("Redis enqueue failed: " + e.getMessage(), e);
                 }
@@ -291,8 +286,8 @@ class ChatMessagePersistenceManager {
 
                 // Fire-and-forget cache updates
                 try {
-                    messageCache.pushToHistory(context.chatroomId(), entity, CACHE_LIMIT);
-                    messageCache.putRecentLog(entity.getMessageId(), entity);
+                    messageCache.pushToHistory(context.chatroomId(), redisDTO, CACHE_LIMIT);
+                    messageCache.putRecentLog(redisDTO.messageId(), redisDTO);
 
                     metadataService.syncRoomMetadata(
                             context.chatroomId(),

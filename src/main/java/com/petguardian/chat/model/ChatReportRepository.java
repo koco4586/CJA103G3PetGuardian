@@ -14,13 +14,13 @@ public interface ChatReportRepository extends JpaRepository<ChatReport, Integer>
      * Check if a report exists for a specific user and message.
      * Used to prevent duplicate reports.
      */
-    boolean existsByReporterIdAndMessageId(Integer reporterId, String messageId);
+    boolean existsByReporterIdAndMessageId(Integer reporterId, Long messageId);
 
     /**
      * Find report status for a user and message.
      * Used by the API to return current status to frontend.
      */
-    Optional<ChatReport> findByReporterIdAndMessageId(Integer reporterId, String messageId);
+    Optional<ChatReport> findByReporterIdAndMessageId(Integer reporterId, Long messageId);
 
     /**
      * Find reports by status (e.g., 0 for pending).
@@ -40,7 +40,7 @@ public interface ChatReportRepository extends JpaRepository<ChatReport, Integer>
     /**
      * Batch Optimization: Find reports for a specific user and list of messages.
      */
-    List<ChatReport> findByReporterIdAndMessageIdIn(Integer reporterId, Collection<String> messageIds);
+    List<ChatReport> findByReporterIdAndMessageIdIn(Integer reporterId, Collection<Long> messageIds);
 
     // 後台dashboard統計用：計算指定檢舉狀態的檢舉單數量
     long countByReportStatus(Integer returnStatus);

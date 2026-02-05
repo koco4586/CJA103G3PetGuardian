@@ -1,8 +1,7 @@
 package com.petguardian.chat.service.chatmessage;
 
-import com.petguardian.chat.model.ChatMessageEntity;
+import com.petguardian.chat.dto.ChatMessageRedisDTO;
 import com.petguardian.chat.service.RedisJsonMapper;
-import com.petguardian.chat.service.context.MessageCreationContext;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -49,11 +48,11 @@ public class ChatMessageCache {
     // MESSAGE HISTORY (List)
     // =================================================================================
 
-    public List<ChatMessageEntity> getHistory(Integer roomId, int limit) {
+    public List<ChatMessageRedisDTO> getHistory(Integer roomId, int limit) {
         String key = String.format(HISTORY_KEY, roomId);
         try {
             return circuitBreaker.executeSupplier(
-                    () -> redisJsonMapper.getList(key, 0, limit - 1, ChatMessageEntity.class));
+                    () -> redisJsonMapper.getList(key, 0, limit - 1, ChatMessageRedisDTO.class));
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping cache read for room history {}.", circuitBreaker.getState(), roomId);
             return Collections.emptyList();
@@ -63,7 +62,7 @@ public class ChatMessageCache {
         }
     }
 
-    public void pushToHistory(Integer roomId, ChatMessageEntity message, int limit) {
+    public void pushToHistory(Integer roomId, ChatMessageRedisDTO message, int limit) {
         String key = String.format(HISTORY_KEY, roomId);
         try {
             // Explicit serialization to JSON String for Lua
@@ -80,7 +79,7 @@ public class ChatMessageCache {
         }
     }
 
-    public void warmUpHistory(Integer roomId, List<ChatMessageEntity> messages) {
+    public void warmUpHistory(Integer roomId, List<ChatMessageRedisDTO> messages) {
         String key = String.format(HISTORY_KEY, roomId);
         try {
             circuitBreaker.executeRunnable(() -> {
@@ -109,7 +108,7 @@ public class ChatMessageCache {
     // PERSISTENCE QUEUE (List)
     // =================================================================================
 
-    public void enqueueForPersistence(int shardId, MessageCreationContext context) {
+    public void enqueueForPersistence(int shardId, ChatMessageRedisDTO context) {
         String key = String.format(QUEUE_KEY, shardId);
         try {
             // Push JSON String
@@ -127,16 +126,16 @@ public class ChatMessageCache {
     }
 
     // Returns Typed Objects now!
-    public List<MessageCreationContext> pollPersistenceBatch(int shardId, int batchSize) {
+    public List<ChatMessageRedisDTO> pollPersistenceBatch(int shardId, int batchSize) {
         String key = String.format(QUEUE_KEY, shardId);
-        List<MessageCreationContext> batch = new java.util.ArrayList<>();
+        List<ChatMessageRedisDTO> batch = new java.util.ArrayList<>();
 
         // This is a loop of pops. Can be optimized with LPOP count in newer Redis, but
         // we use rightPop loop for now.
         for (int i = 0; i < batchSize; i++) {
             String jsonItem = redisJsonMapper.getStringTemplate().opsForList().rightPop(key);
             if (jsonItem != null) {
-                MessageCreationContext ctx = redisJsonMapper.fromJson(jsonItem, MessageCreationContext.class);
+                ChatMessageRedisDTO ctx = redisJsonMapper.fromJson(jsonItem, ChatMessageRedisDTO.class);
                 if (ctx != null) {
                     batch.add(ctx);
                 }
@@ -147,7 +146,7 @@ public class ChatMessageCache {
         return batch;
     }
 
-    public void requeuePersistenceBatch(int shardId, List<MessageCreationContext> batch) {
+    public void requeuePersistenceBatch(int shardId, List<ChatMessageRedisDTO> batch) {
         String key = String.format(QUEUE_KEY, shardId);
         if (batch == null || batch.isEmpty())
             return;
@@ -164,7 +163,7 @@ public class ChatMessageCache {
     // MISC
     // =================================================================================
 
-    public void putRecentLog(String messageId, ChatMessageEntity message) {
+    public void putRecentLog(String messageId, ChatMessageRedisDTO message) {
         try {
             // Hash needs Strings
             String jsonMessage = redisJsonMapper.toJson(message);
