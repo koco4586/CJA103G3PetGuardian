@@ -283,6 +283,14 @@ mark {
     margin-bottom: 1rem;
 }
 
+/* Mini loading for infinite scroll */
+.chat-loading-mini {
+    text-align: center;
+    padding: 10px;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
 /* Send button styles */
 .chat-input .btn-send {
     background: #ccc;

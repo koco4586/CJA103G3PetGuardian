@@ -2,6 +2,7 @@ package com.petguardian.chat.service.chatmessage;
 
 import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatMessageRepository;
+import com.petguardian.chat.dto.ChatMessageRedisDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -32,16 +33,29 @@ public class ChatMessageRetrievalManager {
         // Redis only caches first page (recent 50 messages)
         if (pageable.getPageNumber() == 0) {
             int pageSize = pageable.getPageSize();
-            List<com.petguardian.chat.dto.ChatMessageRedisDTO> cached = messageCache.getHistory(chatroomId, pageSize);
-
-            if (cached.size() >= pageSize) {
-                log.debug("[Retrieval] Cache HIT for room {}. Returning {} messages.", chatroomId, cached.size());
-                return cached.stream()
-                        .map(com.petguardian.chat.dto.ChatMessageRedisDTO::toEntity)
-                        .toList();
+            boolean isWarmed = false;
+            try {
+                isWarmed = messageCache.isWarmed(chatroomId);
+            } catch (Exception e) {
+                log.debug("[Retrieval] Failed to check isWarmed for room {}: {}", chatroomId, e.getMessage());
             }
-            log.info("[Retrieval] Cache PARTIAL HIT ({}/{}) for room {}. Falling back to MySQL.",
-                    cached.size(), pageSize, chatroomId);
+
+            if (isWarmed) {
+                List<ChatMessageRedisDTO> cached = messageCache.getHistory(chatroomId,
+                        pageSize);
+
+                if (cached != null) {
+                    log.debug("[Retrieval] Cache HIT (Warmed) for room {}. Returning {} messages.", chatroomId,
+                            cached.size());
+                    return cached.stream()
+                            .map(ChatMessageRedisDTO::toEntity)
+                            .toList();
+                }
+                log.warn(
+                        "[Retrieval] Cache availability check failed (CB Open/Error) for room {}. Proceeding to DB fallback.",
+                        chatroomId);
+            }
+            log.info("[Retrieval] Cache MISS (Unwarmed) for room {}. Falling back to MySQL.", chatroomId);
         }
 
         // Fallback or deeper pages: MySQL
@@ -53,8 +67,8 @@ public class ChatMessageRetrievalManager {
                 try {
                     log.info("[Retrieval] Warming up Redis cache for room {} with {} messages.", chatroomId,
                             dbResults.size());
-                    List<com.petguardian.chat.dto.ChatMessageRedisDTO> dtos = dbResults.stream()
-                            .map(com.petguardian.chat.dto.ChatMessageRedisDTO::fromEntity)
+                    List<ChatMessageRedisDTO> dtos = dbResults.stream()
+                            .map(ChatMessageRedisDTO::fromEntity)
                             .toList();
                     messageCache.warmUpHistory(chatroomId, dtos);
                 } catch (Exception e) {
