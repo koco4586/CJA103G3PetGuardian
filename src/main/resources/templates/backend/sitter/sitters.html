@@ -165,7 +165,7 @@
                                 <th>保母姓名</th>
                                 <th>服務評價</th>
                                 <th>目前狀態</th>
-                                <th>上次登入</th>
+
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -214,10 +214,7 @@
                                     <span th:if="${sitter.sitterStatus == 1}"
                                         style="color:red; font-weight:bold;">已停權</span>
                                 </td>
-                                <td>
-                                    <!-- 上次登入暫無資料，顯示固定文字或從 member 關聯取得 -->
-                                    <span style="color:#999;">-</span>
-                                </td>
+
                                 <td>
                                     <!-- 狀態為 0 (正常) -> 顯示停權按鈕 -->
                                     <form th:if="${sitter.sitterStatus == 0}"
