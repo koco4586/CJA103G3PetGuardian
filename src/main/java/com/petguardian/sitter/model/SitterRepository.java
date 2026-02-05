@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * 保姆 Repository
@@ -99,4 +101,18 @@ public interface SitterRepository extends JpaRepository<SitterVO, Integer> {
         @Query("SELECT s.sitterId, s.sitterName, s.sitterAdd, s.sitterStarCount, s.sitterRatingCount, s.memId " +
                "FROM SitterVO s WHERE s.sitterStatus = 0")
         List<Object[]> findSitterBasicInfo();
+        
+        /**
+         * [分頁優化] 查詢所有啟用保母 (暫不抓取關聯以利 Page 運作)
+         */
+        @Query("SELECT s FROM SitterVO s WHERE s.sitterStatus = 0")
+        Page<SitterVO> findAllActive(Pageable pageable);
+        /**
+         * [批次抓取關聯] 專門用來補齊該頁面 6 位保母的服務地區，徹底解決 N+1
+         */
+        @Query("SELECT DISTINCT s FROM SitterVO s " +
+               "LEFT JOIN FETCH s.serviceAreas sa " +
+               "LEFT JOIN FETCH sa.area " +
+               "WHERE s.sitterId IN :ids")
+        List<SitterVO> findAllWithAreasByIds(@Param("ids") List<Integer> ids);
 }

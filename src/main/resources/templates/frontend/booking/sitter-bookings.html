@@ -12,6 +12,7 @@
 	<link rel="stylesheet" th:href="@{/css/frontend/sitter/dashboard.css}">
 	<link rel="stylesheet" th:href="@{/css/frontend/booking/sitter-bookings.css}">
 	<link rel="stylesheet" th:href="@{/css/frontend/evaluate-styles.css}">
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 
 <body>
@@ -22,10 +23,10 @@
 		<div class="sidebar">
 			<div class="text-center mb-2">
 				<div class="avatar-wrapper">
-					<img th:if="${sitter != null and sitter.memImage != null}" th:src="${sitter.memImage}"
-						class="avatar" alt="會員頭像">
-					<img th:unless="${sitter != null and sitter.memImage != null}"
-						src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar" alt="預設頭像">
+					<img th:src="${sitter.memImage == null ? '/images/default-avatar.png' : 
+				             (sitter.memImage.startsWith('http') or sitter.memImage.startsWith('/') or sitter.memImage.startsWith('data:') ? 
+				              sitter.memImage : 'data:image/jpeg;base64,' + sitter.memImage)}" class="avatar"
+						onerror="this.src='/images/default-avatar.png'">
 				</div>
 				<h4 th:text="${sitter.memName}" style="margin-bottom: 2px;">保母姓名</h4>
 				<p style="color: #64748b; font-size: 0.85rem; margin-top: 0;">專業保姆專區</p>
@@ -105,9 +106,10 @@
 					<div class="card-body">
 						<!-- 圖片區 -->
 						<div class="avatar-area">
-							<img src="/images/pet-avatar-placeholder.png" th:src="@{/images/default-pet.png}"
-								onerror="this.src='https://placehold.co/100x100?text=Pet'" alt="Pet"
-								class="pet-avatar-img">
+							<img th:src="@{${order.petImage != null ? order.petImage : '/images/default-pet.png'}}"
+						         onerror="this.src='/images/default-pet.png'" 
+						         alt="Pet"
+						         class="pet-avatar-img">
 						</div>
 
 						<!-- 資訊區 -->

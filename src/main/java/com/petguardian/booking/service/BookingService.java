@@ -40,6 +40,8 @@ public interface BookingService {
 
 	void completePayout(Integer orderId);
 	
+	void suspendSitterRefund(Integer orderId);
+	
 	Double calculateRefundRatio(LocalDateTime startTime, LocalDateTime cancelTime);
 	
 	//收藏
