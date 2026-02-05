@@ -55,7 +55,7 @@ public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer>
 	       "join p.members m " + 	 // 用來過濾「該會員的收藏」
 	       "join fetch p.forum f " + // 用來顯示「討論區名稱 && 討論區ID」
 	       "where m.memId = :memId order by p.createdAt desc")
-	List<ForumPostVO> findAllPostCollectionsByMemId(@Param("memId") Integer memId);
+    public List<ForumPostVO> findAllPostCollectionsByMemId(@Param("memId") Integer memId);
 	
 	//	只拿主頁圖片方法
 	@Query(value = "select p.postPic from ForumPostVO p where p.postId = :postId")

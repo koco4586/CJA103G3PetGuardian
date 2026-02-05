@@ -253,6 +253,57 @@
 		    min-width: 0;
 		    padding-right: 10px;
 		}
+		
+		/* 熱門貼文卡片樣式 */
+		.hot-posts-list {
+		    list-style: none;
+		    padding: 0;
+		    margin: 0;
+		}
+		
+		.hot-post-item {
+		    display: flex;
+		    align-items: center;
+		    padding: 12px 0;
+		    border-bottom: 1px dashed #eee;
+		}
+		
+		.hot-post-item:last-child { border-bottom: none; }
+		
+		/* 排名數字樣式 */
+		.rank-badge {
+		    width: 24px;
+		    height: 24px;
+		    border-radius: 6px;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    font-size: 14px;
+		    font-weight: 900;
+		    margin-right: 12px;
+		    background-color: #eee;
+		    color: #888;
+		}
+		
+		/* 前三名特別色 */
+		.rank-1 { background-color: #FFD700; color: #fff; } /* 金 */
+		.rank-2 { background-color: #C0C0C0; color: #fff; } /* 銀 */
+		.rank-3 { background-color: #CD7F32; color: #fff; } /* 銅 */
+		
+		.hot-post-link {
+		    text-decoration: none;
+		    color: var(--text-dark);
+		    font-weight: 700;
+		    font-size: 0.95rem;
+		    transition: color 0.2s;
+		    /* 標題太長自動省略 */
+		    white-space: nowrap;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		    max-width: 180px;
+		}
+		
+		.hot-post-link:hover { color: var(--primary-orange); }
 
         @media (max-width: 850px) {
             .container.d-flex { 
@@ -318,7 +369,7 @@
 					
 						<div class="post-meta">
 						    <i class="far fa-clock"></i>
-						    <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span>
+						    <span class="need-timeago" th:datetime="${forumPostVO.createdAt}"></span>
 						</div>
                     </a>
                 </th:block>
@@ -335,17 +386,28 @@
                 <p>請保持友善發言，嚴禁謾罵或人身攻擊。讓我們一起營造溫暖、有愛的寵物社群。</p>
             </div>
             
-            <div class="card">
-                <h4>熱門討論版</h4>
-                <ul>
-                    <li><a href="#"><b>1</b> 狗狗日誌</a></li>
-                    <li><a href="#"><b>2</b> 貓奴日常</a></li>
-                    <li><a href="#"><b>3</b> 寵物醫療</a></li>
-                    <li><a href="#"><b>4</b> 浪浪領養資訊</a></li>
-                </ul>
-            </div>
+            <div class="sidebar-card">
+			    <h4><i class="fas fa-fire" style="color: #e74c3c;"></i> 熱門貼文</h4>
+			    <ul class="hot-posts-list">
+			        <li class="hot-post-item" th:each="post, iterStat : ${topHotPostList}">
+			            <span class="rank-badge" 
+			                  th:classappend="${iterStat.count == 1 ? 'rank-1' : (iterStat.count == 2 ? 'rank-2' : (iterStat.count == 3 ? 'rank-3' : ''))}"
+			                  th:text="${iterStat.count}">
+			            </span>
+			            
+			            <a th:href="@{/forumpost/get-post-id-for-one-post(postId=${post.postId}, forumId=${forumId}, forumName=${forumName})}" 
+			               class="hot-post-link" 
+			               th:text="${post.postTitle}">
+			               貼文標題載入中...
+			            </a>
+			        </li>
+			    </ul>
+			    
+			    <p th:if="${#lists.isEmpty(topHotPostList)}" class="sidebar-desc" style="text-align: center; color: #999;">
+			        目前尚無熱門貼文
+			    </p>
+			</div>
         </div>
-
     </div>
 
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
