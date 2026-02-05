@@ -22,6 +22,7 @@ import com.petguardian.booking.model.BookingOrderVO;
 // import com.petguardian.sitter.model.SitterVO; // [Refactor] 不再直接引用 Entity
 import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.model.SitterDashboardDTO;
+import com.petguardian.sitter.model.SitterMemberVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -93,6 +94,12 @@ public class SitterDashboardController {
 
         // 待確認訂單數量
         model.addAttribute("pendingCount", dashboardData.getPendingOrderCount());
+
+        // [New] 取得會員資料供側邊欄顯示頭像
+        SitterMemberVO currentMember = sitterService.getSitterMemberById(memId);
+        if (currentMember != null) {
+            model.addAttribute("currentMember", currentMember);
+        }
 
         return "frontend/sitter/dashboard";
     }

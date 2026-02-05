@@ -22,8 +22,10 @@
 		<div class="sidebar">
 			<div class="text-center mb-2">
 				<div class="avatar-wrapper">
-					<img th:src="${sitter.memImage != null ? 'data:image/jpeg;base64,' + sitter.memImage : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter'}"
-						class="avatar">
+					<img th:if="${sitter != null and sitter.memImage != null}" th:src="${sitter.memImage}"
+						class="avatar" alt="會員頭像">
+					<img th:unless="${sitter != null and sitter.memImage != null}"
+						src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar" alt="預設頭像">
 				</div>
 				<h4 th:text="${sitter.memName}" style="margin-bottom: 2px;">保母姓名</h4>
 				<p style="color: #64748b; font-size: 0.85rem; margin-top: 0;">專業保姆專區</p>
