@@ -64,6 +64,24 @@ public class RedisJsonMapper {
         }
     }
 
+    public <T> List<T> mget(List<String> keys, Class<T> clazz) {
+        if (keys == null || keys.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            List<String> jsonList = redisTemplate.opsForValue().multiGet(keys);
+            if (jsonList == null || jsonList.isEmpty()) {
+                return Collections.emptyList();
+            }
+            return jsonList.stream()
+                    .map(json -> fromJson(json, clazz))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.debug("[Redis] mget failed for {}: {}", clazz.getSimpleName(), e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
     public <T> T convertValue(Object fromValue, Class<T> toValueType) {
         if (fromValue == null)
             return null;
@@ -89,15 +107,8 @@ public class RedisJsonMapper {
             if (entries.isEmpty())
                 return Optional.empty();
 
-            // Convert Map<Object, Object> (actually String, String) to target object
-            // For simple DTOs, we can convert the Map directly if it matches fields,
-            // OR if we stored it as a JSON String value?
             // HASH STRATEGY: We store fields individualy.
-            // BUT wait, existing implementation likely stored the whole object as a Map
-            // properties.
-            // entries() returns Map<Object, Object>. Since we use StringRedisTemplate, it
-            // is Map<String, String>.
-
+            // Since we use StringRedisTemplate, it is Map<String, String>.
             // Jackson can convert Map<String, String> to POJO.
             return Optional.ofNullable(objectMapper.convertValue(entries, type));
 
@@ -124,12 +135,6 @@ public class RedisJsonMapper {
     public void setHash(String key, Object object, Duration ttl) {
         try {
             // Convert POJO to Map<String, String> to store as Hash fields
-            // convertValue returns Map<String, Object>. We need values to be Strings for
-            // StringRedisTemplate?
-            // Actually, StringRedisTemplate.opsForHash().putAll() expects Map<?, ?> but
-            // keys/values must be Strings.
-            // Jackson's convertValue might produce Integers/Longs in the map.
-
             Map<String, Object> rawMap = objectMapper.convertValue(object, new TypeReference<Map<String, Object>>() {
             });
             Map<String, String> stringMap = rawMap.entrySet().stream()

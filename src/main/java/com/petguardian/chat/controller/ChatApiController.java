@@ -93,7 +93,7 @@ public class ChatApiController {
             HttpServletRequest request,
             @PathVariable Integer chatroomId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "50") int size) {
 
         Integer currentUserId = authStrategyService.getCurrentUserId(request);
         if (currentUserId == null) {
@@ -136,7 +136,7 @@ public class ChatApiController {
             HttpServletRequest request,
             @PathVariable Integer chatroomId,
             @PathVariable String messageId,
-            @RequestParam(defaultValue = "20") Integer size) {
+            @RequestParam(defaultValue = "50") Integer size) {
 
         // Although position calculation might not strictly require auth for the
         // calculation itself,

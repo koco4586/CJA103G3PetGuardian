@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  * Service for Chat Room and Member Metadata (Domain Layer).
@@ -89,15 +90,13 @@ public class ChatRoomMetadataService {
         if (memberIds == null || memberIds.isEmpty())
             return Collections.emptyMap();
 
-        // 1. Try Cache
-        Map<Integer, MemberProfileDTO> resultMap = new java.util.HashMap<>();
-        List<Integer> missingIds = new java.util.ArrayList<>();
+        // 1. Try Cache (Batch)
+        Map<Integer, MemberProfileDTO> resultMap = new HashMap<>(
+                metadataCache.getMemberProfileBatch(memberIds));
 
-        for (Integer id : memberIds) {
-            metadataCache.getMemberProfile(id).ifPresentOrElse(
-                    dto -> resultMap.put(id, dto),
-                    () -> missingIds.add(id));
-        }
+        List<Integer> missingIds = memberIds.stream()
+                .filter(id -> !resultMap.containsKey(id))
+                .collect(Collectors.toList());
 
         // 2. DB Fallback for misses
         if (!missingIds.isEmpty()) {
