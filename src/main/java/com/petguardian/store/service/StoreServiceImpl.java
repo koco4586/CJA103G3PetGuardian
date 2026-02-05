@@ -85,6 +85,31 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
+    @Transactional
+    public void restoreStock(Integer proId, Integer quantity) {
+        if (proId == null) {
+            throw new IllegalArgumentException("商品 ID 不能為 null");
+        }
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("還原數量必須大於 0");
+        }
+
+        Product product = productDAO.findById(proId)
+                .orElseThrow(() -> new IllegalArgumentException("商品不存在: " + proId));
+
+        int currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
+        int newStock = currentStock + quantity;
+        product.setStockQuantity(newStock);
+
+        // 如果商品原本因庫存歸零而下架，還原庫存後自動上架
+        if (product.getProState() != null && product.getProState().equals(STATE_INACTIVE) && newStock > 0) {
+            product.setProState(STATE_ACTIVE);
+        }
+
+        productDAO.save(product);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<Product> getOtherActiveProductsBySeller(Integer sellerId, List<Integer> excludeProIds) {
         if (sellerId == null) {

@@ -41,6 +41,6 @@ public class ChatMemberEntity implements Serializable {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return memId != null ? memId.hashCode() : getClass().hashCode();
     }
 }

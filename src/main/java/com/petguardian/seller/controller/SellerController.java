@@ -2,6 +2,7 @@ package com.petguardian.seller.controller;
 
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.orders.model.OrderItemVO;
+import com.petguardian.orders.service.ReturnOrderService;
 import com.petguardian.seller.model.ProType;
 import com.petguardian.seller.service.ProductService;
 import com.petguardian.seller.service.SellerDashboardService;
@@ -37,6 +38,11 @@ public class SellerController {
 
     @Autowired
     private SellerOrderService orderService;
+
+    @Autowired
+    private ReturnOrderService returnOrderService;
+
+
 
     /**
      * 取得當前登入會員 ID
@@ -298,7 +304,77 @@ public class SellerController {
 
         return result;
     }
+    /**
+     * 取得訂單退貨資訊（AJAX）
+     * 用於訂單Modal中動態載入退貨資訊
+     * 當訂單狀態為「申請退貨中」(4)或「退貨完成」(5)時使用
+     */
+    @GetMapping("/order/{orderId}/return-info")
+    @ResponseBody
+    public Map<String, Object> getOrderReturnInfo(@PathVariable Integer orderId, HttpServletRequest request) {
+        Map<String, Object> result = new HashMap<>();
 
+        Integer sellerId = getCurrentMemId(request);
+        if (sellerId == null) {
+            result.put("success", false);
+            result.put("error", "未登入");
+            return result;
+        }
+
+        // 驗證訂單是否屬於該賣家
+        Map<String, Object> orderDetail = orderService.getOrderDetail(sellerId, orderId);
+        if (orderDetail == null) {
+            result.put("success", false);
+            result.put("error", "訂單不存在或無權限查看");
+            return result;
+        }
+
+        // 取得訂單
+        com.petguardian.orders.model.OrdersVO order =
+                (com.petguardian.orders.model.OrdersVO) orderDetail.get("order");
+
+        // 檢查訂單狀態是否為退貨相關
+        Integer orderStatus = order.getOrderStatus();
+        if (orderStatus == null || (orderStatus != 4 && orderStatus != 5)) {
+            result.put("success", false);
+            result.put("hasReturnOrder", false);
+            result.put("error", "此訂單無退貨資訊");
+            return result;
+        }
+
+        // 查詢退貨單資訊
+        java.util.Optional<com.petguardian.orders.model.ReturnOrderVO> returnOrderOpt =
+                returnOrderService.getReturnOrderByOrderId(orderId);
+
+        if (returnOrderOpt.isPresent()) {
+            com.petguardian.orders.model.ReturnOrderVO returnOrder = returnOrderOpt.get();
+            result.put("success", true);
+            result.put("hasReturnOrder", true);
+            result.put("returnId", returnOrder.getReturnId());
+            result.put("applyTime", returnOrder.getApplyTime() != null ?
+                    returnOrder.getApplyTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : "-");
+            result.put("returnReason", returnOrder.getReturnReason());
+            result.put("refundAmount", returnOrder.getRefundAmount());
+            result.put("returnStatus", returnOrder.getReturnStatus());
+
+            // 退貨狀態文字
+            String returnStatusText = "審核中";
+            if (returnOrder.getReturnStatus() != null) {
+                switch (returnOrder.getReturnStatus()) {
+                    case 0: returnStatusText = "審核中"; break;
+                    case 1: returnStatusText = "退貨通過"; break;
+                    case 2: returnStatusText = "退貨失敗"; break;
+                }
+            }
+            result.put("returnStatusText", returnStatusText);
+        } else {
+            result.put("success", false);
+            result.put("hasReturnOrder", false);
+            result.put("error", "查無退貨資料");
+        }
+
+        return result;
+    }
     /**
      * 出貨
      */

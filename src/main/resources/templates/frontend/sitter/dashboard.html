@@ -179,7 +179,10 @@
         <div class="sidebar">
             <div class="text-center mb-2">
                 <div class="avatar-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar">
+                    <img th:if="${currentMember != null and currentMember.memImage != null}"
+                        th:src="${currentMember.memImage}" class="avatar" alt="會員頭像">
+                    <img th:unless="${currentMember != null and currentMember.memImage != null}"
+                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar" alt="預設頭像">
                 </div>
                 <h4 th:text="${sitter.sitterName}">保姆姓名</h4>
                 <p style="color: #999; font-size: 0.9rem;">保姆專區</p>
