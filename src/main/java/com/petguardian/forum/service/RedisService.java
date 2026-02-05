@@ -23,41 +23,45 @@ public class RedisService {
 	}
 
 	public void incrementPostViewCount(Integer postId) {
-		String key = "post:views:" + postId;
-		redisTemplate.opsForValue().increment(key);
-		
-		// 熱門貼文排行榜用
-		redisTemplate.opsForZSet().incrementScore("post:rank:", postId.toString(), 1);
+		try {
+			String key = "post:views:" + postId;
+			redisTemplate.opsForValue().increment(key);
+			// 熱門貼文排行榜用
+			redisTemplate.opsForZSet().incrementScore("post:rank:", postId.toString(), 1);
+		}catch(Exception e){
+			System.err.println("Redis 連線失敗，請檢查 Redis 是否已啟動。");
+		}
 	}
 	
 	public Integer getPostViewCount(Integer postId) {
-
-	    String key = "post:views:" + postId;
-	    String value = redisTemplate.opsForValue().get(key);
-
-	    if (value != null) {
-	        return Integer.valueOf(value);
-	    }
-
-	    return forumPostService.getOnePost(postId).getPostViews();
-	    
+		try {
+		    String key = "post:views:" + postId;
+		    String value = redisTemplate.opsForValue().get(key);	
+		    if (value != null) {
+		        return Integer.valueOf(value);
+		    }
+		}catch(Exception e){
+			System.err.println("Redis 連線失敗，請檢查 Redis 是否已啟動。");
+		}
+		return forumPostService.getOnePost(postId).getPostViews();
 	}
 	
 	public List<Integer> getTopHotPostIds(int topN){
-		
-		Set<String> postIds = redisTemplate.opsForZSet().reverseRange("post:rank:", 0, topN - 1);
-		
-		// 防止NullPointerException
-		if(postIds.isEmpty() || postIds == null) {
-			return Collections.emptyList();
+		try {
+			Set<String> postIds = redisTemplate.opsForZSet().reverseRange("post:rank:", 0, topN - 1);
+			// 防止NullPointerException
+			if(postIds.isEmpty() || postIds == null) {
+				return Collections.emptyList();
+			}
+			return postIds.stream()
+					.map(postId -> {
+						return Integer.valueOf(postId);
+					})
+					.collect(Collectors.toList());
+		}catch(Exception e){
+			System.err.println("Redis 連線失敗，請檢查 Redis 是否已啟動。");
 		}
-		
-		return postIds.stream()
-				.map(postId -> {
-					return Integer.valueOf(postId);
-				})
-				.collect(Collectors.toList());
-		
+		return Collections.emptyList();
 	}
 	
 	public void setPostViewsToRedis() {
