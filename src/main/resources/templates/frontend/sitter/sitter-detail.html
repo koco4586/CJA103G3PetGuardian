@@ -185,7 +185,7 @@
                 <div class="profile-card">
                     <!-- 預設頭像或保母上傳的頭像 -->
                     <!-- 預設頭像或保母上傳的頭像 -->
-                    <img th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
+                    <img th:src="${sitterMember != null && sitterMember.memImage != null ? 'data:image/jpeg;base64,' + sitterMember.memImage : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + sitter.sitterId}"
                         class="profile-avatar" alt="保母頭像">
 
                     <!-- B. 保母名稱 -->
