@@ -200,12 +200,16 @@ public class PetController {
             petVO.setMemId(oldPet.getMemId());
             petVO.setCreatedTime(oldPet.getCreatedTime());
 
-            if (petImageBase64 != null && petImageBase64.contains(",")) {
+            // 優先處理刪除邏輯
+            if ("true".equals(deleteImage)) {
+                petVO.setPetImage(null);
+            } else if (petImageBase64 != null && petImageBase64.contains(",")) {
                 byte[] imageBytes = java.util.Base64.getDecoder().decode(petImageBase64.split(",")[1]);
                 petVO.setPetImage(imageBytes);
             } else if (upFiles != null && !upFiles.isEmpty()) {
                 petVO.setPetImage(upFiles.getBytes());
             } else {
+                // 沒刪除也沒傳新圖，才保留舊圖
                 petVO.setPetImage(oldPet.getPetImage());
             }
 
