@@ -239,14 +239,10 @@ public class SitterPublicController {
                 }
             }
 
-            /*
-             * [FUTURE] 未來功能：查詢保姆的會員頭像
-             * SitterMemberVO sitterMember =
-             * sitterService.getSitterMemberById(sitter.getMemId());
-             * if (sitterMember != null) {
-             * model.addAttribute("sitterMember", sitterMember);
-             * }
-             */
+            SitterMemberVO sitterMember = sitterService.getSitterMemberById(sitter.getMemId());
+            if (sitterMember != null) {
+                model.addAttribute("sitterMember", sitterMember);
+            }
 
             // 歷史評價 (僅查詢有文字評論的訂單)
             List<BookingOrderVO> reviews = sitterService.getSitterReviews(sitterId);
