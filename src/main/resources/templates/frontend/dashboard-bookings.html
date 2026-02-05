@@ -199,7 +199,8 @@
 								<th:block
 									th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
 									<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->
-										<button class="btn btn-outline btn-sm">評價保母</button>
+									<button class="btn btn-outline btn-sm"
+										th:onclick="|injectEvalBox(this, ${order.bookingOrderId}, ${order.sitterMemId})|">評價保母</button>
 								</th:block>
 
 								<th:block th:if="${order.orderStatus == 3}">
@@ -295,7 +296,7 @@
 					window.location.reload();
 				} else {
 					const errorMsg = await response.text();
-					alert("取消失敗：");
+					alert("取消失敗：" + errorMsg); // 顯示錯誤訊息
 				}
 			} catch (error) {
 				console.error("Error:", error);
@@ -325,7 +326,9 @@
 			reviewsTab.classList.add('active');
 
 			try {
-				const response = await fetch(`/pet/evaluate/member/${memId}`);
+				let base = typeof contextPath !== 'undefined' ? contextPath : '';
+				if (base === '/') base = '';
+				const response = await fetch(base + `/pet/evaluate/member/${memId}`);
 				const reviews = await response.json();
 
 				// 清空訂單列表區域
@@ -437,7 +440,7 @@
 
 	</script>
 
-	<script src="/js/frontend/complaint-functions.js"></script>
+	<script th:src="@{/js/frontend/complaint-functions.js}"></script>
 
 </body>
 

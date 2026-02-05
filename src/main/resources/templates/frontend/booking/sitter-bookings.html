@@ -205,8 +205,11 @@
 
 	<!-- Scripts -->
 	<script th:src="@{/js/frontend/main.js}"></script>
-	<script src="/js/frontend/evaluate-functions.js"></script>
-	<script>
+	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		const contextPath = /*[[@{/}]]*/ '';
+		/*]]>*/
 		async function updateStatus(orderId, newStatus) {
 			const statusText = {
 				1: '接受預約',

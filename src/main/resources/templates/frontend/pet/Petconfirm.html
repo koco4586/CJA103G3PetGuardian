@@ -286,12 +286,17 @@
                 const btn = this;
                 if (btn.disabled) return;
 
-                // 二次驗證，防止空值送出
                 if (!pendingData.petName || !pendingData.petName.trim()) {
                     alert("請回上一頁輸入寵物名稱！");
                     return;
                 }
-                if (!pendingData.petImage || pendingData.petImage === "NONE") {
+
+                // 根據 petId 判斷是新增還是修改 (null 或空字串代表新增)
+                const finalId = petIdInput.value;
+                const isUpdate = (finalId != null && String(finalId).trim() !== "" && String(finalId) !== "null");
+
+                // 新增時強制檢查圖片
+                if (!isUpdate && (!pendingData.petImage || pendingData.petImage === "NONE")) {
                     alert("請回上一頁選取寵物圖片！");
                     return;
                 }
@@ -300,15 +305,13 @@
                 btn.innerText = "處理中...";
 
                 const params = new FormData();
-
                 let finalImg = (pendingData.petImage === "NONE") ? "" : pendingData.petImage;
-                let finalId = petIdInput.value;
 
-                const isUpdate = (finalId != null && String(finalId).trim() !== "" && String(finalId) !== "null");
                 let targetUrl = isUpdate ? "/pet/update" : "/pet/insertBase64";
 
                 params.append("petId", isUpdate ? finalId : "");
                 params.append("petImageBase64", finalImg || "");
+                params.append("deleteImage", (pendingData.petImage === "NONE" ? "true" : "false"));
                 params.append("petName", pendingData.petName || "");
                 params.append("typeId", pendingData.typeId || "1");
                 params.append("petGender", pendingData.petGender || "0");
