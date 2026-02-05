@@ -95,8 +95,8 @@ public class SitterDashboardController {
         // 待確認訂單數量
         model.addAttribute("pendingCount", dashboardData.getPendingOrderCount());
 
-        // [New] 取得會員資料供側邊欄顯示頭像
-        SitterMemberVO currentMember = sitterService.getSitterMemberById(memId);
+        // [New] 使用 DTO 中已查詢的會員資料，避免重複查詢
+        SitterMemberVO currentMember = dashboardData.getMember();
         if (currentMember != null) {
             model.addAttribute("currentMember", currentMember);
         }
