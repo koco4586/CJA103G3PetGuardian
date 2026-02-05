@@ -68,7 +68,10 @@ public class ForumPostController {
 	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, ModelMap model) {
 		
 		List<ForumPostVO> postList = forumPostService.getAllActiveByForumId(forumId);
-		String forumName = forumService.getOneForum(forumId).getForumName();
+		
+		// redis處理熱門貼文邏輯
+		List<Integer> postIds = redisService.getTopHotPostIds(5);
+		List<ForumPostVO> topHotPostList = forumPostService.getTopHotPostsByPostIds(postIds);
 		
 		// redis拿取瀏覽次數邏輯
 		for(ForumPostVO post : postList) {
@@ -79,7 +82,8 @@ public class ForumPostController {
 		}
 		
 		model.addAttribute("postList", postList);
-		model.addAttribute("forumName", forumName);
+		model.addAttribute("topHotPostList", topHotPostList);
+		model.addAttribute("forumName", forumService.getOneForum(forumId).getForumName());
 		
 		return "frontend/forum/list-all-active-posts";
 	}
@@ -659,7 +663,7 @@ public class ForumPostController {
 		
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
-
+	
 	@ModelAttribute
 	public void addAttribute(@RequestParam(value = "forumId", required = false) Integer forumId,
 			@RequestParam(value = "forumName", required = false) String forumName, ModelMap model) {
