@@ -1,22 +1,13 @@
 package com.petguardian.seller.service;
 
-import com.petguardian.orders.model.OrderItemVO;
-import com.petguardian.orders.model.OrderItemRepository;
-import com.petguardian.orders.model.OrdersVO;
-import com.petguardian.orders.model.OrdersRepository;
-import com.petguardian.orders.model.StoreMemberRepository;
-import com.petguardian.orders.model.StoreMemberVO;
+import com.petguardian.orders.model.*;
 import com.petguardian.wallet.model.Wallet;
 import com.petguardian.wallet.model.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 賣家訂單管理 Service 實作
@@ -36,6 +27,9 @@ public class SellerOrderServiceImpl implements SellerOrderService {
 
     @Autowired
     private WalletRepository walletRepository;
+
+    @Autowired
+    private ReturnOrderRepository returnOrderRepository;
 
     // 訂單狀態常數
     private static final int STATUS_PAID = 0;       // 已付款
@@ -181,11 +175,28 @@ public class SellerOrderServiceImpl implements SellerOrderService {
             boolean isPaidOut = (order.getOrderStatus() != null && order.getOrderStatus() == STATUS_PAIDOUT);
             orderData.put("isPaidOut", isPaidOut);
 
+            // 判斷是否為退貨相關狀態，若是則加入退貨資訊
+            Integer orderStatus = order.getOrderStatus();
+            if (orderStatus != null && (orderStatus == STATUS_REFUNDING || orderStatus == STATUS_REFUNDED)) {
+                // 查詢退貨單資訊
+                Optional<ReturnOrderVO> returnOrderOpt = returnOrderRepository.findByOrderId(order.getOrderId());
+                if (returnOrderOpt.isPresent()) {
+                    ReturnOrderVO returnOrder = returnOrderOpt.get();
+                    orderData.put("returnOrder", returnOrder);
+                    orderData.put("hasReturnOrder", true);
+                } else {
+                    orderData.put("hasReturnOrder", false);
+                }
+            } else {
+                orderData.put("hasReturnOrder", false);
+            }
+
             result.add(orderData);
         }
 
         return result;
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -219,6 +230,20 @@ public class SellerOrderServiceImpl implements SellerOrderService {
         boolean isPaidOut = (order.getOrderStatus() != null && order.getOrderStatus() == STATUS_PAIDOUT);
         result.put("isPaidOut", isPaidOut);
 
+        // 退貨狀態，顯示退貨資訊
+        Integer orderStatus = order.getOrderStatus();
+        if (orderStatus != null && (orderStatus == STATUS_REFUNDING || orderStatus == STATUS_REFUNDED)) {
+            Optional<ReturnOrderVO> returnOrderOpt = returnOrderRepository.findByOrderId(orderId);
+            if (returnOrderOpt.isPresent()) {
+                ReturnOrderVO returnOrder = returnOrderOpt.get();
+                result.put("returnOrder", returnOrder);
+                result.put("hasReturnOrder", true);
+            } else {
+                result.put("hasReturnOrder", false);
+            }
+        } else {
+            result.put("hasReturnOrder", false);
+        }
         return result;
     }
 
@@ -233,14 +258,14 @@ public class SellerOrderServiceImpl implements SellerOrderService {
                 .count();
     }
 
+    // 總營收只計算已撥款(狀態6)的訂單
     @Override
     @Transactional(readOnly = true)
     public int calculateTotalRevenue(Integer sellerId) {
-        // 計算已完成及已撥款的訂單總營收
+        // 只計算已撥款(STATUS_PAIDOUT = 6)的訂單總營收
         List<OrdersVO> orders = getSellerOrders(sellerId);
         return orders.stream()
-                .filter(o -> o.getOrderStatus() != null &&
-                        (o.getOrderStatus() == STATUS_COMPLETED || o.getOrderStatus() == STATUS_PAIDOUT))
+                .filter(o -> o.getOrderStatus() != null && o.getOrderStatus() == STATUS_PAIDOUT)
                 .mapToInt(o -> o.getOrderTotal() != null ? o.getOrderTotal() : 0)
                 .sum();
     }
