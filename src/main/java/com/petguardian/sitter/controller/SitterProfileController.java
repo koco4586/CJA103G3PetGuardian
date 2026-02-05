@@ -113,6 +113,9 @@ public class SitterProfileController {
         model.addAttribute("petTypeMap", petTypeMap);
         model.addAttribute("petSizeMap", petSizeMap);
 
+        // [New] 查詢會員資料以取得大頭貼
+        model.addAttribute("member", sitterService.getSitterMemberById(memId));
+
         // 7. 準備 Model
         model.addAttribute("sitter", sitter);
         model.addAttribute("services", services);
