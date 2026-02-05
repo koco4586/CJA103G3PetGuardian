@@ -303,6 +303,8 @@ public class SitterServiceImpl implements SitterService {
                         .serviceTime(sitter.getServiceTime())
                         .ratingCount(sitter.getSitterRatingCount())
                         .starCount(sitter.getSitterStarCount())
+                        // 同步會員大頭貼
+                        .memImage(memberRepository.findById(memId).map(m -> m.getMemImage()).orElse(null))
                         .build())
                 .serviceCount(services.size())
                 .areaCount(areas != null ? areas.size() : 0)

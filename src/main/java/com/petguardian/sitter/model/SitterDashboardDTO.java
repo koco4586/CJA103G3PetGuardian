@@ -68,6 +68,9 @@ public class SitterDashboardDTO implements Serializable {
         private String sitterName;
         private String sitterAdd;
 
+        /** 會員大頭貼 (Base64 or Path) */
+        private String memImage;
+
         /** 保姆狀態 (0:啟用, 1:停權) */
         private Byte sitterStatus;
 
