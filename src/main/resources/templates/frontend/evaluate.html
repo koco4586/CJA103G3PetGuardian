@@ -291,7 +291,10 @@
 
 
 
-    <script type="text/javascript">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const contextPath = /*[[@{/}]]*/ '';
+        /*]]>*/
 
 
         // --- 將你原本的功能封裝成這個 function ---
@@ -452,7 +455,9 @@
                 starRating: rating
             };
 
-            fetch('/pet/evaluate/save', {
+            let base = typeof contextPath !== 'undefined' ? contextPath : '';
+            if (base === '/') base = '';
+            fetch(base + '/pet/evaluate/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -460,8 +465,10 @@
                 .then(res => res.text())
                 .then(msg => {
                     if (msg === 'success') {
+                        let base = typeof contextPath !== 'undefined' ? contextPath : '';
+                        if (base === '/') base = '';
                         alert('✅ 評價已送出！');
-                        window.location.href = '/pet/evaluate/list#reviewList';  // 重新載入頁面，評價會顯示在底部
+                        window.location.href = base + '/pet/evaluate/list#reviewList';
                     } else {
                         alert('❌ 送出失敗');
                     }

@@ -1,19 +1,20 @@
 package com.petguardian.backend.model;
 
-import com.petguardian.member.model.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-/**
- * 後台專用會員 Repository
- * 僅供後台統計功能使用
- */
+// 假設您有一個基本的 Member Entity
+import com.petguardian.member.model.Member;
+
 @Repository
 public interface BackendMemberRepository extends JpaRepository<Member, Integer> {
 
     /**
-     * 計算指定會員狀態的會員數量
-     * mem_status = 0 表示正常會員，1 表示停權
+     * 計算所有啟用的會員
+     * 直接使用 SQL 查詢資料庫 table: member
+     * mem_status = 1 (啟用)
      */
-    long countByMemStatus(Integer memStatus);
+    @Query(value = "SELECT count(*) FROM member WHERE mem_status = 1", nativeQuery = true)
+    long countActiveMembers();
 }

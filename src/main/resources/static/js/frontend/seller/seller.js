@@ -239,14 +239,15 @@ function openOrderDetailModal(button) {
     document.getElementById('detailReceiverAddress').textContent = receiverAddress || '-';
 
     // 訂單狀態對應表（對應資料庫 order_status 欄位）
-    // 0:已付款 1:已出貨 2:已完成 3:已取消 4:申請退貨中 5:退貨完成
+    // 0:已付款 1:已出貨 2:已完成 3:已取消 4:申請退貨中 5:退貨完成 6:已撥款
     var statusMap = {
         '0': '<span class="badge badge-warning">已付款</span>',
         '1': '<span class="badge badge-info">已出貨</span>',
         '2': '<span class="badge badge-success">已完成</span>',
         '3': '<span class="badge badge-secondary">已取消</span>',
         '4': '<span class="badge" style="background: #ffc107; color: #333;">申請退貨中</span>',
-        '5': '<span class="badge" style="background: #6c757d; color: white;">退貨完成</span>'
+        '5': '<span class="badge" style="background: #6c757d; color: white;">退貨完成</span>',
+        '6': '<span class="badge badge-success">已撥款</span>'
     };
 
     // 填入訂單狀態（來自 orders 表的 order_status）
@@ -264,6 +265,19 @@ function openOrderDetailModal(button) {
 
     // 載入訂單商品項目（從資料庫動態讀取）
     loadOrderItems(orderId);
+
+    // 處理退貨資訊顯示
+    // 當訂單狀態為「申請退貨中」(4)或「退貨完成」(5)時，載入並顯示退貨資訊
+    var returnInfoSection = document.getElementById('returnInfoSection');
+    if (orderStatus === '4' || orderStatus === '5') {
+        // 載入退貨資訊
+        loadReturnOrderInfo(orderId);
+    } else {
+        // 隱藏退貨資訊區塊
+        if (returnInfoSection) {
+            returnInfoSection.style.display = 'none';
+        }
+    }
 
     // 顯示 Modal
     document.getElementById('orderDetailModal').classList.add('active');
@@ -314,6 +328,63 @@ function loadOrderItems(orderId) {
         .catch(function(error) {
             console.error('載入訂單商品失敗:', error);
             container.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> 載入失敗</div>';
+        });
+}
+
+/**
+ * 載入訂單退貨資訊
+ * 透過 AJAX 從後端取得退貨單的詳細資料
+ * 包含：申請時間、退款原因、退款金額
+ */
+function loadReturnOrderInfo(orderId) {
+    var returnInfoSection = document.getElementById('returnInfoSection');
+
+    // 先隱藏退貨區塊，等資料載入後再顯示
+    if (returnInfoSection) {
+        returnInfoSection.style.display = 'none';
+    }
+
+    fetch('/seller/order/' + orderId + '/return-info')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success && data.hasReturnOrder) {
+                // 填入退貨申請時間（來自 return_order 表的 apply_time）
+                var applyTimeElement = document.getElementById('detailReturnApplyTime');
+                if (applyTimeElement) {
+                    applyTimeElement.textContent = data.applyTime || '-';
+                }
+
+                // 填入退款原因（來自 return_order 表的 return_reason）
+                var returnReasonElement = document.getElementById('detailReturnReason');
+                if (returnReasonElement) {
+                    returnReasonElement.textContent = data.returnReason || '-';
+                }
+
+                // 填入退款金額（來自 return_order 表的 refund_amount）
+                var refundAmountElement = document.getElementById('detailRefundAmount');
+                if (refundAmountElement) {
+                    refundAmountElement.textContent = '$' + Number(data.refundAmount).toLocaleString();
+                }
+
+                // 顯示退貨資訊區塊
+                if (returnInfoSection) {
+                    returnInfoSection.style.display = 'block';
+                }
+            } else {
+                // 沒有退貨資料，隱藏區塊
+                if (returnInfoSection) {
+                    returnInfoSection.style.display = 'none';
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('載入退貨資訊失敗:', error);
+            // 發生錯誤時隱藏區塊
+            if (returnInfoSection) {
+                returnInfoSection.style.display = 'none';
+            }
         });
 }
 

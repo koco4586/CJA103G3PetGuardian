@@ -129,7 +129,17 @@ public class SitterServiceImpl implements SitterService {
      */
     @Override
     public List<SitterVO> getAllSitters() {
-        return repository.findAll();
+        List<SitterVO> sitters = repository.findAll();
+        // 同步會員停權狀態
+        for (SitterVO sitter : sitters) {
+            memberRepository.findById(sitter.getMemId()).ifPresent(member -> {
+                // 如果會員已停權 (0)，則顯示保母狀態為停權 (1)
+                if (member.getMemStatus() == 0) {
+                    sitter.setSitterStatus((byte) 1);
+                }
+            });
+        }
+        return sitters;
     }
 
     /**
@@ -270,6 +280,10 @@ public class SitterServiceImpl implements SitterService {
         }
 
         // 2. 統計數據
+        // [NEW] 一次性查詢會員資料，避免重複查詢
+        SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
+        String memImage = member != null ? member.getMemImage() : null;
+
         // 服務數量
         // [Refactor] 使用 PetSitterService 取得服務列表，減少直接 Repository 依賴
         List<PetSitterServiceVO> services = petSitterService.getServicesBySitter(sitter.getSitterId());
@@ -293,6 +307,8 @@ public class SitterServiceImpl implements SitterService {
                         .serviceTime(sitter.getServiceTime())
                         .ratingCount(sitter.getSitterRatingCount())
                         .starCount(sitter.getSitterStarCount())
+                        // 使用已查詢的會員大頭貼
+                        .memImage(memImage)
                         .build())
                 .serviceCount(services.size())
                 .areaCount(areas != null ? areas.size() : 0)
@@ -301,6 +317,7 @@ public class SitterServiceImpl implements SitterService {
                 .services(services)
                 .areas(areas)
                 .pendingOrders(pendingOrders)
+                .member(member) // [NEW] 加入會員資料供 Controller 重用
                 .build();
     }
 

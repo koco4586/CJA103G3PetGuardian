@@ -50,6 +50,12 @@ public class SitterDashboardDTO implements Serializable {
     private List<BookingOrderVO> pendingOrders;
 
     /**
+     * 會員資料 (用於避免重複查詢)
+     * 包含會員基本資訊，供 Controller 層使用
+     */
+    private SitterMemberVO member;
+
+    /**
      * 靜態內部類別：保姆基本資訊 DTO
      * 
      * 用途：
@@ -67,6 +73,9 @@ public class SitterDashboardDTO implements Serializable {
         private Integer memId;
         private String sitterName;
         private String sitterAdd;
+
+        /** 會員大頭貼 (Base64 or Path) */
+        private String memImage;
 
         /** 保姆狀態 (0:啟用, 1:停權) */
         private Byte sitterStatus;
