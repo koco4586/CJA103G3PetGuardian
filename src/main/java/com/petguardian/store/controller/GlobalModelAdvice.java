@@ -12,7 +12,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
  * 全域 Model 屬性注入
  * 為所有 Controller 自動注入常用資料（如登入會員資訊）
  */
-@ControllerAdvice
+@ControllerAdvice(basePackages = {
+        "com.petguardian.store.controller",
+        "com.petguardian.booking.controller",
+        "com.petguardian.pet.controller",
+        "com.petguardian.sitter.controller",
+        "com.petguardian.forum.controller",
+        "com.petguardian.productfavoritelist.controller"
+})
 public class GlobalModelAdvice {
 
     @Autowired
