@@ -28,17 +28,9 @@
                         border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; color: black;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <!-- 頭像 -->
-                    <div style="position: relative;">
-                        <img th:if="${sellerInfo.memImage != null}" th:src="@{'/images' + ${sellerInfo.memImage}}"
-                             alt="賣家頭像" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
-                border: 3px solid rgba(255,255,255,0.3);">
-                        <div th:unless="${sellerInfo.memImage != null}" style="width: 60px; height: 60px; border-radius: 50%;
-                                    background: rgba(255,255,255,0.2); display: flex;
-                                    align-items: center; justify-content: center;
-                                    border: 3px solid rgba(255,255,255,0.3);">
-                            <i class="fas fa-user" style="font-size: 1.5rem;"></i>
-                        </div>
-                    </div>
+                    <img th:if="${sellerInfo.memImage != null}" th:src="@{${sellerInfo.memImage}}"
+                         alt="賣家頭像" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+     border: 3px solid rgba(255,255,255,0.3);">
                     <!-- 資訊 -->
                     <div style="flex: 1;">
                         <div style="font-weight: 700; font-size: 1.1rem;"
@@ -642,6 +634,29 @@
             </h4>
             <div id="orderItemsContainer" style="background: #f9f9f9; border-radius: 8px; padding: 12px;">
                 <!-- 商品項目由 JavaScript 動態載入 -->
+            </div>
+        </div>
+
+        <!-- 退貨資訊區塊 - 只在退貨狀態時顯示 -->
+        <div id="returnInfoSection" style="margin-bottom: 1.5rem; display: none;">
+            <h4 style="margin-bottom: 1rem; font-size: 1rem;">
+                <i class="fas fa-undo" style="color: #dc3545;"></i> 退貨資訊
+            </h4>
+            <div style="background: #fff5f5; border: 1px solid #ffcdd2; border-radius: 8px; padding: 16px;">
+                <div class="detail-grid">
+                    <div class="detail-row">
+                        <span class="detail-label">申請時間</span>
+                        <span class="detail-value" id="detailReturnApplyTime">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">退款金額</span>
+                        <span class="detail-value" id="detailRefundAmount" style="color: #dc3545; font-weight: 600;">-</span>
+                    </div>
+                    <div class="detail-row" style="grid-column: 1 / -1;">
+                        <span class="detail-label">退款原因</span>
+                        <span class="detail-value" id="detailReturnReason" style="word-break: break-word;">-</span>
+                    </div>
+                </div>
             </div>
         </div>
 
