@@ -10,11 +10,11 @@ import com.petguardian.chat.model.ChatMessageEntity;
  * Encapsulates all necessary data for persistence and processing.
  */
 public record MessageCreationContext(
-        String messageId,
+        Long messageId,
         Integer chatroomId,
         Integer senderId,
         String content,
-        String replyToId) {
+        Long replyToId) {
 
     public LocalDateTime createdAt() {
         return LocalDateTime.ofInstant(TSID.from(messageId).getInstant(), ZoneId.systemDefault());

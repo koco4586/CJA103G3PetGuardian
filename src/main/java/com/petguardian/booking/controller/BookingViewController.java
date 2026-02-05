@@ -28,6 +28,9 @@ import com.petguardian.pet.model.PetserItemrepository;
 import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.member.repository.register.MemberRegisterRepository;
+import com.petguardian.member.model.Member;
+import com.petguardian.petsitter.model.PetSitterServiceRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -55,10 +58,13 @@ public class BookingViewController {
     private PetRepository petRepository;
 
     @Autowired
+    private MemberRegisterRepository memberRepository;
+
+    @Autowired
     private PetserItemrepository petServiceItemRepository;
 
     @Autowired
-    private com.petguardian.petsitter.model.PetSitterServiceRepository petSitterServiceRepository;
+    private PetSitterServiceRepository petSitterServiceRepository;
 
     @Autowired
     private SitterMemberRepository sitterMemberRepository;
@@ -134,14 +140,14 @@ public class BookingViewController {
         
         return "frontend/services";
     }
-    
+
     @GetMapping("/member/favorites")
     public String listMyFavorites(HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
-        
+
         // 這裡才呼叫詳細版，因為這頁就是要看保母名字
         List<BookingFavoriteVO> detailFavs = bookingService.getSitterFavoritesWithDetail(memId);
-        
+
         model.addAttribute("sitterFavorites", detailFavs);
         return "frontend/member-favorites";
     }
@@ -218,6 +224,12 @@ public class BookingViewController {
         model.addAttribute("currentStatus", status);
         model.addAttribute("memId", memId);
         model.addAttribute("memName", authStrategyService.getCurrentUserName(request));
+
+        // [NEW] 查詢會員資料供側邊欄顯示頭像
+        Member currentMember = memberRepository.findById(memId).orElse(null);
+        if (currentMember != null) {
+            model.addAttribute("currentMember", currentMember);
+        }
 
         return "frontend/dashboard-bookings";
     }

@@ -32,11 +32,13 @@ public class ChatMessageRetrievalManager {
         // Redis only caches first page (recent 50 messages)
         if (pageable.getPageNumber() == 0) {
             int pageSize = pageable.getPageSize();
-            List<ChatMessageEntity> cached = messageCache.getHistory(chatroomId, pageSize);
+            List<com.petguardian.chat.dto.ChatMessageRedisDTO> cached = messageCache.getHistory(chatroomId, pageSize);
 
             if (cached.size() >= pageSize) {
                 log.debug("[Retrieval] Cache HIT for room {}. Returning {} messages.", chatroomId, cached.size());
-                return cached;
+                return cached.stream()
+                        .map(com.petguardian.chat.dto.ChatMessageRedisDTO::toEntity)
+                        .toList();
             }
             log.info("[Retrieval] Cache PARTIAL HIT ({}/{}) for room {}. Falling back to MySQL.",
                     cached.size(), pageSize, chatroomId);
@@ -51,7 +53,10 @@ public class ChatMessageRetrievalManager {
                 try {
                     log.info("[Retrieval] Warming up Redis cache for room {} with {} messages.", chatroomId,
                             dbResults.size());
-                    messageCache.warmUpHistory(chatroomId, dbResults);
+                    List<com.petguardian.chat.dto.ChatMessageRedisDTO> dtos = dbResults.stream()
+                            .map(com.petguardian.chat.dto.ChatMessageRedisDTO::fromEntity)
+                            .toList();
+                    messageCache.warmUpHistory(chatroomId, dtos);
                 } catch (Exception e) {
                     log.warn("[Retrieval] Cache warm-up failed for room {}. Skipping. Reason: {}", chatroomId,
                             e.getMessage());
@@ -68,12 +73,12 @@ public class ChatMessageRetrievalManager {
     }
 
     @Transactional(readOnly = true)
-    Optional<ChatMessageEntity> findById(String messageId) {
+    Optional<ChatMessageEntity> findById(Long messageId) {
         return messageRepository.findById(messageId);
     }
 
     @Transactional(readOnly = true)
-    List<ChatMessageEntity> findAllById(Iterable<String> messageIds) {
+    List<ChatMessageEntity> findAllById(Iterable<Long> messageIds) {
         return messageRepository.findAllById(messageIds);
     }
 
@@ -94,7 +99,7 @@ public class ChatMessageRetrievalManager {
      * Returns 0-based page index.
      */
     @Transactional(readOnly = true)
-    public int getMessagePage(Integer chatroomId, String messageId, int pageSize) {
+    public int getMessagePage(Integer chatroomId, Long messageId, int pageSize) {
         return messageRepository.findById(messageId)
                 .map(msg -> {
                     long countAfter = messageRepository.countByChatroomIdAndChatTimeAfter(chatroomId,

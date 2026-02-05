@@ -17,14 +17,15 @@ public class MessageSendContext {
     private final MemberProfileDTO senderProfile;
     private final ChatMessageEntity replyMessage;
     private final MemberProfileDTO replySenderProfile;
-    private final String messageId;
+    private final Long messageId;
 
     public MessageCreationContext toCreationContext(String content, String replyToId) {
+        Long replyTo = replyToId != null ? io.hypersistence.tsid.TSID.from(replyToId).toLong() : null;
         return new MessageCreationContext(
                 this.messageId,
                 this.chatroom.getChatroomId(),
                 this.senderProfile.getMemberId(),
                 content,
-                replyToId);
+                replyTo);
     }
 }

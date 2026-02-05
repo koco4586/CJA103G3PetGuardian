@@ -43,7 +43,7 @@ public class ChatReport {
     private Member reporter;
 
     @Column(name = "message_id", length = 13, nullable = false)
-    private String messageId;
+    private Long messageId;
 
     // Relation to ChatMessageEntity for retrieving content
     @ManyToOne(fetch = FetchType.LAZY)
