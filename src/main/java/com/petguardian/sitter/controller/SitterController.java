@@ -10,11 +10,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.sitter.model.SitterApplicationVO;
 import com.petguardian.sitter.model.SitterVO;
-import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.service.SitterApplicationService;
 import com.petguardian.sitter.service.SitterService;
-import com.petguardian.member.repository.register.MemberRegisterRepository;
-import com.petguardian.member.model.Member;
 
 /**
  * 後台保母管理 Controller
@@ -32,12 +29,6 @@ public class SitterController {
     @Autowired
     private SitterService sitterService;
 
-    @Autowired
-    private MemberRegisterRepository memberRepository;
-
-    @Autowired
-    private SitterRepository sitterRepository;
-
     /**
      * 顯示後台保母管理頁面
      * URL: GET /admin/sitter/manage
@@ -50,18 +41,6 @@ public class SitterController {
         // 取得所有申請和保母列表
         List<SitterApplicationVO> applications = applicationService.getAllApplications();
         List<SitterVO> sitters = sitterService.getAllSitters();
-
-        // [NEW] 同步會員停權狀態到保母
-        for (SitterVO sitter : sitters) {
-            Member member = memberRepository.findById(sitter.getMemId()).orElse(null);
-            if (member != null && member.getMemSitterStatus() != null && member.getMemSitterStatus() == 1) {
-                // 如果會員的保母權限已停權，保母帳號也要停權
-                if (sitter.getSitterStatus() != 1) {
-                    sitter.setSitterStatus((byte) 1);
-                    sitterRepository.save(sitter);
-                }
-            }
-        }
 
         model.addAttribute("applications", applications);
         model.addAttribute("sitters", sitters);
