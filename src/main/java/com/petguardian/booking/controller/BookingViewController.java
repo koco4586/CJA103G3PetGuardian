@@ -1,11 +1,14 @@
 package com.petguardian.booking.controller;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +25,7 @@ import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.pet.model.PetRepository;
 import com.petguardian.pet.model.PetVO;
 import com.petguardian.pet.model.PetserItemrepository;
+import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
@@ -56,6 +60,8 @@ public class BookingViewController {
     @Autowired
     private com.petguardian.petsitter.model.PetSitterServiceRepository petSitterServiceRepository;
 
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
     /**
      * 【顯示保姆服務列表頁面】
      * 1. 從資料庫撈取所有保姆資料
@@ -64,70 +70,68 @@ public class BookingViewController {
      * 4. 送到前端頁面顯示
      */
     @GetMapping("/services")
-    public String listSitters(HttpServletRequest request, Model model) {
-        List<Object[]> rawData = sitterRepository.findSitterBasicInfo();
+    public String listSitters(
+            @RequestParam(defaultValue = "0") int page, // 正確放置 RequestParam
+            HttpServletRequest request, 
+            Model model) { // 這裡只需一組括號
 
-        List<SitterVO> rawSitters = rawData.stream().map(row -> {
-            SitterVO s = new SitterVO();
-            s.setSitterId((Integer) row[0]);
-            s.setSitterName((String) row[1]);
-            s.setSitterAdd((String) row[2]);
-            s.setSitterStarCount((Integer) row[3]);
-            s.setSitterRatingCount((Integer) row[4]);
-            s.setMemId((Integer) row[5]);
-            return s;
-        }).collect(Collectors.toList());
+        // 1. 先查出該頁面的 6 位保母 (分頁關鍵)
+        Pageable pageable = PageRequest.of(page, 6);
+        Page<SitterVO> sitterPage = sitterRepository.findAllActive(pageable);
+        
+        // 2. 蒐集這 6 位保母的 ID 並補齊「服務地區」
+        List<Integer> sitterIds = sitterPage.getContent().stream()
+                .map(SitterVO::getSitterId).collect(Collectors.toList());
+        List<SitterVO> fullSitters = sitterRepository.findAllWithAreasByIds(sitterIds);
+        
+        // 3. 蒐集這 6 位保母的會員 ID 並補齊「頭像」
+        List<Integer> memIds = fullSitters.stream()
+                .map(SitterVO::getMemId).collect(Collectors.toList());
+        
+        Map<Integer, String> memberImageMap = new HashMap<>();
+        sitterMemberRepository.findAllById(memIds).forEach(m -> {
+            String img = (m.getMemImage() != null) ? m.getMemImage() : "/images/default-avatar.png";
+            memberImageMap.put(m.getMemId(), img);
+        });
+        
+        Integer currentMemId = authStrategyService.getCurrentUserId(request);
+        
+        // 4. 建立收藏保姆 ID 的集合 (修正變數名稱與類型)
+        java.util.Set<Integer> favSitterIds = new java.util.HashSet<>();
 
-        Integer memId = authStrategyService.getCurrentUserId(request);
-
-        // 3. 建立收藏保姆 ID 的集合
-        Set<Integer> favSitterIds = new HashSet<>();
-
-        // 4. 如果使用者已登入，查詢他收藏了哪些保姆
-        if (memId != null) {
-            favSitterIds = bookingService.getSitterFavoritesByMember(memId)
+        // 5. 如果使用者已登入，查詢他收藏了哪些保姆
+        if (currentMemId != null) {
+            favSitterIds = bookingService.getSitterFavoritesByMember(currentMemId)
                     .stream()
                     .map(BookingFavoriteVO::getSitterId)
                     .collect(Collectors.toSet());
         }
 
-//        java.util.Map<Integer, java.util.List<PetSitterServiceVO>> allServicesBySitter = petSitterServiceRepository
-//                .findAll().stream()
-//                .collect(Collectors.groupingBy(svc -> svc.getSitter().getSitterId()));
-        final Set<Integer> finalFavIds = favSitterIds;
-        List<BookingDisplayDTO> displayList = rawSitters.stream().map(s -> {
-            BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
-            dto.setServicesJson("[]");
-
-            // 從 Map 取得該保母的服務
-            // List<PetSitterServiceVO> myServices =
-            // allServicesBySitter.getOrDefault(s.getSitterId(), new
-            // java.util.ArrayList<>());
-            //
-            // StringBuilder json = new StringBuilder("[");
-            // for (int i = 0; i < myServices.size(); i++) {
-            // PetSitterServiceVO svc = myServices.get(i);
-            // Integer svcId = svc.getServiceItemId();
-            //
-            // // 直接透過關聯取得服務名稱！不用再查表了
-            // String svcName = "未知服務";
-            // if (svc.getServiceItem() != null) {
-            // svcName = svc.getServiceItem().getServiceType();
-            // }
-            //
-            // json.append(String.format("{\"id\":%d,\"name\":\"%s\"}", svcId, svcName));
-            // if (i < myServices.size() - 1) json.append(",");
-            // }
-            // json.append("]");
-            //
-            // dto.setServicesJson(json.toString());
-            return dto;
-        }).collect(Collectors.toList());
-
+        final java.util.Set<Integer> finalFavIds = favSitterIds;
+        List<BookingDisplayDTO> displayList = fullSitters.stream()
+                .filter(s -> currentMemId == null || !s.getMemId().equals(currentMemId))
+                .map(s -> {
+                    com.petguardian.booking.model.BookingDisplayDTO dto = 
+                        new com.petguardian.booking.model.BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
+                    dto.setMemImage(memberImageMap.getOrDefault(s.getMemId(), "/images/default-avatar.png"));
+                    
+                    String city = "沒有設定服務";
+                    if (s.getServiceAreas() != null && !s.getServiceAreas().isEmpty()) {
+                        // 取得第一個服務地區的城市名稱 (例如：台北市)
+                        city = s.getServiceAreas().get(0).getArea().getCityName();
+                    }
+                    dto.setServicesJson(city);
+                    
+                    return dto;
+                }).collect(Collectors.toList());
+        
         // 6. 將資料傳給前端頁面
-        model.addAttribute("currentMemId", memId);
         model.addAttribute("sitters", displayList);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", sitterPage.getTotalPages()); // 修正 odel -> model
+        model.addAttribute("currentMemId", currentMemId);
         addCommonAttributes(request, model);
+        
         return "frontend/services";
     }
     
@@ -219,9 +223,8 @@ public class BookingViewController {
     }
 
     /**
-     * 【共用方法：加入頁面常用資料】
-     * 1. 如果使用者已登入，載入他的寵物清單
-     * 2. 加入測試用的假寵物
+     * 【加入頁面常用資料】
+     * 如果使用者已登入，載入他的寵物清單
      */
     private void addCommonAttributes(HttpServletRequest request, Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);

@@ -67,7 +67,9 @@ public class BookingFavoriteService {
             SitterVO s = sitterMap.get(fav.getSitterId());
             if (s != null) {
                 fav.setSitterName(s.getSitterName());
-                fav.setBasePrice(500); 
+                fav.setAvgRating(s.getAverageRating());    // 填入平均分
+                fav.setRatingCount(s.getSitterRatingCount()); // 填入次數
+                fav.setBasePrice(500); // 建議此處維持 500 或從 SitterService 抓取
             } else {
                 fav.setSitterName("保母資料已移除");
             }

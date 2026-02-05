@@ -26,7 +26,7 @@ public class BookingDashboardController {
 //            return "redirect:/front/loginpage";
 //        }
         // 2. 取得收藏清單 (建議在 Service 處理好「補完保母資料」的邏輯)
-        List<BookingFavoriteVO> favorites = bookingService.getSitterFavoritesByMember(memId);
+    	List<BookingFavoriteVO> favorites = bookingService.getSitterFavoritesWithDetail(memId);
         // 3. 傳遞給前端
         model.addAttribute("sitterFavorites", favorites);
         

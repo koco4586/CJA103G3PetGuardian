@@ -57,17 +57,22 @@
 									class="fa-solid fa-arrow-right"></i> <span
 									th:text="'保母ID: ' + ${order.sitterId}"></span></td>
 								<td th:text="${#temporals.format(order.startTime, 'MM-dd')}"></td>
-								<td><span th:if="${order.orderStatus == 0}"
-									class="badge status-wait">待確認</span> <span
-									th:if="${order.orderStatus == 1}" class="badge status-ongoing">進行中</span>
-									<span th:if="${order.orderStatus == 2}"
-									class="badge status-ready">服務完成</span> <span
-									th:if="${order.orderStatus == 5}" class="badge">已結案</span>
-									<span th:if="${order.orderStatus == 4}" class="badge" 
-								          style="background-color: #95a5a6; color: white;"
-								          th:text="${#strings.contains(order.cancelReason, '已過審核時間') ? '已退款(已過審核時間)' : '已退款'}">
-								        已退款
-								    </span>
+								<td>
+								    <div th:if="${order.sitterStatus != null and order.sitterStatus.toString() == '1' and (order.orderStatus == 0 or order.orderStatus == 1)}" 
+								         class="badge" style="background-color: #e74c3c; color: white !important;">
+								        <i class="fa-solid fa-triangle-exclamation"></i> 保母已停權
+								    </div>
+								
+								    <div th:unless="${order.sitterStatus != null and order.sitterStatus.toString() == '1' and (order.orderStatus == 0 or order.orderStatus == 1)}">
+								        <span th:if="${order.orderStatus == 0}" class="badge status-wait">待確認</span>
+								        <span th:if="${order.orderStatus == 1}" class="badge status-ongoing">進行中</span>
+								        <span th:if="${order.orderStatus == 2}" class="badge status-ready">服務完成</span>
+								        <span th:if="${order.orderStatus == 4}" class="badge" style="background-color: #95a5a6; color: white;"
+								              th:text="${order.cancelReason != null and #strings.contains(order.cancelReason, '已過審核時間') ? '已退款(已過審核時間)' : '已退款'}">
+								        </span>
+								        <span th:if="${order.orderStatus == 5}" class="badge">已結案</span>
+								        <span th:if="${order.orderStatus == 6}" class="badge" style="background-color: #e74c3c; color: white;">保母停權</span>
+								    </div>
 								</td>
 								<td><span th:text="'$' + ${order.reservationFee}"></span> /
 									<strong th:if="${order.orderStatus == 5}" style="color: green">已撥款</strong>
@@ -77,6 +82,11 @@
 										style="background: green;"
 										th:onclick="'executePayout(' + ${order.bookingOrderId} + ')'">執行撥款</button>
 								<!-- 	<button th:if="${order.orderStatus == 0}" class="btn ghost">催促保母</button> -->
+									<button th:if="${order.sitterStatus != null and order.sitterStatus.toString() == '1' and (order.orderStatus == 0 or order.orderStatus == 1)}" 
+									        class="btn" style="background: #e67e22;"
+									        th:onclick="'suspendSitterRefund(' + ${order.bookingOrderId} + ')'">
+									    處置停權退款
+									</button>
 								</td>
 							</tr>
 						</tbody>
@@ -170,7 +180,6 @@
                 handleApiCall('/admin/bookings/approveRefund', orderId, '退款已核准，時段已釋出。');
             }
         }
-
         function rejectRefund(orderId) {
             if (confirm('確定要「駁回」退款申請嗎？\n駁回後訂單將回到「進行中」狀態。')) {
                 handleApiCall('/admin/bookings/rejectRefund', orderId, '已駁回申請，訂單恢復進行中。');
@@ -180,6 +189,11 @@
         function executePayout(orderId) {
             if (confirm('確定要「執行撥款」給保母嗎？\n一旦撥款，該筆訂單將標記為已結案。')) {
                 handleApiCall('/admin/bookings/payout', orderId, '撥款成功，訂單已結案。');
+            }
+        }
+        function suspendSitterRefund(orderId) {
+            if (confirm('確定要執行「保母停權退款」嗎？\n這將會 100% 退款給會員並將訂單標記為停權。')) {
+                handleApiCall('/admin/bookings/suspendRefund', orderId, '已執行停權退款，時段已釋出。');
             }
         }
     </script>

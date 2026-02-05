@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.booking.service.BookingService;
+import com.petguardian.sitter.model.SitterRepository;
 
 @Controller
 @RequestMapping("/admin/bookings") // 設定後台管理路徑
@@ -24,6 +25,9 @@ public class AdminBookingController {
 
     @Autowired
     private BookingService bookingService;
+    
+    @Autowired
+    private SitterRepository sitterRepository;
 
     @GetMapping("/all")
     public String listAllBookings(Model model) {
@@ -32,7 +36,21 @@ public class AdminBookingController {
 
         // 2. 抓取所有「退款中」或「有取消原因」的訂單
         List<BookingOrderVO> refundRequests = orderRepository.findByOrderStatus(3);
+        
+        // 批次抓取保姆狀態
+        java.util.Set<Integer> sitterIds = allBookings.stream()
+        		.map(BookingOrderVO::getSitterId).collect(java.util.stream.Collectors.toSet());
 
+        // 一次性查出所有保姆
+        java.util.Map<Integer, Byte> sitterStatusMap = sitterRepository.findAllById(sitterIds).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                    com.petguardian.sitter.model.SitterVO::getSitterId, 
+                    com.petguardian.sitter.model.SitterVO::getSitterStatus
+                ));
+        // 補齊資料
+        allBookings.forEach(o -> o.setSitterStatus(sitterStatusMap.get(o.getSitterId())));
+        refundRequests.forEach(o -> o.setSitterStatus(sitterStatusMap.get(o.getSitterId())));
+        
         // 3. 將資料存入 model 傳給 Thymeleaf
         model.addAttribute("allBookings", allBookings);
         model.addAttribute("refundRequests", refundRequests);
@@ -121,4 +139,16 @@ public class AdminBookingController {
         //計算待處理退款的訂單總數 後台dashboard
         return (long) orderRepository.findByOrderStatus(3).size();
     }
+    
+    @PostMapping("/suspendRefund")
+    @ResponseBody
+    public String suspendRefund(@RequestParam Integer orderId) {
+        try {
+            bookingService.suspendSitterRefund(orderId);
+            return "success";
+        } catch (Exception e) {
+            return "error: " + e.getMessage();
+        }
+    }
+
 }
