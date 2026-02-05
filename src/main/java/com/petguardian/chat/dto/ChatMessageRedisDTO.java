@@ -6,6 +6,7 @@ import io.hypersistence.tsid.TSID;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Dedicated DTO for Redis Persistence.
@@ -33,7 +34,7 @@ public record ChatMessageRedisDTO(
                 ctx.senderId(),
                 ctx.content(),
                 ctx.replyToId() != null ? TSID.from(ctx.replyToId()).toString() : null,
-                ctx.createdAt(),
+                ctx.createdAt().truncatedTo(ChronoUnit.MILLIS),
                 0 // Default message type
         );
     }
@@ -49,7 +50,7 @@ public record ChatMessageRedisDTO(
                 entity.getMemberId(),
                 entity.getMessage(),
                 entity.getReplyToMessageId() != null ? TSID.from(entity.getReplyToMessageId()).toString() : null,
-                entity.getChatTime(),
+                entity.getChatTime().truncatedTo(ChronoUnit.MILLIS),
                 0);
     }
 

@@ -17,6 +17,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Map;
+import java.util.HashMap;
 
 @Slf4j
 @Component
@@ -28,7 +31,7 @@ public class ChatRoomMetadataCache {
     private static final String REDIS_USER_ROOMS_KEY = "chat:user_rooms:";
     private static final String DIRTY_ROOMS_SET = "chat:dirty_rooms";
     private static final String CIRCUIT_NAME = "redisCacheCircuit";
-    private static final long DEFAULT_TTL_DAYS = 7;
+    private static final long DEFAULT_TTL_DAYS = 1;
 
     // Track rooms that need cache invalidation after Redis recovery
     private final Set<Integer> pendingRecoveryRooms = ConcurrentHashMap.newKeySet();
@@ -85,11 +88,58 @@ public class ChatRoomMetadataCache {
         if (ids == null || ids.isEmpty())
             return Collections.emptyList();
 
-        return ids.stream()
-                .map(this::getRoomMeta)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
+        try {
+            return circuitBreaker.executeSupplier(() -> {
+                List<String> keys = ids.stream().map(id -> ROOM_KEY + id).collect(Collectors.toList());
+                // mget preserves order and nulls. We need to filter nulls to match original
+                // contract
+                // which returned only present items.
+                List<ChatRoomMetadataDTO> results = redisJsonMapper.mget(keys, ChatRoomMetadataDTO.class);
+                if (results == null)
+                    return Collections.emptyList();
+
+                return results.stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            });
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping batch read for rooms.", circuitBreaker.getState());
+            return Collections.emptyList();
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to batch read rooms: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    public Map<Integer, MemberProfileDTO> getMemberProfileBatch(List<Integer> ids) {
+        if (ids == null || ids.isEmpty())
+            return Collections.emptyMap();
+
+        try {
+            return circuitBreaker.executeSupplier(() -> {
+                List<String> keys = ids.stream().map(id -> MEMBER_KEY + id).collect(Collectors.toList());
+                List<MemberProfileDTO> results = redisJsonMapper.mget(keys, MemberProfileDTO.class);
+
+                if (results == null || results.isEmpty() || results.size() != ids.size())
+                    return Collections.emptyMap();
+
+                // Correlate results back to IDs
+                Map<Integer, MemberProfileDTO> map = new HashMap<>();
+                for (int i = 0; i < ids.size(); i++) {
+                    MemberProfileDTO dto = results.get(i);
+                    if (dto != null) {
+                        map.put(ids.get(i), dto);
+                    }
+                }
+                return map;
+            });
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping batch read for members.", circuitBreaker.getState());
+            return Collections.emptyMap();
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to batch read members: {}", e.getMessage());
+            return Collections.emptyMap();
+        }
     }
 
     // =================================================================================
@@ -109,6 +159,7 @@ public class ChatRoomMetadataCache {
             log.debug("[Cache] CB is {}. Skipping cache write for room {}.", circuitBreaker.getState(), roomId);
         } catch (Exception e) {
             log.warn("[Cache] Failed to cache room {}: {}", roomId, e.getMessage());
+            throw new RuntimeException("Cache write failed", e);
         }
     }
 
@@ -125,6 +176,7 @@ public class ChatRoomMetadataCache {
             log.debug("[Cache] CB is {}. Skipping cache write for member {}.", circuitBreaker.getState(), memberId);
         } catch (Exception e) {
             log.warn("[Cache] Failed to cache member {}: {}", memberId, e.getMessage());
+            throw new RuntimeException("Cache write failed", e);
         }
     }
 
@@ -136,6 +188,7 @@ public class ChatRoomMetadataCache {
             log.debug("[Cache] CB is {}. Skipping markAsDirty for room {}.", circuitBreaker.getState(), roomId);
         } catch (Exception e) {
             log.warn("[Cache] Failed to mark room {} as dirty: {}", roomId, e.getMessage());
+            throw new RuntimeException("Cache write failed", e);
         }
     }
 
@@ -170,13 +223,19 @@ public class ChatRoomMetadataCache {
         String lookupKey = REDIS_ROOM_LOOKUP_KEY + id1 + ":" + id2 + ":" + safeType;
 
         try {
-            // Now returns String
-            String idStr = redisJsonMapper.getStringTemplate().opsForValue().get(lookupKey);
-            if (idStr != null) {
-                return Optional.of(Integer.parseInt(idStr));
-            }
+            return circuitBreaker.executeSupplier(() -> {
+                // Now returns String
+                String idStr = redisJsonMapper.getStringTemplate().opsForValue().get(lookupKey);
+                if (idStr != null) {
+                    return Optional.of(Integer.parseInt(idStr));
+                }
+                return Optional.empty();
+            });
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping room lookup {}.", circuitBreaker.getState(), lookupKey);
             return Optional.empty();
         } catch (Exception e) {
+            log.debug("[Cache] Failed to lookup room {}: {}", lookupKey, e.getMessage());
             return Optional.empty();
         }
     }
@@ -210,13 +269,18 @@ public class ChatRoomMetadataCache {
     public List<Integer> getUserRoomIds(Integer userId) {
         String key = REDIS_USER_ROOMS_KEY + userId;
         try {
-            List<String> ids = redisJsonMapper.getStringTemplate().opsForList().range(key, 0, -1);
-            if (ids == null)
-                return Collections.emptyList();
+            return circuitBreaker.executeSupplier(() -> {
+                List<String> ids = redisJsonMapper.getStringTemplate().opsForList().range(key, 0, -1);
+                if (ids == null)
+                    return Collections.emptyList();
 
-            return ids.stream()
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toList());
+                return ids.stream()
+                        .map(Integer::parseInt)
+                        .collect(Collectors.toList());
+            });
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping read for user rooms {}.", circuitBreaker.getState(), userId);
+            return Collections.emptyList();
         } catch (Exception e) {
             log.debug("[Cache] Failed to read room IDs for user {}: {}", userId, e.getMessage());
             return Collections.emptyList();
@@ -251,13 +315,23 @@ public class ChatRoomMetadataCache {
                     () -> redisJsonMapper.delete(key));
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping invalidation for key {}.", circuitBreaker.getState(), key);
+            throw new RuntimeException("Circuit Breaker Open", e);
         } catch (Exception e) {
             log.warn("[Cache] Failed to invalidate key {}: {}", key, e.getMessage());
+            throw new RuntimeException("Invalidation failed", e);
         }
     }
 
     public void invalidateRoom(Integer roomId) {
-        redisJsonMapper.delete(ROOM_KEY + roomId);
+        try {
+            circuitBreaker.executeRunnable(() -> redisJsonMapper.delete(ROOM_KEY + roomId));
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping invalidation for room {}.", circuitBreaker.getState(), roomId);
+            throw new RuntimeException("Circuit Breaker Open", e);
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to invalidate room {}: {}", roomId, e.getMessage());
+            throw new RuntimeException("Invalidation failed", e);
+        }
     }
 
     // =================================================================================

@@ -12,7 +12,7 @@
 // CONFIGURATION
 // ============================================================
 const CONFIG = {
-    PAGE_SIZE: 20,
+    PAGE_SIZE: 50,
     RECONNECT_DELAY_MS: 5000,
     RECONNECT_JITTER_MS: 2000, // Random jitter to prevent thundering herd
     SCROLL_THRESHOLD_PX: 100,
@@ -391,13 +391,16 @@ async function loadChatHistory(partnerId, direction = 'INITIAL') {
     const requestId = ++ChatState.loadingRequestId;
     ChatState.isLoadingHistory = true;
 
-    // Reset for INITIAL load
+    // Clear cache/state for INITIAL load
     if (direction === 'INITIAL') {
         ChatState.currentPage = 0;
         ChatState.hasMoreHistory = true;
         ChatState.messageIds.clear();
         ChatState.isReturningToPresent = false;
-        if (DOM.messageList) DOM.messageList.innerHTML = '';
+        // DO NOT clear innerHTML here yet, preserve the spinner from selectRoom
+    } else if (direction === 'OLDER') {
+        // Show a small spinner at the top for infinite scroll
+        showTopLoadingIndicator();
     }
 
     // Determine target page (don't commit to ChatState yet)
@@ -460,8 +463,29 @@ async function loadChatHistory(partnerId, direction = 'INITIAL') {
     } finally {
         if (requestId === ChatState.loadingRequestId) {
             ChatState.isLoadingHistory = false;
+            removeTopLoadingIndicator();
         }
     }
+}
+
+/**
+ * Shows a temporary loading indicator at the top of the message list.
+ */
+function showTopLoadingIndicator() {
+    if (!DOM.messageList || document.getElementById('top-loading-indicator')) return;
+    const indicator = document.createElement('div');
+    indicator.id = 'top-loading-indicator';
+    indicator.className = 'chat-loading-mini';
+    indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    DOM.messageList.prepend(indicator);
+}
+
+/**
+ * Removes the top loading indicator.
+ */
+function removeTopLoadingIndicator() {
+    const indicator = document.getElementById('top-loading-indicator');
+    if (indicator) indicator.remove();
 }
 
 
@@ -1160,7 +1184,7 @@ async function jumpToMessage(messageId) {
 
         // Reset DOM and ID cache for clean render
         if (DOM.messageList) {
-            DOM.messageList.innerHTML = '';
+            DOM.messageList.innerHTML = '<div class="chat-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>';
             ChatState.messageIds.clear();
         }
 
