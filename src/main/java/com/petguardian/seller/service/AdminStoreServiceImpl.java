@@ -47,43 +47,35 @@ public class AdminStoreServiceImpl implements AdminStoreService {
     private static final Integer RETURN_STATUS_APPROVED = 1;
     private static final Integer RETURN_STATUS_REJECTED = 2;
 
+    // ... getPendingOrders, getClosedOrders, getReturnOrders 保持原樣 (省略以節省空間，請使用上方你提供的版本，這邊只顯示關鍵修改方法) ...
+    // 請保留原有的 getPendingOrders, getClosedOrders, getReturnOrders, getReturnOrdersWithDetails 方法
+
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getPendingOrders() {
-        //取得所有待處理訂單（已付款、已出貨）
         List<Map<String, Object>> result = new ArrayList<>();
-
         List<OrdersVO> paidOrders = ordersRepository.findByOrderStatusOrderByOrderTimeDesc(STATUS_PAID);
         List<OrdersVO> shippedOrders = ordersRepository.findByOrderStatusOrderByOrderTimeDesc(STATUS_SHIPPED);
-
-        //合併所有待處理訂單
         List<OrdersVO> allPendingOrders = new ArrayList<>();
         allPendingOrders.addAll(paidOrders);
         allPendingOrders.addAll(shippedOrders);
-        //建立訂單資料
         for (OrdersVO order : allPendingOrders) {
             result.add(buildOrderData(order));
         }
-
         return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getClosedOrders() {
-        //取得所有已結案訂單（已完成、已取消、已撥款）
         List<Map<String, Object>> result = new ArrayList<>();
-
         List<OrdersVO> completedOrders = ordersRepository.findByOrderStatusOrderByOrderTimeDesc(STATUS_COMPLETED);
         List<OrdersVO> canceledOrders = ordersRepository.findByOrderStatusOrderByOrderTimeDesc(STATUS_CANCELED);
         List<OrdersVO> paidOutOrders = ordersRepository.findByOrderStatusOrderByOrderTimeDesc(STATUS_PAIDOUT);
-
         List<OrdersVO> allClosedOrders = new ArrayList<>();
         allClosedOrders.addAll(completedOrders);
         allClosedOrders.addAll(canceledOrders);
         allClosedOrders.addAll(paidOutOrders);
-
-        //建立訂單資料
         for (OrdersVO order : allClosedOrders) {
             Map<String, Object> orderData = buildOrderData(order);
             orderData.put("canPayout", order.getOrderStatus().equals(STATUS_COMPLETED));
@@ -91,67 +83,52 @@ public class AdminStoreServiceImpl implements AdminStoreService {
             orderData.put("isPaidOut", order.getOrderStatus().equals(STATUS_PAIDOUT));
             result.add(orderData);
         }
-
         return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getReturnOrders() {
-        //取得所有退貨訂單（退貨中、已退貨）
         List<Map<String, Object>> result = new ArrayList<>();
-
         List<OrdersVO> refundingOrders = ordersRepository.findByOrderStatusOrderByOrderTimeDesc(STATUS_REFUNDING);
         List<OrdersVO> refundedOrders = ordersRepository.findByOrderStatusOrderByOrderTimeDesc(STATUS_REFUNDED);
-
         List<OrdersVO> allReturnOrders = new ArrayList<>();
         allReturnOrders.addAll(refundingOrders);
         allReturnOrders.addAll(refundedOrders);
-
         for (OrdersVO order : allReturnOrders) {
             result.add(buildOrderData(order));
         }
-
         return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getReturnOrdersWithDetails() {
-        //取得所有退貨申請（含買家、賣家名稱及退貨狀態標記）
         List<Map<String, Object>> result = new ArrayList<>();
         List<ReturnOrderVO> allReturnApplications = returnOrderRepository.findAllByOrderByApplyTimeDesc();
-
-        //建立退貨申請資料
         for (ReturnOrderVO returnOrder : allReturnApplications) {
             Map<String, Object> returnData = new HashMap<>();
             returnData.put("returnOrder", returnOrder);
-
             ordersRepository.findById(returnOrder.getOrderId())
                     .ifPresent(order -> {
                         returnData.put("order", order);
-
                         memberRepository.findById(order.getBuyerMemId())
                                 .ifPresent(buyer -> returnData.put("buyerName", buyer.getMemName()));
-
                         memberRepository.findById(order.getSellerMemId())
                                 .ifPresent(seller -> returnData.put("sellerName", seller.getMemName()));
                     });
-
             returnData.put("isPending", returnOrder.getReturnStatus().equals(RETURN_STATUS_PENDING));
             returnData.put("isApproved", returnOrder.getReturnStatus().equals(RETURN_STATUS_APPROVED));
             returnData.put("isRejected", returnOrder.getReturnStatus().equals(RETURN_STATUS_REJECTED));
-
             result.add(returnData);
         }
-
         return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getReturnOrderDetail(Integer returnId) {
-        //取得特定退貨申請詳情（含買家、賣家名稱及退貨圖片）
+        // 【修改重點】：讀取退貨詳情（含買家、賣家名稱及退貨圖片 URL）
         Map<String, Object> result = new HashMap<>();
 
         try {
@@ -169,24 +146,25 @@ public class AdminStoreServiceImpl implements AdminStoreService {
             ordersRepository.findById(returnOrder.getOrderId())
                     .ifPresent(order -> {
                         result.put("orderTotal", order.getOrderTotal());
-
                         memberRepository.findById(order.getBuyerMemId())
                                 .ifPresent(buyer -> result.put("buyerName", buyer.getMemName()));
-
                         memberRepository.findById(order.getSellerMemId())
                                 .ifPresent(seller -> result.put("sellerName", seller.getMemName()));
                     });
 
+            // 修正部分：直接讀取 picUrl，不再做 Base64 編碼
             List<ReturnOrderPicVO> pics = returnOrderPicRepository.findByReturnOrder_ReturnId(returnId);
             List<String> imageUrlList = new ArrayList<>();
+
             for (ReturnOrderPicVO pic : pics) {
-                if (pic.getPicUrl() != null && !pic.getPicUrl().trim().isEmpty()) {
+                // 檢查 picUrl 是否有值
+                if (pic.getPicUrl() != null && !pic.getPicUrl().isEmpty()) {
                     imageUrlList.add(pic.getPicUrl());
                 }
             }
-            result.put("returnImages", imageUrlList);
-            result.put("hasImages", !imageUrlList.isEmpty());
 
+            result.put("returnImages", imageUrlList); // 前端 market.js 會讀取這個欄位
+            result.put("hasImages", !imageUrlList.isEmpty());
 
         } catch (Exception e) {
             result.put("success", false);
@@ -198,7 +176,6 @@ public class AdminStoreServiceImpl implements AdminStoreService {
 
     @Override
     public void approveReturn(Integer returnId) {
-        //批准退貨申請，更新訂單狀態並退款至買家錢包
         ReturnOrderVO returnOrder = returnOrderRepository.findById(returnId)
                 .orElseThrow(() -> new RuntimeException("退貨申請不存在"));
 
@@ -224,7 +201,6 @@ public class AdminStoreServiceImpl implements AdminStoreService {
 
     @Override
     public void rejectReturn(Integer returnId) {
-        //駁回退貨申請，更新訂單狀態並撥款至賣家錢包
         ReturnOrderVO returnOrder = returnOrderRepository.findById(returnId)
                 .orElseThrow(() -> new RuntimeException("退貨申請不存在"));
 
@@ -250,7 +226,6 @@ public class AdminStoreServiceImpl implements AdminStoreService {
 
     @Override
     public void payoutToSeller(Integer orderId) {
-        //撥款至賣家錢包，更新訂單狀態為已撥款
         OrdersVO order = ordersRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("訂單不存在"));
 
@@ -270,23 +245,18 @@ public class AdminStoreServiceImpl implements AdminStoreService {
     }
 
     private Map<String, Object> buildOrderData(OrdersVO order) {
-        //建立訂單資料（含買家、賣家名稱及訂單項目）
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("order", order);
-
         memberRepository.findById(order.getBuyerMemId())
                 .ifPresent(buyer -> orderData.put("buyerName", buyer.getMemName()));
-
         memberRepository.findById(order.getSellerMemId())
                 .ifPresent(seller -> orderData.put("sellerName", seller.getMemName()));
-
         try {
             Map<String, Object> orderWithItems = ordersService.getOrderWithItems(order.getOrderId());
             orderData.put("items", orderWithItems.get("orderItems"));
         } catch (Exception e) {
             orderData.put("items", new ArrayList<>());
         }
-
         return orderData;
     }
 }
