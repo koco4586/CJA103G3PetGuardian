@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import com.petguardian.evaluate.model.EvaluateVO;
 import com.petguardian.evaluate.model.EvaluateRepository;
 import com.petguardian.sitter.model.SitterRepository;
-import com.petguardian.sitter.model.SitterVO;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -133,6 +133,24 @@ public class PetComplaintController {
             // 再次檢查必要欄位，防止資料庫外鍵約束失敗
             if (vo.getToReportedMemId() == null) {
                 return ResponseEntity.badRequest().body("無法識別被檢舉人的會員身份，請確認該保姆/會員連結有效");
+            }
+
+            // 🔥 檢舉功能：檢舉送出時，只隱藏「被檢舉人」撰寫的評論
+            // 📌 重要：不要隱藏該訂單的所有評論，只隱藏被檢舉的那則
+            if (vo.getToReportedMemId() != null) {
+                List<EvaluateVO> reviews = evaluateRepository.findByBookingOrderId(vo.getBookingOrderId());
+                if (reviews != null && !reviews.isEmpty()) {
+                    for (EvaluateVO review : reviews) {
+                        // 只隱藏被檢舉人撰寫的評價 (senderId == toReportedMemId)
+                        if (review.getSenderId() != null && review.getSenderId().equals(vo.getToReportedMemId())) {
+                            review.setIsHidden(1); // 標記為已隱藏
+                            evaluateRepository.save(review);
+                            System.out.println(">>> 已隱藏被檢舉評價 (EvaluateID: " + review.getEvaluateId() +
+                                    ", SenderId: " + review.getSenderId() + ")");
+                            break; // 找到後就停止，一個人在一個訂單只會有一則評價
+                        }
+                    }
+                }
             }
 
             complaintservice.insert(vo);

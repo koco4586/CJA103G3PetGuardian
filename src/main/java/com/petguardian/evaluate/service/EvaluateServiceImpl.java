@@ -113,6 +113,12 @@ public class EvaluateServiceImpl implements EvaluateService {
     @Override
     public List<EvaluateVO> getReviewsBySitterId(Integer sitterId) {
         List<EvaluateVO> reviews = repo.findByReceiverId(sitterId);
+
+        // 🔥 檢舉功能：過濾隱藏與刪除的評論
+        reviews = reviews.stream()
+                .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
+                .collect(Collectors.toList());
+
         // 填充評價者名字（會員評保母，所以 senderId 是會員ID）
         fillSenderNames(reviews);
         return reviews;
@@ -120,9 +126,14 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
     public List<EvaluateVO> getReviewsByMemberId(Integer memberId) {
-        // roleType=0 代表保母評價會員
+        // 查詢該會員收到的評價 (roleType = 0 表示保姆評會員)
         List<EvaluateVO> reviews = repo.findByReceiverIdAndRoleType(memberId, 0);
-        // 填充評價者名字（保母評會員，所以 senderId 是保母ID）
+
+        // 🔥 檢舉功能：過濾隱藏與刪除的評論
+        reviews = reviews.stream()
+                .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
+                .collect(Collectors.toList());
+
         fillSenderNames(reviews);
         return reviews;
     }

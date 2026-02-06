@@ -49,12 +49,35 @@ public class Complaintservice {
             memberRepository.findById(vo.getToReportedMemId()).ifPresent(m -> vo.setAccusedName(m.getMemName()));
         }
 
-        // 3. 抓取被檢舉的評價內容 (根據 bookingOrderId)
-        if (vo.getBookingOrderId() != null) {
+        // 3. 抓取被檢舉的評價內容
+        // 📌 重要邏輯：被檢舉的評價是「被檢舉人」寫的那則評價
+        // - toReportedMemId = 被檢舉人（寫評價的人）
+        // - senderId = 評價的發送者
+        // - 因此要找 senderId == toReportedMemId 的評價
+        if (vo.getBookingOrderId() != null && vo.getToReportedMemId() != null) {
             List<com.petguardian.evaluate.model.EvaluateVO> evals = evaluateRepository
                     .findByBookingOrderId(vo.getBookingOrderId());
+
             if (!evals.isEmpty()) {
-                vo.setReportedContent(evals.get(0).getContent());
+                // 🔥 關鍵修正：根據被檢舉人來精確匹配評價
+                // 被檢舉人 (toReportedMemId) = 評價的發送者 (senderId)
+                com.petguardian.evaluate.model.EvaluateVO targetEval = evals.stream()
+                        .filter(e -> e.getSenderId() != null && e.getSenderId().equals(vo.getToReportedMemId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (targetEval != null) {
+                    vo.setReportedContent(targetEval.getContent());
+                } else {
+                    // 如果找不到對應的評價，設定提示訊息
+                    vo.setReportedContent("[系統提示] 找不到被檢舉人的評價內容 (訂單ID: " + vo.getBookingOrderId() +
+                            ", 被檢舉人ID: " + vo.getToReportedMemId() + ")");
+                    System.err.println("⚠️ 檢舉案件 #" + vo.getBookingReportId() +
+                            " 找不到對應的評價 (訂單:" + vo.getBookingOrderId() +
+                            ", 被檢舉人:" + vo.getToReportedMemId() + ")");
+                }
+            } else {
+                vo.setReportedContent("[系統提示] 此訂單沒有任何評價");
             }
         }
     }
