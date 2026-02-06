@@ -2,6 +2,7 @@ package com.petguardian.seller.controller;
 
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.orders.model.OrderItemVO;
+import com.petguardian.orders.model.ReturnOrderPicVO;
 import com.petguardian.orders.model.ReturnOrderVO;
 import com.petguardian.orders.service.ReturnOrderService;
 import com.petguardian.seller.model.ProType;
@@ -89,6 +90,8 @@ public class SellerController {
         model.addAttribute("productsWithImages", productsWithImages);
         model.addAttribute("proTypes", proTypes);
         model.addAttribute("currentView", "products");
+        // 傳入時間戳，讓前端圖片 URL 帶上此參數，防止瀏覽器快取舊圖
+        model.addAttribute("cacheBuster", System.currentTimeMillis());
 
         return "frontend/store-seller";
     }
@@ -259,8 +262,7 @@ public class SellerController {
 
     /**
      * 取得訂單退貨資訊（AJAX）
-     * 用於訂單Modal中動態載入退貨資訊
-     * 自行組裝 Map 回傳給前端
+     * 包含退貨單基本資訊和退貨圖片 URL 列表
      */
     @GetMapping("/order/{orderId}/return-info")
     @ResponseBody
@@ -275,7 +277,6 @@ public class SellerController {
         }
 
         try {
-            // 使用 getReturnOrderByOrderId 取得 Optional
             Optional<ReturnOrderVO> returnOrderOpt = returnOrderService.getReturnOrderByOrderId(orderId);
 
             if (returnOrderOpt.isPresent()) {
@@ -307,8 +308,17 @@ public class SellerController {
                 }
                 result.put("returnStatusText", statusText);
 
+                // 讀取退貨圖片 URL 列表
+                List<ReturnOrderPicVO> pics = returnOrderService.getReturnOrderPics(returnOrder.getReturnId());
+                List<String> imageUrlList = new ArrayList<>();
+                for (ReturnOrderPicVO pic : pics) {
+                    if (pic.getPicUrl() != null && !pic.getPicUrl().isEmpty()) {
+                        imageUrlList.add(pic.getPicUrl());
+                    }
+                }
+                result.put("returnImages", imageUrlList);
+
             } else {
-                // 沒有退貨單也回傳 success: false (但不是系統錯誤)
                 result.put("success", false);
                 result.put("hasReturnOrder", false);
                 result.put("error", "查無退貨資料");

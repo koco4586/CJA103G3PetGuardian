@@ -102,8 +102,8 @@ function loadExistingImages(proId) {
                 imgWrapper.setAttribute('data-pic-id', img.productPicId);
 
                 var imgElement = document.createElement('img');
-                // 使用 imageUrl 載入圖片
-                imgElement.src = img.imageUrl;
+                // 使用 imageUrl 載入圖片，加時間戳防止快取
+                imgElement.src = img.imageUrl + '?t=' + Date.now();
                 imgElement.alt = '商品圖片';
                 imgElement.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px;';
                 // 圖片載入失敗時顯示預設圖
@@ -264,8 +264,16 @@ function openOrderDetailModal(button) {
     // 載入商品明細
     loadOrderItems(orderId);
 
-    // 載入退貨資訊
-    loadReturnInfo(orderId);
+    // 根據訂單狀態決定是否載入退貨資訊（狀態 4=申請退貨中、5=退貨完成 才載入）
+    var returnSection = document.getElementById('returnInfoSection');
+    if (orderStatus === '4' || orderStatus === '5') {
+        loadReturnInfo(orderId);
+    } else {
+        // 非退貨狀態，隱藏退貨資訊區塊
+        if (returnSection) {
+            returnSection.style.display = 'none';
+        }
+    }
 
     // 開啟 Modal
     document.getElementById('orderDetailModal').classList.add('active');
@@ -323,46 +331,71 @@ function loadOrderItems(orderId) {
         });
 }
 
-// 載入退貨資訊
+// 載入退貨資訊（對應 store-seller.html 中的元素 ID）
 function loadReturnInfo(orderId) {
-    var container = document.getElementById('returnInfoContainer');
-    if (!container) return;
+    var section = document.getElementById('returnInfoSection');
+    if (!section) return;
 
     fetch('/seller/order/' + orderId + '/return-info')
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
-            if (!data || !data.returnId) {
-                container.style.display = 'none';
+            if (!data || !data.success || !data.hasReturnOrder) {
+                section.style.display = 'none';
                 return;
             }
 
-            container.style.display = 'block';
+            // 有退貨資料，顯示區塊
+            section.style.display = 'block';
 
-            var returnIdEl = document.getElementById('detailReturnId');
-            var returnReasonEl = document.getElementById('detailReturnReason');
-            var returnStatusEl = document.getElementById('detailReturnStatus');
+            // 填入申請時間
+            var applyTimeEl = document.getElementById('detailReturnApplyTime');
+            if (applyTimeEl) {
+                var timeStr = data.applyTime || '-';
+                if (timeStr && timeStr.indexOf('T') > -1) {
+                    timeStr = timeStr.replace('T', ' ').substring(0, 19);
+                }
+                applyTimeEl.innerText = timeStr;
+            }
+
+            // 填入退款金額
             var refundAmountEl = document.getElementById('detailRefundAmount');
+            if (refundAmountEl) {
+                refundAmountEl.innerText = '$' + (data.refundAmount || 0);
+            }
 
-            if (returnIdEl) returnIdEl.innerText = '#' + data.returnId;
-            if (returnReasonEl) returnReasonEl.innerText = data.returnReason || '-';
-            if (refundAmountEl) refundAmountEl.innerText = '$' + (data.refundAmount || 0);
+            // 填入退款原因
+            var returnReasonEl = document.getElementById('detailReturnReason');
+            if (returnReasonEl) {
+                returnReasonEl.innerText = data.returnReason || '-';
+            }
 
-            if (returnStatusEl) {
-                var returnStatusMap = {
-                    '0': { text: '審核中', className: 'status-paid' },
-                    '1': { text: '退貨通過', className: 'status-completed' },
-                    '2': { text: '退貨失敗', className: 'status-cancelled' }
-                };
-                var returnStatusInfo = returnStatusMap[String(data.returnStatus)] || { text: '未知', className: '' };
-                returnStatusEl.innerText = returnStatusInfo.text;
-                returnStatusEl.className = 'status-badge ' + returnStatusInfo.className;
+            // 顯示退貨圖片
+            var imagesContainer = document.getElementById('returnImagesContainer');
+            var imagesDiv = document.getElementById('returnImagesDiv');
+            if (imagesContainer && imagesDiv) {
+                imagesDiv.innerHTML = '';
+                if (data.returnImages && data.returnImages.length > 0) {
+                    imagesContainer.style.display = 'block';
+                    data.returnImages.forEach(function(imageUrl, index) {
+                        var img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = '退貨圖片 ' + (index + 1);
+                        img.style.cssText = 'width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;';
+                        img.onclick = function() {
+                            window.open(imageUrl, '_blank');
+                        };
+                        imagesDiv.appendChild(img);
+                    });
+                } else {
+                    imagesContainer.style.display = 'none';
+                }
             }
         })
         .catch(function(error) {
             console.error('載入退貨資訊失敗:', error);
-            container.style.display = 'none';
+            section.style.display = 'none';
         });
 }
 
