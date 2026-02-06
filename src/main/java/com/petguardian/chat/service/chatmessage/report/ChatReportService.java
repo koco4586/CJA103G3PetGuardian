@@ -218,7 +218,7 @@ public class ChatReportService {
                 circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
             } catch (Exception e) {
                 log.warn("[Report] Invalidation Failed: {}", e.getMessage());
-                throw new RuntimeException("Cache invalidation failed", e);
+                // Do not throw - next DB fallback will repopulate cache
             }
         }
     }

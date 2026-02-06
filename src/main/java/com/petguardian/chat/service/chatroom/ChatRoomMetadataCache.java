@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,9 @@ public class ChatRoomMetadataCache {
 
     // Track rooms that need cache invalidation after Redis recovery
     private final Set<Integer> pendingRecoveryRooms = ConcurrentHashMap.newKeySet();
+
+    // Track user room lists that need cache invalidation after Redis recovery
+    private final Set<Integer> pendingRecoveryUserRooms = ConcurrentHashMap.newKeySet();
 
     private final RedisJsonMapper redisJsonMapper;
     private final CircuitBreaker circuitBreaker;
@@ -193,23 +197,58 @@ public class ChatRoomMetadataCache {
     }
 
     public boolean updateReadStatusInCache(Integer roomId, Integer userId, LocalDateTime time) {
-        Optional<ChatRoomMetadataDTO> meta = getRoomMeta(roomId);
-        if (meta.isEmpty()) {
+        String key = ROOM_KEY + roomId;
+        String timeStr = time.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+
+        try {
+            return circuitBreaker.executeSupplier(() -> {
+                boolean updated = redisJsonMapper.executeUpdateReadStatus(
+                        key,
+                        userId,
+                        timeStr,
+                        Duration.ofDays(DEFAULT_TTL_DAYS).toSeconds());
+
+                if (updated) {
+                    markAsDirty(roomId);
+                    return true;
+                }
+                return false;
+            });
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping read status update for room {}.", circuitBreaker.getState(), roomId);
+            return false;
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to atomic update read status room {}: {}", roomId, e.getMessage());
+            // Return false to trigger DB fallback
             return false;
         }
+    }
 
-        ChatRoomMetadataDTO dto = meta.get();
-        List<Integer> members = dto.getMemberIds();
-        if (members != null && !members.isEmpty()) {
-            if (userId.equals(members.get(0))) {
-                dto.setMem1LastReadAt(time);
-            } else if (members.size() > 1 && userId.equals(members.get(1))) {
-                dto.setMem2LastReadAt(time);
-            }
-            setRoomMeta(roomId, dto);
-            markAsDirty(roomId);
+    public void updateMessageMetadataAtomic(Integer roomId, String preview, LocalDateTime time, Integer senderId) {
+        String key = ROOM_KEY + roomId;
+        // Format matches Jackson's ISO-8601 default
+        String timeStr = time.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+
+        try {
+            circuitBreaker.executeRunnable(() -> {
+                String result = redisJsonMapper.executeUpdateMessageMeta(
+                        key,
+                        preview,
+                        timeStr,
+                        senderId,
+                        Duration.ofDays(DEFAULT_TTL_DAYS).toSeconds());
+
+                // If result is 'OK', mark as dirty for write-behind
+                if (result != null) {
+                    markAsDirty(roomId);
+                }
+            });
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Skipping atomic update for room {}.", circuitBreaker.getState(), roomId);
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to atomic update room {}: {}", roomId, e.getMessage());
+            throw new RuntimeException("Cache write failed", e);
         }
-        return true;
     }
 
     // =================================================================================
@@ -306,19 +345,31 @@ public class ChatRoomMetadataCache {
     }
 
     public void invalidateUserRoomList(Integer userId) {
-        invalidate(REDIS_USER_ROOMS_KEY + userId);
+        String key = REDIS_USER_ROOMS_KEY + userId;
+        try {
+            circuitBreaker.executeRunnable(() -> redisJsonMapper.delete(key));
+        } catch (CallNotPermittedException e) {
+            log.debug("[Cache] CB is {}. Queueing user {} for recovery.", circuitBreaker.getState(), userId);
+            pendingRecoveryUserRooms.add(userId);
+            // Do not throw - let business logic continue
+        } catch (Exception e) {
+            log.warn("[Cache] Failed to invalidate user rooms {}: {}", userId, e.getMessage());
+            pendingRecoveryUserRooms.add(userId);
+            // Do not throw - let business logic continue
+        }
     }
 
-    public void invalidate(String key) {
+    public boolean invalidate(String key) {
         try {
             circuitBreaker.executeRunnable(
                     () -> redisJsonMapper.delete(key));
+            return true;
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping invalidation for key {}.", circuitBreaker.getState(), key);
-            throw new RuntimeException("Circuit Breaker Open", e);
+            return false;
         } catch (Exception e) {
             log.warn("[Cache] Failed to invalidate key {}: {}", key, e.getMessage());
-            throw new RuntimeException("Invalidation failed", e);
+            return false;
         }
     }
 
@@ -326,11 +377,13 @@ public class ChatRoomMetadataCache {
         try {
             circuitBreaker.executeRunnable(() -> redisJsonMapper.delete(ROOM_KEY + roomId));
         } catch (CallNotPermittedException e) {
-            log.debug("[Cache] CB is {}. Skipping invalidation for room {}.", circuitBreaker.getState(), roomId);
-            throw new RuntimeException("Circuit Breaker Open", e);
+            log.debug("[Cache] CB is {}. Queueing room {} for recovery.", circuitBreaker.getState(), roomId);
+            pendingRecoveryRooms.add(roomId);
+            // Do not throw - let business logic continue
         } catch (Exception e) {
             log.warn("[Cache] Failed to invalidate room {}: {}", roomId, e.getMessage());
-            throw new RuntimeException("Invalidation failed", e);
+            pendingRecoveryRooms.add(roomId);
+            // Do not throw - let business logic continue
         }
     }
 
@@ -344,5 +397,9 @@ public class ChatRoomMetadataCache {
 
     public Set<Integer> getRecoveryQueue() {
         return this.pendingRecoveryRooms;
+    }
+
+    public Set<Integer> getUserRoomRecoveryQueue() {
+        return this.pendingRecoveryUserRooms;
     }
 }

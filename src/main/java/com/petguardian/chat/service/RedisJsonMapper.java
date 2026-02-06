@@ -8,6 +8,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -35,6 +37,99 @@ public class RedisJsonMapper {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         return mapper;
     }
+
+    // Lua script to atomically read -> modify -> write back JSON
+    // ARGV[1]: preview
+    // ARGV[2]: time (ISO string)
+    // ARGV[3]: senderId
+    // ARGV[4]: ttl (seconds)
+    private static final String LUA_UPDATE_MESSAGE_META = """
+            local key = KEYS[1]
+            local preview = ARGV[1]
+            local time = ARGV[2]
+            local senderId = ARGV[3]
+            local ttl = tonumber(ARGV[4])
+
+            -- 1. Get existing JSON
+            local json = redis.call('GET', key)
+            if not json then
+                return nil
+            end
+
+            -- 2. Decode to table
+            local dto = cjson.decode(json)
+
+            -- 3. Update fields (Matched with ChatRoomMetadataDTO fields)
+            dto.lastMessagePreview = preview
+            dto.lastMessageAt = time
+
+            -- 4. Update Read Status
+            -- Note: Lua arrays are 1-based
+            local members = dto.memberIds
+            if members and #members > 0 then
+                if tostring(members[1]) == senderId then
+                    dto.mem1LastReadAt = time
+                elseif #members > 1 and tostring(members[2]) == senderId then
+                    dto.mem2LastReadAt = time
+                end
+            end
+
+            -- 5. Encode and Save
+            local newJson = cjson.encode(dto)
+            redis.call('SET', key, newJson, 'EX', ttl)
+
+            return 'OK'
+            """;
+
+    private static final RedisScript<String> UPDATE_MSG_META_SCRIPT = new DefaultRedisScript<>(LUA_UPDATE_MESSAGE_META,
+            String.class);
+
+    // Atomic Read Status Update Script
+    // ARGV[1]: userId
+    // ARGV[2]: time (ISO string)
+    // ARGV[3]: ttl (seconds)
+    private static final String LUA_UPDATE_READ_STATUS = """
+             local key = KEYS[1]
+             local userId = ARGV[1]
+             local time = ARGV[2]
+             local ttl = tonumber(ARGV[3])
+            \s
+             -- 1. Get existing JSON
+             local json = redis.call('GET', key)
+             if not json then
+                 return nil
+             end
+            \s
+             -- 2. Decode
+             local dto = cjson.decode(json)
+            \s
+             -- 3. Update ONLY Read Status matches
+             local members = dto.memberIds
+             local updated = false
+            \s
+             if members and #members > 0 then
+                 if tostring(members[1]) == userId then
+                     dto.mem1LastReadAt = time
+                     updated = true
+                 elseif #members > 1 and tostring(members[2]) == userId then
+                     dto.mem2LastReadAt = time
+                     updated = true
+                 end
+             end
+            \s
+             -- 4. Save only if needed
+             if updated then
+                 local newJson = cjson.encode(dto)
+                 redis.call('SET', key, newJson, 'EX', ttl)
+                 return 'OK'
+             end
+            \s
+             return nil
+             """;
+
+    private static final RedisScript<String> UPDATE_READ_STATUS_SCRIPT = new DefaultRedisScript<>(
+            LUA_UPDATE_READ_STATUS,
+            String.class);
 
     // =================================================================================
     // CORE SERIALIZATION UTILS
@@ -180,7 +275,45 @@ public class RedisJsonMapper {
         redisTemplate.delete(key);
     }
 
+    public Long deleteBatch(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return 0L;
+        }
+        // Use UNLINK (non-blocking delete) instead of DEL
+        return redisTemplate.unlink(keys);
+    }
+
     public void expire(String key, Duration ttl) {
         redisTemplate.expire(key, ttl);
+    }
+
+    public String executeUpdateMessageMeta(String key, String preview, String time, Integer senderId, long ttlSeconds) {
+        try {
+            return redisTemplate.execute(
+                    UPDATE_MSG_META_SCRIPT,
+                    Collections.singletonList(key),
+                    preview,
+                    time,
+                    String.valueOf(senderId),
+                    String.valueOf(ttlSeconds));
+        } catch (Exception e) {
+            log.error("[Redis] Lua script execution failed: {}", e.getMessage());
+            throw new RuntimeException("Redis Lua script failed", e);
+        }
+    }
+
+    public boolean executeUpdateReadStatus(String key, Integer userId, String timeStr, long ttlSeconds) {
+        try {
+            String result = redisTemplate.execute(
+                    UPDATE_READ_STATUS_SCRIPT,
+                    Collections.singletonList(key),
+                    String.valueOf(userId),
+                    timeStr,
+                    String.valueOf(ttlSeconds));
+            return "OK".equals(result);
+        } catch (Exception e) {
+            log.error("[Redis] Lua read-status script failed: {}", e.getMessage());
+            throw new RuntimeException("Redis Lua script failed", e);
+        }
     }
 }
