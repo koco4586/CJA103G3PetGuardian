@@ -12,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * 賣家管理中心 Controller
@@ -106,6 +106,7 @@ public class SellerController {
 
     /**
      * 儲存商品（新增或編輯）
+     * 接收圖片檔案上傳，存到 /images/store_image/ 資料夾，資料庫存路徑
      */
     @PostMapping("/product/save")
     public String saveProduct(
@@ -116,7 +117,7 @@ public class SellerController {
             @RequestParam(required = false) String proDescription,
             @RequestParam Integer stockQuantity,
             @RequestParam Integer proState,
-            @RequestParam(value = "imageUrl", required = false) String imageUrl,
+            @RequestParam(value = "productImage", required = false) MultipartFile productImage,
             @RequestParam(value = "deleteImageIds", required = false) List<Integer> deleteImageIds,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
@@ -128,7 +129,6 @@ public class SellerController {
         System.out.println("價格: " + proPrice);
         System.out.println("庫存: " + stockQuantity);
         System.out.println("狀態: " + proState);
-        System.out.println("圖片URL: " + imageUrl);
         System.out.println("待刪除圖片IDs: " + deleteImageIds);
 
         Integer sellerId = getCurrentMemId(request);
@@ -139,17 +139,61 @@ public class SellerController {
         System.out.println("賣家ID: " + sellerId);
 
         try {
+            // 處理圖片上傳：將檔案存到 static/images/store_image/
+            String imageUrl = null;
+            if (productImage != null && !productImage.isEmpty()) {
+                imageUrl = saveUploadedImage(productImage, request);
+                System.out.println("圖片已上傳，URL: " + imageUrl);
+            }
+
             productService.saveProductWithImages(sellerId, proId, proName, proTypeId,
                     proPrice, proDescription, stockQuantity, proState,
                     imageUrl, deleteImageIds);
 
             redirectAttributes.addFlashAttribute("successMessage", "商品儲存成功!");
         } catch (Exception e) {
+            System.err.println("商品儲存失敗: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
 
         return "redirect:/seller/products";
     }
+
+    /**
+     * 將上傳的圖片檔案存到 static/images/store_image/ 資料夾
+     * 回傳可用於前端存取的 URL 路徑
+     */
+    private String saveUploadedImage(MultipartFile file, HttpServletRequest request) throws IOException {
+        // 取得原始檔名和副檔名
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+        // 產生唯一檔名，避免重複
+        String newFilename = "product_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
+
+        // 取得 static/images/store_image/ 的實際路徑
+        String uploadDir = request.getServletContext().getRealPath("/images/store_image/");
+
+        // 如果資料夾不存在就建立
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        // 將檔案寫入資料夾
+        File destFile = new File(dir, newFilename);
+        file.transferTo(destFile);
+
+        System.out.println("圖片儲存路徑: " + destFile.getAbsolutePath());
+
+        // 回傳前端可存取的 URL 路徑
+        return "/images/store_image/" + newFilename;
+    }
+
 
     /**
      * 刪除商品

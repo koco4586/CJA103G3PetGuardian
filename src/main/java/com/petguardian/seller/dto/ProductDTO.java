@@ -32,9 +32,9 @@ public class ProductDTO {
     private LocalDateTime launchedTime; // 上架時間
     private LocalDateTime soldTime;     // 售出時間
 
-    // 商品圖片列表 (Base64 格式)
+    // 商品圖片列表
     private List<ProductPicDTO> productPics;
 
-    // 第一張圖片 (用於列表顯示)
-    private String mainImageBase64;
+    // 第一張圖片 URL（用於列表顯示）
+    private String mainImageUrl;
 }
