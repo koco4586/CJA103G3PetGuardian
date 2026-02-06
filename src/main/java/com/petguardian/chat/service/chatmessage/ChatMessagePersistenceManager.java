@@ -6,6 +6,7 @@ import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataCache;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
+import com.petguardian.chat.service.RedisJsonMapper;
 import com.petguardian.chat.dto.ChatMessageRedisDTO;
 import com.petguardian.chat.service.context.MessageCreationContext;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -37,6 +38,7 @@ class ChatMessagePersistenceManager {
     private final ChatRoomMetadataService metadataService;
     private final ChatRoomMetadataCache metadataCache;
     private final ChatMessageCache messageCache;
+    private final RedisJsonMapper redisJsonMapper;
     private final TransactionTemplate transactionTemplate;
     private final CircuitBreaker circuitBreaker;
 
@@ -50,6 +52,7 @@ class ChatMessagePersistenceManager {
             ChatRoomMetadataService metadataService,
             ChatRoomMetadataCache metadataCache,
             ChatMessageCache messageCache,
+            RedisJsonMapper redisJsonMapper,
             TransactionTemplate transactionTemplate,
             CircuitBreakerRegistry circuitBreakerRegistry) {
         this.mysqlRepository = mysqlRepository;
@@ -57,6 +60,7 @@ class ChatMessagePersistenceManager {
         this.metadataService = metadataService;
         this.metadataCache = metadataCache;
         this.messageCache = messageCache;
+        this.redisJsonMapper = redisJsonMapper;
         this.transactionTemplate = transactionTemplate;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
     }
@@ -106,30 +110,50 @@ class ChatMessagePersistenceManager {
         // No manual circuit breaker check. Rely on executeRunnable/Supplier to handle
         // state.
 
-        // Piggyback Invalidation Logic
+        // Room Recovery - Batch Operation
         // If Circuit Breaker is CLOSED (Redis Healthy) and we have pending
         // invalidations
         Set<Integer> pendingRooms = metadataCache.getRecoveryQueue();
         if (!pendingRooms.isEmpty() && circuitBreaker.getState() != CircuitBreaker.State.OPEN) {
-            Iterator<Integer> it = pendingRooms.iterator();
-            while (it.hasNext()) {
-                Integer roomId = it.next();
-                try {
-                    // Try to invalidate (delete keys)
-                    // If this succeeds, it means Redis is back up
-                    circuitBreaker.executeRunnable(() -> {
-                        messageCache.invalidateHistory(roomId);
-                        metadataCache.invalidateRoom(roomId);
-                    });
-
-                    // Remove from set only if successful
-                    it.remove();
-                    log.info("[Recovery] Invalidated stale cache for room {}", roomId);
-                } catch (Exception e) {
-                    // Redis might still be unstable, or CB opened during loop
-                    // Keep in set, retry next tick
-                    log.debug("[Recovery] Failed to invalidate room {}, retrying later: {}", roomId, e.getMessage());
+            // Snapshot current items to process (avoid race with concurrent additions)
+            List<Integer> roomsToProcess = new ArrayList<>(pendingRooms);
+            try {
+                // Collect all keys to delete in a single batch
+                List<String> keysToDelete = new ArrayList<>();
+                for (Integer roomId : roomsToProcess) {
+                    keysToDelete.add("chat:room_meta:" + roomId); // Room metadata
+                    keysToDelete.add("chat:room:" + roomId + ":history"); // Message history
+                    keysToDelete.add("chat:room:" + roomId + ":warmed"); // Warmed marker
                 }
+
+                // Batch delete using UNLINK (non-blocking)
+                circuitBreaker.executeRunnable(() -> redisJsonMapper.deleteBatch(keysToDelete));
+
+                // Remove only processed items to avoid losing concurrent additions
+                roomsToProcess.forEach(pendingRooms::remove);
+                log.info("[Recovery] Batch invalidated {} rooms ({} keys)", roomsToProcess.size(), keysToDelete.size());
+            } catch (Exception e) {
+                log.debug("[Recovery] Batch room recovery failed, retrying later: {}", e.getMessage());
+            }
+        }
+
+        // User Room List Recovery - Batch Operation
+        Set<Integer> pendingUserRooms = metadataCache.getUserRoomRecoveryQueue();
+        if (!pendingUserRooms.isEmpty() && circuitBreaker.getState() != CircuitBreaker.State.OPEN) {
+            // Snapshot current items to process
+            List<Integer> usersToProcess = new ArrayList<>(pendingUserRooms);
+            try {
+                List<String> keysToDelete = usersToProcess.stream()
+                        .map(userId -> "chat:user_rooms:" + userId)
+                        .collect(Collectors.toList());
+
+                circuitBreaker.executeRunnable(() -> redisJsonMapper.deleteBatch(keysToDelete));
+
+                // Remove only processed items
+                usersToProcess.forEach(pendingUserRooms::remove);
+                log.info("[Recovery] Batch invalidated user room lists for {} users", usersToProcess.size());
+            } catch (Exception e) {
+                log.debug("[Recovery] Batch user room recovery failed, retrying later: {}", e.getMessage());
             }
         }
 
