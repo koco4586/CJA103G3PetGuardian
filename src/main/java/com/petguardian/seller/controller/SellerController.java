@@ -2,8 +2,11 @@ package com.petguardian.seller.controller;
 
 import com.petguardian.common.service.AuthStrategyService;
 import com.petguardian.orders.model.OrderItemVO;
+import com.petguardian.orders.model.ReturnOrderPicVO;
+import com.petguardian.orders.model.ReturnOrderVO;
 import com.petguardian.orders.service.ReturnOrderService;
 import com.petguardian.seller.model.ProType;
+import com.petguardian.seller.model.Product;
 import com.petguardian.seller.service.ProductService;
 import com.petguardian.seller.service.SellerDashboardService;
 import com.petguardian.seller.service.SellerOrderService;
@@ -12,12 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * 賣家管理中心 Controller
@@ -41,27 +47,21 @@ public class SellerController {
     @Autowired
     private ReturnOrderService returnOrderService;
 
+    // 圖片上傳目標資料夾（相對於 static 目錄）
+    private static final String UPLOAD_SUB_PATH = "images/store_image/";
 
-
-    /**
-     * 取得當前登入會員 ID
-     */
     private Integer getCurrentMemId(HttpServletRequest request) {
         return authService.getCurrentUserId(request);
     }
 
     // ==================== 營運概況 ====================
 
-    // 賣家管理中心首頁
     @GetMapping("/dashboard")
     public String showDashboard(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/front/loginpage";
-        }
+        if (sellerId == null) return "redirect:/front/loginpage";
 
         Map<String, Object> dashboardData = dashboardService.getDashboardData(sellerId);
-
         model.addAttribute("sellerInfo", dashboardData.get("sellerInfo"));
         model.addAttribute("totalProducts", dashboardData.get("totalProducts"));
         model.addAttribute("activeProducts", dashboardData.get("activeProducts"));
@@ -78,13 +78,10 @@ public class SellerController {
 
     // ==================== 商品管理 ====================
 
-    // 商品管理頁面
     @GetMapping("/products")
     public String showProducts(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/front/loginpage";
-        }
+        if (sellerId == null) return "redirect:/front/loginpage";
 
         List<Map<String, Object>> productsWithImages = productService.getSellerProductsWithImages(sellerId);
         List<ProType> proTypes = productService.getAllProTypes();
@@ -93,20 +90,18 @@ public class SellerController {
         model.addAttribute("productsWithImages", productsWithImages);
         model.addAttribute("proTypes", proTypes);
         model.addAttribute("currentView", "products");
+        // 傳入時間戳，讓前端圖片 URL 帶上此參數，防止瀏覽器快取舊圖
+        model.addAttribute("cacheBuster", System.currentTimeMillis());
 
         return "frontend/store-seller";
     }
 
-    // 取得商品圖片（AJAX），回傳圖片URL列表
     @GetMapping("/product/{proId}/images")
     @ResponseBody
     public List<Map<String, Object>> getProductImages(@PathVariable Integer proId) {
         return productService.getProductImages(proId);
     }
 
-    /**
-     * 儲存商品（新增或編輯）
-     */
     @PostMapping("/product/save")
     public String saveProduct(
             @RequestParam(required = false) Integer proId,
@@ -116,44 +111,63 @@ public class SellerController {
             @RequestParam(required = false) String proDescription,
             @RequestParam Integer stockQuantity,
             @RequestParam Integer proState,
-            @RequestParam(value = "imageUrl", required = false) String imageUrl,
+            @RequestParam(value = "productImage", required = false) MultipartFile productImage,
             @RequestParam(value = "deleteImageIds", required = false) List<Integer> deleteImageIds,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
-        System.out.println("=== saveProduct Controller 開始 ===");
-        System.out.println("商品ID: " + proId);
-        System.out.println("商品名稱: " + proName);
-        System.out.println("類別ID: " + proTypeId);
-        System.out.println("價格: " + proPrice);
-        System.out.println("庫存: " + stockQuantity);
-        System.out.println("狀態: " + proState);
-        System.out.println("圖片URL: " + imageUrl);
-        System.out.println("待刪除圖片IDs: " + deleteImageIds);
-
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            System.out.println("錯誤: sellerId 為 null");
-            return "redirect:/front/loginpage";
-        }
-        System.out.println("賣家ID: " + sellerId);
+        if (sellerId == null) return "redirect:/front/loginpage";
 
         try {
+            // 處理圖片上傳
+            String imageUrl = null;
+            if (productImage != null && !productImage.isEmpty()) {
+                imageUrl = saveUploadedImage(productImage);
+            }
+
             productService.saveProductWithImages(sellerId, proId, proName, proTypeId,
                     proPrice, proDescription, stockQuantity, proState,
                     imageUrl, deleteImageIds);
 
             redirectAttributes.addFlashAttribute("successMessage", "商品儲存成功!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "儲存失敗: " + e.getMessage());
         }
 
         return "redirect:/seller/products";
     }
 
     /**
-     * 刪除商品
+     * 將上傳的圖片檔案存到 src/main/resources/static/images/store_image/ 資料夾
+     * 回傳前端可存取的 URL 短路徑
      */
+    private String saveUploadedImage(MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.lastIndexOf(".") > 0) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+        // 產生唯一檔名
+        String newFilename = "prod_" + UUID.randomUUID().toString().substring(0, 8) + "_" + System.currentTimeMillis() + extension;
+
+        // 取得 static/images/store_image/ 的實際路徑 (本機開發用)
+        String staticPath = "src/main/resources/static/" + UPLOAD_SUB_PATH;
+        Path uploadDir = Paths.get(staticPath).toAbsolutePath().normalize();
+
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        Path targetPath = uploadDir.resolve(newFilename).normalize();
+        file.transferTo(targetPath.toFile());
+
+        // 回傳相對路徑供前端讀取
+        return "/" + UPLOAD_SUB_PATH + newFilename;
+    }
+
     @PostMapping("/product/delete")
     public String deleteProduct(
             @RequestParam Integer proId,
@@ -161,9 +175,7 @@ public class SellerController {
             RedirectAttributes redirectAttributes) {
 
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/front/loginpage";
-        }
+        if (sellerId == null) return "redirect:/front/loginpage";
 
         boolean success = productService.deleteProductBySeller(sellerId, proId);
         if (success) {
@@ -177,20 +189,13 @@ public class SellerController {
 
     // ==================== 訂單管理 ====================
 
-    /**
-     * 訂單管理頁面
-     */
     @GetMapping("/orders")
     public String showOrders(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/front/loginpage";
-        }
+        if (sellerId == null) return "redirect:/front/loginpage";
 
-        // 取得訂單列表（含買家名稱、是否可出貨）
         List<Map<String, Object>> ordersWithDetails = orderService.getSellerOrdersWithDetails(sellerId);
 
-        // 賣家資訊（側邊欄用）
         model.addAttribute("sellerInfo", dashboardService.getSellerBasicInfo(sellerId));
         model.addAttribute("ordersWithDetails", ordersWithDetails);
         model.addAttribute("currentView", "orders");
@@ -198,9 +203,6 @@ public class SellerController {
         return "frontend/store-seller";
     }
 
-    /**
-     * 訂單詳情頁面
-     */
     @GetMapping("/order/{orderId}")
     public String showOrderDetail(
             @PathVariable Integer orderId,
@@ -209,11 +211,8 @@ public class SellerController {
             RedirectAttributes redirectAttributes) {
 
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/front/loginpage";
-        }
+        if (sellerId == null) return "redirect:/front/loginpage";
 
-        // 取得訂單詳情
         Map<String, Object> orderDetail = orderService.getOrderDetail(sellerId, orderId);
 
         if (orderDetail == null) {
@@ -228,31 +227,18 @@ public class SellerController {
         return "frontend/seller/order-detail";
     }
 
-    /**
-     * 取得訂單商品項目（AJAX）
-     * 用於訂單Modal中動態載入商品明細
-     */
     @GetMapping("/order/{orderId}/items")
     @ResponseBody
     public List<Map<String, Object>> getOrderItems(@PathVariable Integer orderId, HttpServletRequest request) {
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return new ArrayList<>();
-        }
+        if (sellerId == null) return new ArrayList<>();
 
-        // 驗證訂單是否屬於該賣家
         Map<String, Object> orderDetail = orderService.getOrderDetail(sellerId, orderId);
-        if (orderDetail == null) {
-            return new ArrayList<>();
-        }
+        if (orderDetail == null) return new ArrayList<>();
 
-        // 取得訂單項目
         List<OrderItemVO> items = (List<OrderItemVO>) orderDetail.get("items");
-        if (items == null || items.isEmpty()) {
-            return new ArrayList<>();
-        }
+        if (items == null) return new ArrayList<>();
 
-        // 轉換為前端需要的格式
         List<Map<String, Object>> result = new ArrayList<>();
         for (OrderItemVO item : items) {
             Map<String, Object> itemData = new HashMap<>();
@@ -261,25 +247,22 @@ public class SellerController {
             itemData.put("quantity", item.getQuantity());
             itemData.put("subtotal", item.getSubtotal());
 
-            // 透過 ProductService 取得商品名稱
             String productName = productService.getProductById(item.getProId())
-                    .map(product -> product.getProName())
+                    .map(Product::getProName)
                     .orElse("商品 #" + item.getProId());
             itemData.put("productName", productName);
 
-            // 取得商品主圖片
             String productImage = productService.getProductMainImage(item.getProId());
             itemData.put("productImage", productImage);
 
             result.add(itemData);
         }
-
         return result;
     }
+
     /**
      * 取得訂單退貨資訊（AJAX）
-     * 用於訂單Modal中動態載入退貨資訊
-     * 當訂單狀態為「申請退貨中」(4)或「退貨完成」(5)時使用
+     * 包含退貨單基本資訊和退貨圖片 URL 列表
      */
     @GetMapping("/order/{orderId}/return-info")
     @ResponseBody
@@ -293,106 +276,94 @@ public class SellerController {
             return result;
         }
 
-        // 驗證訂單是否屬於該賣家
-        Map<String, Object> orderDetail = orderService.getOrderDetail(sellerId, orderId);
-        if (orderDetail == null) {
-            result.put("success", false);
-            result.put("error", "訂單不存在或無權限查看");
-            return result;
-        }
+        try {
+            Optional<ReturnOrderVO> returnOrderOpt = returnOrderService.getReturnOrderByOrderId(orderId);
 
-        // 取得訂單
-        com.petguardian.orders.model.OrdersVO order =
-                (com.petguardian.orders.model.OrdersVO) orderDetail.get("order");
+            if (returnOrderOpt.isPresent()) {
+                ReturnOrderVO returnOrder = returnOrderOpt.get();
+                result.put("success", true);
+                result.put("hasReturnOrder", true);
+                result.put("returnId", returnOrder.getReturnId());
 
-        // 檢查訂單狀態是否為退貨相關
-        Integer orderStatus = order.getOrderStatus();
-        if (orderStatus == null || (orderStatus != 4 && orderStatus != 5)) {
-            result.put("success", false);
-            result.put("hasReturnOrder", false);
-            result.put("error", "此訂單無退貨資訊");
-            return result;
-        }
-
-        // 查詢退貨單資訊
-        java.util.Optional<com.petguardian.orders.model.ReturnOrderVO> returnOrderOpt =
-                returnOrderService.getReturnOrderByOrderId(orderId);
-
-        if (returnOrderOpt.isPresent()) {
-            com.petguardian.orders.model.ReturnOrderVO returnOrder = returnOrderOpt.get();
-            result.put("success", true);
-            result.put("hasReturnOrder", true);
-            result.put("returnId", returnOrder.getReturnId());
-            result.put("applyTime", returnOrder.getApplyTime() != null ?
-                    returnOrder.getApplyTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : "-");
-            result.put("returnReason", returnOrder.getReturnReason());
-            result.put("refundAmount", returnOrder.getRefundAmount());
-            result.put("returnStatus", returnOrder.getReturnStatus());
-
-            // 退貨狀態文字
-            String returnStatusText = "審核中";
-            if (returnOrder.getReturnStatus() != null) {
-                switch (returnOrder.getReturnStatus()) {
-                    case 0: returnStatusText = "審核中"; break;
-                    case 1: returnStatusText = "退貨通過"; break;
-                    case 2: returnStatusText = "退貨失敗"; break;
+                // 格式化時間
+                String applyTimeStr = "-";
+                if (returnOrder.getApplyTime() != null) {
+                    applyTimeStr = returnOrder.getApplyTime().format(
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
                 }
+                result.put("applyTime", applyTimeStr);
+
+                result.put("returnReason", returnOrder.getReturnReason());
+                result.put("refundAmount", returnOrder.getRefundAmount());
+                result.put("returnStatus", returnOrder.getReturnStatus());
+
+                // 狀態文字轉換
+                String statusText = "未知";
+                if (returnOrder.getReturnStatus() != null) {
+                    switch (returnOrder.getReturnStatus()) {
+                        case 0: statusText = "審核中"; break;
+                        case 1: statusText = "退貨通過"; break;
+                        case 2: statusText = "退貨失敗"; break;
+                    }
+                }
+                result.put("returnStatusText", statusText);
+
+                // 讀取退貨圖片 URL 列表
+                List<ReturnOrderPicVO> pics = returnOrderService.getReturnOrderPics(returnOrder.getReturnId());
+                List<String> imageUrlList = new ArrayList<>();
+                for (ReturnOrderPicVO pic : pics) {
+                    if (pic.getPicUrl() != null && !pic.getPicUrl().isEmpty()) {
+                        imageUrlList.add(pic.getPicUrl());
+                    }
+                }
+                result.put("returnImages", imageUrlList);
+
+            } else {
+                result.put("success", false);
+                result.put("hasReturnOrder", false);
+                result.put("error", "查無退貨資料");
             }
-            result.put("returnStatusText", returnStatusText);
-        } else {
+        } catch (Exception e) {
             result.put("success", false);
-            result.put("hasReturnOrder", false);
-            result.put("error", "查無退貨資料");
+            result.put("error", e.getMessage());
+            e.printStackTrace();
         }
 
         return result;
     }
-    /**
-     * 出貨
-     */
+
+    // ==================== 出貨/取消 ====================
+
     @PostMapping("/order/ship")
-    public String shipOrder(
-            @RequestParam Integer orderId,
-            HttpServletRequest request,
-            RedirectAttributes redirectAttributes) {
-
+    public String shipOrder(@RequestParam Integer orderId, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/front/loginpage";
-        }
+        if (sellerId == null) return "redirect:/front/loginpage";
 
-        boolean success = orderService.shipOrder(sellerId, orderId);
-        if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "訂單已標記為已出貨!");
-        } else {
-            redirectAttributes.addFlashAttribute("error", "出貨失敗：訂單不存在或狀態不正確");
+        try {
+            orderService.shipOrder(sellerId, orderId);
+            redirectAttributes.addFlashAttribute("successMessage", "訂單已標記為出貨!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-
         return "redirect:/seller/orders";
     }
 
-    /**
-     * 取消訂單（含退款）
-     */
     @PostMapping("/order/cancel")
-    public String cancelOrder(
-            @RequestParam Integer orderId,
-            HttpServletRequest request,
-            RedirectAttributes redirectAttributes) {
-
+    public String cancelOrder(@RequestParam Integer orderId, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         Integer sellerId = getCurrentMemId(request);
-        if (sellerId == null) {
-            return "redirect:/front/loginpage";
-        }
+        if (sellerId == null) return "redirect:/front/loginpage";
 
-        Integer refundAmount = orderService.cancelOrderWithRefund(sellerId, orderId);
-        if (refundAmount != null) {
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "訂單已取消，已退款 $" + refundAmount + " 至買家錢包");
-        } else {
-            redirectAttributes.addFlashAttribute("error", "取消失敗：訂單不存在或狀態不正確");
+        try {
+            Integer refundAmount = orderService.cancelOrderWithRefund(sellerId, orderId);
+            if (refundAmount != null) {
+                redirectAttributes.addFlashAttribute("successMessage", "訂單已取消，已退款 $" + refundAmount + " 給買家!");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "取消失敗，請確認訂單狀態");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-
         return "redirect:/seller/orders";
     }
+
 }
