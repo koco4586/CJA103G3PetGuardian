@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * 商品 DTO
- * 用於前端展示，包含商品基本資訊與圖片列表
  */
 @Data
 @NoArgsConstructor

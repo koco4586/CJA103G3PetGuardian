@@ -17,5 +17,5 @@ public class ProductPicDTO {
 
     private Integer productPicId;   // 圖片ID
     private Integer proId;          // 商品ID
-    private String imageUrl;        // 圖片 URL 字串
+    private String imageUrl;        // 圖片 URL 路徑
 }
