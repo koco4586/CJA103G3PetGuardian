@@ -23,6 +23,7 @@ import com.petguardian.common.service.AuthStrategyService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 
 /**
@@ -35,7 +36,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/sitter")
 public class SitterApplicationController {
 
-    @Autowired  //AuthStrategyService做介面做登入驗證 登入驗證的規格書
+    @Autowired // AuthStrategyService做介面做登入驗證 登入驗證的規格書
     private AuthStrategyService authStrategyService;
 
     @Autowired
@@ -161,9 +162,23 @@ public class SitterApplicationController {
             prepareModelAttributes(request, session, model);
             return "frontend/sitter/dashboard-sitter-registration";
 
+        } catch (ConstraintViolationException e) {
+            // Hibernate 驗證錯誤 -> 提取並顯示具體的驗證訊息
+            StringBuilder errorMsg = new StringBuilder("表單驗證失敗:\n");
+            e.getConstraintViolations().forEach(violation -> {
+                errorMsg.append("• ").append(violation.getMessage()).append("\n");
+            });
+            model.addAttribute("errorMessage", errorMsg.toString());
+            prepareModelAttributes(request, session, model);
+            return "frontend/sitter/dashboard-sitter-registration";
+
         } catch (Exception e) {
-            // 其他未預期錯誤 -> 保留資料並顯示錯誤
-            model.addAttribute("errorMessage", "系統錯誤，請稍後再試： " + e.getMessage());
+            // 其他未預期錯誤 -> 保留資料並顯示友善的錯誤訊息
+            // 記錄完整錯誤到日誌供開發人員查看
+            e.printStackTrace(); // 或使用 logger.error("申請提交失敗", e);
+
+            // 只顯示友善的錯誤訊息給使用者,不暴露技術細節
+            model.addAttribute("errorMessage", "系統錯誤,請稍後再試。如問題持續發生,請聯繫客服人員。");
             prepareModelAttributes(request, session, model);
             return "frontend/sitter/dashboard-sitter-registration";
         }

@@ -209,6 +209,8 @@ public class ChatReportService {
                         circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
                     } catch (Exception e) {
                         log.warn("[Report] Invalidation Failed: {}", e.getMessage());
+                        // Trigger async cleanup or alert?
+                        // Note: Throwing here might not roll back committed TX, but logs error.
                     }
                 }
             });
@@ -217,6 +219,7 @@ public class ChatReportService {
                 circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
             } catch (Exception e) {
                 log.warn("[Report] Invalidation Failed: {}", e.getMessage());
+                throw new RuntimeException("Cache invalidation failed", e);
             }
         }
     }

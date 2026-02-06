@@ -64,7 +64,7 @@ public class SitterApplicationVO implements Serializable {//
     @Lob
     @Column(name = "app_intro", nullable = false)
     @NotBlank(message = "個人簡介: 請勿空白")
-    @Size(min = 10, max = 500, message = "個人簡介: 長度需在{min}~{max}字")
+    @Size(min = 5, max = 500, message = "個人簡介: 長度需在{min}~{max}字")
     private String appIntro;
 
     /**
@@ -75,7 +75,7 @@ public class SitterApplicationVO implements Serializable {//
     @Lob
     @Column(name = "app_experience", nullable = false)
     @NotBlank(message = "相關經驗: 請勿空白")
-    @Size(min = 10, max = 500, message = "相關經驗: 長度需在{min}~{max}字")
+    @Size(min = 5, max = 500, message = "相關經驗: 長度需在{min}~{max}字")
     private String appExperience;
 
     // =========================

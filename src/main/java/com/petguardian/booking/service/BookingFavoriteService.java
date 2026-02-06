@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.petguardian.booking.model.BookingFavoriteRepository;
 import com.petguardian.booking.model.BookingFavoriteVO;
 import com.petguardian.petsitter.model.PetSitterServiceRepository;
+import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
@@ -31,6 +32,9 @@ public class BookingFavoriteService {
 
     @Autowired
     private PetSitterServiceRepository petSitterServiceRepository;
+    
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
 
     /**
      * 取得會員的所有收藏保母列表
@@ -62,14 +66,30 @@ public class BookingFavoriteService {
         Map<Integer, SitterVO> sitterMap = sitters.stream()
                 .collect(Collectors.toMap(SitterVO::getSitterId, s -> s));
 
+        List<Integer> memIds = sitters.stream()
+                .map(SitterVO::getMemId)
+                .collect(Collectors.toList());
+        Map<Integer, String> memberImageMap = sitterMemberRepository.findAllById(memIds).stream()
+                .collect(Collectors.toMap(
+                    com.petguardian.sitter.model.SitterMemberVO::getMemId,
+                    com.petguardian.sitter.model.SitterMemberVO::getMemImage,
+                    (v1, v2) -> v1
+                ));
         // 4. 填回 VO
         for (BookingFavoriteVO fav : favorites) {
             SitterVO s = sitterMap.get(fav.getSitterId());
             if (s != null) {
                 fav.setSitterName(s.getSitterName());
-                fav.setBasePrice(500); 
+                fav.setSitterMemId(s.getMemId());
+                fav.setAvgRating(s.getAverageRating());    // 填入平均分
+                fav.setRatingCount(s.getSitterRatingCount()); // 填入次數
+                fav.setBasePrice(500); // 建議此處維持 500 或從 SitterService 抓取
+            
+                String img = memberImageMap.getOrDefault(s.getMemId(), "/images/default-avatar.png");
+                fav.setMemImage(img);
             } else {
                 fav.setSitterName("保母資料已移除");
+                fav.setMemImage("/images/default-avatar.png");
             }
         }
         return favorites;

@@ -12,7 +12,7 @@ import com.petguardian.booking.model.BookingOrderVO;
 
 /**
  * 退款服務
- * 職責：處理訂單取消、退款比例計算、退款審核等功能
+ * 職責：處理訂單取消、退款比例計算、退款審核等功能，狀台為6代表保母被停權
  */
 @Service
 @Transactional
@@ -134,5 +134,24 @@ public class BookingRefundService {
         } else {
             return 0.0; // 低於12小時：不予退款
         }
+    }
+    
+    /**
+     * [後台操作] 因保母停權導致的強制全額退款
+     */
+    public void suspendSitterRefund(Integer orderId) {
+        BookingOrderVO order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("找不到訂單"));
+        // 1. 執行 100% 全額退款
+        if (order.getReservationFee() > 0) {
+            dataService.processRefund(order.getMemId(), order.getReservationFee());
+        }
+        // 2. 更新狀態與記錄
+        order.setOrderStatus(6); // 6: 保母停權
+        order.setCancelReason("保母已被管理員停權，系統執行全額退款。");
+        order.setCancelTime(LocalDateTime.now());
+        orderRepository.save(order);
+        // 3. 釋放排程
+        scheduleInternalService.updateSitterSchedule(order, '0');
     }
 }

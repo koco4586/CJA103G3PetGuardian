@@ -129,17 +129,7 @@ public class SitterServiceImpl implements SitterService {
      */
     @Override
     public List<SitterVO> getAllSitters() {
-        List<SitterVO> sitters = repository.findAll();
-        // 同步會員停權狀態
-        for (SitterVO sitter : sitters) {
-            memberRepository.findById(sitter.getMemId()).ifPresent(member -> {
-                // 如果會員已停權 (0)，則顯示保母狀態為停權 (1)
-                if (member.getMemStatus() == 0) {
-                    sitter.setSitterStatus((byte) 1);
-                }
-            });
-        }
-        return sitters;
+        return repository.findAll();
     }
 
     /**

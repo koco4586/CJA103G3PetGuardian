@@ -54,7 +54,8 @@ public class PostViewSyncTask {
 			})
 			.forEach(entry -> {
 				repo.savePostViewCountToDatabase(entry.getKey(), entry.getValue());
-			});		
+			});
+	
 	}
     	
 }

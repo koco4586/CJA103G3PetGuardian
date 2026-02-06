@@ -112,25 +112,25 @@ public class PetRepository {
 		// 使用你原本就寫好的 petRowMapper
 		return jdbcTemplate.query(GET_BY_MEM_ID, petRowMapper, memId);
 	}
-	
+
 	/**
-     * [新增] 批次查詢寵物資料 (支援傳入多個 ID)
-     */
-    public List<PetVO> findAllById(java.util.Set<Integer> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return new java.util.ArrayList<>();
-        }
-        
-        String inSql = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
-        
-        // 組合 SQL (包含關聯查詢以確保資料完整)
-        String sql = "SELECT p.*, pt.TYPE_NAME, ps.SIZE_NAME " + 
-                     "FROM PET p " +
-                     "LEFT JOIN PET_TYPE pt ON p.TYPE_ID = pt.TYPE_ID " + 
-                     "LEFT JOIN PET_SIZE ps ON p.SIZE_ID = ps.SIZE_ID " + 
-                     "WHERE p.PET_ID IN (" + inSql + ")";
-        
-        // 執行查詢
-        return jdbcTemplate.query(sql, petRowMapper, ids.toArray());
-    }
+	 * [新增] 批次查詢寵物資料 (支援傳入多個 ID)
+	 */
+	public List<PetVO> findAllById(java.util.Set<Integer> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return new java.util.ArrayList<>();
+		}
+
+		String inSql = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+
+		// 組合 SQL (包含關聯查詢以確保資料完整)
+		String sql = "SELECT p.*, pt.TYPE_NAME, ps.SIZE_NAME " +
+				"FROM PET p " +
+				"LEFT JOIN PET_TYPE pt ON p.TYPE_ID = pt.TYPE_ID " +
+				"LEFT JOIN PET_SIZE ps ON p.SIZE_ID = ps.SIZE_ID " +
+				"WHERE p.PET_ID IN (" + inSql + ")";
+
+		// 執行查詢
+		return jdbcTemplate.query(sql, petRowMapper, ids.toArray());
+	}
 }

@@ -72,10 +72,6 @@ public class BookingApiController {
      * 1. 檢查使用者是否登入
      * 2. 將表單資料儲存為新的預約單
      * 3. 回傳新建立的預約單 ID
-     * 
-     * @param order 預約單資料（從表單綁定）
-     * @param request HttpServletRequest（用來取得登入使用者 ID）
-     * @return ResponseEntity<?> - 成功回傳訂單 ID，失敗回傳錯誤訊息
      */
     @PostMapping("/submit")
     public ResponseEntity<?> submitBooking(

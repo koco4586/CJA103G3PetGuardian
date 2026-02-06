@@ -69,12 +69,24 @@ to {
 /* Image Wrapper */
 .product-image-wrapper {
 	position: relative;
+	width: 100%;
+	padding-top: 80%;
+	height: 0;
 	overflow: hidden;
-	border-radius: 12px;
+	background-color: #f8f9fa;
+	border-radius: 12px 12px 0 0;
 }
 
 .product-image-wrapper img {
-	transition: transform 0.4s ease;
+	position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+    padding: 10px; 
+    transition: transform 0.4s ease;
+    background-color: #ffffff;
 }
 
 .store-product-card:hover .product-image-wrapper img {
@@ -84,14 +96,14 @@ to {
 /* Favorite Button */
 .btn-like {
 	position: absolute;
-	top: 12px;
-	right: 12px;
+	top: 10px;
+	right: 10px;
 	z-index: 10;
-	background: rgba(255, 255, 255, 0.95);
+	background: rgba(255, 255, 255, 0.9);
 	border: none;
 	border-radius: 50%;
-	width: 38px;
-	height: 38px;
+	width: 34px;
+	height: 34px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -225,32 +237,33 @@ to {
 
 				<div class="d-flex justify-between align-center mb-2">
 					<div class="sub-tabs" style="margin-bottom: 0;">
-						<a th:href="@{/dashboard/favorites/sitters}"
-							class="sub-tab active">保母</a> <a
-							th:href="@{/dashboard/favorites}" class="sub-tab">二手商品</a>
+						<a th:href="@{/dashboard/favorites/sitters}" class="sub-tab active">保母</a> 
+						<a th:href="@{/dashboard/favorites}" class="sub-tab">二手商品</a>
+						<a class="sub-tab" th:href="@{/forumpost/post-collection}">文章</a>
 					</div>
 				</div>
 				<div class="store-grid">
 					<div th:each="fav : ${sitterFavorites}" class="store-product-card">
-						<div class="product-image-wrapper">
-							<a
-								th:href="@{/frontend/public/sitter/detail/{id}(id=${fav.sitterId})}">
-								<img th:src="@{'/api/sitter/' + ${fav.sitterId} + '/image'}"
-								th:alt="${fav.sitterName}"
-								style="width: 100%; height: 200px; object-fit: cover;">
-							</a>
-
-							<button class="btn-like active"
-								th:onclick="'handleToggleFavorite(' + ${fav.sitterId} + ', this)'">
-								<i class="fa-solid fa-heart"></i>
-							</button>
-						</div>
-
+					    <div class="product-image-wrapper">
+					        <a th:href="@{/frontend/public/sitter/detail/{id}(id=${fav.sitterId})}">
+					            <img th:src="${fav.memImage}"
+								     th:alt="${fav.sitterName}"
+								     onerror="this.src='/images/default-avatar.png'">
+					        </a>
+					
+					        <button class="btn-like active"
+					            th:onclick="'handleToggleFavorite(' + ${fav.sitterId} + ', this)'">
+					            <i class="fa-solid fa-heart"></i>
+					        </button>
+					    </div>
 						<div class="product-info">
 							<h3 th:text="${fav.sitterName}">保母姓名</h3>
 							<div class="stock-info">
-								<span><i class="fas fa-star" style="color: #f1c40f;"></i>
-									4.9 (評價)</span>
+								<span>
+								    <i class="fas fa-star" style="color: #f1c40f;"></i>
+								    <span th:text="${fav.avgRating}">0.0</span> 
+								    (<span th:text="${fav.ratingCount}">0</span> 評價)
+								</span>
 							</div>
 							<div class="product-price" style="margin: 0.5rem 0;">
 								NT$ <span th:text="${fav.basePrice}">500</span> / 小時

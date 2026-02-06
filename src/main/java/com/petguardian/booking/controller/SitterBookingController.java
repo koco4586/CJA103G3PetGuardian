@@ -20,6 +20,22 @@ import com.petguardian.sitter.model.SitterVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * 保姆端預約管理控制器
+ * 
+ * 職責範圍：
+ * - 顯示保姆收到的預約列表
+ * - 處理保姆對預約的操作（接受/拒絕/完成）
+ * - 計算保姆的本月收入
+ * - 提供預約狀態篩選功能
+ * 訂單狀態流程（保姆視角）：
+ * 1. 待確認 (0) → 保姆可以「接受」或「拒絕」
+ * 2. 已確認 (1) → 等待服務開始
+ * 3. 服務中 (2) → 保姆可以標記「完成」
+ * 4. 已完成 (4) → 等待會員評價
+ * 5. 已評價 (5) → 流程結束
+ */
+
 @Controller
 @RequestMapping("/sitter")
 public class SitterBookingController {
