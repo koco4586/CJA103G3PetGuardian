@@ -284,7 +284,8 @@
 		}
 
 		async function handleRefund(orderId) {
-			const base = typeof contextPath !== 'undefined' ? contextPath : '';
+			let base = typeof contextPath !== 'undefined' ? contextPath : '';
+		    if (base === '/') base = '';
 			try {
 				const response = await fetch(base + `/booking/refund/${orderId}`, {
 					method: 'POST',
