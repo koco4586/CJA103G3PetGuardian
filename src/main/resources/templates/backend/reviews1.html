@@ -122,8 +122,8 @@
                             <td>
                                 <button class="btn"
                                     style="background: #3498db; display: flex; align-items: center; gap: 5px;"
-                                    th:onclick="'openAuditModal(' + ${complaint.bookingReportId} + ')'">
-                                    <i class="fas fa-edit"></i> 處理中
+                                    th:onclick="'startAudit(' + ${complaint.bookingReportId} + ')'">
+                                    <i class="fas fa-edit"></i> 審核中
                                 </button>
                             </td>
                         </tr>
@@ -173,18 +173,27 @@
                                 <span th:text="${complaint.reportReason}"></span>
                             </td>
                             <td>
-                                <span th:if="${complaint.reportStatus == 1}" style="color: green; font-weight: bold;">
-                                    <i class="fas fa-check-circle"></i> 申訴通過
+                                <span th:if="${complaint.reportStatus == 1 or complaint.reportStatus == 3}"
+                                    style="color: green; font-weight: bold;">
+                                    <i class="fas fa-check-circle"></i> 審核通過
                                 </span>
-                                <span th:if="${complaint.reportStatus == 2}" style="color: red; font-weight: bold;">
-                                    <i class="fas fa-times-circle"></i> 申訴駁回
+                                <span th:if="${complaint.reportStatus == 2 or complaint.reportStatus == 4}"
+                                    style="color: red; font-weight: bold;">
+                                    <i class="fas fa-times-circle"></i> 審核駁回
                                 </span>
                             </td>
                             <td>
                                 <!-- 🔥 評論處理按鈕 -->
-                                <button class="btn-action" th:onclick="|handleReview(${complaint.bookingReportId})|"
+                                <button th:if="${complaint.reportStatus == 1 or complaint.reportStatus == 2}"
+                                    class="btn-action" th:onclick="|handleClosedReview(${complaint.bookingReportId})|"
                                     style="background: #3498db;">
                                     <i class="fa-solid fa-comment"></i> 評論處理
+                                </button>
+                                <!-- 🔥 審核已完成標籤 -->
+                                <button th:if="${complaint.reportStatus == 3 or complaint.reportStatus == 4}"
+                                    class="btn-action" disabled
+                                    style="background: #95a5a6; cursor: not-allowed; opacity: 0.8;">
+                                    <i class="fa-solid fa-check-double"></i> 審核已完成
                                 </button>
                             </td>
                         </tr>
@@ -208,6 +217,36 @@
 
 
     <script type="text/javascript">
+        let lastComplaintCount = 0;
+        let autoRefreshInterval;
+
+        function startAutoRefresh() {
+            // 每 15 秒檢查一次
+            autoRefreshInterval = setInterval(() => {
+                // 檢查是否有 SweetAlert2 彈窗開啟
+                const isSwalOpen = document.querySelector('.swal2-container') !== null;
+
+                if (!isSwalOpen) {
+                    // 沒有彈窗開啟，可以檢查是否有新案件
+                    fetch('/admin/reviews1')
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newCount = doc.querySelectorAll('#pending-section tbody tr').length;
+
+                            // 如果案件數量改變（且不是第一頁 0 案），自動刷新
+                            if (newCount !== lastComplaintCount) {
+                                console.log(`檢測到檢舉案件變動：${lastComplaintCount} → ${newCount}，自動刷新頁面`);
+                                location.reload();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('自動刷新檢查失敗:', error);
+                        });
+                }
+            }, 15000);
+        }
 
 
 
@@ -227,6 +266,25 @@
             document.getElementById(sectionId).classList.add('active');
         }
 
+        function startAudit(reportId) {
+            // 第一步：確認是否進入處理流程
+            Swal.fire({
+                title: '確認處理',
+                text: `您是否要開始處理申訴案號：#${reportId}？`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3498db',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: '是的，開始審核',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 第二步：彈出審核選項
+                    openAuditModal(reportId);
+                }
+            });
+        }
+
         function openAuditModal(reportId) {
             Swal.fire({
                 title: '審核結果',
@@ -235,26 +293,25 @@
                 showDenyButton: true,
                 showCancelButton: true,
                 confirmButtonText: '<i class="fa-solid fa-check"></i> 審核通過',
-                denyButtonText: '<i class="fa-solid fa-xmark"></i> 駁回審核',
+                denyButtonText: '<i class="fa-solid fa-xmark"></i> 申訴駁回',
                 cancelButtonText: '暫時關閉',
-                confirmButtonColor: '#27ae60', // 綠色 (審核通過)
-                denyButtonColor: '#e74c3c',    // 紅色 (駁回審核)
+                confirmButtonColor: '#27ae60', // 綠色 (核准)
+                denyButtonColor: '#e74c3c',    // 紅色 (駁回)
             }).then((result) => {
                 let status = 0;
                 let statusText = "";
 
                 if (result.isConfirmed) {
-                    status = 1; // 1 = 審核通過
+                    status = 1; // 假設 1 是核准
                     statusText = "審核通過";
                 } else if (result.isDenied) {
-                    status = 2; // 2 = 駁回審核
-                    statusText = "駁回審核";
+                    status = 2; // 假設 2 是駁回
+                    statusText = "審核駁回";
                 } else {
-                    return; // 使用者按暫時關閉
+                    return; // 使用者按取消
                 }
 
-                // 發送 AJAX 到後端（只更新檢舉狀態，不處理評論）
-                // 評論的處理統一在已結案區由管理員手動決定
+                // 第三步：發送 AJAX 到後端（只更新檢舉狀態，不處理評論）
                 sendAuditResult(reportId, status, statusText);
             });
         }
@@ -294,7 +351,7 @@
         }
 
         // 🔥 評論處理功能（已結案紀錄專用）
-        function handleReview(reportId) {
+        function handleClosedReview(reportId) {
             Swal.fire({
                 title: '評論處理',
                 text: '請選擇對被檢舉評論的處理方式：',
@@ -354,55 +411,19 @@
         }
 
 
-        // 🔥 智能自動刷新功能
-        let autoRefreshInterval;
-        let lastComplaintCount = document.querySelectorAll('#pending-section tbody tr').length;
-
-        function startAutoRefresh() {
-            // 每 30 秒檢查一次
-            autoRefreshInterval = setInterval(() => {
-                // 檢查是否有 SweetAlert2 彈窗開啟
-                const isSwalOpen = document.querySelector('.swal2-container') !== null;
-
-                if (!isSwalOpen) {
-                    // 沒有彈窗開啟，可以檢查是否有新案件
-                    fetch('/admin/reviews1')
-                        .then(response => response.text())
-                        .then(html => {
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(html, 'text/html');
-                            const newCount = doc.querySelectorAll('#pending-section tbody tr').length;
-
-                            // 如果案件數量改變，自動刷新
-                            if (newCount !== lastComplaintCount) {
-                                console.log(`檢測到新的檢舉案件：${lastComplaintCount} → ${newCount}，自動刷新頁面`);
-                                location.reload();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('自動刷新檢查失敗:', error);
-                        });
-                } else {
-                    console.log('偵測到審核彈窗開啟中，跳過自動刷新');
-                }
-            }, 15000); // 15 秒
-        }
-
-        // 頁面載入時啟動自動刷新
+        // 頁面載入時初始化
         document.addEventListener('DOMContentLoaded', () => {
-            startAutoRefresh();
-            console.log('✅ 後台審核頁面自動刷新已啟動（每 15 秒檢查一次）');
+            console.log('✅ 後台審核頁面已準備就緒');
+
+            // 取得初始案件數
+            lastComplaintCount = document.querySelectorAll('#pending-section tbody tr').length;
 
             // 🔥 初始化分頁功能
             initTablePagination('#pending-section table', 'pending-pagination', 10);
             initTablePagination('#closed-section table', 'closed-pagination', 10);
-        });
 
-        // 頁面卸載時清除定時器
-        window.addEventListener('beforeunload', () => {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
+            // 啟動自動刷新
+            startAutoRefresh();
         });
 
         // 🔥 分頁功能（每頁 10 筆，少於 10 筆不顯示分頁）

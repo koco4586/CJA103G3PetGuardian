@@ -92,6 +92,14 @@ public class Complaintcontroller {
                 }
             }
 
+            // 3. 🔥 關鍵修正：將檢舉案狀態晉升為「已完全處理」
+            // 狀態 1 -> 3 (審核通過且已處理評論)
+            // 狀態 2 -> 4 (審核駁回且已處理評論)
+            if (vo.getReportStatus() != null && (vo.getReportStatus() == 1 || vo.getReportStatus() == 2)) {
+                vo.setReportStatus(vo.getReportStatus() + 2);
+                complaintservice.insert(vo);
+            }
+
             // 3. 回傳成功
             java.util.Map<String, Object> response = new java.util.HashMap<>();
             response.put("success", true);
