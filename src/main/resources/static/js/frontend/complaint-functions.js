@@ -29,7 +29,7 @@ window.openComplaintModal = function (bookingOrderId) {
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 11000;
             backdrop-filter: blur(3px);
         ">
             <div style="
@@ -46,6 +46,27 @@ window.openComplaintModal = function (bookingOrderId) {
                     @keyframes modalFadeIn {
                         from { opacity: 0; transform: translateY(-20px); }
                         to { opacity: 1; transform: translateY(0); }
+                    }
+                    /* 🔥 動態注入檢舉標籤樣式，確保所有頁面皆可正常顯示 */
+                    .report-tag {
+                        display: inline-block;
+                        padding: 6px 14px;
+                        margin: 5px;
+                        background: #fff;
+                        border: 1px solid #ffcdd2;
+                        border-radius: 20px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                        color: #c62828;
+                        transition: all 0.2s;
+                    }
+                    .report-tag.selected {
+                        background: #ffcdd2;
+                        font-weight: bold;
+                        color: #b71c1c;
+                    }
+                    .report-tag:hover {
+                        background: #ffebee;
                     }
                 </style>
 
@@ -177,14 +198,10 @@ window.submitComplaint = function (bookingOrderId) {
     })
         .then(response => {
             if (response.ok || response.redirected) {
-                alert('✅ 檢舉已送出！\n頁面將每 10 秒自動更新，直到評論消失。');
+                alert('✅ 檢舉已送出！\n您的檢舉已收到，管理員將進行審核。\n評論將立即隱藏。');
                 closeComplaintModal();
-                // 🔥 檢舉功能：立即刷新一次，然後每 10 秒自動刷新
-                setTimeout(() => {
-                    window.location.reload();
-                    // 刷新後啟動定時器（透過 sessionStorage 標記）
-                    sessionStorage.setItem('autoRefreshAfterReport', 'true');
-                }, 100);
+                // 立即刷新以更新狀態
+                window.location.reload();
             } else {
                 alert('❌ 提交失敗，請稍後再試');
             }

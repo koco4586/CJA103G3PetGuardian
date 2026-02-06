@@ -14,6 +14,7 @@ import com.petguardian.booking.service.BookingService;
 import com.petguardian.evaluate.model.EvaluateDTO;
 import com.petguardian.evaluate.model.EvaluateVO;
 import com.petguardian.evaluate.service.EvaluateService;
+import com.petguardian.sitter.service.SitterService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -26,6 +27,9 @@ public class PetEvaluateController {
 
     @Autowired
     private BookingService bookingOrderSvc;
+
+    @Autowired
+    private SitterService sitterService;
 
     /**
      * API 端點：根據保姆 ID 撈取所有評價資料
@@ -184,16 +188,17 @@ public class PetEvaluateController {
     public ResponseEntity<?> getReviewsByMemberId(@PathVariable Integer memberId, HttpSession session) {
         try {
             Integer currentMemId = (Integer) session.getAttribute("memId");
-            Integer roleId = (Integer) session.getAttribute("roleId");
-
             if (currentMemId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"error\":\"請先登入\"}");
             }
 
+            // 🔥 強化身分判定：透過 SitterService 確認保姆身分
+            boolean isSitter = (sitterService.getSitterByMemId(currentMemId) != null);
+            boolean isAdmin = (session.getAttribute("admId") != null);
             boolean isOwner = currentMemId.equals(memberId);
-            boolean isSitter = (roleId != null && roleId == 0);
 
-            if (!isOwner && !isSitter) {
+            if (!isOwner && !isSitter && !isAdmin) {
+                System.out.println("⚠️ [API] 權限拒絕: memId=" + currentMemId + ", targetMember=" + memberId);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"error\":\"無權限查看此評價\"}");
             }
 

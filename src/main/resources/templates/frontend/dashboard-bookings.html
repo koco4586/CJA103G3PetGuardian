@@ -393,8 +393,16 @@
 					function (review) {
 						const stars = renderStars(review.starRating || 0);
 						const reviewDate = new Date(review.createTime).toLocaleDateString('zh-TW');
-						// 優先顯示名字，如果沒有則顯示 ID
-						const reviewerName = review.senderName || `保母 ID: ${review.senderId}`;
+						// 🔥 檢舉按鈕邏輯：若不是本人發出的評價，才顯示檢舉按鈕
+						const isOwnReview = memId > 0 && Number(review.senderMemId) === memId;
+						const reportBtnHTML = !isOwnReview ? `
+							<button class="btn btn-sm btn-outline-danger" 
+								style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
+								onclick="reportReview(this, ${review.bookingOrderId})">
+								<i class="fas fa-flag"></i> 檢舉
+							</button>
+						` : '';
+
 						return `
 							<div class="review-card" style="
 								border: none;
@@ -405,11 +413,7 @@
 								<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
 									<div style="display: flex; align-items: center; gap: 10px;">
 										<strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
-										<button class="btn btn-sm btn-outline-danger" 
-											style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
-											onclick="reportReview(this, ${review.bookingOrderId})">
-											<i class="fas fa-flag"></i> 檢舉
-										</button>
+										${reportBtnHTML}
 									</div>
 									<div style="color: #ffc107;">
 										${stars}

@@ -107,7 +107,8 @@
 						<!-- 圖片區 -->
 						<div class="avatar-area">
 							<img th:src="@{${order.petImage != null ? order.petImage : '/images/default-pet.png'}}"
-								onerror="this.src='/images/default-pet.png'" alt="Pet" class="pet-avatar-img">
+								onerror="this.onerror=null; this.src='/images/default-pet.png'" alt="Pet"
+								class="pet-avatar-img">
 						</div>
 
 						<!-- 資訊區 -->
@@ -143,6 +144,9 @@
 											<i class="far fa-comment-dots"></i> 聯絡
 										</button>
 									</form>
+
+
+
 									<button class="btn btn-primary btn-sm"
 										th:onclick="'acceptOrder(' + ${order.bookingOrderId} + ')'">
 										<i class="fas fa-check"></i> 接受
@@ -162,14 +166,22 @@
 											<i class="far fa-comment-dots"></i> 聯絡
 										</button>
 									</form>
+
+
+
 									<button class="btn btn-primary btn-sm"
 										th:onclick="'completeOrder(' + ${order.bookingOrderId} + ')'">
 										<i class="fas fa-flag-checkered"></i> 完成
 									</button>
 								</th:block>
 
-								<!-- 已完成/取消 -->
 								<th:block th:if="${order.orderStatus >= 2}">
+									<button class="btn btn-outline-info btn-sm" th:data-mem-id="${order.memId}"
+										th:data-mem-name="${order.memName}"
+										onclick="showMemberReviewModal(this.getAttribute('data-mem-id'), this.getAttribute('data-mem-name'))">
+										<i class="fas fa-user-tag"></i> 會員評價
+									</button>
+
 									<button class="btn btn-primary btn-sm"
 										th:onclick="|injectSitterEvalBox(this, ${order.bookingOrderId}, ${order.memId})|">
 										<i class="fas fa-paw"></i> 評價
@@ -209,9 +221,11 @@
 	<!-- Scripts -->
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>
+	<script th:src="@{/js/frontend/complaint-functions.js}"></script>
 	<script th:inline="javascript">
 		/*<![CDATA[*/
 		const contextPath = /*[[@{/}]]*/ '';
+		window.currentMemId = /*[[${session.memId}]]*/ 0;
 		/*]]>*/
 		async function updateStatus(orderId, newStatus) {
 			const statusText = {
