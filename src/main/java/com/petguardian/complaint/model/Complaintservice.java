@@ -17,9 +17,6 @@ public class Complaintservice {
     @Autowired
     private com.petguardian.evaluate.model.EvaluateRepository evaluateRepository;
 
-    @Autowired
-    private com.petguardian.sitter.model.SitterRepository sitterRepository;
-
     public void insert(ComplaintVO vo) {
         repository.save(vo);
     }
@@ -52,52 +49,19 @@ public class Complaintservice {
             memberRepository.findById(vo.getToReportedMemId()).ifPresent(m -> vo.setAccusedName(m.getMemName()));
         }
 
-        // 3. 抓取被檢舉的評價內容
-        // 📌 重要邏輯：被檢舉的評價是「被檢舉人」寫的那則評價
-        // - toReportedMemId = 被檢舉人的 memId
-        // - senderId = 評價的發送者（可能是 memId 或 sitterId）
-        // - 需要處理兩種情況：直接匹配 memId，或轉換成 sitterId 後匹配
-        if (vo.getBookingOrderId() != null && vo.getToReportedMemId() != null) {
+        // 3. 抓取被檢舉的評價內容 (根據 bookingOrderId)
+        if (vo.getBookingOrderId() != null) {
             List<com.petguardian.evaluate.model.EvaluateVO> evals = evaluateRepository
                     .findByBookingOrderId(vo.getBookingOrderId());
-
             if (!evals.isEmpty()) {
-                com.petguardian.evaluate.model.EvaluateVO targetEval = null;
-
-                // 🔥 步驟1：先嘗試用 memId 直接匹配（會員寫的評價）
-                targetEval = evals.stream()
-                        .filter(e -> e.getSenderId() != null && e.getSenderId().equals(vo.getToReportedMemId()))
+                // 🔥 根據被檢舉人來判斷應該取哪個評論
+                // 被檢舉人是評論的發送者（senderId）
+                com.petguardian.evaluate.model.EvaluateVO targetEval = evals.stream()
+                        .filter(e -> e.getSenderId().equals(vo.getToReportedMemId()))
                         .findFirst()
-                        .orElse(null);
+                        .orElse(evals.get(0)); // 如果找不到，就取第一個（向後相容）
 
-                // 🔥 步驟2：如果找不到，嘗試將 memId 轉換成 sitterId 再匹配（保姆寫的評價）
-                if (targetEval == null) {
-                    // 查詢該 memId 對應的 sitterId
-                    com.petguardian.sitter.model.SitterVO sitter = sitterRepository
-                            .findByMemId(vo.getToReportedMemId());
-
-                    if (sitter != null) {
-                        Integer sitterId = sitter.getSitterId();
-                        // 用 sitterId 再次匹配
-                        targetEval = evals.stream()
-                                .filter(e -> e.getSenderId() != null && e.getSenderId().equals(sitterId))
-                                .findFirst()
-                                .orElse(null);
-                    }
-                }
-
-                if (targetEval != null) {
-                    vo.setReportedContent(targetEval.getContent());
-                } else {
-                    // 如果找不到對應的評價，設定提示訊息
-                    vo.setReportedContent("[系統提示] 找不到被檢舉人的評價內容 (訂單ID: " + vo.getBookingOrderId() +
-                            ", 被檢舉人ID: " + vo.getToReportedMemId() + ")");
-                    System.err.println("⚠️ 檢舉案件 #" + vo.getBookingReportId() +
-                            " 找不到對應的評價 (訂單:" + vo.getBookingOrderId() +
-                            ", 被檢舉人:" + vo.getToReportedMemId() + ")");
-                }
-            } else {
-                vo.setReportedContent("[系統提示] 此訂單沒有任何評價");
+                vo.setReportedContent(targetEval.getContent());
             }
         }
     }

@@ -329,7 +329,19 @@
 				let base = typeof contextPath !== 'undefined' ? contextPath : '';
 				if (base === '/') base = '';
 				const response = await fetch(base + `/pet/evaluate/member/${memId}`);
-				const reviews = await response.json();
+				let reviews = await response.json();
+
+				// 檢查是否返回錯誤對象 (由 Controller Map.of 回傳)
+				if (reviews && reviews.error) {
+					bookingListContainer.innerHTML = `<div class="alert alert-danger" style="margin: 2rem; border-radius: 1rem;">⚠️ 載入評價失敗: ${reviews.error}</div>`;
+					return;
+				}
+
+				// 確保 reviews 是一個數列，防止 calculateAvgRating 崩潰
+				if (!Array.isArray(reviews)) {
+					console.warn('API 回傳格式不正確:', reviews);
+					reviews = [];
+				}
 
 				// 清空訂單列表區域
 				bookingListContainer.innerHTML = '';
