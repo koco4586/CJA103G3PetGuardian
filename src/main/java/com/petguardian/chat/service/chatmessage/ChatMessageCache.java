@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Component
 public class ChatMessageCache {
 
-    private static final String HISTORY_KEY = "chat:room:%d:history_v2";
+    private static final String HISTORY_KEY = "chat:room:%d:history";
     private static final String WARMED_KEY = "chat:room:%d:warmed";
     private static final String QUEUE_KEY = "chat:write_queue:%d";
     private static final String RECENT_LOG_HASH = "chat:recent_msgs";
@@ -58,7 +58,7 @@ public class ChatMessageCache {
         String key = String.format(HISTORY_KEY, roomId);
         try {
             return circuitBreaker.executeSupplier(() -> {
-                // Lexicographical ZSET: Score is 0, so sorted by Member (JSON String)
+                // Lexicographical ZSET: Score is 0, so sorted by TSID (JSON String)
                 // TSID is Base32 (sortable string), so reverse range gives newest messages
                 Set<String> jsonSet = redisJsonMapper.getStringTemplate().opsForZSet()
                         .reverseRange(key, 0, limit - 1);

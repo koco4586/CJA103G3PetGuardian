@@ -207,7 +207,7 @@ function onMessageReceived(dto) {
     }
 
     if (shouldAppend) {
-        appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName, dto.isRead, 0, dto.chatTime);
+        appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName, dto.isRead, dto.reportStatus, dto.chatTime);
 
 
         // Real-time "Mark as Read"
@@ -559,7 +559,7 @@ function renderMessagesBatch(messages, container, mode = RenderMode.INITIAL) {
         }
 
         const isSentByMe = (msg.senderId === ChatState.currentUserId);
-        const reportStatus = msg.reportStatus || 0;
+        const reportStatus = (msg.reportStatus !== undefined) ? msg.reportStatus : null;
         const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName, msg.isRead, reportStatus, msg.chatTime);
         fragment.appendChild(msgEl);
     });
@@ -609,7 +609,7 @@ function renderMessagesBatch(messages, container, mode = RenderMode.INITIAL) {
  * Create message DOM element (XSS-safe via createTextNode).
  * Added chatTime parameter
  */
-function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus = 0, chatTime = null) {
+function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus = null, chatTime = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isSent ? 'sent' : 'received');
 
@@ -632,12 +632,13 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
             showContextMenu(e, messageId, reportStatus);
         });
 
-        // Add visual indicator if reported (Status 1: Pending, 3: Rejected)
+        // Add visual indicator if reported (Status 0: Pending, 3: Rejected)
         // Status 2 is Hidden, so handling it separately below
-        if (reportStatus == 1 || reportStatus == 3) {
+        if (reportStatus !== null && (reportStatus === 0 || reportStatus === 3)) {
             const reportIcon = document.createElement('i');
             reportIcon.className = 'fas fa-flag';
-            reportIcon.style.cssText = 'font-size: 10px; color: #e74c3c; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+            const flagColor = (reportStatus === 3) ? '#2ecc71' : '#e74c3c'; // Green for Rejected, Red for Pending
+            reportIcon.style.cssText = `font-size: 10px; color: ${flagColor}; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);`;
             msgDiv.appendChild(reportIcon);
         }
     }
@@ -692,7 +693,7 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
 /**
  * Append single message and smart-scroll.
  */
-function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead = false, reportStatus = 0, chatTime = new Date().toISOString()) {
+function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead = false, reportStatus = null, chatTime = new Date().toISOString()) {
     // Duplicate guard (O(1))
     if (messageId && ChatState.messageIds.has(messageId)) {
         return;
