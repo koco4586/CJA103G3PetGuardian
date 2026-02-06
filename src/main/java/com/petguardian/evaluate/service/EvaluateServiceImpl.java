@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import com.petguardian.evaluate.model.EvaluateDTO;
 import com.petguardian.evaluate.model.EvaluateRepository;
 import com.petguardian.evaluate.model.EvaluateVO;
-import com.petguardian.sitter.model.SitterMemberRepository;
-import com.petguardian.sitter.model.SitterMemberVO;
+import com.petguardian.member.model.Member;
+import com.petguardian.member.repository.management.MemberManagementRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
@@ -23,10 +23,10 @@ public class EvaluateServiceImpl implements EvaluateService {
     private EvaluateRepository repo;
 
     @Autowired
-    private SitterMemberRepository sitterMemberRepository;
+    private SitterRepository sitterRepository;
 
     @Autowired
-    private SitterRepository sitterRepository;
+    private MemberManagementRepository memberManagementRepository;
 
     @Override
     public void handleSubmission(EvaluateVO vo, String currentRole) {
@@ -113,6 +113,12 @@ public class EvaluateServiceImpl implements EvaluateService {
     @Override
     public List<EvaluateVO> getReviewsBySitterId(Integer sitterId) {
         List<EvaluateVO> reviews = repo.findByReceiverId(sitterId);
+
+        // 🔥 檢舉功能：過濾隱藏與刪除的評論
+        reviews = reviews.stream()
+                .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
+                .collect(Collectors.toList());
+
         // 填充評價者名字（會員評保母，所以 senderId 是會員ID）
         fillSenderNames(reviews);
         return reviews;
@@ -120,9 +126,14 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
     public List<EvaluateVO> getReviewsByMemberId(Integer memberId) {
-        // roleType=0 代表保母評價會員
+        // 查詢該會員收到的評價 (roleType = 0 表示保姆評會員)
         List<EvaluateVO> reviews = repo.findByReceiverIdAndRoleType(memberId, 0);
-        // 填充評價者名字（保母評會員，所以 senderId 是保母ID）
+
+        // 🔥 檢舉功能：過濾隱藏與刪除的評論
+        reviews = reviews.stream()
+                .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
+                .collect(Collectors.toList());
+
         fillSenderNames(reviews);
         return reviews;
     }
@@ -151,9 +162,9 @@ public class EvaluateServiceImpl implements EvaluateService {
                         .orElse(null);
             } else if (review.getRoleType() == 1) {
                 // roleType=1: 會員評保母，senderId 是會員ID (memId)
-                // 從 SITTER_MEMBER 表查詢會員名字
-                senderName = sitterMemberRepository.findById(review.getSenderId())
-                        .map(SitterMemberVO::getMemName)
+                // 從 MEMBER 表查詢會員名字（無論該會員是否為保姆）
+                senderName = memberManagementRepository.findById(review.getSenderId())
+                        .map(Member::getMemName)
                         .orElse(null);
             }
 

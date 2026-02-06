@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import com.petguardian.evaluate.model.EvaluateVO;
 import com.petguardian.evaluate.model.EvaluateRepository;
 import com.petguardian.sitter.model.SitterRepository;
-import com.petguardian.sitter.model.SitterVO;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -133,6 +133,65 @@ public class PetComplaintController {
             // 再次檢查必要欄位，防止資料庫外鍵約束失敗
             if (vo.getToReportedMemId() == null) {
                 return ResponseEntity.badRequest().body("無法識別被檢舉人的會員身份，請確認該保姆/會員連結有效");
+            }
+
+            // 🔥 檢舉功能：檢舉送出時，只隱藏「被檢舉人」撰寫的評論
+            // 📌 重要：不要隱藏該訂單的所有評論，只隱藏被檢舉的那則
+            if (vo.getToReportedMemId() != null) {
+                List<EvaluateVO> reviews = evaluateRepository.findByBookingOrderId(vo.getBookingOrderId());
+                System.out.println(">>> 🔍 開始尋找要隱藏的評價");
+                System.out.println(">>> 訂單ID: " + vo.getBookingOrderId());
+                System.out.println(">>> 被檢舉人ID (toReportedMemId): " + vo.getToReportedMemId());
+                System.out.println(">>> 該訂單的評價數量: " + (reviews != null ? reviews.size() : 0));
+
+                if (reviews != null && !reviews.isEmpty()) {
+                    boolean found = false;
+
+                    // 步驟1：先嘗試用 memId 直接匹配（會員寫的評價）
+                    for (EvaluateVO review : reviews) {
+                        System.out.println(">>> 檢查評價 #" + review.getEvaluateId() +
+                                " - SenderId: " + review.getSenderId() +
+                                ", ReceiverId: " + review.getReceiverId() +
+                                ", RoleType: " + review.getRoleType());
+
+                        if (review.getSenderId() != null && review.getSenderId().equals(vo.getToReportedMemId())) {
+                            review.setIsHidden(1); // 標記為已隱藏
+                            evaluateRepository.save(review);
+                            System.out.println(">>> ✅ 已隱藏被檢舉評價 (EvaluateID: " + review.getEvaluateId() +
+                                    ", SenderId: " + review.getSenderId() + ")");
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    // 步驟2：如果找不到，嘗試將 memId 轉換成 sitterId 再匹配（保姆寫的評價）
+                    if (!found) {
+                        System.out.println(">>> 用 memId 找不到，嘗試轉換成 sitterId");
+                        com.petguardian.sitter.model.SitterVO sitter = sitterRepository
+                                .findByMemId(vo.getToReportedMemId());
+
+                        if (sitter != null) {
+                            Integer sitterId = sitter.getSitterId();
+                            System.out.println(">>> 找到對應的 sitterId: " + sitterId);
+
+                            for (EvaluateVO review : reviews) {
+                                if (review.getSenderId() != null && review.getSenderId().equals(sitterId)) {
+                                    review.setIsHidden(1); // 標記為已隱藏
+                                    evaluateRepository.save(review);
+                                    System.out.println(">>> ✅ 已隱藏被檢舉評價 (EvaluateID: " + review.getEvaluateId() +
+                                            ", SenderId(sitterId): " + review.getSenderId() + ")");
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!found) {
+                        System.err.println(">>> ⚠️ 沒有找到匹配的評價！toReportedMemId=" + vo.getToReportedMemId() +
+                                " 與所有評價的 senderId 都不匹配");
+                    }
+                }
             }
 
             complaintservice.insert(vo);

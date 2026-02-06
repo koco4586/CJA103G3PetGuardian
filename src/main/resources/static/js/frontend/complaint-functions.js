@@ -177,10 +177,14 @@ window.submitComplaint = function (bookingOrderId) {
     })
         .then(response => {
             if (response.ok || response.redirected) {
-                alert('✅ 申訴成功！\n您的申訴已收到，管理員將進行審核。');
+                alert('✅ 檢舉已送出！\n頁面將每 10 秒自動更新，直到評論消失。');
                 closeComplaintModal();
-                // 可選：重新載入頁面
-                // window.location.reload();
+                // 🔥 檢舉功能：立即刷新一次，然後每 10 秒自動刷新
+                setTimeout(() => {
+                    window.location.reload();
+                    // 刷新後啟動定時器（透過 sessionStorage 標記）
+                    sessionStorage.setItem('autoRefreshAfterReport', 'true');
+                }, 100);
             } else {
                 alert('❌ 提交失敗，請稍後再試');
             }
@@ -342,7 +346,7 @@ function sendReportToBackend(orderId, reason, reportBox, isModal = false) {
     })
         .then(async response => {
             if (response.ok || response.redirected) {
-                alert('✅ 檢舉已送出！\n您的檢舉已收到，管理員將進行審核。');
+                alert('✅ 檢舉已送出！\n您的檢舉已收到，管理員將進行審核。\n評論將立即隱藏。');
 
                 if (isModal) {
                     closeComplaintModal();
@@ -352,6 +356,11 @@ function sendReportToBackend(orderId, reason, reportBox, isModal = false) {
                     if (textarea) textarea.value = '';
                     reportBox.querySelectorAll('.report-tag.selected').forEach(tag => tag.classList.remove('selected'));
                 }
+
+                // 🔥 檢舉功能：延遲刷新以確保 alert 完全關閉
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
             } else {
                 const errorMsg = await response.text();
                 alert('❌ 送出失敗：' + (errorMsg || '請稍後再試'));
