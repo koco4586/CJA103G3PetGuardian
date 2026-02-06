@@ -1,6 +1,7 @@
 package com.petguardian.home.controller;
 
 import com.petguardian.seller.model.Product;
+import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterVO;
 import com.petguardian.sitter.service.SitterService;
 import com.petguardian.store.service.StoreService;
@@ -9,7 +10,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 首頁控制器
@@ -25,6 +29,9 @@ public class HomeController {
     @Autowired
     private StoreService storeService;
 
+    @Autowired
+    private SitterMemberRepository sitterMemberRepository;
+
     /**
      * 首頁
      * URL: / 或 /index
@@ -38,6 +45,17 @@ public class HomeController {
                 ? allSitters.stream().limit(3).toList()
                 : List.of();
 
+        // 取得保母的會員圖片（與 /booking/services 同步）
+        List<Integer> memIds = featuredSitters.stream()
+                .map(SitterVO::getMemId)
+                .collect(Collectors.toList());
+
+        Map<Integer, String> sitterImages = new HashMap<>();
+        sitterMemberRepository.findAllById(memIds).forEach(m -> {
+            String img = (m.getMemImage() != null) ? m.getMemImage() : "/images/default-avatar.png";
+            sitterImages.put(m.getMemId(), img);
+        });
+
         // 取得所有上架商品（前3件作為熱門商品）
         List<Product> allProducts = storeService.getAllActiveProducts();
         List<Product> featuredProducts = (allProducts != null)
@@ -45,6 +63,7 @@ public class HomeController {
                 : List.of();
 
         model.addAttribute("featuredSitters", featuredSitters);
+        model.addAttribute("sitterImages", sitterImages);
         model.addAttribute("featuredProducts", featuredProducts);
 
         return "frontend/index";

@@ -8,11 +8,12 @@
 <div th:fragment="sidebar(activePage)" class="sidebar">
     <div class="text-center mb-2">
         <div class="avatar-wrapper">
-            <!-- 會員頭像：使用標準化的條件判斷格式 -->
-            <img th:if="${currentMember != null and currentMember.memImage != null}" th:src="${currentMember.memImage}"
-                class="avatar" alt="會員頭像">
+            <!-- 會員頭像：從資料庫讀取 memImage -->
+            <img th:if="${currentMember != null and currentMember.memImage != null}"
+                th:src="@{${currentMember.memImage}}" class="avatar" alt="會員頭像">
             <img th:unless="${currentMember != null and currentMember.memImage != null}"
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Member" class="avatar" alt="預設頭像">
+                src="/images/member/aed4ec81-2887-41e6-8ed3-cd4cd6aa17f3_petguardianMember01.png" class="avatar"
+                alt="預設頭像">
         </div>
         <h4 th:text="${currentMember != null and currentMember.memName != null} ? ${currentMember.memName} : '會員中心'">
             會員中心</h4>
@@ -32,7 +33,8 @@
         <a href="/booking/memberOrders" class="menu-item" th:classappend="${activePage == 'bookings'} ? ' active' : ''">
             <i class="fas fa-calendar-check"></i> 保母預約紀錄
         </a>
-        <a href="/dashboard/favorites" class="menu-item" th:classappend="${activePage == 'favorites'} ? ' active' : ''">
+        <a href="/dashboard/favorites/sitters" class="menu-item"
+            th:classappend="${activePage == 'favorites'} ? ' active' : ''">
             <i class="fas fa-heart"></i> 收藏列表
         </a>
         <a href="/sitter/apply" class="menu-item"
