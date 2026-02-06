@@ -69,6 +69,7 @@ public class ForumPostController {
 		
 		List<ForumPostVO> postList = forumPostService.getAllActiveByForumId(forumId);
 		
+		redisService.incrementForumViewCount(forumId);
 		// redis處理熱門貼文邏輯
 		List<Integer> postIds = redisService.getTopHotPostIds(5);
 		List<ForumPostVO> topHotPostList = forumPostService.getTopHotPostsByPostIds(postIds);
