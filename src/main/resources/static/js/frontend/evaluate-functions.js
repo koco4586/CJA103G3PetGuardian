@@ -1,4 +1,9 @@
 // ========================================
+// 評價系統功能庫 (Version: 2026.02.06.v2)
+// ========================================
+console.log("✅ [Evaluate] 評價系統腳本已載入 (v2)");
+
+// ========================================
 // 評價輸入功能區塊
 // ========================================
 
@@ -420,6 +425,22 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
     fetch(base + `/pet/evaluate/list/${sitterId}`)
         .then(res => res.json())
         .then(reviews => {
+            // 檢查是否返回錯誤對象
+            if (reviews && reviews.error) {
+                console.error('API 報錯:', reviews.error);
+                const container = document.querySelector(containerSelector);
+                if (container) {
+                    container.innerHTML = `<div class="alert alert-danger" style="margin: 20px;">⚠️ 載入評價失敗: ${reviews.error}</div>`;
+                }
+                return;
+            }
+
+            // 確保 reviews 是一個數列
+            if (!Array.isArray(reviews)) {
+                console.warn('評價資料格式不正確，預期為陣列:', reviews);
+                reviews = [];
+            }
+
             // 更新標題顯示 "XXX 的歷史評價"
             if (sitterName) {
                 const reviewsSection = document.getElementById('reviews');
@@ -498,11 +519,12 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                                     <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                            ${!review.isOwnReview ? `
                                             <button class="btn btn-sm btn-outline-danger" 
                                                 style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
                                                 onclick="reportReview(this, ${review.bookingOrderId})">
                                                 <i class="fas fa-flag"></i> 檢舉
-                                            </button>
+                                            </button>` : ''}
                                         </div>
                                         <div>
                                             <p style="margin: 0; color: #555; line-height: 1.6; word-break: break-all;">
@@ -539,11 +561,12 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                                 <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
                                         <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                        ${!review.isOwnReview ? `
                                         <button class="btn btn-sm btn-outline-danger" 
                                             style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
                                             onclick="reportReview(this, ${review.bookingOrderId})">
                                             <i class="fas fa-flag"></i> 檢舉
-                                        </button>
+                                        </button>` : ''}
                                     </div>
                                     <p style="margin: 0; color: #555; line-height: 1.6; word-break: break-all;">
                                         ${plainContent || '無評論內容'}
@@ -592,6 +615,24 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
         })
         .then(reviews => {
             console.log('📦 收到評價資料:', reviews);
+
+            // 檢查是否返回錯誤對象
+            if (reviews && reviews.error) {
+                console.error('API 報錯 (Dashboard):', reviews.error);
+                const reviewsCard = document.getElementById('reviews-card');
+                if (reviewsCard) {
+                    const h3 = reviewsCard.querySelector('h3');
+                    if (h3) h3.innerHTML += ` <small style="color:red; font-size:0.8rem;">(載入失敗: ${reviews.error})</small>`;
+                }
+                return;
+            }
+
+            // 確保 reviews 是一個數列
+            if (!Array.isArray(reviews)) {
+                console.warn('Dashboard 評價資料格式不正確:', reviews);
+                reviews = [];
+            }
+
             console.log('📊 評價數量:', reviews.length);
 
             // 找到歷史評價卡片 (id="reviews-card")
@@ -689,11 +730,12 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                                     <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                            ${!review.isOwnReview ? `
                                             <button class="btn btn-sm btn-outline-danger" 
                                                 style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
                                                 onclick="reportReview(this, ${review.bookingOrderId})">
                                                 <i class="fas fa-flag"></i> 檢舉
-                                            </button>
+                                            </button>` : ''}
                                         </div>
                                         <div>
                                             <p style="margin: 0; color: #555; line-height: 1.6; word-break: break-all;">
@@ -730,11 +772,12 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                                 <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
                                         <strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
+                                        ${!review.isOwnReview ? `
                                         <button class="btn btn-sm btn-outline-danger" 
                                             style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
                                             onclick="reportReview(this, ${review.bookingOrderId})">
                                             <i class="fas fa-flag"></i> 檢舉
-                                        </button>
+                                        </button>` : ''}
                                     </div>
                                     <div>
                                         <p style="margin: 0; color: #555; line-height: 1.6; word-break: break-all;">
@@ -769,7 +812,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
  * @returns {number} 平均星數（保留一位小數）
  */
 window.calculateAvgRating = function (reviews) {
-    if (!reviews || reviews.length === 0) return 0;
+    if (!reviews || !Array.isArray(reviews) || reviews.length === 0) return "0.0";
 
     const total = reviews.reduce((sum, review) => sum + (review.starRating || 0), 0);
     return (total / reviews.length).toFixed(1);
@@ -786,6 +829,19 @@ window.calculateAvgRating = function (reviews) {
 window.initPagination = function (items, pageSize, containerId, paginationId, renderItem) {
     let currentPage = 1;
     const totalPages = Math.ceil(items.length / pageSize);
+    const pagination = document.getElementById(paginationId);
+
+    // 🔥 增強：若資料不足一頁，隱藏分頁容器並直接渲染
+    if (totalPages <= 1) {
+        if (pagination) pagination.style.display = 'none';
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = items.map(item => renderItem(item)).join('');
+        }
+        return;
+    }
+
+    if (pagination) pagination.style.display = 'flex';
 
     function renderPage(page) {
         const container = document.getElementById(containerId);
@@ -869,81 +925,142 @@ window.renderStars = function (rating) {
  * @param {string} memberName - 會員名稱
  * @param {HTMLElement} buttonElement - 觸發按鈕元素
  */
-window.loadMemberReviews = function (memberId, memberName, buttonElement) {
-    const parentCard = buttonElement.closest('.booking-card');
-
-    // 檢查是否已經展開評論區塊
-    let reviewBox = parentCard.nextElementSibling;
-    if (reviewBox && reviewBox.classList.contains('member-review-box')) {
-        // 如果已展開，則收合並移除
-        reviewBox.remove();
-        return;
-    }
+/**
+ * 彈窗顯示會員受評紀錄
+ * @param {number} memberId - 會員 ID
+ * @param {string} memberName - 會員名稱
+ */
+window.showMemberReviewModal = function (memberId, memberName) {
+    const oldModal = document.getElementById('memberReviewModal');
+    if (oldModal) oldModal.remove();
 
     let base = typeof contextPath !== 'undefined' ? contextPath : '';
     if (base === '/') base = '';
+
+    // 🔥 嘗試取得當前登入者 ID (用於防止自我檢舉)
+    const currentMemId = Number(window.currentMemId) || 0;
+
     fetch(base + `/pet/evaluate/member/${memberId}`)
         .then(res => res.json())
         .then(reviews => {
-            console.log('📦 收到會員評價資料:', reviews);
-
-            // 建立評論顯示區塊
-            reviewBox = document.createElement('div');
-            reviewBox.className = 'member-review-box';
-
-            // 建立標題
-            let headerHTML = `
-                <h4>
-                    <i class="fas fa-user-circle"></i> ${memberName} 的歷史評價
-                    <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">(共 ${reviews.length} 筆)</span>
-                </h4>
-            `;
-
-            // 建立評價列表
-            let reviewsHTML = '<div class="reviews-container">';
-
-            if (reviews.length === 0) {
-                reviewsHTML += `
-                    <div style="text-align: center; padding: 2rem; color: #999;">
-                        <i class="far fa-comment-dots fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
-                        <p>目前尚無評價紀錄</p>
-                    </div>
-                `;
-            } else {
-                reviews.forEach(review => {
-                    const stars = renderStars(review.starRating || 0);
-                    const reviewDate = new Date(review.createTime).toLocaleDateString('zh-TW');
-
-                    reviewsHTML += `
-                        <div class="review-card">
-                            <div class="review-header">
-                                <div>
-                                    <strong>保母 ${review.senderId}</strong>
-                                </div>
-                                <div style="color: #ffc107;">
-                                    ${stars}
-                                </div>
-                            </div>
-                            <p class="mb-0 text-muted">${review.content || ''}</p>
-                            <small class="text-muted">${reviewDate}</small>
-                        </div>
-                    `;
-                });
+            if (!Array.isArray(reviews)) {
+                console.error('API 回傳格式錯誤:', reviews);
+                throw new Error(reviews.error || '載入評價失敗');
             }
 
-            reviewsHTML += '</div>';
+            const avg = calculateAvgRating(reviews);
+            const reviewCount = reviews.length;
 
-            // 組合完整 HTML
-            reviewBox.innerHTML = headerHTML + reviewsHTML;
+            const modalHTML = `
+                <div id="memberReviewModal" style="
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.6); display: flex; justify-content: center;
+                    align-items: center; z-index: 10001; backdrop-filter: blur(4px);
+                ">
+                    <div style="
+                        background: white; width: 90%; max-width: 600px; max-height: 80vh;
+                        border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;
+                        box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideUp 0.3s ease;
+                    ">
+                        <style>
+                            @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                            .review-scroll-area::-webkit-scrollbar { width: 6px; }
+                            .review-scroll-area::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+                            .pagination-container button { padding: 6px 12px; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+                            .pagination-container button:hover:not(:disabled) { background: #f8f9fa; border-color: #3b82f6; color: #3b82f6; }
+                            .pagination-container button.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+                        </style>
+                        
+                        <div style="padding: 20px 25px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 1.25rem; color: #1e293b;">
+                                <i class="fas fa-user-check" style="color: #3b82f6;"></i> ${memberName} 的歷史受評
+                                <span style="font-size: 0.8rem; color: #94a3b8; font-weight: normal; margin-left: 10px;">(ID: ${memberId})</span>
+                            </h3>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="text-align: right;">
+                                    <div style="color: #f39c12; font-weight: bold; font-size: 1.1rem;"><i class="fas fa-star"></i> ${avg}</div>
+                                    <div style="font-size: 0.75rem; color: #94a3b8;">共 ${reviewCount} 筆評價</div>
+                                </div>
+                                <button onclick="this.closest('#memberReviewModal').remove()" style="background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer;">&times;</button>
+                            </div>
+                        </div>
 
-            // 插入到訂單卡片之後
-            parentCard.insertAdjacentElement('afterend', reviewBox);
+                        <div class="review-scroll-area" style="padding: 0 25px 15px; overflow-y: auto; flex: 1;">
+                            <div id="modalReviewListContainer"></div>
+                        </div>
+                        
+                        <div id="modalPaginationContainer" class="pagination-container" style="padding: 15px 25px; border-top: 1px solid #eee; display: flex; justify-content: center; gap: 8px;"></div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // 分頁顯示邏輯
+            if (reviewCount === 0) {
+                document.getElementById('modalReviewListContainer').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <i class="far fa-comment-dots fa-3x" style="margin-bottom: 15px; display: block;"></i>
+                        <p>該會員目前尚無評價紀錄</p>
+                    </div>
+                `;
+                document.getElementById('modalPaginationContainer').style.display = 'none';
+            } else {
+                initPagination(
+                    reviews,
+                    5, // 彈窗內每頁 5 筆較為舒適
+                    'modalReviewListContainer',
+                    'modalPaginationContainer',
+                    function (review) {
+                        const stars = renderStars(review.starRating || 0);
+                        const reviewDate = new Date(review.createTime).toLocaleDateString('zh-TW');
+                        const reviewerName = review.senderName || `保母 ID: ${review.senderId}`;
+                        const parsed = parseEvaluationContent(review.content);
+                        const tagsHTML = renderTagsVertical(parsed.tags);
+
+                        // 🔥 檢舉按鈕邏輯：如果不是本人評價，則顯示檢舉按鈕
+                        const showReportBtn = currentMemId > 0 && Number(review.senderMemId) !== currentMemId;
+                        const reportBtnHTML = showReportBtn ? `
+                            <button class="btn btn-sm btn-outline-danger" 
+                                style="padding: 2px 8px; font-size: 0.75rem; margin-left: 8px; border-radius: 4px;"
+                                onclick="reportReview(this, ${review.bookingOrderId})">
+                                <i class="fas fa-flag"></i> 檢舉
+                            </button>
+                        ` : '';
+
+                        return `
+                            <div style="border-bottom: 1px solid #eee; padding: 20px 0; margin-bottom: 5px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                    <div>
+                                        <div style="display: flex; align-items: center;">
+                                            <strong style="color: #2c3e50; font-size: 1.05rem;">${reviewerName}</strong>
+                                            ${reportBtnHTML}
+                                        </div>
+                                        <div style="color: #ffc107; font-size: 0.85rem; margin-top: 4px;">${stars}</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <small style="color: #94a3b8;">${reviewDate}</small>
+                                        ${tagsHTML}
+                                    </div>
+                                </div>
+                                <p style="margin: 5px 0 0; color: #475569; font-size: 0.95rem; line-height: 1.6; word-break: break-all;">
+                                    ${parsed.plainContent || '無評論內容'}
+                                </p>
+                            </div>
+                        `;
+                    }
+                );
+            }
         })
         .catch(err => {
             console.error('載入會員評價失敗:', err);
             alert('❌ 載入評價失敗，請稍後再試');
         });
-}
+};
+
+window.loadMemberReviews = function (memberId, memberName, buttonElement) {
+    // 重新封裝為呼叫彈窗
+    showMemberReviewModal(memberId, memberName);
+};
 
 // ========================================
 // 輔助功能：解析與渲染評價標籤

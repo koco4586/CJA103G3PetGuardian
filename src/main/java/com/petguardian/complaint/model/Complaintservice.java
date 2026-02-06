@@ -54,7 +54,14 @@ public class Complaintservice {
             List<com.petguardian.evaluate.model.EvaluateVO> evals = evaluateRepository
                     .findByBookingOrderId(vo.getBookingOrderId());
             if (!evals.isEmpty()) {
-                vo.setReportedContent(evals.get(0).getContent());
+                // 🔥 根據被檢舉人來判斷應該取哪個評論
+                // 被檢舉人是評論的發送者（senderId）
+                com.petguardian.evaluate.model.EvaluateVO targetEval = evals.stream()
+                        .filter(e -> e.getSenderId().equals(vo.getToReportedMemId()))
+                        .findFirst()
+                        .orElse(evals.get(0)); // 如果找不到，就取第一個（向後相容）
+
+                vo.setReportedContent(targetEval.getContent());
             }
         }
     }

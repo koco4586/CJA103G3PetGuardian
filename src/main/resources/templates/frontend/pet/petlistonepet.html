@@ -17,53 +17,124 @@
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
-      margin: 0;
-      padding: 0;
     }
 
-    table#table-1 {
-      background-color: #CCCCFF;
-      border: 2px solid black;
-      text-align: center;
-      width: 600px;
-      margin: 20px auto;
+   table#table-1 {
+  width: 900px;
+  margin: 0 auto 10px;
+  border: none;
+  background-color: transparent;
+}
+
+/* 2. 圖片容器：這裡只負責撐開空間與文字佈局 */
+.header-container {
+  position: relative;        /* 💡 讓偽元素可以定位 */
+  width: 100%;
+  padding: 200px 0;          /* 💡 撐開高度包裹內容 */
+  margin-top: -150px;         /* 💡 往上撐起位置 */
+  margin-bottom: -180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 3. 關鍵：使用偽元素單獨控制圖片透明度 */
+.header-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  
+  /* 渲染 PNG 圖片 */
+  background-image: url("/images/pet/labels.png"); 
+  background-size: contain;   /* 💡 確保不畸形 */
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  /* 💡 只有這裡變透明，不會影響文字 */
+  opacity: 0.8;               
+  z-index: -1;                /* 💡 確保圖片在文字底下 */
+}
+
+/* 4. 標題文字：完全不會被透明度影響 */
+.header-container h3 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+  font-weight: bold;
+}
+
+/* 5. 回首頁連結 */
+.header-container a {
+  font-size: 1rem;
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+  border-bottom: 2px solid #333;
+}
+
+    table#table-1 h3 {
+      color: #333;
+      margin: 10px 0;
     }
 
     table {
       width: 800px;
       background-color: white;
-      margin: 10px auto;
+      margin-top: 5px;
+      margin-bottom: 5px;
       border-collapse: collapse;
+      margin: 0 auto;
     }
 
-    table,
-    th,
-    td {
-      border: 1px solid #CCCCFF;
-      padding: 8px;
-      text-align: center;
-    }
+   
 
     th {
       background-color: #F2F2F2;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 10px;
-    }
-
-    .nav-group {
-      text-align: center;
-      margin-top: 20px;
     }
 
     img.pet-img {
       max-width: 200px;
       border-radius: 5px;
     }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .nav-group {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    table#table-1, 
+table#table-1 th, 
+table#table-1 td {
+  border: none !important;
+}
+
+/* 2. 💡 關鍵：找回「除了 table-1 以外」的所有表格線條 */
+table:not(#table-1), 
+table:not(#table-1) th, 
+table:not(#table-1) td {
+  border: 1px solid #CCCCFF !important; /* 💡 加上 !important 確保紫色線條回來 */
+  padding: 8px;
+  text-align: center;
+}
+
+/* 3. 資料表格的基本設定 */
+table:not(#table-1) {
+  width: 800px;
+  background-color: white;
+  border-collapse: collapse; /* 💡 確保線條是單線，不會有雙重感 */
+  margin: 0 auto;
+}
 
     #main-footer {
       background-color: #f9f9f9 !important;
@@ -80,49 +151,55 @@
 
   <header id="main-header" class="header"></header>
 
-  <table id="table-1">
-    <tr>
-      <td>
-        <h3>寵物資料詳情</h3>
-        <h4><a th:href="@{/pet/dashboard}">回首頁</a></h4>
-      </td>
-    </tr>
-  </table>
+  <div align="center">
+    <table id="table-1">
+      <tr>
+       <td>
+  <div class="header-container">
+    <h3 class="title-text">寵物資料詳情</h3>
+    <div class="nav-label">
+      <h4><a th:href="@{/pet/dashboard}">回首頁</a></h4>
+    </div>
+  </div>
+</td>
+      </tr>
+    </table>
 
-  <table>
-    <tr>
-      <th>編號</th>
-      <th>姓名</th>
-      <th>種類</th>
-      <th>體型</th>
-      <th>年齡</th>
-      <th>圖片</th>
-      <th>性別</th>
-      <th>備註</th>
-      <th>建立時間</th>
-      <th>最後更新</th>
-    </tr>
+    <table>
+      <tr>
+        <th>編號</th>
+        <th>姓名</th>
+        <th>種類</th>
+        <th>體型</th>
+        <th>年齡</th>
+        <th>圖片</th>
+        <th>性別</th>
+        <th>備註</th>
+        <th>建立時間</th>
+        <th>最後更新</th>
+      </tr>
 
-    <tr>
-      <td th:text="${pet.petId}"></td>
-      <td th:text="${pet.petName}"></td>
-      <td th:text="${pet.typeName}"></td>
-      <td th:text="${pet.sizeName}"></td>
-      <td th:text="${pet.petAge != null ? pet.petAge : '未填寫'}"></td>
+      <tr>
+        <td th:text="${pet.petId}"></td>
+        <td th:text="${pet.petName}"></td>
+        <td th:text="${pet.typeName}"></td>
+        <td th:text="${pet.sizeName}"></td>
+        <td th:text="${pet.petAge != null ? pet.petAge : '未填寫'}"></td>
 
-      <td>
-        <img class="pet-img" th:if="${pet.petId != null}" th:src="@{/pet/img/{id}(id=${pet.petId})}">
+        <td>
+          <img class="pet-img" th:if="${pet.petId != null}" th:src="@{/pet/img/{id}(id=${pet.petId})}">
 
-        <span th:if="${pet.petId == null}" style="color:#ccc;">(無圖片)</span>
-      </td>
+          <span th:if="${pet.petId == null}" style="color:#ccc;">(無圖片)</span>
+        </td>
 
-      <td th:text="${pet.petGender == 0 ? '母' : '公'}"></td>
-      <td th:text="${pet.petDescription}"></td>
-      <td th:text="${pet.createdTimeText}"></td>
-      <td th:text="${pet.updatedAtText}"></td>
+        <td th:text="${pet.petGender == 0 ? '母' : '公'}"></td>
+        <td th:text="${pet.petDescription}"></td>
+        <td th:text="${pet.createdTimeText}"></td>
+        <td th:text="${pet.updatedAtText}"></td>
 
-    </tr>
-  </table>
+      </tr>
+    </table>
+  </div>
 
   <div class="btn-group" th:if="${session.memId != null and session.memId == pet.memId}">
     <form th:action="@{/pet/getOne_For_Update}" method="get"> <input type="hidden" name="petId" th:value="${pet.petId}">
@@ -152,7 +229,7 @@
     </a>
   </div>
 
-  <footer id="main-footer" style="margin-top: 4rem;"></footer>
+  <footer id="main-footer"></footer>
 
   <script th:src="@{/js/frontend/main.js}">
 
