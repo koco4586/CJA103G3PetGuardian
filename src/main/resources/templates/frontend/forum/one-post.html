@@ -242,7 +242,7 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
 
     <div class="main-container">
         <aside class="post-user-sidebar" th:if="${forumPostVO.member.memId}">
-            <img th:src="@{'/images' + ${forumPostVO.member.memImage}}" class="user-avatar" alt="Avatar">
+            <img th:src="@{${forumPostVO.member.memImage}}" class="user-avatar" alt="Avatar">
             <div th:text="${forumPostVO.member.memName}" class="user-name">原PO大大</div>
         </aside>
 
@@ -296,7 +296,7 @@ body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", Arial, sans
                     
                     <th:block th:each="forumPostCommentVO, iterStat : ${forumPostVO.forumPostComments}">
 					    <div class="comment-item">
-					        <img th:src="@{'/images' + ${forumPostCommentVO.member.memImage}}" class="comment-user-mini-img">
+					        <img th:src="@{${forumPostCommentVO.member.memImage}}" class="comment-user-mini-img">
 					        <div class="comment-body">
 					            <div class="comment-header">
 					                <div class="comment-info">
