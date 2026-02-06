@@ -97,10 +97,10 @@ public class StoreController {
     }
 
     /**
-     * 將商品圖片轉換為 Base64 字串（使用快取服務）
+     * 取得商品圖片 URL（使用快取服務）
      */
-    private String getProductImageBase64(Integer proId) {
-        return imageCacheService.getProductImageBase64(proId);
+    private String getProductImageUrl(Integer proId) {
+        return imageCacheService.getProductImageUrl(proId);
     }
 
     /**
@@ -114,7 +114,7 @@ public class StoreController {
         dto.setProPrice(product.getProPrice());
         dto.setStockQuantity(product.getStockQuantity());
         dto.setProDescription(product.getProDescription());
-        dto.setImageBase64(getProductImageBase64(product.getProId()));
+        dto.setImageBase64(getProductImageUrl(product.getProId()));
         dto.setFavorited(favoriteIds != null && favoriteIds.contains(product.getProId()));
         // 加入分類資訊
         if (product.getProType() != null) {
@@ -300,7 +300,7 @@ public class StoreController {
             dto.setProPrice(item.getProPrice());
             dto.setQuantity(item.getQuantity());
             dto.setSubtotal(item.getSubtotal());
-            dto.setImageBase64(getProductImageBase64(item.getProId()));
+            dto.setImageBase64(getProductImageUrl(item.getProId()));
 
             // 取得即時庫存
             productService.getProductById(item.getProId())
