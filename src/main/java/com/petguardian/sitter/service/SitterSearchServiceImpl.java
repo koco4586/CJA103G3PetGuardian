@@ -173,12 +173,18 @@ public class SitterSearchServiceImpl implements SitterSearchService {
         dto.setStarCount(sitter.getSitterStarCount());
 
         // 計算平均評分
-        if (sitter.getSitterRatingCount() != null && sitter.getSitterRatingCount() > 0) {
-            double avgRating = (double) sitter.getSitterStarCount() / sitter.getSitterRatingCount();
-            dto.setAverageRating(avgRating);
-        } else {
-            dto.setAverageRating(0.0);
-        }
+        // 計算平均評分 (Deprecated: 舊邏輯不再使用，改由 Controller 注入 EvaluateService 真實數據)
+        dto.setAverageRating(null); // Explicitly set to null to avoid confusion
+        /*
+         * if (sitter.getSitterRatingCount() != null && sitter.getSitterRatingCount() >
+         * 0) {
+         * double avgRating = (double) sitter.getSitterStarCount() /
+         * sitter.getSitterRatingCount();
+         * dto.setAverageRating(avgRating);
+         * } else {
+         * dto.setAverageRating(0.0);
+         * }
+         */
 
         // [Modified] 查詢服務項目與價格
         List<String> serviceNames = new ArrayList<>();

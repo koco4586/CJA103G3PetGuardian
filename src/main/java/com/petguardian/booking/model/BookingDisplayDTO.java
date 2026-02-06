@@ -7,6 +7,7 @@ public class BookingDisplayDTO {
 	private boolean isFavorited; // 收藏狀態邏輯
 	private String servicesJson; // 服務列表
 	private String memImage;// 會員頭像路徑
+	private Double avgRating; // 平均評分(來自 EvaluateService)
 
 	public BookingDisplayDTO(SitterVO sitter, boolean isFavorited) {
 		this.sitter = sitter;
@@ -45,5 +46,13 @@ public class BookingDisplayDTO {
 
 	public void setMemImage(String memImage) {
 		this.memImage = memImage;
+	}
+
+	public Double getAvgRating() {
+		return avgRating;
+	}
+
+	public void setAvgRating(Double avgRating) {
+		this.avgRating = avgRating;
 	}
 }
