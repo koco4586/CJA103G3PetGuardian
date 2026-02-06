@@ -258,7 +258,7 @@
                         <tbody>
                         <tr th:each="item : ${productsWithImages}">
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0;">
-                                <img th:src="${item.mainImage}" alt="商品圖片"
+                                <img th:src="${item.mainImage + '?t=' + cacheBuster}" alt="商品圖片"
                                      style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
                             </td>
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;"
@@ -655,6 +655,10 @@
                         <span class="detail-label">退款原因</span>
                         <span class="detail-value" id="detailReturnReason" style="word-break: break-word;">-</span>
                     </div>
+                </div>
+                <div id="returnImagesContainer" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #ffcdd2;">
+                    <h4 style="font-size: 0.95rem; font-weight: 600; color: #333; margin-bottom: 10px;">退貨圖片</h4>
+                    <div id="returnImagesDiv" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
                 </div>
             </div>
         </div>
