@@ -11,7 +11,7 @@ public class MemberLogoutRedirectController {
 	@GetMapping("/memberlogoutpage")
     public String memberlogout() {
 
-        return "redirect:/html/frontend/member/logout/member_logout.html";
+        return "forward:/html/frontend/member/logout/member_logout.html";
 
     }
 

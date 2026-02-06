@@ -25,6 +25,8 @@ import com.petguardian.sitter.model.SitterMemberDTO;
 import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.service.SitterSearchService;
 
+import com.petguardian.evaluate.service.EvaluateService;
+
 import com.petguardian.petsitter.service.PetSitterService;
 import com.petguardian.service.service.ServiceAreaService;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
@@ -75,6 +77,9 @@ public class SitterPublicController {
 
     @Autowired
     private PetRepository petRepository;
+
+    @Autowired
+    private EvaluateService evaluateService;
 
     /**
      * 顯示公開的保姆搜尋頁面
@@ -127,6 +132,17 @@ public class SitterPublicController {
                 results = sitterSearchService.searchSitters(criteria);
             }
 
+            // 🔥 注入平均星數
+            for (SitterSearchDTO dto : results) {
+                Double avgRating = evaluateService.getAverageRatingBySitterId(dto.getSitterId());
+                if (avgRating != null) {
+                    System.out.println("DEBUG_SEARCH_API: Sitter=" + dto.getSitterId() + ", Rating=" + avgRating);
+                    dto.setAverageRating(avgRating);
+                } else {
+                    System.out.println("DEBUG_SEARCH_API: Sitter=" + dto.getSitterId() + " has NULL rating");
+                }
+            }
+
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             e.printStackTrace();
@@ -145,6 +161,18 @@ public class SitterPublicController {
     public ResponseEntity<List<SitterSearchDTO>> getAllSitters() {
         try {
             List<SitterSearchDTO> results = sitterSearchService.getAllActiveSitters();
+
+            // 🔥 注入平均星數
+            for (SitterSearchDTO dto : results) {
+                Double avgRating = evaluateService.getAverageRatingBySitterId(dto.getSitterId());
+                if (avgRating != null) {
+                    System.out.println("DEBUG_SEARCH_ALL: Sitter=" + dto.getSitterId() + ", Rating=" + avgRating);
+                    dto.setAverageRating(avgRating);
+                } else {
+                    System.out.println("DEBUG_SEARCH_ALL: Sitter=" + dto.getSitterId() + " has NULL rating");
+                }
+            }
+
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             e.printStackTrace();

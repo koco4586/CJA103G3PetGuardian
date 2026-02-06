@@ -114,8 +114,11 @@ public class EvaluateServiceImpl implements EvaluateService {
     public List<EvaluateVO> getReviewsBySitterId(Integer sitterId) {
         List<EvaluateVO> reviews = repo.findByReceiverId(sitterId);
 
-        // 🔥 檢舉功能：過濾隱藏與刪除的評論
+        // 🔥 過濾條件：
+        // 1. 只保留 roleType=1 (會員評保母)
+        // 2. 過濾隱藏與刪除的評論
         reviews = reviews.stream()
+                .filter(r -> r.getRoleType() != null && r.getRoleType() == 1) // 只要會員評保母
                 .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
                 .collect(Collectors.toList());
 
@@ -181,5 +184,33 @@ public class EvaluateServiceImpl implements EvaluateService {
                 review.setSenderMemId(null);
             }
         }
+    }
+
+    @Override
+    public Double getAverageRatingBySitterId(Integer sitterId) {
+        // 獲取評價 (Evaluate 表，已過濾 roleType=1)
+        List<EvaluateVO> reviews = getReviewsBySitterId(sitterId);
+        int totalSum = 0;
+        int totalCount = 0;
+
+        if (reviews != null && !reviews.isEmpty()) {
+            for (EvaluateVO vo : reviews) {
+                if (vo.getStarRating() != null && vo.getStarRating() > 0) {
+                    totalSum += vo.getStarRating();
+                    totalCount++;
+                }
+            }
+        }
+
+        // 🔥 移除舊系統假資料：不再使用 sitter_star_count 和 sitter_rating_count
+        // 只使用 evaluate 表的真實評價資料
+
+        if (totalCount == 0) {
+            return null; // 無任何評價
+        }
+
+        double average = (double) totalSum / totalCount;
+        // 四捨五入到小數點後一位
+        return Math.round(average * 10.0) / 10.0;
     }
 }

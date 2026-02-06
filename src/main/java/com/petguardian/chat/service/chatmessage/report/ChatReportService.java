@@ -104,7 +104,7 @@ public class ChatReportService {
         report.setMessageId(messageIdLong);
         report.setReportType(type);
         report.setReportReason(reason);
-        report.setReportStatus(1); // Pending
+        report.setReportStatus(0); // 0: Pending (待處理)
         report.setReportTime(LocalDateTime.now());
         report.setUpdatedAt(LocalDateTime.now());
 
@@ -115,7 +115,7 @@ public class ChatReportService {
     }
 
     public List<ChatReport> getPendingReports() {
-        return chatReportRepository.findByReportStatus(1);
+        return chatReportRepository.findByReportStatus(0); // 0: Pending
     }
 
     public List<ChatReport> getClosedReports() {
@@ -209,7 +209,6 @@ public class ChatReportService {
                         circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
                     } catch (Exception e) {
                         log.warn("[Report] Invalidation Failed: {}", e.getMessage());
-                        // Trigger async cleanup or alert?
                         // Note: Throwing here might not roll back committed TX, but logs error.
                     }
                 }

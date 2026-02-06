@@ -287,7 +287,6 @@ class ChatMessagePersistenceManager {
                 // Fire-and-forget cache updates
                 try {
                     messageCache.pushToHistory(context.chatroomId(), redisDTO, CACHE_LIMIT);
-                    messageCache.putRecentLog(redisDTO.messageId(), redisDTO);
 
                     metadataService.syncRoomMetadata(
                             context.chatroomId(),

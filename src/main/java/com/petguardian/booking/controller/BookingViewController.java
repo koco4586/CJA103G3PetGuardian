@@ -57,9 +57,13 @@ public class BookingViewController {
 
     @Autowired
     private SitterMemberRepository sitterMemberRepository;
-    
+
     @Autowired
     private MemberRegisterRepository memberRepository;
+
+    @Autowired
+    private com.petguardian.evaluate.service.EvaluateService evaluateService;
+
     /**
      * 【顯示保姆服務列表頁面】
      * 1. 從資料庫撈取所有保姆資料
@@ -70,32 +74,32 @@ public class BookingViewController {
     @GetMapping("/services")
     public String listSitters(
             @RequestParam(defaultValue = "0") int page, // 正確放置 RequestParam
-            HttpServletRequest request, 
+            HttpServletRequest request,
             Model model) { // 這裡只需一組括號
 
         // 1. 先查出該頁面的 6 位保母 (分頁關鍵)
         Pageable pageable = PageRequest.of(page, 6);
         Page<SitterVO> sitterPage = sitterRepository.findAllActive(pageable);
-        
+
         // 2. 蒐集這 6 位保母的 ID 並補齊「服務地區」
         List<Integer> sitterIds = sitterPage.getContent().stream()
                 .map(SitterVO::getSitterId)
                 .collect(Collectors.toList());
         // 3. 蒐集這 6 位保母的會員 ID 並補齊「頭像」
         List<SitterVO> fullSitters = sitterRepository.findAllWithAreasByIds(sitterIds);
-        
+
         List<Integer> memIds = fullSitters.stream()
                 .map(SitterVO::getMemId)
                 .collect(Collectors.toList());
-        
+
         Map<Integer, String> memberImageMap = new HashMap<>();
         sitterMemberRepository.findAllById(memIds).forEach(m -> {
             String img = (m.getMemImage() != null) ? m.getMemImage() : "/images/default-avatar.png";
             memberImageMap.put(m.getMemId(), img);
         });
-        
+
         Integer currentMemId = authStrategyService.getCurrentUserId(request);
-        
+
         // 4. 建立收藏保姆 ID 的集合 (修正變數名稱與類型)
         java.util.Set<Integer> favSitterIds = new java.util.HashSet<>();
 
@@ -113,29 +117,32 @@ public class BookingViewController {
                 .map(s -> {
                     BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
                     dto.setMemImage(memberImageMap.getOrDefault(s.getMemId(), "/images/default-avatar.png"));
-                    
+
                     dto.setMemImage(memberImageMap.getOrDefault(
-                            s.getMemId(), 
-                            "/images/default-avatar.png"
-                        ));
-                    
+                            s.getMemId(),
+                            "/images/default-avatar.png"));
+
                     String city = "沒有設定服務";
                     if (s.getServiceAreas() != null && !s.getServiceAreas().isEmpty()) {
                         // 取得第一個服務地區的城市名稱 (例如：台北市)
                         city = s.getServiceAreas().get(0).getArea().getCityName();
                     }
                     dto.setServicesJson(city);
-                    
+
+                    // 🔥 注入平均星數
+                    Double avgRating = evaluateService.getAverageRatingBySitterId(s.getSitterId());
+                    dto.setAvgRating(avgRating);
+
                     return dto;
                 }).collect(Collectors.toList());
-        
+
         // 6. 將資料傳給前端頁面
         model.addAttribute("sitters", displayList);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", sitterPage.getTotalPages()); // 修正 odel -> model
         model.addAttribute("currentMemId", currentMemId);
         addCommonAttributes(request, model);
-        
+
         return "frontend/services";
     }
 

@@ -56,8 +56,8 @@ public class Member {
     @Column(name = "mem_account_number")
     private String memAccountNumber;
 
-    @Column(name = "mem_status")
-    private Integer memStatus;
+    @Column(name = "mem_status", nullable = false, columnDefinition = "INT DEFAULT 1")
+    private Integer memStatus = 1;
 
     @Column(name = "mem_sitter_status")
     private Integer memSitterStatus;

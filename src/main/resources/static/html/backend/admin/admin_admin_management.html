@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>PetGuardian｜後台中心</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../../css/backend/style.css">
-    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
+    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/admin/admin.css">
 
     <style>
         .myatag {
@@ -55,8 +56,8 @@
                 <tbody class="tbody"></tbody>
             </table><br>
             <div class="myatag">
-                <a href="./admin_insert.html" class="a_tag">新增管理員</a>
-                <a href="./admin_management_updateinfo.html" class="a_tag">修改個人資料</a>
+                <a href="/admin/admininsert" class="a_tag">新增管理員</a>
+                <a href="/admin/adminupdateinfo" class="a_tag">修改個人資料</a>
                 <a href="/admin/index" class="a_tag">回首頁</a>
             </div>
 
@@ -66,13 +67,13 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="../../../js/backend/sidebar.js"></script>
+    <script src="js/backend/sidebar.js"></script>
 
     <script>
 
         function init() {
 
-            let fetch_url = "http://localhost:8080/admin/admin-admin-management";
+            let fetch_url = "/admin/admin-admin-management";// 拿掉 http://localhost:8080
 
             fetch(fetch_url, {
                 credentials: "include"
@@ -125,7 +126,7 @@
                     "admId": adminid
                 }
 
-                var fetch_url = "http://localhost:8080/admin/admin-admin-management-updatestatus";
+                var fetch_url = "/admin/admin-admin-management-updatestatus";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "PUT",

@@ -4,13 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/"> <!-- 添加這行！ -->
   <title>Pet Guardian - 會員密碼變更</title>
 
-  <link rel="stylesheet" href="../../../../css/frontend/style.css">
-  <link rel="stylesheet" href="../../../../css/frontend/dashboard.css">
+  <link rel="stylesheet" href="/css/frontend/style.css">
+  <link rel="stylesheet" href="/css/frontend/dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="../../../../css/frontend/components.css">
-  <link rel="stylesheet" href="../../../../css/frontend/member/member.css">
+  <link rel="stylesheet" href="/css/frontend/components.css">
+  <link rel="stylesheet" href="/css/frontend/member/member.css">
 
 </head>
 
@@ -26,7 +27,7 @@
     <div class="sidebar">
       <div class="text-center mb-2">
         <div class="avatar-wrapper">
-          <img src="../../../../images/frontend/frontend_sidebar_image.png" class="avatar">
+          <img src="images/frontend/frontend_sidebar_image.png" class="avatar">
         </div>
         <h4>會員中心</h4>
       </div>
@@ -85,7 +86,7 @@
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <script src="../../../../js/frontend/main.js"></script>
+  <script src="js/frontend/main.js"></script>
 
 
   <script>
@@ -106,7 +107,7 @@
         }
 
 
-        let fetch_url = "http://localhost:8080/front/resetpw";
+        let fetch_url = "/front/resetpw";// 拿掉 http://localhost:8080
 
         fetch(fetch_url, {
           method: "PUT",

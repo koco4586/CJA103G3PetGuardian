@@ -9,4 +9,9 @@ public interface ProductPicRepository extends JpaRepository<ProductPic, Integer>
 
     List<ProductPic> findByProduct_ProId(Integer proId);
 
+    /**
+     * 批次查詢多個商品的圖片
+     */
+    List<ProductPic> findByProduct_ProIdIn(List<Integer> proIds);
+
 }

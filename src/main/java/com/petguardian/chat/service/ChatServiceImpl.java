@@ -211,7 +211,7 @@ public class ChatServiceImpl implements ChatService {
         String replySenderName = ctx.getReplySenderProfile() != null ? ctx.getReplySenderProfile().getMemberName()
                 : null;
 
-        return messageMapper.toDto(saved, sender, replyContent, replySenderName, saved.getMemberId(), receiverId, 0);
+        return messageMapper.toDto(saved, sender, replyContent, replySenderName, saved.getMemberId(), receiverId, null);
     }
 
     private List<ChatMessageEntity> fetchMessagesAsc(Integer chatroomId, Pageable pageable) {
