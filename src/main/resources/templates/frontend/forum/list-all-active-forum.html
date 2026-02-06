@@ -152,6 +152,38 @@
         .sidebar ul li a:hover {
             color: var(--primary-orange) !important;
         }
+        
+        /* 數據統計區塊容器 */
+		.stat-item {
+		    display: flex;
+		    align-items: center;
+		    gap: 6px; /* 圖示與數字的間距 */
+		    padding: 6px 12px;
+		    background-color: #f8f9fa; /* 淺灰色背景，增加層次感 */
+		    border-radius: 20px;
+		    color: #888; /* 稍微淡一點的顏色，不搶標題戲 */
+		    font-size: 0.9rem;
+		    font-weight: 700;
+		    transition: all 0.2s ease;
+		    flex-shrink: 0; /* 防止在寬度不足時被擠壓 */
+		}
+		
+		/* 圖示顏色微調 */
+		.stat-item i {
+		    color: var(--primary-orange); /* 使用你定義的主題橘色 */
+		    font-size: 1rem;
+		}
+		
+		/* 當滑過整張卡片時，數據區塊的視覺變化 */
+		.forum-row-card:hover .stat-item {
+		    background-color: #fff3e0; /* 滑過時變橘色淺背景 */
+		    color: var(--deep-brown);
+		}
+		
+		/* 如果數字太長，確保排列整齊 */
+		.stat-item span {
+		    font-family: 'Arial', sans-serif; /* 數字使用無襯線字體較清晰 */
+		}
 
         /* --- 響應式處理 --- */
         @media (max-width: 850px) {
@@ -176,6 +208,10 @@
                 margin-right: 0;
                 margin-bottom: 15px;
             }
+            .stat-item {
+		        margin-top: 10px;
+		        align-self: flex-start;
+		    }
         }
     </style>
 </head>
@@ -217,9 +253,15 @@
                         <div class="forum-main-info">
                             <h3 class="forum-title" th:text="${forumVO.forumName}"></h3>
                             <p style="white-space: nowrap; display: inline-block; margin: 0; font-weight: 600;">
-                                歡迎來到 <span><b style="color: #f44336;" th:text="${forumVO.forumName}"></b></span> 快來與大家分享飼養心得與生活點滴吧！
+                                <span><b style="color: orange;" th:text="${forumVO.forumName}"></b></span> 快來與大家分享飼養心得與生活點滴吧！
                             </p>
                         </div>
+                        
+                        <div class="stat-item">
+					        <i class="far fa-eye"></i>
+					        <span th:text="${forumVO.forumViews ?: 0}"></span>
+					    </div>
+					    
                     </a>
                 </th:block>
             </div>
