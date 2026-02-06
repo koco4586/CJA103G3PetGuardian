@@ -24,38 +24,43 @@ public class EvaluateVO implements Serializable {
 
     @Id // 👈 必須有主鍵
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "EVALUATE_ID")
+    @Column(name = "evaluate_id")
     private Integer evaluateId; // 評價編號 (PK)
 
-    @Column(name = "BOOKING_ORDER_ID")
+    @Column(name = "booking_order_id")
     @JsonProperty("bookingOrderId")
     private Integer bookingOrderId; // 預約訂單編號 (對應圖中的 BOOKING_ORDER_ID)
-    @Column(name = "SENDER_ID")
+    @Column(name = "sender_id")
     private Integer senderId; // 評價人 (MEM_ID 或 SITTER_ID)
-    @Column(name = "RECEIVER_ID")
+    @Column(name = "receiver_id")
     private Integer receiverId; // 被評價人 (SITTER_ID 或 MEM_ID)
     @Transient
     private Integer memberId;
     @Transient
     private Integer sitterId;
-    @Column(name = "ROLE_TYPE")
+    @Column(name = "role_type")
     private Integer roleType;
-    @Column(name = "STAR_RATING")
+    @Column(name = "star_rating")
     private Integer starRating; // 星星分數 (1-5)
-    @Column(name = "CONTENT")
+    @Column(name = "content")
     private String content; // 評價內容文字
 
     // 時間自動化：對應資料庫的 DEFAULT CURRENT_TIMESTAMP
-    @Column(name = "CREATE_TIME", insertable = false, updatable = false)
+    @Column(name = "create_time", insertable = false, updatable = false)
     private Timestamp createTime;
 
     // 🔥 檢舉功能：隱藏/刪除狀態 (0=正常, 1=已隱藏, 2=已刪除)
-    @Column(name = "IS_HIDDEN")
+    @Column(name = "is_hidden")
     private Integer isHidden = 0;
 
-    // --- 擴充欄位 (供 evaluate.html 顯示用) ---
     @Transient
     private String senderName; // 評價者姓名
+
+    @Transient
+    private Integer senderMemId; // 評價者的 memId（用於判斷是否為當前用戶的評價）
+
+    @Transient
+    private Boolean isOwnReview; // 是否為當前用戶的評價（用於前端判斷是否顯示檢舉按鈕）
 
     @Transient
     private String createTimeText; // 格式化時間
@@ -160,6 +165,22 @@ public class EvaluateVO implements Serializable {
 
     public void setCreateTimeText(String createTimeText) {
         this.createTimeText = createTimeText;
+    }
+
+    public Integer getSenderMemId() {
+        return senderMemId;
+    }
+
+    public void setSenderMemId(Integer senderMemId) {
+        this.senderMemId = senderMemId;
+    }
+
+    public Boolean getIsOwnReview() {
+        return isOwnReview;
+    }
+
+    public void setIsOwnReview(Boolean isOwnReview) {
+        this.isOwnReview = isOwnReview;
     }
 
     public Integer getIsHidden() {

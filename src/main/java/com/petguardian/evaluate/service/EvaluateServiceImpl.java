@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import com.petguardian.evaluate.model.EvaluateDTO;
 import com.petguardian.evaluate.model.EvaluateRepository;
 import com.petguardian.evaluate.model.EvaluateVO;
-import com.petguardian.member.model.Member;
-import com.petguardian.member.repository.management.MemberManagementRepository;
+import com.petguardian.sitter.model.SitterMemberRepository;
+import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
@@ -23,10 +23,10 @@ public class EvaluateServiceImpl implements EvaluateService {
     private EvaluateRepository repo;
 
     @Autowired
-    private SitterRepository sitterRepository;
+    private SitterMemberRepository sitterMemberRepository;
 
     @Autowired
-    private MemberManagementRepository memberManagementRepository;
+    private SitterRepository sitterRepository;
 
     @Override
     public void handleSubmission(EvaluateVO vo, String currentRole) {
@@ -148,27 +148,38 @@ public class EvaluateServiceImpl implements EvaluateService {
         }
 
         for (EvaluateVO review : reviews) {
-            if (review.getSenderId() == null || review.getRoleType() == null) {
-                continue;
+            try {
+                if (review.getSenderId() == null || review.getRoleType() == null) {
+                    continue;
+                }
+
+                String senderName = null;
+                Integer senderMemId = null;
+
+                if (review.getRoleType() == 0) {
+                    // roleType=0: 保母評會員，senderId 是保母ID (sitterId)
+                    SitterVO sitter = sitterRepository.findById(review.getSenderId()).orElse(null);
+                    if (sitter != null) {
+                        senderName = sitter.getSitterName();
+                        senderMemId = sitter.getMemId();
+                    }
+                } else if (review.getRoleType() == 1) {
+                    // roleType=1: 會員評保母，senderId 是會員ID (memId)
+                    SitterMemberVO member = sitterMemberRepository.findById(review.getSenderId()).orElse(null);
+                    if (member != null) {
+                        senderName = member.getMemName();
+                        senderMemId = review.getSenderId();
+                    }
+                }
+
+                review.setSenderName(senderName);
+                review.setSenderMemId(senderMemId);
+            } catch (Exception e) {
+                System.err.println("❌ 填充評價發送者資料時出錯 (ID: " + review.getEvaluateId() + "): " + e.getMessage());
+                // 出錯時給予預設值，不中斷整組查詢
+                review.setSenderName("未知用戶");
+                review.setSenderMemId(null);
             }
-
-            String senderName = null;
-
-            if (review.getRoleType() == 0) {
-                // roleType=0: 保母評會員，senderId 是保母ID (sitterId)
-                // 從 SITTER 表查詢保母名字
-                senderName = sitterRepository.findById(review.getSenderId())
-                        .map(SitterVO::getSitterName)
-                        .orElse(null);
-            } else if (review.getRoleType() == 1) {
-                // roleType=1: 會員評保母，senderId 是會員ID (memId)
-                // 從 MEMBER 表查詢會員名字（無論該會員是否為保姆）
-                senderName = memberManagementRepository.findById(review.getSenderId())
-                        .map(Member::getMemName)
-                        .orElse(null);
-            }
-
-            review.setSenderName(senderName);
         }
     }
 }
