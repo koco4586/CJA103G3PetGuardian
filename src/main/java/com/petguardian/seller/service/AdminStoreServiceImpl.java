@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -179,15 +178,15 @@ public class AdminStoreServiceImpl implements AdminStoreService {
                     });
 
             List<ReturnOrderPicVO> pics = returnOrderPicRepository.findByReturnOrder_ReturnId(returnId);
-            List<String> imageBase64List = new ArrayList<>();
+            List<String> imageUrlList = new ArrayList<>();
             for (ReturnOrderPicVO pic : pics) {
-                if (pic.getPicData() != null && pic.getPicData().length > 0) {
-                    String base64 = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(pic.getPicData());
-                    imageBase64List.add(base64);
+                if (pic.getPicUrl() != null && !pic.getPicUrl().trim().isEmpty()) {
+                    imageUrlList.add(pic.getPicUrl());
                 }
             }
-            result.put("returnImages", imageBase64List);
-            result.put("hasImages", !imageBase64List.isEmpty());
+            result.put("returnImages", imageUrlList);
+            result.put("hasImages", !imageUrlList.isEmpty());
+
 
         } catch (Exception e) {
             result.put("success", false);

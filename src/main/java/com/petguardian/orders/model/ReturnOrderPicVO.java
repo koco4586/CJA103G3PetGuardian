@@ -21,6 +21,6 @@ public class ReturnOrderPicVO {
     @JoinColumn(name = "return_id", nullable = false)
     private ReturnOrderVO returnOrder;
 
-    @Column(name = "pic_url", length = 500)
+    @Column(name = "pic_url", length = 255)
     private String picUrl;
 }

@@ -1,6 +1,7 @@
 /**
  * PetGuardian - 賣家管理中心 JavaScript
  * 商品管理、訂單管理、營運概況
+ * 圖片改為URL方式儲存
  */
 
 // 全域變數
@@ -22,9 +23,9 @@ function openProductModal() {
     existingImagesList = [];
     deleteImageIdsList = [];
     document.getElementById('existingImages').innerHTML = '';
-    document.getElementById('newImagePreview').innerHTML = '';
+    document.getElementById('imagePreview').innerHTML = '';
     document.getElementById('deleteImageInputs').innerHTML = '';
-    document.getElementById('productImages').value = '';
+    document.getElementById('imageUrl').value = '';
 }
 
 // 關閉商品 Modal
@@ -55,9 +56,9 @@ function openEditProductModal(button) {
     document.getElementById('stockQuantity').value = stockQuantity;
     document.getElementById('proState').value = proState;
 
-    // 清空新圖片預覽
-    document.getElementById('newImagePreview').innerHTML = '';
-    document.getElementById('productImages').value = '';
+    // 清空新圖片URL輸入和預覽
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('imageUrl').value = '';
 
     // 重置刪除清單
     deleteImageIdsList = [];
@@ -67,7 +68,7 @@ function openEditProductModal(button) {
     loadExistingImages(proId);
 }
 
-// 載入現有商品圖片
+// 載入現有商品圖片（改為載入URL）
 function loadExistingImages(proId) {
     fetch('/seller/product/' + proId + '/images')
         .then(function(response) {
@@ -91,9 +92,14 @@ function loadExistingImages(proId) {
                 imgWrapper.setAttribute('data-pic-id', img.productPicId);
 
                 var imgElement = document.createElement('img');
-                imgElement.src = img.imageBase64;
+                // 改為使用 imageUrl 而非 imageBase64
+                imgElement.src = img.imageUrl;
                 imgElement.alt = '商品圖片';
                 imgElement.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px;';
+                // 圖片載入失敗時顯示預設圖
+                imgElement.onerror = function() {
+                    this.src = '/images/default-product.png';
+                };
 
                 var deleteBtn = document.createElement('button');
                 deleteBtn.type = 'button';
@@ -115,19 +121,14 @@ function loadExistingImages(proId) {
 
 // 標記圖片待刪除
 function markImageForDeletion(picId, wrapper) {
-    // 加入刪除清單
     deleteImageIdsList.push(picId);
     console.log('標記刪除圖片 ID:', picId);
 
-    // 從現有圖片清單中移除
     existingImagesList = existingImagesList.filter(function(img) {
         return img.productPicId !== picId;
     });
 
-    // 移除預覽
     wrapper.remove();
-
-    // 更新隱藏欄位
     updateDeleteImageInputs();
 }
 
@@ -147,66 +148,49 @@ function updateDeleteImageInputs() {
     console.log('更新刪除清單，共 ' + deleteImageIdsList.length + ' 張待刪除');
 }
 
-// 預覽新上傳的圖片
-function previewNewImages(input) {
-    var container = document.getElementById('newImagePreview');
-    var files = input.files;
+// 預覽圖片URL（當使用者輸入URL時即時預覽）
+function previewImageUrl(url) {
+    var container = document.getElementById('imagePreview');
+    container.innerHTML = '';
 
-    console.log('previewNewImages 被呼叫');
-    console.log('選擇的檔案數量:', files ? files.length : 0);
-
-    if (!files || files.length === 0) {
-        console.log('沒有選擇檔案');
+    // 如果URL為空則不顯示預覽
+    if (!url || url.trim() === '') {
         return;
     }
 
-    // 只取第一個檔案
-    var file = files[0];
-    console.log('處理檔案:', file.name);
+    var imgWrapper = document.createElement('div');
+    imgWrapper.style.cssText = 'position: relative; width: 100px; height: 100px;';
 
-    // 清空舊預覽
-    container.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = url.trim();
+    img.alt = '圖片預覽';
+    img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid var(--primary-color);';
 
-    // 讀取並顯示預覽
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var imgWrapper = document.createElement('div');
-        imgWrapper.style.cssText = 'position: relative; width: 100px; height: 100px;';
-
-        var img = document.createElement('img');
-        img.src = e.target.result;
-        img.alt = '新圖片預覽';
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid var(--primary-color);';
-
-        var deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.innerHTML = '&times;';
-        deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #ff4d4f; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; line-height: 1;';
-        deleteBtn.onclick = function() {
-            // 清空 file input 和預覽
-            document.getElementById('productImages').value = '';
-            container.innerHTML = '';
-            console.log('已移除新圖片預覽');
-        };
-
-        imgWrapper.appendChild(img);
-        imgWrapper.appendChild(deleteBtn);
-        container.appendChild(imgWrapper);
-
-        console.log('預覽圖片已建立，file input 仍保留檔案');
+    // 圖片載入失敗時顯示錯誤提示
+    img.onerror = function() {
+        container.innerHTML = '<span style="color: #ff4d4f; font-size: 0.85rem;">圖片URL無效，請確認網址是否正確</span>';
     };
-    reader.readAsDataURL(file);
+
+    // 清除URL按鈕
+    var deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.innerHTML = '&times;';
+    deleteBtn.style.cssText = 'position: absolute; top: -8px; right: -8px; background: #ff4d4f; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; line-height: 1;';
+    deleteBtn.onclick = function() {
+        document.getElementById('imageUrl').value = '';
+        container.innerHTML = '';
+        console.log('已清除圖片URL');
+    };
+
+    imgWrapper.appendChild(img);
+    imgWrapper.appendChild(deleteBtn);
+    container.appendChild(imgWrapper);
 }
 
 // ==================== 訂單管理 ====================
 
-/**
- * 開啟訂單詳情 Modal
- * 從按鈕的 data 屬性讀取訂單資料並顯示在 Modal 中
- * 所有資料皆來自資料庫
- */
+// 開啟訂單詳情 Modal
 function openOrderDetailModal(button) {
-    // 從按鈕的 data 屬性取得訂單資料（資料來源為資料庫）
     var orderId = button.getAttribute('data-order-id');
     var buyerName = button.getAttribute('data-buyer-name');
     var orderTotal = button.getAttribute('data-order-total');
@@ -218,174 +202,37 @@ function openOrderDetailModal(button) {
     var specialInstructions = button.getAttribute('data-special-instructions');
 
     // 填入訂單編號
-    document.getElementById('detailOrderId').textContent = '#' + orderId;
+    document.getElementById('detailOrderId').innerText = '#' + orderId;
 
-    // 填入買家姓名（來自 member 表的 mem_name）
-    document.getElementById('detailBuyerName').textContent = buyerName || '-';
+    // 填入訂單資訊
+    document.getElementById('detailBuyerName').innerText = buyerName || '-';
+    document.getElementById('detailOrderTotal').innerText = '$' + (orderTotal || '0');
+    document.getElementById('detailOrderTime').innerText = orderTime || '-';
 
-    // 填入訂單金額（來自 orders 表的 order_total）
-    document.getElementById('detailOrderTotal').textContent = '$' + Number(orderTotal).toLocaleString();
-
-    // 填入下單時間（來自 orders 表的 order_time）
-    document.getElementById('detailOrderTime').textContent = orderTime || '-';
-
-    // 填入收件人姓名（來自 orders 表的 receiver_name）
-    document.getElementById('detailReceiverName').textContent = receiverName || '-';
-
-    // 填入收件人電話（來自 orders 表的 receiver_phone）
-    document.getElementById('detailReceiverPhone').textContent = receiverPhone || '-';
-
-    // 填入收件人地址（來自 orders 表的 receiver_address）
-    document.getElementById('detailReceiverAddress').textContent = receiverAddress || '-';
-
-    // 訂單狀態對應表（對應資料庫 order_status 欄位）
-    // 0:已付款 1:已出貨 2:已完成 3:已取消 4:申請退貨中 5:退貨完成 6:已撥款
+    // 訂單狀態
+    var statusElement = document.getElementById('detailOrderStatus');
     var statusMap = {
-        '0': '<span class="badge badge-warning">已付款</span>',
-        '1': '<span class="badge badge-info">已出貨</span>',
-        '2': '<span class="badge badge-success">已完成</span>',
-        '3': '<span class="badge badge-secondary">已取消</span>',
-        '4': '<span class="badge" style="background: #ffc107; color: #333;">申請退貨中</span>',
-        '5': '<span class="badge" style="background: #6c757d; color: white;">退貨完成</span>',
-        '6': '<span class="badge badge-success">已撥款</span>'
+        '0': { text: '已付款', className: 'status-paid' },
+        '1': { text: '已出貨', className: 'status-shipped' },
+        '2': { text: '已完成', className: 'status-completed' },
+        '3': { text: '已取消', className: 'status-cancelled' },
+        '4': { text: '退貨中', className: 'status-paid' },
+        '5': { text: '已退貨', className: 'status-cancelled' },
+        '6': { text: '已撥款', className: 'status-completed' }
     };
 
-    // 填入訂單狀態（來自 orders 表的 order_status）
-    var statusHtml = statusMap[String(orderStatus)] || '<span class="badge">未知狀態</span>';
-    document.getElementById('detailOrderStatus').innerHTML = statusHtml;
+    var statusInfo = statusMap[orderStatus] || { text: '未知', className: '' };
+    statusElement.innerText = statusInfo.text;
+    statusElement.className = 'status-badge ' + statusInfo.className;
 
-    // 處理訂單備註（來自 orders 表的 special_instructions）
-    var specialRow = document.getElementById('detailSpecialRow');
-    if (specialInstructions && specialInstructions.trim() && specialInstructions !== 'null') {
-        document.getElementById('detailSpecialInstructions').textContent = specialInstructions;
-        specialRow.style.display = 'flex';
-    } else {
-        specialRow.style.display = 'none';
-    }
+    // 收件人資訊
+    document.getElementById('detailReceiverName').innerText = receiverName || '-';
+    document.getElementById('detailReceiverPhone').innerText = receiverPhone || '-';
+    document.getElementById('detailReceiverAddress').innerText = receiverAddress || '-';
+    document.getElementById('detailSpecialInstructions').innerText = specialInstructions || '無';
 
-    // 載入訂單商品項目（從資料庫動態讀取）
-    loadOrderItems(orderId);
-
-    // 處理退貨資訊顯示
-    // 當訂單狀態為「申請退貨中」(4)或「退貨完成」(5)時，載入並顯示退貨資訊
-    var returnInfoSection = document.getElementById('returnInfoSection');
-    if (orderStatus === '4' || orderStatus === '5') {
-        // 載入退貨資訊
-        loadReturnOrderInfo(orderId);
-    } else {
-        // 隱藏退貨資訊區塊
-        if (returnInfoSection) {
-            returnInfoSection.style.display = 'none';
-        }
-    }
-
-    // 顯示 Modal
+    // 開啟 Modal
     document.getElementById('orderDetailModal').classList.add('active');
-}
-
-/**
- * 載入訂單商品項目
- * 透過 AJAX 從後端取得訂單的商品明細
- */
-function loadOrderItems(orderId) {
-    var container = document.getElementById('orderItemsContainer');
-    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
-
-    fetch('/seller/order/' + orderId + '/items')
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(items) {
-            if (!items || items.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">沒有商品項目</div>';
-                return;
-            }
-
-            var html = '';
-            items.forEach(function(item) {
-                html += '<div style="display: flex; gap: 12px; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; align-items: center;">';
-
-                // 商品圖片
-                if (item.productImage) {
-                    html += '<img src="' + item.productImage + '" alt="商品圖片" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">';
-                } else {
-                    html += '<div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #ccc;"><i class="fas fa-image"></i></div>';
-                }
-
-                // 商品資訊
-                html += '<div style="flex: 1;">';
-                html += '<div style="font-weight: 600; margin-bottom: 4px;">' + (item.productName || '商品 #' + item.proId) + '</div>';
-                html += '<div style="font-size: 0.85rem; color: #666;">單價: $' + Number(item.proPrice).toLocaleString() + ' x ' + item.quantity + '</div>';
-                html += '</div>';
-
-                // 小計
-                html += '<div style="font-weight: 600; color: var(--primary-color);">$' + Number(item.subtotal).toLocaleString() + '</div>';
-                html += '</div>';
-            });
-
-            container.innerHTML = html;
-        })
-        .catch(function(error) {
-            console.error('載入訂單商品失敗:', error);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> 載入失敗</div>';
-        });
-}
-
-/**
- * 載入訂單退貨資訊
- * 透過 AJAX 從後端取得退貨單的詳細資料
- * 包含：申請時間、退款原因、退款金額
- */
-function loadReturnOrderInfo(orderId) {
-    var returnInfoSection = document.getElementById('returnInfoSection');
-
-    // 先隱藏退貨區塊，等資料載入後再顯示
-    if (returnInfoSection) {
-        returnInfoSection.style.display = 'none';
-    }
-
-    fetch('/seller/order/' + orderId + '/return-info')
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            if (data.success && data.hasReturnOrder) {
-                // 填入退貨申請時間（來自 return_order 表的 apply_time）
-                var applyTimeElement = document.getElementById('detailReturnApplyTime');
-                if (applyTimeElement) {
-                    applyTimeElement.textContent = data.applyTime || '-';
-                }
-
-                // 填入退款原因（來自 return_order 表的 return_reason）
-                var returnReasonElement = document.getElementById('detailReturnReason');
-                if (returnReasonElement) {
-                    returnReasonElement.textContent = data.returnReason || '-';
-                }
-
-                // 填入退款金額（來自 return_order 表的 refund_amount）
-                var refundAmountElement = document.getElementById('detailRefundAmount');
-                if (refundAmountElement) {
-                    refundAmountElement.textContent = '$' + Number(data.refundAmount).toLocaleString();
-                }
-
-                // 顯示退貨資訊區塊
-                if (returnInfoSection) {
-                    returnInfoSection.style.display = 'block';
-                }
-            } else {
-                // 沒有退貨資料，隱藏區塊
-                if (returnInfoSection) {
-                    returnInfoSection.style.display = 'none';
-                }
-            }
-        })
-        .catch(function(error) {
-            console.error('載入退貨資訊失敗:', error);
-            // 發生錯誤時隱藏區塊
-            if (returnInfoSection) {
-                returnInfoSection.style.display = 'none';
-            }
-        });
 }
 
 // 關閉訂單詳情 Modal
@@ -393,10 +240,7 @@ function closeOrderDetailModal() {
     document.getElementById('orderDetailModal').classList.remove('active');
 }
 
-/**
- * 切換訂單狀態篩選
- * 根據選擇的狀態篩選訂單列表
- */
+// 訂單狀態篩選
 function filterOrders(status, btn) {
     // 更新按鈕狀態
     document.querySelectorAll('.sub-tabs .sub-tab').forEach(function(t) {
