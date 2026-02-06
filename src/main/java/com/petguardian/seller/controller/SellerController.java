@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
@@ -53,9 +52,7 @@ public class SellerController {
 
     // ==================== 營運概況 ====================
 
-    /**
-     * 賣家管理中心首頁
-     */
+    // 賣家管理中心首頁
     @GetMapping("/dashboard")
     public String showDashboard(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
@@ -63,10 +60,8 @@ public class SellerController {
             return "redirect:/front/loginpage";
         }
 
-        // 取得所有營運概況資料（一次呼叫）
         Map<String, Object> dashboardData = dashboardService.getDashboardData(sellerId);
 
-        // 傳遞所有資料到 Model
         model.addAttribute("sellerInfo", dashboardData.get("sellerInfo"));
         model.addAttribute("totalProducts", dashboardData.get("totalProducts"));
         model.addAttribute("activeProducts", dashboardData.get("activeProducts"));
@@ -83,9 +78,7 @@ public class SellerController {
 
     // ==================== 商品管理 ====================
 
-    /**
-     * 商品管理頁面
-     */
+    // 商品管理頁面
     @GetMapping("/products")
     public String showProducts(HttpServletRequest request, Model model) {
         Integer sellerId = getCurrentMemId(request);
@@ -93,11 +86,9 @@ public class SellerController {
             return "redirect:/front/loginpage";
         }
 
-        // 取得商品列表（含圖片）
         List<Map<String, Object>> productsWithImages = productService.getSellerProductsWithImages(sellerId);
         List<ProType> proTypes = productService.getAllProTypes();
 
-        // 賣家資訊（側邊欄用）
         model.addAttribute("sellerInfo", dashboardService.getSellerBasicInfo(sellerId));
         model.addAttribute("productsWithImages", productsWithImages);
         model.addAttribute("proTypes", proTypes);
@@ -106,9 +97,7 @@ public class SellerController {
         return "frontend/store-seller";
     }
 
-    /**
-     * 取得商品圖片（AJAX）
-     */
+    // 取得商品圖片（AJAX），回傳圖片URL列表
     @GetMapping("/product/{proId}/images")
     @ResponseBody
     public List<Map<String, Object>> getProductImages(@PathVariable Integer proId) {
@@ -127,11 +116,11 @@ public class SellerController {
             @RequestParam(required = false) String proDescription,
             @RequestParam Integer stockQuantity,
             @RequestParam Integer proState,
-            @RequestParam(value = "productImages", required = false) List<MultipartFile> productImages,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl,
             @RequestParam(value = "deleteImageIds", required = false) List<Integer> deleteImageIds,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
-//         詳細記錄接收到的資料
+
         System.out.println("=== saveProduct Controller 開始 ===");
         System.out.println("商品ID: " + proId);
         System.out.println("商品名稱: " + proName);
@@ -139,29 +128,12 @@ public class SellerController {
         System.out.println("價格: " + proPrice);
         System.out.println("庫存: " + stockQuantity);
         System.out.println("狀態: " + proState);
+        System.out.println("圖片URL: " + imageUrl);
         System.out.println("待刪除圖片IDs: " + deleteImageIds);
-
-        // 詳細記錄圖片資訊
-        if (productImages == null) {
-            System.out.println("productImages 參數為 null");
-        } else {
-            System.out.println("productImages 數量: " + productImages.size());
-            for (int i = 0; i < productImages.size(); i++) {
-                MultipartFile file = productImages.get(i);
-                if (file == null) {
-                    System.out.println("  圖片[" + i + "]: null");
-                } else {
-                    System.out.println("  圖片[" + i + "]: name=" + file.getOriginalFilename()
-                            + ", size=" + file.getSize()
-                            + ", contentType=" + file.getContentType()
-                            + ", isEmpty=" + file.isEmpty());
-                }
-            }
-        }
 
         Integer sellerId = getCurrentMemId(request);
         if (sellerId == null) {
-            System.out.println("錯誤: sellerId 為 null，重導向到 /store");
+            System.out.println("錯誤: sellerId 為 null");
             return "redirect:/front/loginpage";
         }
         System.out.println("賣家ID: " + sellerId);
@@ -169,7 +141,7 @@ public class SellerController {
         try {
             productService.saveProductWithImages(sellerId, proId, proName, proTypeId,
                     proPrice, proDescription, stockQuantity, proState,
-                    productImages, deleteImageIds);
+                    imageUrl, deleteImageIds);
 
             redirectAttributes.addFlashAttribute("successMessage", "商品儲存成功!");
         } catch (Exception e) {

@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -22,15 +21,11 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductPicRepository productPicRepository;
 
-    // 注入圖片快取服務，用於在圖片更新後清除快取
     @Autowired
     private ImageCacheService imageCacheService;
 
-    // 預設圖片（1x1透明PNG）
-    private static final String DEFAULT_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-
-    // 最大圖片數量限制
-    private static final int MAX_IMAGE_COUNT = 1;
+    // 預設圖片（當商品沒有圖片時使用）
+    private static final String DEFAULT_IMAGE = "/images/default-product.png";
 
     // ==================== 基本查詢 ====================
 
@@ -71,7 +66,6 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Integer proId) {
         if (proId != null) {
             productRepository.deleteById(proId);
-            // 刪除商品時清除快取
             imageCacheService.evictCache(proId);
         }
     }
@@ -90,7 +84,6 @@ public class ProductServiceImpl implements ProductService {
         }
 
         productRepository.deleteById(proId);
-        // 刪除商品時清除快取
         imageCacheService.evictCache(proId);
         return true;
     }
@@ -108,10 +101,12 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductPic> pics = productPicRepository.findByProduct_ProId(proId);
         for (ProductPic pic : pics) {
-            if (pic.getProPic() != null && pic.getProPic().length > 0) {
+            // 檢查 URL 是否存在且非空白
+            if (pic.getProPic() != null && !pic.getProPic().trim().isEmpty()) {
                 Map<String, Object> picData = new HashMap<>();
                 picData.put("productPicId", pic.getProductPicId());
-                picData.put("imageBase64", "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(pic.getProPic()));
+                // 直接回傳圖片URL，不再做 Base64 轉換
+                picData.put("imageUrl", pic.getProPic());
                 result.add(picData);
             }
         }
@@ -129,10 +124,10 @@ public class ProductServiceImpl implements ProductService {
         List<ProductPic> pics = productPicRepository.findByProduct_ProId(proId);
 
         if (pics != null && !pics.isEmpty()) {
-            // 總是回傳最新的一張圖片作為主圖
             ProductPic firstPic = pics.get(0);
-            if (firstPic.getProPic() != null && firstPic.getProPic().length > 0) {
-                return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(firstPic.getProPic());
+            // 直接回傳URL字串
+            if (firstPic.getProPic() != null && !firstPic.getProPic().trim().isEmpty()) {
+                return firstPic.getProPic();
             }
         }
 
@@ -141,10 +136,17 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public void saveProductImages(Integer proId, List<MultipartFile> images) {
-        // 此方法保留給單純上傳圖片的 API 使用，但在 saveProductWithImages 已有完整實作
-        if (images == null || images.isEmpty() || proId == null) {
+    public void saveProductImageUrl(Integer proId, String imageUrl) {
+        if (proId == null || imageUrl == null || imageUrl.trim().isEmpty()) {
             return;
+        }
+
+        Optional<Product> productOpt = productRepository.findById(proId);
+        if (productOpt.isPresent()) {
+            ProductPic pic = new ProductPic();
+            pic.setProduct(productOpt.get());
+            pic.setProPic(imageUrl.trim());
+            productPicRepository.save(pic);
         }
     }
 
@@ -191,13 +193,13 @@ public class ProductServiceImpl implements ProductService {
     public Product saveProductWithImages(Integer sellerId, Integer proId, String proName,
                                          Integer proTypeId, Integer proPrice, String proDescription,
                                          Integer stockQuantity, Integer proState,
-                                         List<MultipartFile> newImages, List<Integer> deleteImageIds) {
+                                         String imageUrl, List<Integer> deleteImageIds) {
         System.out.println("=== ProductServiceImpl.saveProductWithImages 開始 ===");
 
         try {
             Product product = null;
 
-            // 1. 判斷新增/編輯
+            // 1. 判斷新增或編輯
             if (proId != null && proId > 0) {
                 System.out.println("模式: 編輯現有商品 ID: " + proId);
                 product = productRepository.findById(proId)
@@ -226,54 +228,29 @@ public class ProductServiceImpl implements ProductService {
             Product savedProduct = productRepository.saveAndFlush(product);
             Integer savedProId = savedProduct.getProId();
 
-            // =================================================================
-            // 3. 圖片處理
-            // =================================================================
+            // 3. 圖片URL處理
+            boolean hasNewUrl = (imageUrl != null && !imageUrl.trim().isEmpty());
 
-            // 檢查是否有上傳有效的新圖片
-            boolean hasNewUpload = false;
-            MultipartFile fileToUpload = null;
+            if (hasNewUrl) {
+                // 使用者輸入了新的圖片URL，清除舊圖片並存入新URL
+                System.out.println("偵測到新圖片URL，執行舊圖全數清除並寫入新URL");
 
-            if (newImages != null && !newImages.isEmpty()) {
-                for (MultipartFile img : newImages) {
-                    if (img != null && !img.isEmpty() && img.getSize() > 0) {
-                        hasNewUpload = true;
-                        fileToUpload = img;
-                        break;
-                    }
-                }
-            }
-
-            if (hasNewUpload) {
-                // 【使用者上傳了新圖】
-                // 不論前端有沒有傳 deleteImageIds，直接清空該商品所有舊圖，並存入新圖。
-
-                System.out.println("偵測到新圖片上傳，執行舊圖全數清除並寫入新圖");
-
-                // 找出該商品目前所有圖片
                 List<ProductPic> oldPics = productPicRepository.findByProduct_ProId(savedProId);
                 if (oldPics != null && !oldPics.isEmpty()) {
                     productPicRepository.deleteAll(oldPics);
-                    productPicRepository.flush(); // 強制執行刪除
-                    System.out.println("已移除 " + oldPics.size() + " 張舊圖片");
+                    productPicRepository.flush();
+                    System.out.println("已移除 " + oldPics.size() + " 張舊圖片紀錄");
                 }
 
-                // 儲存新圖片
-                try {
-                    ProductPic pic = new ProductPic();
-                    pic.setProduct(savedProduct);
-                    pic.setProPic(fileToUpload.getBytes());
-                    productPicRepository.save(pic);
-                    System.out.println("新圖片已儲存");
-                } catch (Exception e) {
-                    throw new RuntimeException("圖片 bytes 讀取失敗", e);
-                }
+                // 儲存新圖片URL
+                ProductPic pic = new ProductPic();
+                pic.setProduct(savedProduct);
+                pic.setProPic(imageUrl.trim());
+                productPicRepository.save(pic);
+                System.out.println("新圖片URL已儲存: " + imageUrl.trim());
 
             } else {
-                // 【使用者沒有上傳新圖】
-                // 檢查 deleteImageIds，如果使用者在前端按了 "X" 刪除舊圖，則執行刪除。
-                // 如果沒有 deleteImageIds，則保留原樣。
-
+                // 使用者沒有輸入新URL，檢查是否有要刪除的圖片
                 if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
                     System.out.println("執行指定圖片刪除，數量: " + deleteImageIds.size());
                     for (Integer picId : deleteImageIds) {
@@ -281,11 +258,11 @@ public class ProductServiceImpl implements ProductService {
                     }
                     productPicRepository.flush();
                 } else {
-                    System.out.println("無新圖也無刪除指令，保留原圖片");
+                    System.out.println("無新URL也無刪除指令，保留原圖片");
                 }
             }
 
-            // 4. 清除圖片快取 (重要：確保前端重新載入時抓到最新的)
+            // 4. 清除圖片快取
             imageCacheService.evictCache(savedProId);
             System.out.println("已清除商品 " + savedProId + " 的圖片快取");
 
