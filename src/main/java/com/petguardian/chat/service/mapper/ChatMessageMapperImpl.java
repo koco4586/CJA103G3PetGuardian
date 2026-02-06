@@ -26,7 +26,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         chatMessageDTO.setSenderName(sender != null ? sender.getMemberName() : "Unknown");
         chatMessageDTO.setChatroomId(chatMessageEntity.getChatroomId());
         chatMessageDTO.setChatTime(chatMessageEntity.getChatTime());
-        chatMessageDTO.setReportStatus(reportStatus != null ? reportStatus : 0);
+        chatMessageDTO.setReportStatus(reportStatus);
 
         if (chatMessageEntity.getReplyToMessageId() != null) {
             chatMessageDTO.setReplyToId(TSID.from(chatMessageEntity.getReplyToMessageId()).toString());
@@ -88,7 +88,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         }
 
         // Resolve Report Status
-        Integer status = reportStatusMap != null ? reportStatusMap.getOrDefault(msg.getMessageId(), 0) : 0;
+        Integer status = reportStatusMap != null ? reportStatusMap.get(msg.getMessageId()) : null;
 
         // Delegate to base mapper
         return toDto(msg, sender, replyContent, replySenderName, currentUserId, partnerId, status);
