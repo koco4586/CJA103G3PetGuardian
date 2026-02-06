@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import com.petguardian.evaluate.model.EvaluateDTO;
 import com.petguardian.evaluate.model.EvaluateRepository;
 import com.petguardian.evaluate.model.EvaluateVO;
-import com.petguardian.sitter.model.SitterMemberRepository;
-import com.petguardian.sitter.model.SitterMemberVO;
+import com.petguardian.member.model.Member;
+import com.petguardian.member.repository.management.MemberManagementRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
@@ -23,10 +23,10 @@ public class EvaluateServiceImpl implements EvaluateService {
     private EvaluateRepository repo;
 
     @Autowired
-    private SitterMemberRepository sitterMemberRepository;
+    private SitterRepository sitterRepository;
 
     @Autowired
-    private SitterRepository sitterRepository;
+    private MemberManagementRepository memberManagementRepository;
 
     @Override
     public void handleSubmission(EvaluateVO vo, String currentRole) {
@@ -162,9 +162,9 @@ public class EvaluateServiceImpl implements EvaluateService {
                         .orElse(null);
             } else if (review.getRoleType() == 1) {
                 // roleType=1: 會員評保母，senderId 是會員ID (memId)
-                // 從 SITTER_MEMBER 表查詢會員名字
-                senderName = sitterMemberRepository.findById(review.getSenderId())
-                        .map(SitterMemberVO::getMemName)
+                // 從 MEMBER 表查詢會員名字（無論該會員是否為保姆）
+                senderName = memberManagementRepository.findById(review.getSenderId())
+                        .map(Member::getMemName)
                         .orElse(null);
             }
 

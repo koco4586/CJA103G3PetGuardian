@@ -17,6 +17,9 @@ public class Complaintservice {
     @Autowired
     private com.petguardian.evaluate.model.EvaluateRepository evaluateRepository;
 
+    @Autowired
+    private com.petguardian.sitter.model.SitterRepository sitterRepository;
+
     public void insert(ComplaintVO vo) {
         repository.save(vo);
     }
@@ -51,20 +54,37 @@ public class Complaintservice {
 
         // 3. 抓取被檢舉的評價內容
         // 📌 重要邏輯：被檢舉的評價是「被檢舉人」寫的那則評價
-        // - toReportedMemId = 被檢舉人（寫評價的人）
-        // - senderId = 評價的發送者
-        // - 因此要找 senderId == toReportedMemId 的評價
+        // - toReportedMemId = 被檢舉人的 memId
+        // - senderId = 評價的發送者（可能是 memId 或 sitterId）
+        // - 需要處理兩種情況：直接匹配 memId，或轉換成 sitterId 後匹配
         if (vo.getBookingOrderId() != null && vo.getToReportedMemId() != null) {
             List<com.petguardian.evaluate.model.EvaluateVO> evals = evaluateRepository
                     .findByBookingOrderId(vo.getBookingOrderId());
 
             if (!evals.isEmpty()) {
-                // 🔥 關鍵修正：根據被檢舉人來精確匹配評價
-                // 被檢舉人 (toReportedMemId) = 評價的發送者 (senderId)
-                com.petguardian.evaluate.model.EvaluateVO targetEval = evals.stream()
+                com.petguardian.evaluate.model.EvaluateVO targetEval = null;
+
+                // 🔥 步驟1：先嘗試用 memId 直接匹配（會員寫的評價）
+                targetEval = evals.stream()
                         .filter(e -> e.getSenderId() != null && e.getSenderId().equals(vo.getToReportedMemId()))
                         .findFirst()
                         .orElse(null);
+
+                // 🔥 步驟2：如果找不到，嘗試將 memId 轉換成 sitterId 再匹配（保姆寫的評價）
+                if (targetEval == null) {
+                    // 查詢該 memId 對應的 sitterId
+                    com.petguardian.sitter.model.SitterVO sitter = sitterRepository
+                            .findByMemId(vo.getToReportedMemId());
+
+                    if (sitter != null) {
+                        Integer sitterId = sitter.getSitterId();
+                        // 用 sitterId 再次匹配
+                        targetEval = evals.stream()
+                                .filter(e -> e.getSenderId() != null && e.getSenderId().equals(sitterId))
+                                .findFirst()
+                                .orElse(null);
+                    }
+                }
 
                 if (targetEval != null) {
                     vo.setReportedContent(targetEval.getContent());
