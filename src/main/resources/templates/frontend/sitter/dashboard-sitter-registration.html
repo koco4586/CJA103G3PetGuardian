@@ -102,13 +102,17 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // 即時字數統計
+        // 即時字數統計 + LocalStorage 自動儲存
         document.addEventListener('DOMContentLoaded', function () {
             // 使用 name 屬性選取 textarea (Thymeleaf 會將 th:field="*{appIntro}" 轉換為 name="appIntro")
             const introTextarea = document.querySelector('textarea[name="appIntro"]');
             const experienceTextarea = document.querySelector('textarea[name="appExperience"]');
             const introCount = document.getElementById('introCount');
             const experienceCount = document.getElementById('experienceCount');
+
+            // LocalStorage 的 key 名稱
+            const STORAGE_KEY_INTRO = 'sitterApplication_appIntro';
+            const STORAGE_KEY_EXPERIENCE = 'sitterApplication_appExperience';
 
             // 更新字數統計的函數
             function updateCount(textarea, countElement) {
@@ -128,10 +132,46 @@
                 }
             }
 
-            // 監聽輸入事件
+            // 儲存表單資料到 LocalStorage
+            function saveFormData() {
+                if (introTextarea) {
+                    localStorage.setItem(STORAGE_KEY_INTRO, introTextarea.value);
+                }
+                if (experienceTextarea) {
+                    localStorage.setItem(STORAGE_KEY_EXPERIENCE, experienceTextarea.value);
+                }
+            }
+
+            // 從 LocalStorage 恢復表單資料
+            function restoreFormData() {
+                const savedIntro = localStorage.getItem(STORAGE_KEY_INTRO);
+                const savedExperience = localStorage.getItem(STORAGE_KEY_EXPERIENCE);
+
+                // 只在欄位為空時才恢復資料（避免覆蓋後端回填的資料）
+                if (introTextarea && savedIntro && !introTextarea.value) {
+                    introTextarea.value = savedIntro;
+                    updateCount(introTextarea, introCount);
+                }
+                if (experienceTextarea && savedExperience && !experienceTextarea.value) {
+                    experienceTextarea.value = savedExperience;
+                    updateCount(experienceTextarea, experienceCount);
+                }
+            }
+
+            // 清除 LocalStorage 中的表單資料
+            function clearFormData() {
+                localStorage.removeItem(STORAGE_KEY_INTRO);
+                localStorage.removeItem(STORAGE_KEY_EXPERIENCE);
+            }
+
+            // 頁面載入時恢復資料
+            restoreFormData();
+
+            // 監聽輸入事件 - 字數統計 + 自動儲存
             if (introTextarea && introCount) {
                 introTextarea.addEventListener('input', function () {
                     updateCount(this, introCount);
+                    saveFormData(); // 自動儲存
                 });
                 // 初始化字數統計
                 updateCount(introTextarea, introCount);
@@ -140,9 +180,16 @@
             if (experienceTextarea && experienceCount) {
                 experienceTextarea.addEventListener('input', function () {
                     updateCount(this, experienceCount);
+                    saveFormData(); // 自動儲存
                 });
                 // 初始化字數統計
                 updateCount(experienceTextarea, experienceCount);
+            }
+
+            // 檢查是否有成功訊息，如果有則清除暫存資料
+            const successMessage = document.querySelector('.alert-success');
+            if (successMessage) {
+                clearFormData();
             }
         });
 
