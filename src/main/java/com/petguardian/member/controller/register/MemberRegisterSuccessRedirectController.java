@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/front")
-public class MemberRegisterRedirectController {
+public class MemberRegisterSuccessRedirectController {
 
-    @GetMapping("/registerpage")
-    public String registerpage(){
-    return "forward:/html/frontend/member/register/register.html";
-    }
+	@GetMapping("/registersuccesspage")
+	public String registersuccesspage() {
+		return "forward:/html/frontend/member/register/memberregistersuccess.html";
+	}
 }

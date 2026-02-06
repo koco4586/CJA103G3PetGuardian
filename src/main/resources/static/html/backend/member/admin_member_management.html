@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>PetGuardian｜會員管理</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../../css/backend/style.css">
-    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
+    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/admin/admin.css">
 
     <style>
         .myatag {
@@ -68,13 +69,13 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="../../../js/backend/sidebar.js"></script>
+    <script src="js/backend/sidebar.js"></script>
 
     <script>
 
         function init() {
 
-            let fetch_url = "http://localhost:8080/admin/admin-member-management";
+            let fetch_url = "/admin/admin-member-management";// 拿掉 http://localhost:8080
 
             fetch(fetch_url, {
                 credentials: "include"
@@ -117,7 +118,7 @@
 
                 let memid = $(".searchmemid").val();
 
-                let fetch_url = `http://localhost:8080/admin/admin-member-management-searchmember?memId=${memid}`;
+                let fetch_url = `/admin/admin-member-management-searchmember?memId=${memid}`;// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     credentials: "include"
@@ -165,7 +166,7 @@
                     "memId": memberid
                 }
 
-                var fetch_url = "http://localhost:8080/admin/admin-member-management-updatestatus";
+                var fetch_url = "/admin/admin-member-management-updatestatus";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "PUT",

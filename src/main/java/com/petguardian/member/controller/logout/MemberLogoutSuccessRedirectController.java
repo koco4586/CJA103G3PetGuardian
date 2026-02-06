@@ -6,13 +6,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/front")
-public class MemberLogoutRedirectController {
+public class MemberLogoutSuccessRedirectController {
 
-	@GetMapping("/memberlogoutpage")
-    public String memberlogout() {
-
-        return "forward:/html/frontend/member/logout/member_logout.html";
-
-    }
-
+	@GetMapping("/logoutsuccesspage")
+	public String logoutsuccesspage() {
+		return "forward:/html/frontend/member/logout/memberlogoutsuccess.html";
+	}
 }

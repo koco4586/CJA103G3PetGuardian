@@ -6,13 +6,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/admin")
-public class AdminLogoutRedirectController {
-	
-	@GetMapping("/adminlogoutpage")
-	public String adminlogout() {
-		
-		return "forward:/html/backend/admin/admin_logout.html";
-		
-	}
+public class AdminLogoutSuccessRedirectController {
 
+	@GetMapping("/adminlogoutsuccess")
+	public String adminlogoutsuccess() {
+		return "forward:/html/backend/admin/adminlogout/adminlogoutsuccess.html";
+	}
 }

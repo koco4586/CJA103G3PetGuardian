@@ -6,13 +6,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/admin")
-public class AdminLoginRedirectController {
+public class AdminLoginSuccessRedirectController {
 
-    @GetMapping("/adminloginpage")
-    public String adminloginpage(){
-
-        return "forward:/html/backend/admin/admin_login.html";
-
-    }
-
+	@GetMapping("/adminloginsuccess")
+	public String adminloginsuccess() {
+		return "forward:/html/backend/admin/admin_login_success.html";
+	}
 }
