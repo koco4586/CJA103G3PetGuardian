@@ -122,8 +122,8 @@
                             <td>
                                 <button class="btn"
                                     style="background: #3498db; display: flex; align-items: center; gap: 5px;"
-                                    th:onclick="'handleReview(' + ${complaint.bookingReportId} + ')'">
-                                    <i class="fas fa-edit"></i> 處理中
+                                    th:onclick="'startAudit(' + ${complaint.bookingReportId} + ')'">
+                                    <i class="fas fa-edit"></i> 審核中
                                 </button>
                             </td>
                         </tr>
@@ -135,6 +135,8 @@
                         </tr>
                     </tbody>
                 </table>
+                <!-- 🔥 待處理分頁按鈕 -->
+                <div id="pending-pagination" class="pagination-container"></div>
             </div>
 
             <div id="closed-section" class="card content-section">
@@ -171,21 +173,34 @@
                                 <span th:text="${complaint.reportReason}"></span>
                             </td>
                             <td>
-                                <span th:if="${complaint.reportStatus == 1}" style="color: green; font-weight: bold;">
-                                    <i class="fas fa-check-circle"></i> 申訴通過
+                                <span th:if="${complaint.reportStatus == 1 or complaint.reportStatus == 3}"
+                                    style="color: green; font-weight: bold;">
+                                    <i class="fas fa-check-circle"></i> 審核通過
                                 </span>
-                                <span th:if="${complaint.reportStatus == 2}" style="color: red; font-weight: bold;">
-                                    <i class="fas fa-times-circle"></i> 申訴駁回
+                                <span th:if="${complaint.reportStatus == 2 or complaint.reportStatus == 4}"
+                                    style="color: red; font-weight: bold;">
+                                    <i class="fas fa-times-circle"></i> 審核駁回
                                 </span>
                             </td>
                             <td>
-                                <span style="color: #888;">
-                                    <i class="fa-solid fa-circle-check"></i> 已結案
-                                </span>
+                                <!-- 🔥 評論處理按鈕 -->
+                                <button th:if="${complaint.reportStatus == 1 or complaint.reportStatus == 2}"
+                                    class="btn-action" th:onclick="|handleClosedReview(${complaint.bookingReportId})|"
+                                    style="background: #3498db;">
+                                    <i class="fa-solid fa-comment"></i> 評論處理
+                                </button>
+                                <!-- 🔥 審核已完成標籤 -->
+                                <button th:if="${complaint.reportStatus == 3 or complaint.reportStatus == 4}"
+                                    class="btn-action" disabled
+                                    style="background: #95a5a6; cursor: not-allowed; opacity: 0.8;">
+                                    <i class="fa-solid fa-check-double"></i> 審核已完成
+                                </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+                <!-- 🔥 已結案分頁按鈕 -->
+                <div id="closed-pagination" class="pagination-container"></div>
             </div>
         </section>
     </div>
@@ -202,6 +217,36 @@
 
 
     <script type="text/javascript">
+        let lastComplaintCount = 0;
+        let autoRefreshInterval;
+
+        function startAutoRefresh() {
+            // 每 15 秒檢查一次
+            autoRefreshInterval = setInterval(() => {
+                // 檢查是否有 SweetAlert2 彈窗開啟
+                const isSwalOpen = document.querySelector('.swal2-container') !== null;
+
+                if (!isSwalOpen) {
+                    // 沒有彈窗開啟，可以檢查是否有新案件
+                    fetch('/admin/reviews1')
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newCount = doc.querySelectorAll('#pending-section tbody tr').length;
+
+                            // 如果案件數量改變（且不是第一頁 0 案），自動刷新
+                            if (newCount !== lastComplaintCount) {
+                                console.log(`檢測到檢舉案件變動：${lastComplaintCount} → ${newCount}，自動刷新頁面`);
+                                location.reload();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('自動刷新檢查失敗:', error);
+                        });
+                }
+            }, 15000);
+        }
 
 
 
@@ -221,7 +266,7 @@
             document.getElementById(sectionId).classList.add('active');
         }
 
-        function handleReview(reportId) {
+        function startAudit(reportId) {
             // 第一步：確認是否進入處理流程
             Swal.fire({
                 title: '確認處理',
@@ -247,8 +292,8 @@
                 icon: 'info',
                 showDenyButton: true,
                 showCancelButton: true,
-                confirmButtonText: '<i class="fa-solid fa-check"></i> 核准申訴',
-                denyButtonText: '<i class="fa-solid fa-xmark"></i> 駁回申訴',
+                confirmButtonText: '<i class="fa-solid fa-check"></i> 審核通過',
+                denyButtonText: '<i class="fa-solid fa-xmark"></i> 申訴駁回',
                 cancelButtonText: '暫時關閉',
                 confirmButtonColor: '#27ae60', // 綠色 (核准)
                 denyButtonColor: '#e74c3c',    // 紅色 (駁回)
@@ -258,20 +303,20 @@
 
                 if (result.isConfirmed) {
                     status = 1; // 假設 1 是核准
-                    statusText = "已核准";
+                    statusText = "審核通過";
                 } else if (result.isDenied) {
                     status = 2; // 假設 2 是駁回
-                    statusText = "已駁回";
+                    statusText = "審核駁回";
                 } else {
                     return; // 使用者按取消
                 }
 
-                // 第三步：發送 AJAX 到後端
+                // 第三步：發送 AJAX 到後端（只更新檢舉狀態，不處理評論）
                 sendAuditResult(reportId, status, statusText);
             });
         }
 
-        function sendAuditResult(reportId, status, statusText) {
+        function sendAuditResult(reportId, status, statusText, reviewAction) {
             // 🚩 這裡的地址必須是 /admin (類別路徑) + /pet/updateReportStatus (方法路徑)
             fetch('/admin/pet/updateReportStatus', {
                 method: 'POST',
@@ -280,7 +325,8 @@
                 },
                 body: new URLSearchParams({
                     'reportId': reportId,
-                    'status': status
+                    'status': status,
+                    'reviewAction': reviewAction  // 🔥 新增評論處理參數
                 })
             })
                 .then(res => res.json()) // 因為你的 Controller 回傳的是 ResponseEntity.ok(Map)
@@ -304,9 +350,147 @@
                 });
         }
 
+        // 🔥 評論處理功能（已結案紀錄專用）
+        function handleClosedReview(reportId) {
+            Swal.fire({
+                title: '評論處理',
+                text: '請選擇對被檢舉評論的處理方式：',
+                icon: 'question',
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-trash"></i> 刪除評論',
+                denyButtonText: '<i class="fa-solid fa-eye"></i> 解除隱藏',
+                cancelButtonText: '取消',
+                confirmButtonColor: '#e74c3c', // 紅色 (刪除)
+                denyButtonColor: '#27ae60',    // 綠色 (解除隱藏)
+            }).then((result) => {
+                let action = null;
+                let actionText = "";
+
+                if (result.isConfirmed) {
+                    action = 'delete';
+                    actionText = "刪除評論";
+                } else if (result.isDenied) {
+                    action = 'unhide';
+                    actionText = "解除隱藏";
+                } else {
+                    return; // 使用者按取消
+                }
+
+                // 發送 AJAX 到後端
+                fetch('/admin/pet/handleReview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        'reportId': reportId,
+                        'action': action
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: '處理成功',
+                                text: `已${actionText}`,
+                                icon: 'success',
+                                confirmButtonText: '確定'
+                            }).then(() => {
+                                location.reload(); // 成功後刷新頁面
+                            });
+                        } else {
+                            Swal.fire('錯誤', '後台更新失敗', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        Swal.fire('錯誤', '連線異常，請檢查網路或伺服器路徑', 'error');
+                    });
+            });
+        }
 
 
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ 後台審核頁面已準備就緒');
 
+            // 取得初始案件數
+            lastComplaintCount = document.querySelectorAll('#pending-section tbody tr').length;
+
+            // 🔥 初始化分頁功能
+            initTablePagination('#pending-section table', 'pending-pagination', 10);
+            initTablePagination('#closed-section table', 'closed-pagination', 10);
+
+            // 啟動自動刷新
+            startAutoRefresh();
+        });
+
+        // 🔥 分頁功能（每頁 10 筆，少於 10 筆不顯示分頁）
+        function initTablePagination(tableSelector, paginationId, pageSize = 10) {
+            const table = document.querySelector(tableSelector);
+            if (!table) return;
+
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                return !row.querySelector('td[colspan]');
+            });
+
+            if (rows.length < pageSize) {
+                const paginationContainer = document.getElementById(paginationId);
+                if (paginationContainer) paginationContainer.style.display = 'none';
+                return;
+            }
+
+            let currentPage = 1;
+            const totalPages = Math.ceil(rows.length / pageSize);
+
+            function renderPage(page) {
+                rows.forEach(row => row.style.display = 'none');
+                const start = (page - 1) * pageSize;
+                const end = start + pageSize;
+                rows.slice(start, end).forEach(row => row.style.display = '');
+                renderPaginationButtons(page);
+            }
+
+            function renderPaginationButtons(page) {
+                const pagination = document.getElementById(paginationId);
+                if (!pagination) return;
+                pagination.innerHTML = '';
+                pagination.style.display = 'flex';
+                pagination.style.textAlign = 'center';
+                pagination.style.marginTop = '1.5rem';
+                pagination.style.gap = '8px';
+                pagination.style.justifyContent = 'center';
+                pagination.style.flexWrap = 'wrap';
+
+                const btnStyle = 'padding:8px 16px;border:1px solid #ddd;background:white;color:#333;border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:0.9rem;';
+
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '上一頁';
+                prevBtn.disabled = page === 1;
+                prevBtn.style.cssText = btnStyle + (page === 1 ? 'background:#f5f5f5;color:#ccc;cursor:not-allowed;' : '');
+                prevBtn.onclick = () => { currentPage--; renderPage(currentPage); };
+                pagination.appendChild(prevBtn);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.style.cssText = btnStyle + (i === page ? 'background:#ce875b;color:white;border-color:#ce875b;font-weight:bold;' : '');
+                    pageBtn.onclick = () => { currentPage = i; renderPage(currentPage); };
+                    pagination.appendChild(pageBtn);
+                }
+
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '下一頁';
+                nextBtn.disabled = page === totalPages;
+                nextBtn.style.cssText = btnStyle + (page === totalPages ? 'background:#f5f5f5;color:#ccc;cursor:not-allowed;' : '');
+                nextBtn.onclick = () => { currentPage++; renderPage(currentPage); };
+                pagination.appendChild(nextBtn);
+            }
+
+            renderPage(1);
+        }
 
     </script>
 

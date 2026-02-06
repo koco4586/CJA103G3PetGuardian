@@ -10,7 +10,7 @@ public class AdminManagementResetPwRediectController {
 
 	@GetMapping("/adminresetpwpage")
 	public String adminresetpwpage() {
-		return "redirect:/html/backend/admin/admin_resetpw.html";
+		return "forward:/html/backend/admin/admin_resetpw.html";
 	}
 
 }

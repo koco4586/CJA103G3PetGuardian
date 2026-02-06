@@ -74,7 +74,7 @@ public class AdminInsertService {
 
 			// 9. 建立管理員資料並存入資料庫
 			Admin admin = new Admin();
-			admin.setAdmImage("/images/backend/admin/" + safeFileName); // 網頁訪問路徑
+			admin.setAdmImage("/images/backend/adminupdateinfo/" + safeFileName); // 網頁訪問路徑
 			admin.setAdmName(adminInsertDTO.getAdmName());
 			admin.setAdmAccount(adminInsertDTO.getAdmAccount());
 			admin.setAdmEmail(adminInsertDTO.getAdmEmail());

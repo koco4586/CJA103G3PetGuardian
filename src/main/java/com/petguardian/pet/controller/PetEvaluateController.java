@@ -14,6 +14,7 @@ import com.petguardian.booking.service.BookingService;
 import com.petguardian.evaluate.model.EvaluateDTO;
 import com.petguardian.evaluate.model.EvaluateVO;
 import com.petguardian.evaluate.service.EvaluateService;
+import com.petguardian.sitter.service.SitterService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -27,19 +28,38 @@ public class PetEvaluateController {
     @Autowired
     private BookingService bookingOrderSvc;
 
+    @Autowired
+    private SitterService sitterService;
+
     /**
      * API 端點：根據保姆 ID 撈取所有評價資料
      * URL: /pet/evaluate/list/{sitterId}
      */
     @GetMapping("/evaluate/list/{sitterId}")
     @ResponseBody
-    public ResponseEntity<List<EvaluateVO>> getReviewsBySitterId(@PathVariable Integer sitterId) {
+    public ResponseEntity<?> getReviewsBySitterId(@PathVariable Integer sitterId, HttpSession session) {
         try {
+            Integer currentMemId = (Integer) session.getAttribute("memId");
+            // 呼叫 Service 獲取基本資料 (由 Service 填充 senderName 和 senderMemId)
             List<EvaluateVO> reviews = evaluateService.getReviewsBySitterId(sitterId);
+
+            // 在 Controller 層進行本人判斷
+            if (reviews != null) {
+                for (EvaluateVO r : reviews) {
+                    if (currentMemId != null && r.getSenderMemId() != null) {
+                        r.setIsOwnReview(currentMemId.equals(r.getSenderMemId()));
+                    } else {
+                        r.setIsOwnReview(false);
+                    }
+                }
+            }
             return ResponseEntity.ok(reviews);
         } catch (Exception e) {
+            System.err.println("❌ [API] /evaluate/list/" + sitterId + " 出錯: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500).build();
+            java.util.Map<String, String> errorMap = new java.util.HashMap<>();
+            errorMap.put("error", "載入評價清單時伺服器發生異常，請檢查控制台日誌。");
+            return ResponseEntity.status(500).body(errorMap);
         }
     }
 
@@ -168,24 +188,40 @@ public class PetEvaluateController {
     public ResponseEntity<?> getReviewsByMemberId(@PathVariable Integer memberId, HttpSession session) {
         try {
             Integer currentMemId = (Integer) session.getAttribute("memId");
-            Integer roleId = (Integer) session.getAttribute("roleId");
-
             if (currentMemId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("請先登入");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"error\":\"請先登入\"}");
             }
 
+            // 🔥 強化身分判定：透過 SitterService 確認保姆身分
+            boolean isSitter = (sitterService.getSitterByMemId(currentMemId) != null);
+            boolean isAdmin = (session.getAttribute("admId") != null);
             boolean isOwner = currentMemId.equals(memberId);
-            boolean isSitter = (roleId != null && roleId == 0);
 
-            if (!isOwner && !isSitter) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("無權限查看此評價");
+            if (!isOwner && !isSitter && !isAdmin) {
+                System.out.println("⚠️ [API] 權限拒絕: memId=" + currentMemId + ", targetMember=" + memberId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"error\":\"無權限查看此評價\"}");
             }
 
+            // 回退到單參數版本
             List<EvaluateVO> reviews = evaluateService.getReviewsByMemberId(memberId);
+
+            // 補充本人判斷標記
+            if (reviews != null) {
+                for (EvaluateVO r : reviews) {
+                    if (currentMemId != null && r.getSenderMemId() != null) {
+                        r.setIsOwnReview(currentMemId.equals(r.getSenderMemId()));
+                    } else {
+                        r.setIsOwnReview(false);
+                    }
+                }
+            }
             return ResponseEntity.ok(reviews);
         } catch (Exception e) {
+            System.err.println("❌ [API] /evaluate/member/" + memberId + " 出錯: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500).body("查詢失敗：" + e.getMessage());
+            java.util.Map<String, String> errorMap = new java.util.HashMap<>();
+            errorMap.put("error", "查詢評價時發生伺服器錯誤: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorMap);
         }
     }
 }
