@@ -258,7 +258,7 @@
                         <tbody>
                         <tr th:each="item : ${productsWithImages}">
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0;">
-                                <img th:src="${item.mainImage}" alt="商品圖片"
+                                <img th:src="${item.mainImage + '?t=' + cacheBuster}" alt="商品圖片"
                                      style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
                             </td>
                             <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;"
@@ -481,8 +481,7 @@
         <h3 id="modalTitle">新增商品</h3>
         <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 1.5rem;">
 
-        <form id="productForm" th:action="@{/seller/product/save}" method="post">
-            <input type="hidden" id="proId" name="proId">
+        <form id="productForm" th:action="@{/seller/product/save}" method="post" enctype="multipart/form-data">            <input type="hidden" id="proId" name="proId">
 
             <div class="form-group">
                 <label>商品名稱 <span class="required">*</span></label>
@@ -533,7 +532,7 @@
                 <div id="existingImages" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
                 </div>
 
-                <div id="newImagePreview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -541,7 +540,7 @@
                            style="width: auto; height: auto; padding: 10px 20px; flex-direction: row; gap: 8px;">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <span>選擇圖片</span>
-                        <input type="file" id="productImages" name="productImages" accept="image/*"
+                        <input type="file" id="productImage" name="productImage" accept="image/jpeg,image/png"
                                style="display: none;" onchange="previewNewImages(this)">
                     </label>
                     <span style="color: #999; font-size: 0.85rem;">支援 JPG、PNG，最多 1 張</span>
@@ -656,6 +655,10 @@
                         <span class="detail-label">退款原因</span>
                         <span class="detail-value" id="detailReturnReason" style="word-break: break-word;">-</span>
                     </div>
+                </div>
+                <div id="returnImagesContainer" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #ffcdd2;">
+                    <h4 style="font-size: 0.95rem; font-weight: 600; color: #333; margin-bottom: 10px;">退貨圖片</h4>
+                    <div id="returnImagesDiv" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
                 </div>
             </div>
         </div>

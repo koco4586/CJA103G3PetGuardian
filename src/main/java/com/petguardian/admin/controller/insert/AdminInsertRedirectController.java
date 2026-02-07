@@ -10,6 +10,6 @@ public class AdminInsertRedirectController {
 
     @GetMapping("/admininsertpage")
     public String admininsertpage(){
-        return "redirect:/html/backend/admin/admin_insert.html";
+        return "forward:/html/backend/admin/admin_insert.html";
     }
 }

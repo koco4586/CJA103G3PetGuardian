@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>Petguardian｜後台登入</title>
-    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
+    <link rel="stylesheet" href="css/backend/admin/admin.css">
 
     <style>
         .selfouter {
@@ -73,7 +74,7 @@
                     "admPassword": loginpassword
                 }
 
-                let fetch_url = "http://localhost:8080/admin/adminlogin";
+                let fetch_url = "/admin/adminlogin";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "POST",
@@ -91,7 +92,7 @@
                         alert("此帳號已被停權，無法登入，如有疑問請聯繫本平台資訊科，服務專線：(03)425-1108。");
                     } else if (data.result === "登入成功") {
                         alert("PetGuardiab後台登入成功");
-                        window.location.href = "./admin_login_success.html";
+                        window.location.href = "/admin/adminloginsuccess";//記得補這個controller
                     }
                 });
 

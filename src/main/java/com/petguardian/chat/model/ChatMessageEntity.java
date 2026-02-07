@@ -35,7 +35,7 @@ import jakarta.persistence.Index;
 public class ChatMessageEntity implements Persistable<Long>, Serializable {
 
     @Id
-    @Column(name = "message_id", length = 13, updatable = false)
+    @Column(name = "message_id", updatable = false)
     private Long messageId; // Strategy: TSID (Application Generated 64bit Long)
 
     @Column(name = "chatroom_id")
@@ -50,7 +50,7 @@ public class ChatMessageEntity implements Persistable<Long>, Serializable {
     @Column(name = "chat_time")
     private LocalDateTime chatTime;
 
-    @Column(name = "reply_to_message_id", length = 13)
+    @Column(name = "reply_to_message_id")
     private Long replyToMessageId; // Reference to parent message ID
 
     @Override

@@ -16,7 +16,7 @@ public class MemberManagementController {
     private MemberManagementService memberManagementService;
 
     @PutMapping("/management")
-    public Member update(@RequestParam MultipartFile memImage,
+    public Member update(@RequestParam(required = false) MultipartFile memImage,// 添加 required
                          @ModelAttribute MemberManagementUpdateDTO memberManagementUpdateDTO,
                          HttpSession session){
 

@@ -43,7 +43,8 @@ const ChatState = {
     contextMenuTargetId: null,
     contextMenuTargetStatus: 0,
     isSearchMode: false,
-    isReturningToPresent: false
+    isReturningToPresent: false,
+    pinnedRooms: new Set() // [NEW] Track pinned chatroom IDs
 };
 
 // ============================================================
@@ -123,6 +124,17 @@ function initChat() {
 
     DOM.init();
     updateSendButton(); // Initialize button state
+
+    // Load Pinned Rooms from Cookie
+    const savedPinned = getCookie('pinned_chatrooms');
+    if (savedPinned) {
+        savedPinned.split(',').forEach(id => {
+            if (id) ChatState.pinnedRooms.add(parseInt(id, 10));
+        });
+        // Initial sort after loading pinned state
+        sortContacts();
+    }
+
     connect();
 
     // [NEW] Auto-select room if requested (e.g. redirected from Store)
@@ -207,7 +219,7 @@ function onMessageReceived(dto) {
     }
 
     if (shouldAppend) {
-        appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName, dto.isRead, 0, dto.chatTime);
+        appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName, dto.isRead, dto.reportStatus, dto.chatTime);
 
 
         // Real-time "Mark as Read"
@@ -269,9 +281,8 @@ function updateContactLastMessage(chatroomId, userId, content) {
         const msgDiv = contactItem.querySelector('.contact-last-msg');
         if (msgDiv) msgDiv.textContent = content;
 
-        // Move to top (Recent activity sort)
-        // const list = contactItem.parentNode;
-        // list.prepend(contactItem);
+        // Move to top (Recent activity sort) - Pinned/Regular aware
+        sortContacts();
     }
 }
 
@@ -559,7 +570,7 @@ function renderMessagesBatch(messages, container, mode = RenderMode.INITIAL) {
         }
 
         const isSentByMe = (msg.senderId === ChatState.currentUserId);
-        const reportStatus = msg.reportStatus || 0;
+        const reportStatus = (msg.reportStatus !== undefined) ? msg.reportStatus : null;
         const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName, msg.isRead, reportStatus, msg.chatTime);
         fragment.appendChild(msgEl);
     });
@@ -609,7 +620,7 @@ function renderMessagesBatch(messages, container, mode = RenderMode.INITIAL) {
  * Create message DOM element (XSS-safe via createTextNode).
  * Added chatTime parameter
  */
-function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus = 0, chatTime = null) {
+function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus = null, chatTime = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isSent ? 'sent' : 'received');
 
@@ -632,12 +643,13 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
             showContextMenu(e, messageId, reportStatus);
         });
 
-        // Add visual indicator if reported (Status 1: Pending, 3: Rejected)
+        // Add visual indicator if reported (Status 0: Pending, 3: Rejected)
         // Status 2 is Hidden, so handling it separately below
-        if (reportStatus == 1 || reportStatus == 3) {
+        if (reportStatus !== null && (reportStatus === 0 || reportStatus === 3)) {
             const reportIcon = document.createElement('i');
             reportIcon.className = 'fas fa-flag';
-            reportIcon.style.cssText = 'font-size: 10px; color: #e74c3c; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+            const flagColor = (reportStatus === 3) ? '#2ecc71' : '#e74c3c'; // Green for Rejected, Red for Pending
+            reportIcon.style.cssText = `font-size: 10px; color: ${flagColor}; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);`;
             msgDiv.appendChild(reportIcon);
         }
     }
@@ -692,7 +704,7 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
 /**
  * Append single message and smart-scroll.
  */
-function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead = false, reportStatus = 0, chatTime = new Date().toISOString()) {
+function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead = false, reportStatus = null, chatTime = new Date().toISOString()) {
     // Duplicate guard (O(1))
     if (messageId && ChatState.messageIds.has(messageId)) {
         return;
@@ -1224,8 +1236,98 @@ async function jumpToMessage(messageId) {
 }
 
 // ============================================================
+// PINNING LOGIC
+// ============================================================
+
+/**
+ * Toggle pinning of a chatroom.
+ */
+function togglePin(chatroomId, event) {
+    if (event) event.stopPropagation();
+
+    const id = parseInt(chatroomId, 10);
+    const item = document.getElementById('contact-item-' + id);
+
+    if (ChatState.pinnedRooms.has(id)) {
+        ChatState.pinnedRooms.delete(id);
+        if (item) item.classList.remove('pinned');
+    } else {
+        ChatState.pinnedRooms.add(id);
+        if (item) item.classList.add('pinned');
+    }
+
+    // Update Cookie (3 days TTL)
+    const pinArray = Array.from(ChatState.pinnedRooms);
+    setCookie('pinned_chatrooms', pinArray.join(','), 3);
+
+    // Re-sort list
+    sortContacts();
+}
+
+/**
+ * Re-sort the contact list DOM based on pinned status and recency.
+ */
+function sortContacts() {
+    const list = document.getElementById('contact-list');
+    if (!list) return;
+
+    const items = Array.from(list.querySelectorAll('.contact-item'));
+    if (items.length === 0) return;
+
+    // Stable sort: Pinned first, then by DOM order (which reflects server-side recency)
+    items.sort((a, b) => {
+        const idA = parseInt(a.dataset.chatroomId, 10);
+        const idB = parseInt(b.dataset.chatroomId, 10);
+        const isPinnedA = ChatState.pinnedRooms.has(idA);
+        const isPinnedB = ChatState.pinnedRooms.has(idB);
+
+        if (isPinnedA && !isPinnedB) return -1;
+        if (!isPinnedA && isPinnedB) return 1;
+
+        return 0; // Maintain relative order if same pin state
+    });
+
+    // Re-append items in new order
+    items.forEach(item => {
+        // Ensure UI reflects state
+        const id = parseInt(item.dataset.chatroomId, 10);
+        if (ChatState.pinnedRooms.has(id)) {
+            item.classList.add('pinned');
+        } else {
+            item.classList.remove('pinned');
+        }
+        list.appendChild(item);
+    });
+}
+
+// ============================================================
 // UTILITIES
 // ============================================================
+
+/**
+ * Cookie Helpers
+ */
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -1258,7 +1360,9 @@ window.ChatApp = {
     // Report public access
     openReportModal,
     closeReportModal,
-    submitReport
+    submitReport,
+    // [NEW] Pinning public access
+    togglePin
 };
 
 document.addEventListener('DOMContentLoaded', initChat);
