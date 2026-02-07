@@ -640,7 +640,10 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
         // Right click: Context Menu
         msgDiv.addEventListener('contextmenu', function (e) {
             e.preventDefault();
-            showContextMenu(e, messageId, reportStatus);
+            // Minimalist change: Prevent reporting own messages
+            if (!isSent) {
+                showContextMenu(e, messageId, reportStatus);
+            }
         });
 
         // Add visual indicator if reported (Status 0: Pending, 3: Rejected)
