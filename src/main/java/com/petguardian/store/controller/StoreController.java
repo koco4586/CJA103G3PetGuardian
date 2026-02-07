@@ -97,16 +97,23 @@ public class StoreController {
     }
 
     /**
-     * 將商品圖片轉換為 Base64 字串（使用快取服務）
+     * 取得商品圖片 URL（使用快取服務）
      */
-    private String getProductImageBase64(Integer proId) {
-        return imageCacheService.getProductImageBase64(proId);
+    private String getProductImageUrl(Integer proId) {
+        return imageCacheService.getProductImageUrl(proId);
     }
 
     /**
      * 將 ProductVO 轉換為 ProductDisplayDTO
      */
     private ProductDisplayDTO toProductDisplayDTO(Product product, Set<Integer> favoriteIds) {
+        return toProductDisplayDTO(product, favoriteIds, null);
+    }
+
+    /**
+     * 將 ProductVO 轉換為 ProductDisplayDTO（使用預載的圖片 Map）
+     */
+    private ProductDisplayDTO toProductDisplayDTO(Product product, Set<Integer> favoriteIds, Map<Integer, String> imageMap) {
         ProductDisplayDTO dto = new ProductDisplayDTO();
         dto.setProId(product.getProId());
         dto.setSellerId(product.getMemId());
@@ -114,7 +121,12 @@ public class StoreController {
         dto.setProPrice(product.getProPrice());
         dto.setStockQuantity(product.getStockQuantity());
         dto.setProDescription(product.getProDescription());
-        dto.setImageBase64(getProductImageBase64(product.getProId()));
+        // 優先使用預載的圖片 Map，否則單獨查詢
+        if (imageMap != null && imageMap.containsKey(product.getProId())) {
+            dto.setImageBase64(imageMap.get(product.getProId()));
+        } else {
+            dto.setImageBase64(getProductImageUrl(product.getProId()));
+        }
         dto.setFavorited(favoriteIds != null && favoriteIds.contains(product.getProId()));
         // 加入分類資訊
         if (product.getProType() != null) {
@@ -204,9 +216,15 @@ public class StoreController {
                 ? favoriteService.getFavoriteProductIds(memId)
                 : Collections.emptySet();
 
-        // 轉換為 ProductDisplayDTO（含 Base64 圖片）
+        // 批次載入所有商品圖片（單次查詢）
+        List<Integer> proIds = products.stream()
+                .map(Product::getProId)
+                .collect(Collectors.toList());
+        Map<Integer, String> imageMap = imageCacheService.getProductImageUrlMap(proIds);
+
+        // 轉換為 ProductDisplayDTO（使用預載的圖片 Map）
         List<ProductDisplayDTO> productDTOs = products.stream()
-                .map(p -> toProductDisplayDTO(p, favoriteIds))
+                .map(p -> toProductDisplayDTO(p, favoriteIds, imageMap))
                 .collect(Collectors.toList());
 
         // 取得所有商品分類
@@ -300,7 +318,7 @@ public class StoreController {
             dto.setProPrice(item.getProPrice());
             dto.setQuantity(item.getQuantity());
             dto.setSubtotal(item.getSubtotal());
-            dto.setImageBase64(getProductImageBase64(item.getProId()));
+            dto.setImageBase64(getProductImageUrl(item.getProId()));
 
             // 取得即時庫存
             productService.getProductById(item.getProId())
@@ -341,8 +359,13 @@ public class StoreController {
                 .map(CartItem::getProId)
                 .collect(Collectors.toList());
         List<Product> upsellProducts = productService.getOtherActiveProductsBySeller(sellerId, cartProIds);
+        // 批次載入加購商品圖片
+        List<Integer> upsellProIds = upsellProducts.stream()
+                .map(Product::getProId)
+                .collect(Collectors.toList());
+        Map<Integer, String> upsellImageMap = imageCacheService.getProductImageUrlMap(upsellProIds);
         List<ProductDisplayDTO> upsellDTOs = upsellProducts.stream()
-                .map(p -> toProductDisplayDTO(p, favoriteIds))
+                .map(p -> toProductDisplayDTO(p, favoriteIds, upsellImageMap))
                 .collect(Collectors.toList());
         checkout.setUpsellProducts(upsellDTOs);
 

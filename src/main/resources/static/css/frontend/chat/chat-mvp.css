@@ -463,6 +463,7 @@ mark {
 
 .message.sent .message-time {
     color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .message.received .message-time {
@@ -543,4 +544,36 @@ mark {
 
 .context-menu li.disabled:hover {
     background: white;
+}
+
+/* [NEW] Pin Button Styles */
+.pin-btn {
+    padding: 6px;
+    cursor: pointer;
+    color: #ccc;
+    transition: all 0.2s ease;
+    z-index: 5;
+    transform: rotate(45deg);
+    /* Default angle */
+}
+
+.pin-btn:hover {
+    color: var(--primary-color);
+    transform: rotate(0deg) scale(1.2);
+}
+
+.contact-item.pinned .pin-btn {
+    color: var(--primary-color);
+    transform: rotate(0deg);
+}
+
+.contact-item.pinned {
+    background-color: #fffaf0 !important;
+    /* Subtle highlight for pinned rooms */
+    border-right: 4px solid var(--primary-color);
+    /* Extra visual cue */
+}
+
+.contact-item.pinned:hover {
+    background-color: #fff5e6 !important;
 }

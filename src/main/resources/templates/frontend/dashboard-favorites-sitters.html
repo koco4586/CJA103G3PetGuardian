@@ -221,8 +221,7 @@
 
 	<div class="container dashboard-container">
 		<!-- Sidebar (共用元件) -->
-		<div
-			th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='favorites')}"></div>
+		<div th:replace="~{frontend/fragments/dashboard-sidebar :: sidebar(activePage='favorites')}"></div>
 
 		<!-- Main Content -->
 		<div class="main-content">
@@ -236,13 +235,14 @@
 
 				<div class="d-flex justify-between align-center mb-2">
 					<div class="sub-tabs" style="margin-bottom: 0;">
-						<a th:href="@{/dashboard/favorites/sitters}" class="sub-tab active">保母</a> 
+						<a th:href="@{/dashboard/favorites/sitters}" class="sub-tab active">保母</a>
 						<a th:href="@{/dashboard/favorites}" class="sub-tab">二手商品</a>
 						<a class="sub-tab" th:href="@{/forumpost/post-collection}">文章</a>
 					</div>
 				</div>
 				<div class="store-grid">
 					<div th:each="fav : ${sitterFavorites}" class="store-product-card">
+
 					    <div class="product-image-wrapper">
 					        <a th:href="@{/frontend/public/sitter/detail/{id}(id=${fav.sitterId})}">
 					            <img th:src="${fav.memImage}"
@@ -259,17 +259,23 @@
 							<h3 th:text="${fav.sitterName}">保母姓名</h3>
 							<div class="stock-info">
 								<span>
-								    <i class="fas fa-star" style="color: #f1c40f;"></i>
-								    <span th:text="${fav.avgRating}">0.0</span> 
-								    (<span th:text="${fav.ratingCount}">0</span> 評價)
+									<!-- 如果有評分 -->
+									<th:block th:if="${fav.avgRating != null}">
+										<i class="fas fa-star" style="color: #f1c40f;"></i>
+										<span th:text="${fav.avgRating}">0.0</span>
+										<!-- (<span th:text="${fav.ratingCount}">0</span> 評價) -->
+									</th:block>
+									<!-- 如果沒有評分 -->
+									<th:block th:if="${fav.avgRating == null}">
+										<span style="color: #999; font-size: 0.8rem;">暫未有星數</span>
+									</th:block>
 								</span>
 							</div>
 							<div class="product-price" style="margin: 0.5rem 0;">
 								NT$ <span th:text="${fav.basePrice}">500</span> / 小時
 							</div>
-							<a
-								th:href="@{/frontend/public/sitter/detail/{id}(id=${fav.sitterId})}"
-								class="btn-buy-now"> <i class="fas fa-calendar-check"></i>
+							<a th:href="@{/frontend/public/sitter/detail/{id}(id=${fav.sitterId})}" class="btn-buy-now">
+								<i class="fas fa-calendar-check"></i>
 								立即預約
 							</a>
 						</div>
@@ -285,8 +291,7 @@
 		</div>
 	</div>
 
-	<footer id="main-footer"
-		style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
+	<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script th:inline="javascript">
 		if ('scrollRestoration' in history) {

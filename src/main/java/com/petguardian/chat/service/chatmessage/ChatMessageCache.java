@@ -23,10 +23,9 @@ import java.util.stream.Collectors;
 @Component
 public class ChatMessageCache {
 
-    private static final String HISTORY_KEY = "chat:room:%d:history_v2";
+    private static final String HISTORY_KEY = "chat:room:%d:history";
     private static final String WARMED_KEY = "chat:room:%d:warmed";
     private static final String QUEUE_KEY = "chat:write_queue:%d";
-    private static final String RECENT_LOG_HASH = "chat:recent_msgs";
     private static final String DIRTY_ROOMS_SET = "chat:dirty_rooms";
     private static final String CIRCUIT_NAME = "redisCacheCircuit";
     private static final long DEFAULT_TTL_HOURS = 24;
@@ -58,7 +57,7 @@ public class ChatMessageCache {
         String key = String.format(HISTORY_KEY, roomId);
         try {
             return circuitBreaker.executeSupplier(() -> {
-                // Lexicographical ZSET: Score is 0, so sorted by Member (JSON String)
+                // Lexicographical ZSET: Score is 0, so sorted by TSID (JSON String)
                 // TSID is Base32 (sortable string), so reverse range gives newest messages
                 Set<String> jsonSet = redisJsonMapper.getStringTemplate().opsForZSet()
                         .reverseRange(key, 0, limit - 1);
@@ -232,18 +231,6 @@ public class ChatMessageCache {
     // MISC
     // =================================================================================
 
-    public void putRecentLog(String messageId, ChatMessageRedisDTO message) {
-        try {
-            // Hash needs Strings
-            String jsonMessage = redisJsonMapper.toJson(message);
-            redisJsonMapper.getStringTemplate().opsForHash().put(RECENT_LOG_HASH, messageId, jsonMessage);
-            redisJsonMapper.expire(RECENT_LOG_HASH, Duration.ofHours(DEFAULT_TTL_HOURS));
-        } catch (Exception e) {
-            log.debug("[Cache] Failed to put recent log: {}", e.getMessage());
-            throw new RuntimeException("Cache put failed", e);
-        }
-    }
-
     public Integer popDirtyRoom() {
         try {
             return circuitBreaker.executeSupplier(() -> {
@@ -261,12 +248,4 @@ public class ChatMessageCache {
         }
     }
 
-    public void markRoomDirty(Integer roomId) {
-        try {
-            redisJsonMapper.getStringTemplate().opsForSet().add(DIRTY_ROOMS_SET, String.valueOf(roomId));
-        } catch (Exception e) {
-            log.debug("[Cache] Failed to mark room dirty: {}", e.getMessage());
-            throw new RuntimeException("Cache mark dirty failed", e);
-        }
-    }
 }

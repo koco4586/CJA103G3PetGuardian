@@ -1,7 +1,6 @@
 package com.petguardian.forum.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -69,6 +68,7 @@ public class ForumPostController {
 		
 		List<ForumPostVO> postList = forumPostService.getAllActiveByForumId(forumId);
 		
+		redisService.incrementForumViewCount(forumId);
 		// redis處理熱門貼文邏輯
 		List<Integer> postIds = redisService.getTopHotPostIds(5);
 		List<ForumPostVO> topHotPostList = forumPostService.getTopHotPostsByPostIds(postIds);
@@ -429,12 +429,16 @@ public class ForumPostController {
 	public String getKeywordForPosts(@RequestParam("keyword") String keyword, @RequestParam("forumId") Integer forumId,
 			ModelMap model) {
 
+		List<Integer> postIds = redisService.getTopHotPostIds(5);
+		
 		// 空字串驗證，沒輸入資料forward回原頁面
 		if (keyword == null || keyword.trim().isEmpty()) {
 			// 重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 			// model.addAttribute("forumId", forumId);
 			model.addAttribute("errorMsgs", "請輸入欲查詢的內容");
-			model.addAttribute("postList", new ArrayList<ForumPostVO>(forumPostService.getAllActiveByForumId(forumId)));
+			model.addAttribute("postList", forumPostService.getAllActiveByForumId(forumId));
+			model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
+			
 			return "frontend/forum/list-all-active-posts";
 		}
 
@@ -446,7 +450,9 @@ public class ForumPostController {
 			// 【重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 			// model.addAttribute("forumId", forumId);
 			model.addAttribute("errorMsgs", "查無相關貼文");
-			model.addAttribute("postList", new ArrayList<ForumPostVO>(forumPostService.getAllActiveByForumId(forumId)));
+			model.addAttribute("postList", forumPostService.getAllActiveByForumId(forumId));
+			model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
+			
 			return "frontend/forum/list-all-active-posts";
 		}
 
@@ -454,6 +460,8 @@ public class ForumPostController {
 		// 【重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 		// model.addAttribute("forumId", forumId);
 		model.addAttribute("postList", postList);
+		model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
+		
 		return "frontend/forum/list-all-active-posts";
 	}
 
@@ -617,7 +625,7 @@ public class ForumPostController {
 			return "redirect:/html/frontend/member/login/login.html";
 		}
 		
-		model.addAttribute("collectionList", new ArrayList<ForumPostVO>(forumPostService.getAllPostCollectionsByMemId(userId)));
+		model.addAttribute("collectionList", forumPostService.getAllPostCollectionsByMemId(userId));
 		
 		return "frontend/forum/post-collection";
 	}

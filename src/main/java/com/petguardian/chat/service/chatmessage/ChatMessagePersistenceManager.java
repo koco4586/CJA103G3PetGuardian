@@ -6,6 +6,7 @@ import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataCache;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
+import com.petguardian.chat.service.RedisJsonMapper;
 import com.petguardian.chat.dto.ChatMessageRedisDTO;
 import com.petguardian.chat.service.context.MessageCreationContext;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -19,6 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 /**
  * Internal Worker for Message Persistence.
@@ -37,6 +39,7 @@ class ChatMessagePersistenceManager {
     private final ChatRoomMetadataService metadataService;
     private final ChatRoomMetadataCache metadataCache;
     private final ChatMessageCache messageCache;
+    private final RedisJsonMapper redisJsonMapper;
     private final TransactionTemplate transactionTemplate;
     private final CircuitBreaker circuitBreaker;
 
@@ -50,6 +53,7 @@ class ChatMessagePersistenceManager {
             ChatRoomMetadataService metadataService,
             ChatRoomMetadataCache metadataCache,
             ChatMessageCache messageCache,
+            RedisJsonMapper redisJsonMapper,
             TransactionTemplate transactionTemplate,
             CircuitBreakerRegistry circuitBreakerRegistry) {
         this.mysqlRepository = mysqlRepository;
@@ -57,6 +61,7 @@ class ChatMessagePersistenceManager {
         this.metadataService = metadataService;
         this.metadataCache = metadataCache;
         this.messageCache = messageCache;
+        this.redisJsonMapper = redisJsonMapper;
         this.transactionTemplate = transactionTemplate;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
     }
@@ -85,14 +90,26 @@ class ChatMessagePersistenceManager {
             // Since we can't update Redis now, we must delete the stale data later
             metadataCache.queueForRecovery(context.chatroomId());
 
-            // 3. Sync DB (direct)
-            transactionTemplate.executeWithoutResult(status -> {
-                roomRepository.updateFullMetadata(
-                        context.chatroomId(),
-                        context.content(),
-                        context.createdAt(),
-                        context.createdAt(),
-                        null);
+            // 3. Sync DB (direct) - Correctly identify sender's read status with regression
+            // protection
+            LocalDateTime time = context.createdAt();
+            roomRepository.findById(context.chatroomId()).ifPresent(room -> {
+                // SEQUENCE VALIDATION: Only update if this message is not "older"
+                if (room.getLastMessageAt() == null || !time.isBefore(room.getLastMessageAt())) {
+                    LocalDateTime mem1Read = context.senderId().equals(room.getMemId1()) ? time : null;
+                    LocalDateTime mem2Read = context.senderId().equals(room.getMemId2()) ? time : null;
+
+                    transactionTemplate.executeWithoutResult(status -> {
+                        roomRepository.updateFullMetadata(
+                                context.chatroomId(),
+                                context.content(),
+                                time,
+                                mem1Read,
+                                mem2Read);
+                    });
+                } else {
+                    log.info("[Persistence] Skipping metadata sync for older message: {}", context.messageId());
+                }
             });
             return saved;
         } catch (Exception e) {
@@ -106,30 +123,50 @@ class ChatMessagePersistenceManager {
         // No manual circuit breaker check. Rely on executeRunnable/Supplier to handle
         // state.
 
-        // Piggyback Invalidation Logic
+        // Room Recovery - Batch Operation
         // If Circuit Breaker is CLOSED (Redis Healthy) and we have pending
         // invalidations
         Set<Integer> pendingRooms = metadataCache.getRecoveryQueue();
         if (!pendingRooms.isEmpty() && circuitBreaker.getState() != CircuitBreaker.State.OPEN) {
-            Iterator<Integer> it = pendingRooms.iterator();
-            while (it.hasNext()) {
-                Integer roomId = it.next();
-                try {
-                    // Try to invalidate (delete keys)
-                    // If this succeeds, it means Redis is back up
-                    circuitBreaker.executeRunnable(() -> {
-                        messageCache.invalidateHistory(roomId);
-                        metadataCache.invalidateRoom(roomId);
-                    });
-
-                    // Remove from set only if successful
-                    it.remove();
-                    log.info("[Recovery] Invalidated stale cache for room {}", roomId);
-                } catch (Exception e) {
-                    // Redis might still be unstable, or CB opened during loop
-                    // Keep in set, retry next tick
-                    log.debug("[Recovery] Failed to invalidate room {}, retrying later: {}", roomId, e.getMessage());
+            // Snapshot current items to process (avoid race with concurrent additions)
+            List<Integer> roomsToProcess = new ArrayList<>(pendingRooms);
+            try {
+                // Collect all keys to delete in a single batch
+                List<String> keysToDelete = new ArrayList<>();
+                for (Integer roomId : roomsToProcess) {
+                    keysToDelete.add("chat:room_meta:" + roomId); // Room metadata
+                    keysToDelete.add("chat:room:" + roomId + ":history"); // Message history
+                    keysToDelete.add("chat:room:" + roomId + ":warmed"); // Warmed marker
                 }
+
+                // Batch delete using UNLINK (non-blocking)
+                circuitBreaker.executeRunnable(() -> redisJsonMapper.deleteBatch(keysToDelete));
+
+                // Remove only processed items to avoid losing concurrent additions
+                roomsToProcess.forEach(pendingRooms::remove);
+                log.info("[Recovery] Batch invalidated {} rooms ({} keys)", roomsToProcess.size(), keysToDelete.size());
+            } catch (Exception e) {
+                log.debug("[Recovery] Batch room recovery failed, retrying later: {}", e.getMessage());
+            }
+        }
+
+        // User Room List Recovery - Batch Operation
+        Set<Integer> pendingUserRooms = metadataCache.getUserRoomRecoveryQueue();
+        if (!pendingUserRooms.isEmpty() && circuitBreaker.getState() != CircuitBreaker.State.OPEN) {
+            // Snapshot current items to process
+            List<Integer> usersToProcess = new ArrayList<>(pendingUserRooms);
+            try {
+                List<String> keysToDelete = usersToProcess.stream()
+                        .map(userId -> "chat:user_rooms:" + userId)
+                        .collect(Collectors.toList());
+
+                circuitBreaker.executeRunnable(() -> redisJsonMapper.deleteBatch(keysToDelete));
+
+                // Remove only processed items
+                usersToProcess.forEach(pendingUserRooms::remove);
+                log.info("[Recovery] Batch invalidated user room lists for {} users", usersToProcess.size());
+            } catch (Exception e) {
+                log.debug("[Recovery] Batch user room recovery failed, retrying later: {}", e.getMessage());
             }
         }
 
@@ -287,7 +324,6 @@ class ChatMessagePersistenceManager {
                 // Fire-and-forget cache updates
                 try {
                     messageCache.pushToHistory(context.chatroomId(), redisDTO, CACHE_LIMIT);
-                    messageCache.putRecentLog(redisDTO.messageId(), redisDTO);
 
                     metadataService.syncRoomMetadata(
                             context.chatroomId(),

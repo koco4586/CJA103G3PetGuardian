@@ -4,12 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">  <!--  添加這行 -->
     <title>PetGuardian｜登入成功</title>
 
-    <link rel="stylesheet" href="../../../../css/frontend/style.css">
-    <link rel="stylesheet" href="../../../../css/frontend/components.css">
+    <link rel="stylesheet" href="css/frontend/style.css">
+    <link rel="stylesheet" href="css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../../../css/frontend/member/member.css">
+    <link rel="stylesheet" href="css/frontend/member/member.css">
 
     <style>
         .selfouter {
@@ -43,11 +44,11 @@
         <div class="myinnerword">
             <h1 class="titlecenter">登入成功</h1>
             <h3 class="titlecenter">歡迎光臨PetGuardian寵護家</h3>
-            <img src="../../../../images/frontend/loginsuccess.jpg" class="myimg"><br>
+            <img src="images/frontend/loginsuccess.jpg" class="myimg"><br>
 
             <div class="myatag">
                 <a class="a_tag" href="/">回首頁</a>
-                <a class="a_tag" href="../management/member_management.html">前往會員中心</a>
+                <a class="a_tag" href="/front/managementpage">前往會員中心</a>  <!--  改用絕對路徑 -->
             </div>
         </div>
     </div>
@@ -55,7 +56,7 @@
     <!-- Footer 容器 -->
     <footer id="main-footer"></footer>
 
-    <script src="../../../../js/frontend/main.js"></script>
+    <script src="js/frontend/main.js"></script>  <!--  移除 ../../../../ -->
 
 </body>
 

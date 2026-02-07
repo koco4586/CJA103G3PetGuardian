@@ -23,6 +23,7 @@ import com.petguardian.booking.model.BookingFavoriteVO;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.booking.service.BookingService;
 import com.petguardian.common.service.AuthStrategyService;
+import com.petguardian.evaluate.service.EvaluateService;
 import com.petguardian.member.model.Member;
 import com.petguardian.member.repository.register.MemberRegisterRepository;
 import com.petguardian.pet.model.PetRepository;
@@ -65,6 +66,7 @@ public class BookingViewController {
 
     @Autowired
     private AreaService areaService;
+    private EvaluateService evaluateService;
 
     /**
      * 【顯示保姆服務列表頁面】
@@ -119,6 +121,9 @@ public class BookingViewController {
                 .map(s -> {
                     BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
                     dto.setMemImage(memberImageMap.getOrDefault(s.getMemId(), "/images/default-avatar.png"));
+                    dto.setMemImage(memberImageMap.getOrDefault(
+                            s.getMemId(),
+                            "/images/default-avatar.png"));
 
                     String city = "沒有設定服務";
                     if (s.getServiceAreas() != null && !s.getServiceAreas().isEmpty()) {
@@ -126,6 +131,10 @@ public class BookingViewController {
                         city = s.getServiceAreas().get(0).getArea().getCityName();
                     }
                     dto.setServicesJson(city);
+
+                    // 🔥 注入平均星數
+                    Double avgRating = evaluateService.getAverageRatingBySitterId(s.getSitterId());
+                    dto.setAvgRating(avgRating);
 
                     return dto;
                 }).collect(Collectors.toList());
@@ -139,6 +148,7 @@ public class BookingViewController {
 
         addCommonAttributes(request, model); 
         
+
         return "frontend/services";
     }
 

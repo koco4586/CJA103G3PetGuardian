@@ -20,7 +20,6 @@
 
 <body>
 	<header id="main-header" class="header"></header>
-
 	<main class="container"
 		style="padding-top: 2rem; padding-bottom: 5rem;">
 		<!-- 搜尋區域 -->
@@ -97,6 +96,17 @@
 							style="margin: 0; font-size: 1.2rem; font-weight: 700;">保母姓名
 						</h4>
 						<div style="color: #ffb800; font-size: 0.9rem;">
+                            <!-- 如果有評分 -->
+                            <th:block th:if="${sitter.avgRating != null}">
+                                <i class="fa-solid fa-star"></i>
+                                <span th:text="${#numbers.formatDecimal(sitter.avgRating, 1, 1)}">0.0</span>
+                            </th:block>
+                            <!-- 如果沒有評分 -->
+                            <th:block th:if="${sitter.avgRating == null}">
+                                <span style="color: #999; font-size: 0.85rem;">暫未有星數</span>
+                            </th:block>
+                        </div>
+						<div style="color: #ffb800; font-size: 0.9rem;">
 							<i class="fa-solid fa-star"></i> <span
 								th:text="${sitter.sitter.sitterRatingCount != null && sitter.sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitter.sitterStarCount * 1.0 / sitter.sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
 						</div>
@@ -133,7 +143,6 @@
 			th:href="@{/booking/services(page=${currentPage + 1})}"
 			class="btn btn-outline">下一頁</a>
 	</div>
-
 	<!-- 預約 Modal -->
 	<div id="bookingModal"
 		style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
@@ -202,33 +211,33 @@
 
             sitterNameSpan.innerText = name;
             sitterIdInput.value = id;
-            
+
             serviceSelect.innerHTML = '<option>正在載入服務...</option>';
             serviceSelect.disabled = true;
-            
+
             try {
-            	// 發送請求去後端 API 抓取服務資料
+                // 發送請求去後端 API 抓取服務資料
                 const response = await fetch(`/booking/api/sitter/${id}/services`);
                 if (!response.ok) throw new Error("資料讀取失敗");
-                
+
                 const services = await response.json();
-                
+
                 //  載入完成，重置選單
                 serviceSelect.innerHTML = '';
-                serviceSelect.disabled = false; 
+                serviceSelect.disabled = false;
 
                 if (services.length === 0) {
                     let opt = document.createElement('option');
                     opt.text = "此保母暫無服務項目";
                     serviceSelect.add(opt);
-            } else {
-                services.forEach(svc => {
-                    let opt = document.createElement('option');
-                    opt.value = svc.id;
-                    opt.text = svc.name;
-                    serviceSelect.add(opt);
-                });
-            }
+                } else {
+                    services.forEach(svc => {
+                        let opt = document.createElement('option');
+                        opt.value = svc.id;
+                        opt.text = svc.name;
+                        serviceSelect.add(opt);
+                    });
+                }
             } catch (error) {
                 console.error("載入服務失敗:", error);
                 serviceSelect.innerHTML = '<option>載入失敗，請重試</option>';
@@ -373,7 +382,7 @@
             }
             window.location.href = `/booking/search?area=${encodeURIComponent(district)}`;
         }
-        
+
         async function handleToggleFavorite(sitterId, btn) {
         	const icon = btn.querySelector('i');
             try {
@@ -406,7 +415,7 @@
                 console.error("收藏操作失敗:", error);
             }
         }
-        
+
         // 收藏頁面的提示訊息功能
         function showFlashMessage(text) {
             const msg = document.createElement('div');

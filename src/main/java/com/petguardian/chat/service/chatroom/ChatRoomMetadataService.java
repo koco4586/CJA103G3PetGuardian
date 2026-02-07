@@ -151,7 +151,7 @@ public class ChatRoomMetadataService {
 
         // 1. Check Lookup Cache
         return metadataCache.getRoomIdByMembers(memId1, memId2, safeType)
-                .map(this::getRoomMetadata)
+                .flatMap(roomId -> Optional.ofNullable(getRoomMetadata(roomId)))
                 .or(() -> {
                     // 2. Fallback to DB
                     int id1 = Math.min(memId1, memId2);
@@ -160,15 +160,11 @@ public class ChatRoomMetadataService {
                     return chatRoomRepository.findByMemId1AndMemId2AndChatroomType(id1, id2, safeType)
                             .map(entity -> {
                                 ChatRoomMetadataDTO dto = mapper.toMetadataDto(entity);
-                                metadataCache.setRoomIdLookup(memId1, memId2, safeType, dto.getChatroomId()); // Type-Aware
-                                                                                                              // Cache
-                                                                                                              // Set
+                                metadataCache.setRoomIdLookup(memId1, memId2, safeType, dto.getChatroomId());
                                 metadataCache.setRoomMeta(dto.getChatroomId(), dto);
                                 return dto;
                             });
-                })
-                .map(Optional::ofNullable) // Flatten possible null from getRoomMetadata
-                .orElse(Optional.empty());
+                });
     }
 
     // Deprecated legacy method
@@ -191,23 +187,7 @@ public class ChatRoomMetadataService {
     // =================================================================================
 
     public void syncRoomMetadata(Integer chatroomId, String preview, LocalDateTime time, Integer senderId) {
-        metadataCache.getRoomMeta(chatroomId).ifPresent(dto -> {
-            dto.setLastMessagePreview(preview);
-            dto.setLastMessageAt(time);
-
-            // Sync sender's read status
-            List<Integer> members = dto.getMemberIds();
-            if (members != null && !members.isEmpty()) {
-                if (senderId.equals(members.get(0))) {
-                    dto.setMem1LastReadAt(time);
-                } else if (members.size() > 1 && senderId.equals(members.get(1))) {
-                    dto.setMem2LastReadAt(time);
-                }
-            }
-
-            metadataCache.setRoomMeta(chatroomId, dto);
-            metadataCache.markAsDirty(chatroomId);
-        });
+        metadataCache.updateMessageMetadataAtomic(chatroomId, preview, time, senderId);
     }
 
     public void updateLastReadAt(Integer chatroomId, Integer userId, LocalDateTime time) {

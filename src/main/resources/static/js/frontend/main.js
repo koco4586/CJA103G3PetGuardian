@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
                 <ul class="nav-links">
                     <li><a href="/" class="nav-link">首頁</a></li>
+                    <li><a href="/news/list" class="nav-link">最新消息</a></li>
                     <li><a href="/booking/services" class="nav-link">預約服務</a></li>
                     <li class="dropdown">
                         <a href="/store" class="nav-link">二手商城 <i class="fas fa-chevron-down" style="font-size: 0.8rem; margin-left: 4px;"></i></a>
@@ -19,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </li>
                     <li><a href="/forum/list-all-active-forum" class="nav-link">討論區</a></li>
-                    <li><a href="/news/list" class="nav-link">最新消息</a></li>
                 </ul>
                 <div class="d-flex align-center">
                     <a href="#" onclick="enterChat(event)" class="btn btn-outline" style="border:none; margin-right: 0.5rem; font-size: 1.2rem; position: relative; padding: 0.5rem;">

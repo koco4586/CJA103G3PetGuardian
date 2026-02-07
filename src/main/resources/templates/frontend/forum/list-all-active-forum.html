@@ -152,6 +152,89 @@
         .sidebar ul li a:hover {
             color: var(--primary-orange) !important;
         }
+        
+        /* 數據統計區塊容器 */
+		.stat-item {
+		    display: flex;
+		    align-items: center;
+		    gap: 6px; /* 圖示與數字的間距 */
+		    padding: 6px 12px;
+		    background-color: #f8f9fa; /* 淺灰色背景，增加層次感 */
+		    border-radius: 20px;
+		    color: #888; /* 稍微淡一點的顏色，不搶標題戲 */
+		    font-size: 0.9rem;
+		    font-weight: 700;
+		    transition: all 0.2s ease;
+		    flex-shrink: 0; /* 防止在寬度不足時被擠壓 */
+		}
+		
+		/* 圖示顏色微調 */
+		.stat-item i {
+		    color: var(--primary-orange); /* 使用你定義的主題橘色 */
+		    font-size: 1rem;
+		}
+		
+		/* 當滑過整張卡片時，數據區塊的視覺變化 */
+		.forum-row-card:hover .stat-item {
+		    background-color: #fff3e0; /* 滑過時變橘色淺背景 */
+		    color: var(--deep-brown);
+		}
+		
+		/* 如果數字太長，確保排列整齊 */
+		.stat-item span {
+		    font-family: 'Arial', sans-serif; /* 數字使用無襯線字體較清晰 */
+		}
+		
+		/* 熱門貼文卡片樣式 */
+		.hot-forums-list {
+		    list-style: none;
+		    padding: 0;
+		    margin: 0;
+		}
+		
+		.hot-forum-item {
+		    display: flex;
+		    align-items: center;
+		    padding: 12px 0;
+		    border-bottom: 1px dashed #eee;
+		}
+		
+		.hot-forum-item:last-child { border-bottom: none; }
+		
+		/* 排名數字樣式 */
+		.rank-badge {
+		    width: 24px;
+		    height: 24px;
+		    border-radius: 6px;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    font-size: 14px;
+		    font-weight: 900;
+		    margin-right: 12px;
+		    background-color: #eee;
+		    color: #888;
+		}
+		
+		/* 前三名特別色 */
+		.rank-1 { background-color: #FFD700; color: #fff; } /* 金 */
+		.rank-2 { background-color: #C0C0C0; color: #fff; } /* 銀 */
+		.rank-3 { background-color: #CD7F32; color: #fff; } /* 銅 */
+		
+		.hot-forum-link {
+		    text-decoration: none;
+		    color: var(--text-dark);
+		    font-weight: 700;
+		    font-size: 0.95rem;
+		    transition: color 0.2s;
+		    /* 標題太長自動省略 */
+		    white-space: nowrap;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		    max-width: 180px;
+		}
+		
+		.hot-forum-link:hover { color: var(--primary-orange); }
 
         /* --- 響應式處理 --- */
         @media (max-width: 850px) {
@@ -176,6 +259,10 @@
                 margin-right: 0;
                 margin-bottom: 15px;
             }
+            .stat-item {
+		        margin-top: 10px;
+		        align-self: flex-start;
+		    }
         }
     </style>
 </head>
@@ -217,9 +304,15 @@
                         <div class="forum-main-info">
                             <h3 class="forum-title" th:text="${forumVO.forumName}"></h3>
                             <p style="white-space: nowrap; display: inline-block; margin: 0; font-weight: 600;">
-                                歡迎來到 <span><b style="color: #f44336;" th:text="${forumVO.forumName}"></b></span> 快來與大家分享飼養心得與生活點滴吧！
+                                <span><b style="color: orange;" th:text="${forumVO.forumName}"></b></span> 快來與大家分享飼養心得與生活點滴吧！
                             </p>
                         </div>
+                        
+                        <div class="stat-item">
+					        <i class="far fa-eye"></i>
+					        <span th:text="${forumVO.forumViews ?: 0}"></span>
+					    </div>
+					    
                     </a>
                 </th:block>
             </div>
@@ -231,13 +324,27 @@
                 <p>請保持友善發言，嚴禁謾罵或人身攻擊。讓我們一起營造溫暖、有愛的寵物社群。</p>
             </div>
             <div class="card">
-                <h4>熱門討論版</h4>
-                <ul>
-                    <li><a href="#"><b>1</b> 狗狗日誌</a></li>
-                    <li><a href="#"><b>2</b> 貓奴日常</a></li>
-                    <li><a href="#"><b>3</b> 寵物醫療</a></li>
-                    <li><a href="#"><b>4</b> 浪浪領養資訊</a></li>
-                </ul>
+            
+                <h4><i class="fas fa-fire" style="color: #e74c3c;"></i> 熱門討論區</h4>
+			    <ul class="hot-forums-list">
+			        <li class="hot-forum-item" th:each="forum, iterStat : ${topHotForumList}">
+			            <span class="rank-badge" 
+			                  th:classappend="${iterStat.count == 1 ? 'rank-1' : (iterStat.count == 2 ? 'rank-2' : (iterStat.count == 3 ? 'rank-3' : ''))}"
+			                  th:text="${iterStat.count}">
+			            </span>
+			            
+			            <a th:href="@{/forumpost/get-forum-id-for-posts(forumId=${forum.forumId})}" 
+			               class="hot-forum-link" 
+			               th:text="${forum.forumName}">
+			               討論區名稱載入中...
+			            </a>
+			        </li>
+			    </ul>
+			    
+			    <p th:if="${#lists.isEmpty(topHotForumList)}" class="sidebar-desc" style="text-align: center; color: #999;">
+			        目前尚無熱門討論區
+			    </p>
+			    
             </div>
         </div>
 
@@ -245,7 +352,6 @@
 
     <footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
     
-	
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
     <script th:src="@{/js/frontend/main.js}"></script>
     <script th:inline="javascript">

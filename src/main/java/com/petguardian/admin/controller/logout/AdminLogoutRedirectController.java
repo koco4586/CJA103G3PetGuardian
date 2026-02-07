@@ -11,7 +11,7 @@ public class AdminLogoutRedirectController {
 	@GetMapping("/adminlogoutpage")
 	public String adminlogout() {
 		
-		return "redirect:/html/backend/admin/admin_logout.html";
+		return "forward:/html/backend/admin/admin_logout.html";
 		
 	}
 

@@ -28,4 +28,12 @@ public interface EvaluateService {
      * @return 該會員被保母評價的所有紀錄
      */
     List<EvaluateVO> getReviewsByMemberId(Integer memberId);
+
+    /**
+     * 根據保姆 ID 計算平均評分
+     * 
+     * @param sitterId 保姆 ID
+     * @return 平均評分 (若無評價則回傳 0.0 或 null)
+     */
+    Double getAverageRatingBySitterId(Integer sitterId);
 }

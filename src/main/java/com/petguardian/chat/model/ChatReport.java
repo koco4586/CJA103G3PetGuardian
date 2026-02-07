@@ -42,7 +42,7 @@ public class ChatReport {
     @JsonIgnore
     private Member reporter;
 
-    @Column(name = "message_id", length = 13, nullable = false)
+    @Column(name = "message_id", nullable = false)
     private Long messageId;
 
     // Relation to ChatMessageEntity for retrieving content

@@ -138,19 +138,12 @@ public class ChatApiController {
             @PathVariable String messageId,
             @RequestParam(defaultValue = "50") Integer size) {
 
-        // Although position calculation might not strictly require auth for the
-        // calculation itself,
-        // it exposes chatroom data (message existence).
-        // Adding auth check for consistency and security.
         Integer currentUserId = authStrategyService.getCurrentUserId(request);
         if (currentUserId == null) {
             return ResponseEntity.status(401).build();
         }
 
         try {
-            // Ideally we should also verify membership here if the service doesn't.
-            // Assuming service or future improvements will handle it.
-            // For now, wrapping in try-catch is safe.
             Map<String, Integer> position = chatService.getMessagePosition(chatroomId, messageId, size);
             return ResponseEntity.ok(position);
         } catch (SecurityException e) {

@@ -11,7 +11,7 @@ public class AdminLoginRedirectController {
     @GetMapping("/adminloginpage")
     public String adminloginpage(){
 
-        return "redirect:/html/backend/admin/admin_login.html";
+        return "forward:/html/backend/admin/admin_login.html";
 
     }
 

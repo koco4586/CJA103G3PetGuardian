@@ -3,19 +3,26 @@ package com.petguardian.orders.service;
 
 import com.petguardian.orders.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 @Service
 @Transactional
 public class ReturnOrderServiceImpl implements ReturnOrderService {
+
+    @Value("${file.upload.return.path:src/main/resources/static/images/return/}")
+    private String uploadPath;
+
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "gif", "webp");
 
     @Autowired
     private ReturnOrderRepository returnOrderDAO;
@@ -87,9 +94,33 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
             for (MultipartFile image : images) {
                 if (image != null && !image.isEmpty()) {
                     try {
+                        // 取得副檔名
+                        String originalFilename = image.getOriginalFilename();
+                        String sanitizedFilename = new File(originalFilename).getName();
+                        String extension = getFileExtension(sanitizedFilename);
+
+                        if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+                            throw new IllegalArgumentException("不允許的檔案格式，僅支援: " + ALLOWED_EXTENSIONS);
+                        }
+
+                        // 生成安全的檔名
+                        String safeFileName = UUID.randomUUID().toString() + "." + extension;
+
+                        // 建立目標目錄
+                        Path uploadDir = Paths.get(uploadPath).toAbsolutePath().normalize();
+                        Files.createDirectories(uploadDir);
+
+                        // 儲存檔案
+                        Path targetPath = uploadDir.resolve(safeFileName).normalize();
+                        if (!targetPath.startsWith(uploadDir)) {
+                            throw new SecurityException("檢測到路徑遍歷攻擊");
+                        }
+                        image.transferTo(targetPath.toFile());
+
+                        // 儲存 URL 到資料庫
                         ReturnOrderPicVO pic = new ReturnOrderPicVO();
                         pic.setReturnOrder(savedReturn);
-                        pic.setPicData(image.getBytes());
+                        pic.setPicUrl("/images/return/" + safeFileName);
                         returnOrderPicDAO.save(pic);
                     } catch (IOException e) {
                         throw new RuntimeException("圖片上傳失敗: " + e.getMessage());
@@ -183,5 +214,12 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
         }
 
         return updatedReturn;
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null || filename.lastIndexOf(".") == -1) {
+            return "";
+        }
+        return filename.substring(filename.lastIndexOf(".") + 1);
     }
 }

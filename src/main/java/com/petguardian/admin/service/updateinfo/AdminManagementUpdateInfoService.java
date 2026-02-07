@@ -70,7 +70,7 @@ public class AdminManagementUpdateInfoService {
 				fileImagePath.transferTo(targetPath.toFile());
 
 				// 9. 更新圖片路徑
-				admin.setAdmImage("/images/backend/admin/" + safeFileName); // 網頁訪問路徑
+				admin.setAdmImage("/images/backend/adminupdateinfo/" + safeFileName); // 網頁訪問路徑
 			}
 			// 如果沒有上傳新圖片，保留原本的圖片路徑（不更新 admImage）
 

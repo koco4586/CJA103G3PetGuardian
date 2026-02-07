@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>PetGuardian｜後台登出</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../../css/backend/style.css">
-    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
+    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/admin/admin.css">
 
     <style>
         .selfouter {
@@ -62,7 +63,7 @@
             <h1 class="titlecenter">PetGuardian｜寵護家</h1>
             <h3 class="titlecenter">管理員登出</h3>
             <div class="centerimg">
-                <img class="myimg" src="../../../images/backend/admin/adminlogout/adminlogout.jpg">
+                <img class="myimg" src="images/backend/admin/adminlogout/adminlogout.jpg">
             </div>
             <h4 class="hintword centerword">您確定要登出嗎？</h4>
             <div class="conterword">
@@ -76,14 +77,14 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <script src="../../../js/backend/sidebar.js"></script>
+    <script src="js/backend/sidebar.js"></script>
 
     <script>
         function init() {
 
             function adminlogout() {
 
-                let fetch_url = "http://localhost:8080/admin/adminlogout";
+                let fetch_url = "/admin/adminlogout";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "POST",
@@ -93,7 +94,7 @@
 
                     if (data.result === "登出成功") {
                         alert("已登出PetGuardian後台中心！");
-                        window.location.href = "./admin_logout_success.html";
+                        window.location.href = "/admin/adminlogoutsuccess";//記得補這個controller沒寫
                     }
 
                 });

@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>Pet Guardian - 管理員密碼變更</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../../css/backend/style.css">
-    <link rel="stylesheet" href="../../../css/backend/admin/admin.css">
+    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/admin/admin.css">
 
     <style>
         .selfouter {
@@ -78,7 +79,7 @@
                     <div class="centerword">
                         <button type="submit" class="submit mybutton">確認變更</button>
                         <button type="reset" class="mybutton">清除重填</button>
-                        <a class="a_tag" href="./admin_management_updateinfo.html">回上頁</a>
+                        <a class="a_tag" href="/admin/admin-admin-management">回上頁</a>
                     </div>
 
                 </form>
@@ -91,7 +92,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="../../../js/backend/sidebar.js"></script>
+    <script src="js/backend/sidebar.js"></script>
 
     <script>
 
@@ -111,7 +112,7 @@
                 }
 
 
-                let fetch_url = "http://localhost:8080/admin/adminresetpw";
+                let fetch_url = "/admin/adminresetpw";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "PUT",

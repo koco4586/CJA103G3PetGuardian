@@ -10,6 +10,6 @@ public class AdminManagementUpdateInfoRedirectController {
 
 	@GetMapping("/adminupdateinfopage")
 	public String adminupdateinfopage(){
-	return "redirect:/html/backend/admin/admin_management_updateinfo.html";	
+	return "forward:/html/backend/admin/admin_management_updateinfo.html";	
 	}
 }
