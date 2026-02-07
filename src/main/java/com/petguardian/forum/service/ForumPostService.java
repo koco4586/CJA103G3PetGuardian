@@ -102,8 +102,8 @@ public class ForumPostService {
 	    // 3. 按照傳入的 postIds 順序，「對號入座」重新組裝成 List
 	    return postIds.stream()
 	    		// 根據 ID 去 Map 裡抓出對應的物件
-	            .map(id -> {
-	            	return postMap.get(id);
+	            .map(postId -> {
+	            	return postMap.get(postId);
 	            })
 	            .filter(post -> post != null)
 	            .collect(Collectors.toList());

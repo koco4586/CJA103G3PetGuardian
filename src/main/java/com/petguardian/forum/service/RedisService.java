@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.forum.model.ForumPostVO;
+import com.petguardian.forum.model.ForumVO;
 
 @Service
 public class RedisService {
@@ -90,13 +91,35 @@ public class RedisService {
 		return Collections.emptyList();
 	}
 	
-	public void setPostViewsToRedis() {	
+	public List<Integer> getTopHotForumIds(int topN){
+		try {
+			Set<String> forumIds =  redisTemplate.opsForZSet().reverseRange("forum:rank:", 0, topN - 1);
+			if(forumIds == null || forumIds.isEmpty()) {
+				return Collections.emptyList();
+			}
+			return forumIds.stream()
+					.map(forumId -> {
+						return Integer.valueOf(forumId);
+					})
+					.collect(Collectors.toList());	
+		}catch(Exception e) {
+			System.err.println("Redis 連線失敗，請檢查 Redis 是否已啟動。");
+		}
+		return Collections.emptyList();
+	}
+	
+	public void setPostViewsToRedis() {
 		List<ForumPostVO> posts = forumPostService.getAllPosts();
-		
 		posts.forEach(post -> {
 			redisTemplate.opsForZSet().add("post:rank:", post.getPostId().toString(), post.getPostViews());
 		});
-		
+	}
+	
+	public void setForumViewsToRedis() {
+		List<ForumVO> forums = forumService.getAll();
+		forums.forEach(forum -> {
+			redisTemplate.opsForZSet().add("forum:rank:", forum.getForumId().toString(), forum.getForumViews());
+		});
 	}
 	
 }
