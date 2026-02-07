@@ -23,9 +23,42 @@ public class Complaintservice {
 
     public List<ComplaintVO> getAll() {
         List<ComplaintVO> list = repository.findAll();
+
+        // 🔥 批次獲取檢舉次數以提升效能 (解決 N+1 問題)
+        java.util.List<Integer> evalIds = list.stream()
+                .map(ComplaintVO::getEvaluateId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+
+        java.util.Map<Integer, Long> countMap = new java.util.HashMap<>();
+        if (!evalIds.isEmpty()) {
+            java.util.List<Object[]> counts = repository.countComplaintsByEvaluateIds(evalIds);
+            for (Object[] obj : counts) {
+                countMap.put((Integer) obj[0], (Long) obj[1]);
+            }
+        }
+
         for (ComplaintVO vo : list) {
+            if (vo.getEvaluateId() != null) {
+                vo.setEvaluationComplaintCount(countMap.getOrDefault(vo.getEvaluateId(), 0L));
+            }
             populateTransientFields(vo);
         }
+
+        // 🔥 新增：計算每一筆紀錄的「案發序號」(Sequence Number)
+        // 依據 evaluateId 分組，並依據 bookingReportId 排序
+        java.util.Map<Integer, java.util.List<ComplaintVO>> grouped = list.stream()
+                .filter(vo -> vo.getEvaluateId() != null)
+                .collect(java.util.stream.Collectors.groupingBy(ComplaintVO::getEvaluateId));
+
+        grouped.forEach((evalId, subList) -> {
+            subList.sort(java.util.Comparator.comparing(ComplaintVO::getBookingReportId));
+            for (int i = 0; i < subList.size(); i++) {
+                subList.get(i).setReportSequence(i + 1);
+            }
+        });
+
         return list;
     }
 
@@ -62,6 +95,16 @@ public class Complaintservice {
                         .orElse(evals.get(0)); // 如果找不到，就取第一個（向後相容）
 
                 vo.setReportedContent(targetEval.getContent());
+            }
+        }
+
+        // 4. 計算被檢舉的評價總次數 (供 getOne 使用)
+        if (vo.getEvaluateId() != null
+                && (vo.getEvaluationComplaintCount() == null || vo.getEvaluationComplaintCount() == 0)) {
+            java.util.List<Object[]> counts = repository
+                    .countComplaintsByEvaluateIds(java.util.List.of(vo.getEvaluateId()));
+            if (!counts.isEmpty()) {
+                vo.setEvaluationComplaintCount((Long) counts.get(0)[1]);
             }
         }
     }

@@ -15,6 +15,7 @@ import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.complaint.model.Complaintrepository;
 
 @Service
 public class EvaluateServiceImpl implements EvaluateService {
@@ -27,6 +28,9 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     @Autowired
     private SitterRepository sitterRepository;
+
+    @Autowired
+    private Complaintrepository complaintRepository;
 
     @Override
     public void handleSubmission(EvaluateVO vo, String currentRole) {
@@ -100,6 +104,7 @@ public class EvaluateServiceImpl implements EvaluateService {
         dto.setMemberRating(vo.getStarRating());
         dto.setMemberContent(vo.getContent());
         dto.setMemberCreateTime(vo.getCreateTimeText());
+        dto.setMemberEvaluateId(vo.getEvaluateId());
     }
 
     private void fillSitterData(EvaluateDTO dto, EvaluateVO vo) {
@@ -108,22 +113,23 @@ public class EvaluateServiceImpl implements EvaluateService {
         dto.setSitterRating(vo.getStarRating());
         dto.setSitterContent(vo.getContent());
         dto.setSitterCreateTime(vo.getCreateTimeText());
+        dto.setSitterEvaluateId(vo.getEvaluateId());
     }
 
     @Override
     public List<EvaluateVO> getReviewsBySitterId(Integer sitterId) {
         List<EvaluateVO> reviews = repo.findByReceiverId(sitterId);
 
-        // 🔥 過濾條件：
+        // 過濾條件：
         // 1. 只保留 roleType=1 (會員評保母)
         // 2. 過濾隱藏與刪除的評論
         reviews = reviews.stream()
-                .filter(r -> r.getRoleType() != null && r.getRoleType() == 1) // 只要會員評保母
+                .filter(r -> r.getRoleType() != null && r.getRoleType() == 1)
                 .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
                 .collect(Collectors.toList());
 
-        // 填充評價者名字（會員評保母，所以 senderId 是會員ID）
         fillSenderNames(reviews);
+        fillComplaintCounts(reviews);
         return reviews;
     }
 
@@ -132,18 +138,18 @@ public class EvaluateServiceImpl implements EvaluateService {
         // 查詢該會員收到的評價 (roleType = 0 表示保姆評會員)
         List<EvaluateVO> reviews = repo.findByReceiverIdAndRoleType(memberId, 0);
 
-        // 🔥 檢舉功能：過濾隱藏與刪除的評論
+        // 過濾隱藏與刪除的評論
         reviews = reviews.stream()
                 .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
                 .collect(Collectors.toList());
 
         fillSenderNames(reviews);
+        fillComplaintCounts(reviews);
         return reviews;
     }
 
     /**
      * 填充評價者名字
-     * 根據 roleType 和 senderId 從對應的表查詢名字
      */
     private void fillSenderNames(List<EvaluateVO> reviews) {
         if (reviews == null || reviews.isEmpty()) {
@@ -160,14 +166,12 @@ public class EvaluateServiceImpl implements EvaluateService {
                 Integer senderMemId = null;
 
                 if (review.getRoleType() == 0) {
-                    // roleType=0: 保母評會員，senderId 是保母ID (sitterId)
                     SitterVO sitter = sitterRepository.findById(review.getSenderId()).orElse(null);
                     if (sitter != null) {
                         senderName = sitter.getSitterName();
                         senderMemId = sitter.getMemId();
                     }
                 } else if (review.getRoleType() == 1) {
-                    // roleType=1: 會員評保母，senderId 是會員ID (memId)
                     SitterMemberVO member = sitterMemberRepository.findById(review.getSenderId()).orElse(null);
                     if (member != null) {
                         senderName = member.getMemName();
@@ -178,39 +182,53 @@ public class EvaluateServiceImpl implements EvaluateService {
                 review.setSenderName(senderName);
                 review.setSenderMemId(senderMemId);
             } catch (Exception e) {
-                System.err.println("❌ 填充評價發送者資料時出錯 (ID: " + review.getEvaluateId() + "): " + e.getMessage());
-                // 出錯時給予預設值，不中斷整組查詢
+                System.err.println("❌ 填充評價發送者資料時出錯: " + e.getMessage());
                 review.setSenderName("未知用戶");
-                review.setSenderMemId(null);
             }
+        }
+    }
+
+    /**
+     * 批次填充評價的檢舉計數 (解決 N+1)
+     */
+    private void fillComplaintCounts(List<EvaluateVO> reviews) {
+        if (reviews == null || reviews.isEmpty()) {
+            return;
+        }
+
+        List<Integer> evalIds = reviews.stream()
+                .map(EvaluateVO::getEvaluateId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (evalIds.isEmpty()) {
+            return;
+        }
+
+        List<Object[]> counts = complaintRepository.countComplaintsByEvaluateIds(evalIds);
+        Map<Integer, Long> countMap = counts.stream()
+                .collect(Collectors.toMap(row -> (Integer) row[0], row -> (Long) row[1], (a, b) -> a));
+
+        for (EvaluateVO review : reviews) {
+            review.setComplaintCount(countMap.getOrDefault(review.getEvaluateId(), 0L));
         }
     }
 
     @Override
     public Double getAverageRatingBySitterId(Integer sitterId) {
-        // 獲取評價 (Evaluate 表，已過濾 roleType=1)
-        List<EvaluateVO> reviews = getReviewsBySitterId(sitterId);
-        int totalSum = 0;
-        int totalCount = 0;
-
-        if (reviews != null && !reviews.isEmpty()) {
-            for (EvaluateVO vo : reviews) {
-                if (vo.getStarRating() != null && vo.getStarRating() > 0) {
-                    totalSum += vo.getStarRating();
-                    totalCount++;
-                }
-            }
+        Double avg = repo.getAverageRatingBySitterId(sitterId);
+        if (avg == null) {
+            return null;
         }
+        return Math.round(avg * 10.0) / 10.0;
+    }
 
-        // 🔥 移除舊系統假資料：不再使用 sitter_star_count 和 sitter_rating_count
-        // 只使用 evaluate 表的真實評價資料
+    public Long getReviewCountBySitterId(Integer sitterId) {
+        return repo.getReviewCountBySitterId(sitterId);
+    }
 
-        if (totalCount == 0) {
-            return null; // 無任何評價
-        }
-
-        double average = (double) totalSum / totalCount;
-        // 四捨五入到小數點後一位
-        return Math.round(average * 10.0) / 10.0;
+    @Override
+    public EvaluateVO getById(Integer evalId) {
+        return repo.findById(evalId).orElse(null);
     }
 }

@@ -3,6 +3,7 @@ package com.petguardian.chat.service.chatmessage.report;
 import com.petguardian.chat.model.ChatReport;
 import com.petguardian.chat.model.ChatReportRepository;
 import com.petguardian.chat.service.RedisJsonMapper;
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataCache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.slf4j.Logger;
@@ -32,19 +33,22 @@ public class ChatReportService {
 
     private static final Logger log = LoggerFactory.getLogger(ChatReportService.class);
     private static final String REDIS_KEY_PREFIX = "chat:report_status:";
-    private static final long TTL_DAYS = 7;
+    private static final long TTL_DAYS = 1;
     private static final String CIRCUIT_NAME = "reportCircuit";
 
     private final ChatReportRepository chatReportRepository;
     private final RedisJsonMapper redisJsonMapper;
+    private final ChatRoomMetadataCache metadataCache;
     private final CircuitBreaker circuitBreaker;
 
     public ChatReportService(
             ChatReportRepository chatReportRepository,
             RedisJsonMapper redisJsonMapper,
+            ChatRoomMetadataCache metadataCache,
             CircuitBreakerRegistry circuitBreakerRegistry) {
         this.chatReportRepository = chatReportRepository;
         this.redisJsonMapper = redisJsonMapper;
+        this.metadataCache = metadataCache;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
     }
 
@@ -208,8 +212,9 @@ public class ChatReportService {
                     try {
                         circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
                     } catch (Exception e) {
-                        log.warn("[Report] Invalidation Failed: {}", e.getMessage());
-                        // Note: Throwing here might not roll back committed TX, but logs error.
+                        log.warn("[Report] Invalidation Failed for user {}: {}. Queueing for recovery.", reporterId,
+                                e.getMessage());
+                        metadataCache.queueReportForRecovery(reporterId);
                     }
                 }
             });
@@ -217,8 +222,9 @@ public class ChatReportService {
             try {
                 circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
             } catch (Exception e) {
-                log.warn("[Report] Invalidation Failed: {}", e.getMessage());
-                // Do not throw - next DB fallback will repopulate cache
+                log.warn("[Report] Invalidation Failed for user {}: {}. Queueing for recovery.", reporterId,
+                        e.getMessage());
+                metadataCache.queueReportForRecovery(reporterId);
             }
         }
     }

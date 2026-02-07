@@ -94,7 +94,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="complaint : ${complaintList}" th:if="${complaint.reportStatus == 0}">
+                        <tr th:each="complaint : ${complaintList}" th:if="${complaint.reportStatus == 0}"
+                            th:style="${complaint.reportSequence == 2 ? 'background-color: #fffde7;' : (complaint.reportSequence >= 3 ? 'background-color: #fff5f5;' : '')}">
                             <td>
                                 <div style="font-weight: bold; color: #2c3e50;">
                                     檢舉人：<span
@@ -113,6 +114,18 @@
                             </td>
                             <td>
                                 <span th:text="${complaint.reportReason}"></span>
+                                <!-- 🔥 檢舉次數標籤 (待處理) -->
+                                <div style="margin-top: 5px;">
+                                    <span th:if="${complaint.reportSequence == 2}"
+                                        style="background: #fff3cd; color: #856404; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffeeba;">
+                                        <i class="fas fa-exclamation-circle"></i> 第 2 次被檢舉 (建議檢視)
+                                    </span>
+                                    <span th:if="${complaint.reportSequence >= 3}"
+                                        style="background: #f8d7da; color: #721c24; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #f5c6cb;">
+                                        <i class="fas fa-fire"></i> 第 <span
+                                            th:text="${complaint.reportSequence}"></span> 次被檢舉 (強烈建議刪除)
+                                    </span>
+                                </div>
                             </td>
                             <td>
                                 <span style="color: orange; font-weight: bold;">
@@ -152,7 +165,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="complaint : ${complaintList}" th:if="${complaint.reportStatus != 0}">
+                        <tr th:each="complaint : ${complaintList}" th:if="${complaint.reportStatus != 0}"
+                            th:style="${complaint.reportSequence == 2 ? 'background-color: #fffde7;' : (complaint.reportSequence >= 3 ? 'background-color: #fff5f5;' : '')}">
                             <td>
                                 <div style="font-weight: bold; color: #2c3e50;">
                                     檢舉人：<span
@@ -171,6 +185,18 @@
                             </td>
                             <td>
                                 <span th:text="${complaint.reportReason}"></span>
+                                <!-- 🔥 檢舉次數標籤 (已結案) -->
+                                <div style="margin-top: 5px;">
+                                    <span th:if="${complaint.reportSequence == 2}"
+                                        style="background: #fff3cd; color: #856404; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffeeba;">
+                                        <i class="fas fa-exclamation-circle"></i> 累計第 2 次檢舉 (列入警告)
+                                    </span>
+                                    <span th:if="${complaint.reportSequence >= 3}"
+                                        style="background: #f8d7da; color: #721c24; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #f5c6cb;">
+                                        <i class="fas fa-fire"></i> 累計第 <span
+                                            th:text="${complaint.reportSequence}"></span> 次檢舉 (建議刪除)
+                                    </span>
+                                </div>
                             </td>
                             <td>
                                 <span th:if="${complaint.reportStatus == 1 or complaint.reportStatus == 3}"
@@ -183,16 +209,43 @@
                                 </span>
                             </td>
                             <td>
-                                <!-- 🔥 評論處理按鈕 -->
-                                <button th:if="${complaint.reportStatus == 1 or complaint.reportStatus == 2}"
+                                <!-- 🔥 情況 A：案發序號為 2 (顯示兩個按鈕) -->
+                                <div th:if="${complaint.reportSequence == 2 and (complaint.reportStatus == 1 or complaint.reportStatus == 2)}"
+                                    style="display: flex; flex-direction: column; gap: 5px;">
+                                    <button class="btn-action"
+                                        th:onclick="|handleClosedReview(${complaint.bookingReportId})|"
+                                        style="background: #3498db; width: 100%;">
+                                        <i class="fa-solid fa-comment"></i> 評論處理
+                                    </button>
+                                    <button class="btn-action"
+                                        th:onclick="|directDeleteReview(${complaint.bookingReportId})|"
+                                        style="background: #e74c3c; width: 100%;">
+                                        <i class="fa-solid fa-trash-can"></i> 刪除評價
+                                    </button>
+                                </div>
+
+                                <!-- 🔥 情況 B：案發序號為 3 以上 (僅顯示刪除評價) -->
+                                <div
+                                    th:if="${complaint.reportSequence >= 3 and (complaint.reportStatus == 1 or complaint.reportStatus == 2)}">
+                                    <button class="btn-action"
+                                        th:onclick="|directDeleteReview(${complaint.bookingReportId})|"
+                                        style="background: #e74c3c; width: 100%;">
+                                        <i class="fa-solid fa-trash-can"></i> 刪除評價
+                                    </button>
+                                </div>
+
+                                <!-- 🔥 情況 C：一般案件 (序號 1) -->
+                                <button
+                                    th:if="${complaint.reportSequence < 2 and (complaint.reportStatus == 1 or complaint.reportStatus == 2)}"
                                     class="btn-action" th:onclick="|handleClosedReview(${complaint.bookingReportId})|"
                                     style="background: #3498db;">
                                     <i class="fa-solid fa-comment"></i> 評論處理
                                 </button>
+
                                 <!-- 🔥 審核已完成標籤 -->
                                 <button th:if="${complaint.reportStatus == 3 or complaint.reportStatus == 4}"
                                     class="btn-action" disabled
-                                    style="background: #95a5a6; cursor: not-allowed; opacity: 0.8;">
+                                    style="background: #95a5a6; cursor: not-allowed; opacity: 0.8; width: 100%;">
                                     <i class="fa-solid fa-check-double"></i> 審核已完成
                                 </button>
                             </td>
@@ -407,6 +460,48 @@
                         console.error('Fetch error:', error);
                         Swal.fire('錯誤', '連線異常，請檢查網路或伺服器路徑', 'error');
                     });
+            });
+        }
+
+        // 🔥 檢舉二次專用：直接刪除功能
+        function directDeleteReview(reportId) {
+            Swal.fire({
+                title: '確認刪除評價？',
+                text: '此評價檢舉次數已達 2 次以上，系統建議直接刪除。',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74c3c',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: '是的，直接刪除',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 發送 AJAX 到後端，動作設為 delete
+                    fetch('/admin/pet/handleReview', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            'reportId': reportId,
+                            'action': 'delete'
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('處理成功', '評價已刪除，本案標記為已處理', 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('錯誤', '更新失敗', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Fetch error:', err);
+                            Swal.fire('錯誤', '連線異常', 'error');
+                        });
+                }
             });
         }
 

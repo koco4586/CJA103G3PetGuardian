@@ -254,6 +254,7 @@
 
             <div class="member-eval-container"
                 style="border: 2px solid #2e7d32; padding: 20px; border-radius: 10px; background: #f9fff9; width: 100%; box-sizing: border-box;">
+                <input type="hidden" class="evaluate-id" th:value="${order.memberEvaluateId}">
                 <div class="eval-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="user-profile">
                         <strong style="font-size: 1.1rem;" th:text="${isSitter ? order.memberName : '您本人'}"></strong>
@@ -486,8 +487,10 @@
                 const card = e.target.closest('.order-review-card');
                 if (card) {
                     const orderId = card.querySelector('.order-id').value;
+                    // 🔥 取得具體的評價 ID
+                    const evalId = e.target.closest('.member-eval-container').querySelector('.evaluate-id').value;
                     // 調用內嵌式檢舉輸入框
-                    injectReportBox(e.target.closest('.report-btn'), orderId);
+                    injectReportBox(e.target.closest('.report-btn'), orderId, evalId);
                 }
             }
         });

@@ -36,4 +36,9 @@ public interface EvaluateService {
      * @return 平均評分 (若無評價則回傳 0.0 或 null)
      */
     Double getAverageRatingBySitterId(Integer sitterId);
+
+    /**
+     * 根據 ID 獲取評價
+     */
+    EvaluateVO getById(Integer evalId);
 }

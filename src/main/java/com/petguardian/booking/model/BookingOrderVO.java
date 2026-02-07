@@ -98,4 +98,26 @@ public class BookingOrderVO {
     @Transient
     private String petImageUrl;
 
+    @Transient
+    private Integer evaluateId;
+
+    @Transient
+    private Long complaintCount = 0L; // 🔥 新增：檢舉總數
+
+    public Integer getEvaluateId() {
+        return evaluateId;
+    }
+
+    public void setEvaluateId(Integer evaluateId) {
+        this.evaluateId = evaluateId;
+    }
+
+    public Long getComplaintCount() {
+        return complaintCount;
+    }
+
+    public void setComplaintCount(Long complaintCount) {
+        this.complaintCount = complaintCount;
+    }
+
 }

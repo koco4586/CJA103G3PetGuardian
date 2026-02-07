@@ -78,17 +78,33 @@ public class Complaintcontroller {
             }
 
             // 2. 根據 action 處理評論
-            List<com.petguardian.evaluate.model.EvaluateVO> reviews = evaluateRepository
-                    .findByBookingOrderId(vo.getBookingOrderId());
-
-            if (reviews != null && !reviews.isEmpty()) {
-                for (com.petguardian.evaluate.model.EvaluateVO review : reviews) {
+            if (vo.getEvaluateId() != null) {
+                // 🔥 新邏輯：只處理具體被檢舉的那一條
+                java.util.Optional<com.petguardian.evaluate.model.EvaluateVO> reviewOpt = evaluateRepository
+                        .findById(vo.getEvaluateId());
+                if (reviewOpt.isPresent()) {
+                    com.petguardian.evaluate.model.EvaluateVO review = reviewOpt.get();
                     if ("delete".equals(action)) {
-                        review.setIsHidden(2); // 刪除評論
+                        review.setIsHidden(2); // 刪除/隱藏評論 (管理員確認檢舉屬實)
                     } else if ("unhide".equals(action)) {
-                        review.setIsHidden(0); // 解除隱藏
+                        review.setIsHidden(0); // 解除隱藏 (管理員判定檢舉不屬實)
                     }
                     evaluateRepository.save(review);
+                }
+            } else {
+                // 🔥 舊邏輯：處理該訂單的所有評論 (向後兼容)
+                List<com.petguardian.evaluate.model.EvaluateVO> reviews = evaluateRepository
+                        .findByBookingOrderId(vo.getBookingOrderId());
+
+                if (reviews != null && !reviews.isEmpty()) {
+                    for (com.petguardian.evaluate.model.EvaluateVO review : reviews) {
+                        if ("delete".equals(action)) {
+                            review.setIsHidden(2);
+                        } else if ("unhide".equals(action)) {
+                            review.setIsHidden(0);
+                        }
+                        evaluateRepository.save(review);
+                    }
                 }
             }
 

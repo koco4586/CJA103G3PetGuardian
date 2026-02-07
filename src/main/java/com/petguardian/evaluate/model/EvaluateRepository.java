@@ -1,8 +1,11 @@
 package com.petguardian.evaluate.model;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Collection;
 
 @Repository
 public interface EvaluateRepository extends JpaRepository<EvaluateVO, Integer> {
@@ -30,7 +33,20 @@ public interface EvaluateRepository extends JpaRepository<EvaluateVO, Integer> {
      */
     List<EvaluateVO> findByReceiverIdAndRoleType(Integer receiverId, Integer roleType);
 
-    // 請務必把下面這個方法刪除或註解掉！！
-    // List<EvaluateVO> findBySenderName(String senderName);
+    /**
+     * 批次根據訂單編號找尋評價 (解決 N+1 問題)
+     */
+    List<EvaluateVO> findByBookingOrderIdIn(Collection<Integer> bookingOrderIds);
 
+    /**
+     * SQL 聚合優化：獲取保姆的平均星數
+     */
+    @Query("SELECT AVG(e.starRating) FROM EvaluateVO e WHERE e.receiverId = :sitterId AND e.roleType = 1 AND (e.isHidden IS NULL OR e.isHidden = 0)")
+    Double getAverageRatingBySitterId(@Param("sitterId") Integer sitterId);
+
+    /**
+     * SQL 聚合優化：獲取保姆的評論總數
+     */
+    @Query("SELECT COUNT(e) FROM EvaluateVO e WHERE e.receiverId = :sitterId AND e.roleType = 1 AND (e.isHidden IS NULL OR e.isHidden = 0)")
+    Long getReviewCountBySitterId(@Param("sitterId") Integer sitterId);
 }

@@ -63,6 +63,9 @@ public class EvaluateVO implements Serializable {
     private Boolean isOwnReview; // 是否為當前用戶的評價（用於前端判斷是否顯示檢舉按鈕）
 
     @Transient
+    private Long complaintCount = 0L; // 🔥 新增：檢舉次數 (用於視覺警示與刪除判斷)
+
+    @Transient
     private String createTimeText; // 格式化時間
 
     public EvaluateVO() {
@@ -189,5 +192,13 @@ public class EvaluateVO implements Serializable {
 
     public void setIsHidden(Integer isHidden) {
         this.isHidden = isHidden;
+    }
+
+    public Long getComplaintCount() {
+        return complaintCount;
+    }
+
+    public void setComplaintCount(Long complaintCount) {
+        this.complaintCount = complaintCount;
     }
 }
