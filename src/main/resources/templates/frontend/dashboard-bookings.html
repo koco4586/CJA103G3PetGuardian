@@ -199,7 +199,8 @@
 								<th:block
 									th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
 									<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->
-									<button class="btn btn-outline btn-sm"
+									<!-- 🔥 限制：被檢舉兩次則隱藏評價按鈕 -->
+									<button th:if="${order.complaintCount < 2}" class="btn btn-outline btn-sm"
 										th:onclick="|injectEvalBox(this, ${order.bookingOrderId}, ${order.sitterMemId})|">評價保母</button>
 								</th:block>
 
@@ -398,7 +399,7 @@
 						const reportBtnHTML = !isOwnReview ? `
 							<button class="btn btn-sm btn-outline-danger" 
 								style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
-								onclick="reportReview(this, ${review.bookingOrderId})">
+								onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
 								<i class="fas fa-flag"></i> 檢舉
 							</button>
 						` : '';

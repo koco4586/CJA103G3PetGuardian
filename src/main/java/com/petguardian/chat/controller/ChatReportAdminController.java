@@ -11,9 +11,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -42,11 +45,19 @@ public class ChatReportAdminController {
         model.addAttribute("reports", reports);
         model.addAttribute("currentTab", tab);
 
-        // Pre-fetch reporter names to avoid N+1 in template
-        List<Integer> memberIds = reports.stream()
-                .map(ChatReport::getReporterId)
-                .distinct()
-                .collect(Collectors.toList());
+        // Pre-fetch all relevant member names to avoid N+1 in template
+        Set<Integer> memberIdSet = new HashSet<>();
+        if (reports != null) {
+            for (ChatReport report : reports) {
+                if (report.getReporterId() != null) {
+                    memberIdSet.add(report.getReporterId());
+                }
+                if (report.getMessage() != null && report.getMessage().getMemberId() != null) {
+                    memberIdSet.add(report.getMessage().getMemberId());
+                }
+            }
+        }
+        List<Integer> memberIds = new ArrayList<>(memberIdSet);
 
         Map<Integer, String> memberNameMap = new HashMap<>();
         if (!memberIds.isEmpty()) {

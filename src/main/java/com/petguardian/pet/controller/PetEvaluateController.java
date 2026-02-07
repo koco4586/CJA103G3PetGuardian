@@ -224,4 +224,25 @@ public class PetEvaluateController {
             return ResponseEntity.status(500).body(errorMap);
         }
     }
+
+    /**
+     * API 端點：刪除（隱藏）特定評價 (檢舉兩次後的加強功能)
+     * URL: /pet/evaluate/delete/{evalId}
+     */
+    @PostMapping("/evaluate/delete/{evalId}")
+    @ResponseBody
+    public ResponseEntity<?> deleteReview(@PathVariable Integer evalId) {
+        try {
+            EvaluateVO eval = evaluateService.getById(evalId);
+            if (eval != null) {
+                eval.setIsHidden(1); // 設為已隱藏
+                evaluateService.handleSubmission(eval, null);
+                return ResponseEntity.ok(java.util.Map.of("success", true));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("error", "找不到該評價"));
+        } catch (Exception e) {
+            System.err.println("❌ [API] /evaluate/delete/" + evalId + " 出錯: " + e.getMessage());
+            return ResponseEntity.status(500).body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
 }

@@ -66,6 +66,9 @@ public class SitterServiceImpl implements SitterService {
     @Autowired
     private BookingOrderRepository bookingOrderRepository;
 
+    @Autowired
+    private com.petguardian.evaluate.model.EvaluateRepository evaluateRepository;
+
     /**
      * 建立保姆資料
      * 
@@ -316,6 +319,26 @@ public class SitterServiceImpl implements SitterService {
      */
     @Override
     public List<BookingOrderVO> getSitterReviews(Integer sitterId) {
-        return bookingOrderRepository.findBySitterIdAndSitterReviewIsNotNullOrderByEndTimeDesc(sitterId);
+        List<BookingOrderVO> reviews = bookingOrderRepository
+                .findBySitterIdAndSitterReviewIsNotNullOrderByEndTimeDesc(sitterId);
+
+        // 🔥 解決 N+1：批次注入 evaluateId
+        if (reviews != null && !reviews.isEmpty()) {
+            List<Integer> orderIds = reviews.stream().map(BookingOrderVO::getBookingOrderId).toList();
+            List<com.petguardian.evaluate.model.EvaluateVO> evals = evaluateRepository.findByBookingOrderIdIn(orderIds);
+
+            // 建立對應 Map
+            java.util.Map<Integer, Integer> orderToEvalIdMap = new java.util.HashMap<>();
+            for (com.petguardian.evaluate.model.EvaluateVO e : evals) {
+                if (e.getRoleType() != null && e.getRoleType() == 1) { // 會員評保母
+                    orderToEvalIdMap.put(e.getBookingOrderId(), e.getEvaluateId());
+                }
+            }
+
+            for (BookingOrderVO order : reviews) {
+                order.setEvaluateId(orderToEvalIdMap.get(order.getBookingOrderId()));
+            }
+        }
+        return reviews;
     }
 }

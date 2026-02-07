@@ -3,6 +3,7 @@ package com.petguardian.pet.controller;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,11 +33,12 @@ public class PetController {
     @ResponseBody
     public byte[] getImg(@PathVariable Integer petId, HttpServletResponse res) {
         byte[] image = petService.getPetImage(petId);
-        if (image != null) {
+        if (image != null && image.length > 0) {
             res.setContentType("image/jpeg");
             return image;
         }
-        return null;
+        // 沒有圖片時返回空陣列而不是 null
+        return new byte[0];
     }
 
     @GetMapping("/dashboard")
@@ -109,6 +111,7 @@ public class PetController {
         int currentIndex = allIds.indexOf(petId);
         int total = allIds.size();
         model.addAttribute("pet", petDTO);
+        model.addAttribute("currentMemId", currentMemId); // 🔥 明確傳遞給模板
         model.addAttribute("prevId", (currentIndex > 0) ? allIds.get(currentIndex - 1) : null);
         model.addAttribute("nextId", (currentIndex < total - 1) ? allIds.get(currentIndex + 1) : null);
         model.addAttribute("currentIndex", currentIndex);

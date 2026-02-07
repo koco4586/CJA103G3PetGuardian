@@ -506,15 +506,20 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                     reviews,
                     10,
                     'reviewsItemsContainer',
-                    'reviewsPaginationContainer',
                     function (review) {
                         const stars = renderStars(review.starRating || 0);
                         const reviewerName = review.senderName || `會員 ${review.senderId}`;
                         const { tags, plainContent } = parseEvaluationContent(review.content);
                         const tagsHtml = renderTagsVertical(tags);
 
+                        const isTwiceReported = (review.complaintCount || 0) >= 2;
+                        const isThreePlusReported = (review.complaintCount || 0) >= 3;
+                        let bgColor = 'transparent';
+                        if (isThreePlusReported) bgColor = '#fff5f5';
+                        else if (isTwiceReported) bgColor = '#fffde7';
+
                         return `
-                            <div class="review-card" style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem;">
+                            <div class="review-card" style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem; background-color: ${bgColor};">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -522,7 +527,7 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                                             ${!review.isOwnReview ? `
                                             <button class="btn btn-sm btn-outline-danger" 
                                                 style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                                onclick="reportReview(this, ${review.bookingOrderId})">
+                                                onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                                 <i class="fas fa-flag"></i> 檢舉
                                             </button>` : ''}
                                         </div>
@@ -554,9 +559,15 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                     const { tags, plainContent } = parseEvaluationContent(review.content);
                     const tagsHtml = renderTagsVertical(tags);
 
+                    const isTwiceReported = (review.complaintCount || 0) >= 2;
+                    const isThreePlusReported = (review.complaintCount || 0) >= 3;
+                    let bgColor = 'transparent';
+                    if (isThreePlusReported) bgColor = '#fff5f5';
+                    else if (isTwiceReported) bgColor = '#fffde7';
+
                     const card = document.createElement('div');
                     card.innerHTML = `
-                        <div class="review-card" style="border-bottom: 1px solid #eee; padding: 1.5rem 0;">
+                        <div class="review-card" style="border-bottom: 1px solid #eee; padding: 1.5rem 0; background-color: ${bgColor};">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
@@ -564,7 +575,7 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                                         ${!review.isOwnReview ? `
                                         <button class="btn btn-sm btn-outline-danger" 
                                             style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                            onclick="reportReview(this, ${review.bookingOrderId})">
+                                            onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                             <i class="fas fa-flag"></i> 檢舉
                                         </button>` : ''}
                                     </div>
@@ -717,15 +728,20 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                     reviews,
                     10,
                     'dashboardReviewsItems',
-                    'dashboardReviewsPagination',
                     function (review) {
                         const stars = renderStars(review.starRating || 0);
                         const reviewerName = review.senderName || `會員 ${review.senderId}`;
                         const { tags, plainContent } = parseEvaluationContent(review.content);
                         const tagsHtml = renderTagsVertical(tags);
 
+                        const isTwiceReported = (review.complaintCount || 0) >= 2;
+                        const isThreePlusReported = (review.complaintCount || 0) >= 3;
+                        let bgColor = 'transparent';
+                        if (isThreePlusReported) bgColor = '#fff5f5'; // 淡紅色
+                        else if (isTwiceReported) bgColor = '#fffde7'; // 淡黃色
+
                         return `
-                            <div style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem;">
+                            <div style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem; background-color: ${bgColor};">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -733,7 +749,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                                             ${!review.isOwnReview ? `
                                             <button class="btn btn-sm btn-outline-danger" 
                                                 style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                                onclick="reportReview(this, ${review.bookingOrderId})">
+                                                onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                                 <i class="fas fa-flag"></i> 檢舉
                                             </button>` : ''}
                                         </div>
@@ -765,9 +781,15 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                     const { tags, plainContent } = parseEvaluationContent(review.content);
                     const tagsHtml = renderTagsVertical(tags);
 
+                    const isTwiceReported = (review.complaintCount || 0) >= 2;
+                    const isThreePlusReported = (review.complaintCount || 0) >= 3;
+                    let bgColor = 'transparent';
+                    if (isThreePlusReported) bgColor = '#fff5f5';
+                    else if (isTwiceReported) bgColor = '#fffde7';
+
                     const card = document.createElement('div');
                     card.innerHTML = `
-                        <div style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem;">
+                        <div style="border-bottom: 1px solid #eee; padding: 1.5rem 1.2rem; background-color: ${bgColor};">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div style="flex: 1; min-width: 0; padding-right: 20px; display: flex; flex-direction: column; gap: 8px;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -775,7 +797,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                                         ${!review.isOwnReview ? `
                                         <button class="btn btn-sm btn-outline-danger" 
                                             style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                            onclick="reportReview(this, ${review.bookingOrderId})">
+                                            onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                             <i class="fas fa-flag"></i> 檢舉
                                         </button>` : ''}
                                     </div>
@@ -1027,8 +1049,14 @@ window.showMemberReviewModal = function (memberId, memberName) {
                             </button>
                         ` : '';
 
+                        const isTwiceReported = (review.complaintCount || 0) >= 2;
+                        const isThreePlusReported = (review.complaintCount || 0) >= 3;
+                        let bgColor = 'transparent';
+                        if (isThreePlusReported) bgColor = '#fff5f5';
+                        else if (isTwiceReported) bgColor = '#fffde7';
+
                         return `
-                            <div style="border-bottom: 1px solid #eee; padding: 20px 0; margin-bottom: 5px;">
+                            <div style="border-bottom: 1px solid #eee; padding: 20px 0; margin-bottom: 5px; background-color: ${bgColor};">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                                     <div>
                                         <div style="display: flex; align-items: center;">
@@ -1112,4 +1140,6 @@ function renderTagsVertical(tags) {
         </div>
     `;
 }
+
+
 
