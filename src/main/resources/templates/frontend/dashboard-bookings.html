@@ -398,7 +398,7 @@
 						const reportBtnHTML = !isOwnReview ? `
 							<button class="btn btn-sm btn-outline-danger" 
 								style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
-								onclick="reportReview(this, ${review.bookingOrderId})">
+								onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
 								<i class="fas fa-flag"></i> 檢舉
 							</button>
 						` : '';

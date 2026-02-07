@@ -20,6 +20,9 @@ public class ComplaintVO implements java.io.Serializable {
     @Column(name = "booking_order_id")
     private Integer bookingOrderId;
 
+    @Column(name = "evaluate_id")
+    private Integer evaluateId; // 被檢舉的評價ID
+
     @Column(name = "report_mem_id")
     private Integer reportMemId;
 
@@ -57,6 +60,14 @@ public class ComplaintVO implements java.io.Serializable {
 
     public void setBookingOrderId(Integer bookingOrderId) {
         this.bookingOrderId = bookingOrderId;
+    }
+
+    public Integer getEvaluateId() {
+        return evaluateId;
+    }
+
+    public void setEvaluateId(Integer evaluateId) {
+        this.evaluateId = evaluateId;
     }
 
     public Integer getReportMemId() {

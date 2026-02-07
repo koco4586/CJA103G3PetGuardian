@@ -309,7 +309,7 @@
                                         <strong>會員 <span th:text="${review.memId}">ID</span></strong>
                                         <button class="btn btn-sm btn-outline-danger ms-2"
                                             style="padding: 0px 6px; font-size: 0.8rem;"
-                                            th:onclick="'reportReview(' + ${review.bookingOrderId} + ')'">
+                                            th:onclick="'reportReview(' + ${review.bookingOrderId} + ', ' + ${review.evaluateId} + ')'">
                                             <i class="fas fa-flag"></i> 檢舉
                                         </button>
                                     </div>

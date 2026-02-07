@@ -522,7 +522,7 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                                             ${!review.isOwnReview ? `
                                             <button class="btn btn-sm btn-outline-danger" 
                                                 style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                                onclick="reportReview(this, ${review.bookingOrderId})">
+                                                onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                                 <i class="fas fa-flag"></i> 檢舉
                                             </button>` : ''}
                                         </div>
@@ -564,7 +564,7 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                                         ${!review.isOwnReview ? `
                                         <button class="btn btn-sm btn-outline-danger" 
                                             style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                            onclick="reportReview(this, ${review.bookingOrderId})">
+                                            onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                             <i class="fas fa-flag"></i> 檢舉
                                         </button>` : ''}
                                     </div>
@@ -733,7 +733,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                                             ${!review.isOwnReview ? `
                                             <button class="btn btn-sm btn-outline-danger" 
                                                 style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                                onclick="reportReview(this, ${review.bookingOrderId})">
+                                                onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                                 <i class="fas fa-flag"></i> 檢舉
                                             </button>` : ''}
                                         </div>
@@ -775,7 +775,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                                         ${!review.isOwnReview ? `
                                         <button class="btn btn-sm btn-outline-danger" 
                                             style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;"
-                                            onclick="reportReview(this, ${review.bookingOrderId})">
+                                            onclick="reportReview(this, ${review.bookingOrderId}, ${review.evaluateId})">
                                             <i class="fas fa-flag"></i> 檢舉
                                         </button>` : ''}
                                     </div>

@@ -11,8 +11,9 @@
 /**
  * 開啟檢舉彈窗 (用於保母詳情、主頁)
  * @param {number} bookingOrderId - 訂單 ID
+ * @param {number} evaluateId - 評價 ID (可選)
  */
-window.openComplaintModal = function (bookingOrderId) {
+window.openComplaintModal = function (bookingOrderId, evaluateId) {
     // 如果已經有彈窗，先移除
     const oldModal = document.getElementById('complaintModal');
     if (oldModal) oldModal.remove();
@@ -154,7 +155,7 @@ window.openComplaintModal = function (bookingOrderId) {
 
         // 合併標籤與內容
         const fullReason = (selectedTags.length > 0 ? `[${selectedTags.join(', ')}] ` : '') + content;
-        sendReportToBackend(bookingOrderId, fullReason, null, true);
+        sendReportToBackend(bookingOrderId, evaluateId, fullReason, null, true);
     };
 }
 
@@ -216,19 +217,22 @@ window.submitComplaint = function (bookingOrderId) {
  * 修改 reportReview 函數，改為開啟內嵌式檢舉框
  * @param {HTMLElement} button - 觸發按鈕
  * @param {number} orderId - 訂單 ID
+ * @param {number} evaluateId - 評價 ID (可選)
  */
-window.reportReview = function (button, orderId) {
+window.reportReview = function (button, orderId, evaluateId) {
     // 統一改為彈窗模式 (不論第一個參數是按鈕還是 ID)
     const finalOrderId = typeof button === 'number' ? button : orderId;
-    openComplaintModal(finalOrderId);
+    const finalEvaluateId = typeof button === 'number' ? orderId : evaluateId;
+    openComplaintModal(finalOrderId, finalEvaluateId);
 }
 
 /**
  * 內嵌式檢舉輸入框（與評價輸入框樣式一致，包在白色卡片內）
  * @param {HTMLElement} button - 檢舉按鈕元素
  * @param {number} orderId - 訂單 ID
+ * @param {number} evaluateId - 評價 ID (可選)
  */
-window.injectReportBox = function (button, orderId) {
+window.injectReportBox = function (button, orderId, evaluateId) {
     // 找到評價卡片容器 - 支援多種可能的父容器
     let parentCard = button.closest('.order-review-card')
         || button.closest('.review-card')
@@ -329,7 +333,7 @@ window.injectReportBox = function (button, orderId) {
 
             // 合併標籤與內容
             const fullReason = (selectedTags.length > 0 ? `[${selectedTags.join(', ')}] ` : '') + content;
-            sendReportToBackend(orderId, fullReason, reportBox);
+            sendReportToBackend(orderId, evaluateId, fullReason, reportBox);
         };
     }
 
@@ -342,14 +346,18 @@ window.injectReportBox = function (button, orderId) {
 /**
  * 送出檢舉到後端
  * @param {number} orderId - 訂單 ID
+ * @param {number} evaluateId - 評價 ID (可選)
  * @param {string} reason - 檢舉理由
  * @param {HTMLElement} reportBox - 檢舉輸入框元素 (如果是彈窗則傳 null)
  * @param {boolean} isModal - 是否為彈窗模式
  */
-function sendReportToBackend(orderId, reason, reportBox, isModal = false) {
+function sendReportToBackend(orderId, evaluateId, reason, reportBox, isModal = false) {
     const formData = new URLSearchParams();
     formData.append('reportReason', reason);
     formData.append('bookingOrderId', orderId);
+    if (evaluateId) {
+        formData.append('evaluateId', evaluateId);  // 🔥 新增：傳送評價ID
+    }
 
     const base = typeof contextPath !== 'undefined' ? contextPath : '';
     let finalBase = base;

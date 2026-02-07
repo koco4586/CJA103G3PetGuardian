@@ -100,6 +100,7 @@ public class EvaluateServiceImpl implements EvaluateService {
         dto.setMemberRating(vo.getStarRating());
         dto.setMemberContent(vo.getContent());
         dto.setMemberCreateTime(vo.getCreateTimeText());
+        dto.setMemberEvaluateId(vo.getEvaluateId()); // 🔥 新增
     }
 
     private void fillSitterData(EvaluateDTO dto, EvaluateVO vo) {
@@ -108,6 +109,7 @@ public class EvaluateServiceImpl implements EvaluateService {
         dto.setSitterRating(vo.getStarRating());
         dto.setSitterContent(vo.getContent());
         dto.setSitterCreateTime(vo.getCreateTimeText());
+        dto.setSitterEvaluateId(vo.getEvaluateId()); // 🔥 新增
     }
 
     @Override
