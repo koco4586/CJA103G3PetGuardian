@@ -170,6 +170,25 @@ class ChatMessagePersistenceManager {
             }
         }
 
+        // Report Recovery - Batch Operation
+        Set<Integer> pendingReports = metadataCache.getReportRecoveryQueue();
+        if (!pendingReports.isEmpty() && circuitBreaker.getState() != CircuitBreaker.State.OPEN) {
+            List<Integer> reportsToProcess = new ArrayList<>(pendingReports);
+            try {
+                // Key format: chat:report_status:{reporterId}
+                List<String> keysToDelete = reportsToProcess.stream()
+                        .map(id -> "chat:report_status:" + id)
+                        .collect(Collectors.toList());
+
+                circuitBreaker.executeRunnable(() -> redisJsonMapper.deleteBatch(keysToDelete));
+
+                reportsToProcess.forEach(pendingReports::remove);
+                log.info("[Recovery] Batch invalidated chat report status for {} users", reportsToProcess.size());
+            } catch (Exception e) {
+                log.debug("[Recovery] Batch report recovery failed, retrying later: {}", e.getMessage());
+            }
+        }
+
         for (int i = 0; i < SHARD_COUNT; i++) {
             final int shardId = i;
             try {

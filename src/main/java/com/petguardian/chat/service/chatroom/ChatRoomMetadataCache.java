@@ -40,6 +40,10 @@ public class ChatRoomMetadataCache {
     // Track user room lists that need cache invalidation after Redis recovery
     private final Set<Integer> pendingRecoveryUserRooms = ConcurrentHashMap.newKeySet();
 
+    // Track reporter IDs that need report status cache invalidation after Redis
+    // recovery
+    private final Set<Integer> pendingRecoveryReports = ConcurrentHashMap.newKeySet();
+
     private final RedisJsonMapper redisJsonMapper;
     private final CircuitBreaker circuitBreaker;
 
@@ -401,5 +405,15 @@ public class ChatRoomMetadataCache {
 
     public Set<Integer> getUserRoomRecoveryQueue() {
         return this.pendingRecoveryUserRooms;
+    }
+
+    public void queueReportForRecovery(Integer reporterId) {
+        if (reporterId != null) {
+            this.pendingRecoveryReports.add(reporterId);
+        }
+    }
+
+    public Set<Integer> getReportRecoveryQueue() {
+        return this.pendingRecoveryReports;
     }
 }
