@@ -24,81 +24,79 @@
             <div id="pets">
                 <div class="d-flex justify-between align-center mb-2">
                     <h2>我的寵物</h2>
-                    <a th:href="@{/pet/add_page}" class="btn btn-primary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center;">
-					    <i class="fas fa-plus"></i> 新增寵物
-					</a>
+                    <a th:href="@{/pet/add_page}" class="btn btn-primary btn-sm"
+                        style="text-decoration: none; display: inline-flex; align-items: center;">
+                        <i class="fas fa-plus"></i> 新增寵物
+                    </a>
                 </div>
 
                 <div class="pets-grid">
-    <div class="pet-card" th:each="pet : ${petlist}">
-        <div class="pet-header">
-            <img th:src="@{/pet/img/{id}(id=${pet.petId})}" class="pet-avatar">
-            <div class="pet-info">
-                <h3>
-                    <span th:text="${pet.petName}">寵物名</span>
-                    <span class="badge badge-accent" th:text="${pet.typeName}">品種</span>
-                </h3>
-                <div class="pet-stats">
-                    <span><i class="fas fa-venus-mars"></i> [[${pet.petGenderText}]]</span>
-                    <span><i class="fas fa-birthday-cake"></i> [[${pet.petAge}]]歲</span>
+                    <div class="pet-card" th:each="pet : ${petlist}">
+                        <div class="pet-header">
+                            <img th:src="@{/pet/img/{id}(id=${pet.petId})}" class="pet-avatar"
+                                th:onerror="'this.src=\'https://api.dicebear.com/7.x/identicon/svg?seed=' + ${pet.petId} + '\'; this.onerror=null;'">
+                            <div class="pet-info">
+                                <h3>
+                                    <span th:text="${pet.petName}">寵物名</span>
+                                    <span class="badge badge-accent" th:text="${pet.typeName}">品種</span>
+                                </h3>
+                                <div class="pet-stats">
+                                    <span><i class="fas fa-venus-mars"></i> [[${pet.petGenderText}]]</span>
+                                    <span><i class="fas fa-birthday-cake"></i> [[${pet.petAge}]]歲</span>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <p style="color: #666; font-size: 0.95rem;"
+                            th:text="${'備註：' + (pet.petDescription ?: '目前無備註內容')}"></p>
+
+                        <div class="pet-actions">
+                            <a th:href="@{/pet/one(petId=${pet.petId})}" class="btn btn-outline"
+                                style="flex: 1; text-align: center; text-decoration: none;">
+                                <i class="fas fa-search"></i> 查看
+                            </a>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(petlist)}" class="text-center"
+                        style="grid-column: 1/-1; padding: 2rem;">
+                        <p>目前還沒有寵物資料，快去新增一隻吧！</p>
+                    </div>
+
+                </div>
+
+                <div
+                    style="display: inline-flex; align-items: center; gap: 10px; background: #fff; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+                    <a th:href="@{/pet/dashboard(whichPage=${whichPage - 1})}" th:if="${whichPage > 1}"
+                        class="btn btn-outline" style="padding: 5px 15px; text-decoration: none; border-radius: 20px;">
+                        <i class="fas fa-chevron-left"></i> 上一頁
+                    </a>
+
+                    <span style="color: #888; font-size: 0.9rem;">
+                        第 <b th:text="${whichPage}" style="color: #333;">1</b> / <b th:text="${pageNumber}">1</b> 頁
+                    </span>
+
+                    <a th:href="@{/pet/dashboard(whichPage=${whichPage + 1})}" th:if="${whichPage < pageNumber}"
+                        class="btn btn-outline" style="padding: 5px 15px; text-decoration: none; border-radius: 20px;">
+                        下一頁 <i class="fas fa-chevron-right"></i>
+                    </a>
+
                 </div>
             </div>
         </div>
-        
-        
-        
-        <p style="color: #666; font-size: 0.95rem;" 
-           th:text="${'備註：' + (pet.petDescription ?: '目前無備註內容')}"></p>
-        
-        <div class="pet-actions">
-           <a th:href="@{/pet/one(petId=${pet.petId})}" 
-		   class="btn btn-outline" 
-		   style="flex: 1; text-align: center; text-decoration: none;">
-		    <i class="fas fa-search"></i> 查看
-		</a>
-            <button class="btn btn-outline" style="flex: 1; padding: 0.4rem;">
-                <i class="fas fa-file-medical"></i> 紀錄
-            </button>
-        </div>
     </div>
 
-<div th:if="${#lists.isEmpty(petlist)}" class="text-center" style="grid-column: 1/-1; padding: 2rem;">
-        <p>目前還沒有寵物資料，快去新增一隻吧！</p>
-    </div>
-                    
-            </div>
-            
-    <div style="display: inline-flex; align-items: center; gap: 10px; background: #fff; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        
-        <a th:href="@{/pet/dashboard(whichPage=${whichPage - 1})}" 
-           th:if="${whichPage > 1}" 
-           class="btn btn-outline" style="padding: 5px 15px; text-decoration: none; border-radius: 20px;">
-           <i class="fas fa-chevron-left"></i> 上一頁
-        </a>
-
-        <span style="color: #888; font-size: 0.9rem;">
-            第 <b th:text="${whichPage}" style="color: #333;">1</b> / <b th:text="${pageNumber}">1</b> 頁
-        </span>
-
-        <a th:href="@{/pet/dashboard(whichPage=${whichPage + 1})}" 
-           th:if="${whichPage < pageNumber}" 
-           class="btn btn-outline" style="padding: 5px 15px; text-decoration: none; border-radius: 20px;">
-           下一頁 <i class="fas fa-chevron-right"></i>
-        </a>
-        
-    </div>
-</div>
-        </div>
-    </div>
-    
 
     <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
     <script th:src="@{/js/frontend/main.js}">
-    
+
     </script>
-    
-    
+
+
 </body>
 
 </html>

@@ -162,6 +162,7 @@
 								<span th:if="${order.orderStatus == 1}" class="badge-pill status-ongoing">進行中</span>
 								<span th:if="${order.orderStatus == 2}" class="badge-pill status-completed">服務完成</span>
 								<span th:if="${order.orderStatus == 3}" class="badge-pill status-cancelled">已取消</span>
+								<span th:if="${order.orderStatus == 4}" class="badge-pill status-cancelled">已退款</span>
 								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>
 							</div>
 							<div style="color: #666; font-size: 0.9rem;">
@@ -181,18 +182,26 @@
 
 						<div class="d-flex gap-sm">
 							<th:block th:with="isPast=${order.startTime.isBefore(#temporals.createNow())}">
+								<th:block th:if="${order.orderStatus == 0 or order.orderStatus == 1}">
+									<form th:action="@{/chat/connect/booking}" method="post" style="display:inline;">
+										<input type="hidden" name="targetUserId" th:value="${order.sitterMemId}" />
+										<input type="hidden" name="chatroomType" value="0" />
+										<button type="submit" class="btn btn-primary btn-sm">聯絡保母</button>
+									</form>
+								</th:block>
 								<th:block th:if="${(order.orderStatus == 0 or order.orderStatus == 1) and !isPast}">
-									<button class="btn btn-primary btn-sm">聯絡保母</button>
 									<button type="button" th:data-id="${order.bookingOrderId}"
 										th:data-start="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"
 										onclick="openCancelModal(this)" class="btn btn-danger">
 										取消預約</button>
 								</th:block>
 
-							<th:block th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
-							<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->
-								<button class="btn btn-outline btn-sm">評價保母</button>
-							</th:block>
+								<th:block
+									th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
+									<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->
+									<button class="btn btn-outline btn-sm"
+										th:onclick="|injectEvalBox(this, ${order.bookingOrderId}, ${order.sitterMemId})|">評價保母</button>
+								</th:block>
 
 								<th:block th:if="${order.orderStatus == 3}">
 									<span style="color: #ccc; font-size: 0.9rem; margin-right: 1rem;">訂單已結束</span>
@@ -229,6 +238,10 @@
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>
 	<script th:inline="javascript">
+		/*<![CDATA[*/
+		const contextPath = /*[[@{/}]]*/ '';
+		/*]]>*/
+
 		let currentCancelId = null;
 
 		function openCancelModal(btn) {
@@ -271,8 +284,9 @@
 		}
 
 		async function handleRefund(orderId) {
+			const base = typeof contextPath !== 'undefined' ? contextPath : '';
 			try {
-				const response = await fetch(`/booking/refund/${orderId}`, {
+				const response = await fetch(base + `/booking/refund/${orderId}`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' }
 				});
@@ -282,7 +296,7 @@
 					window.location.reload();
 				} else {
 					const errorMsg = await response.text();
-					alert("取消失敗：");
+					alert("取消失敗：" + errorMsg); // 顯示錯誤訊息
 				}
 			} catch (error) {
 				console.error("Error:", error);
@@ -312,21 +326,39 @@
 			reviewsTab.classList.add('active');
 
 			try {
-				const response = await fetch(`/pet/evaluate/member/${memId}`);
-				const reviews = await response.json();
+				let base = typeof contextPath !== 'undefined' ? contextPath : '';
+				if (base === '/') base = '';
+				const response = await fetch(base + `/pet/evaluate/member/${memId}`);
+				let reviews = await response.json();
+
+				// 檢查是否返回錯誤對象 (由 Controller Map.of 回傳)
+				if (reviews && reviews.error) {
+					bookingListContainer.innerHTML = `<div class="alert alert-danger" style="margin: 2rem; border-radius: 1rem;">⚠️ 載入評價失敗: ${reviews.error}</div>`;
+					return;
+				}
+
+				// 確保 reviews 是一個數列，防止 calculateAvgRating 崩潰
+				if (!Array.isArray(reviews)) {
+					console.warn('API 回傳格式不正確:', reviews);
+					reviews = [];
+				}
 
 				// 清空訂單列表區域
 				bookingListContainer.innerHTML = '';
 
 				// 建立評價顯示區域（含收放功能）
+				const avg = calculateAvgRating(reviews);
 				let reviewsHTML = `
 					<div style="background: white; border-radius: 1.5rem; padding: 2rem; margin-bottom: 1.5rem;">
 						<h3 style="cursor: pointer; user-select: none; margin-bottom: 1.5rem; color: #333;"
 							onclick="toggleHistoryReviews('memberReviewsList', 'memberToggleIcon')">
-							<i class="fas fa-comments"></i> ${memName} 的歷史評價
+							<i class="fas fa-comments"></i> ${memName} 的被評價記錄
 							<span style="color: #999; font-size: 0.9rem; margin-left: 10px;">(共 ${reviews.length} 筆)</span>
 							<i id="memberToggleIcon" class="fas fa-chevron-down" 
 								style="float: right; transition: transform 0.3s;"></i>
+							<span class="avg-rating" style="float: right; margin-right: 15px; color: #f39c12; font-weight: bold;">
+								<i class="fas fa-star"></i> ${avg}
+							</span>
 						</h3>
 						<div id="memberReviewsList" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease;">
 							<div id="memberReviewsContainer" class="reviews-container"></div>
@@ -361,8 +393,16 @@
 					function (review) {
 						const stars = renderStars(review.starRating || 0);
 						const reviewDate = new Date(review.createTime).toLocaleDateString('zh-TW');
-						// 優先顯示名字，如果沒有則顯示 ID
-						const reviewerName = review.senderName || `保母 ID: ${review.senderId}`;
+						// 🔥 檢舉按鈕邏輯：若不是本人發出的評價，才顯示檢舉按鈕
+						const isOwnReview = memId > 0 && Number(review.senderMemId) === memId;
+						const reportBtnHTML = !isOwnReview ? `
+							<button class="btn btn-sm btn-outline-danger" 
+								style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
+								onclick="reportReview(this, ${review.bookingOrderId})">
+								<i class="fas fa-flag"></i> 檢舉
+							</button>
+						` : '';
+
 						return `
 							<div class="review-card" style="
 								border: none;
@@ -372,12 +412,8 @@
 							">
 								<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
 									<div style="display: flex; align-items: center; gap: 10px;">
-										<strong style="font-size: 1.1rem; color: #2c3e50;">${reviewerName}</strong>
-										<button class="btn btn-sm btn-outline-danger" 
-											style="padding: 2px 8px; font-size: 0.8rem; margin-left: 10px;"
-											onclick="openComplaintModal(${review.evaluateId || review.bookingOrderId})">
-											<i class="fas fa-flag"></i> 檢舉
-										</button>
+										<strong style="font-size: 1.1rem; color: #2c3e50;">${review.senderName}</strong>
+										${reportBtnHTML}
 									</div>
 									<div style="color: #ffc107;">
 										${stars}
@@ -420,8 +456,7 @@
 
 	</script>
 
-	<script src="/js/frontend/complaint-functions.js"></script>
-	<script src="/js/frontend/evaluate-functions.js"></script>
+	<script th:src="@{/js/frontend/complaint-functions.js}"></script>
 
 </body>
 

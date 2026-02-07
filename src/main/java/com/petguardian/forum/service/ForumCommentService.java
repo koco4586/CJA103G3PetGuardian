@@ -2,7 +2,6 @@ package com.petguardian.forum.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +15,15 @@ import com.petguardian.member.model.Member;
 @Service
 public class ForumCommentService {
 
-	@Autowired
-	ForumCommentRepository repo;
-
-	@Autowired
-	ForumPostRepository postRepo;
+	private final ForumCommentRepository repo;
+	private final ForumPostRepository postRepo;
 	
+	public ForumCommentService(ForumCommentRepository repo, ForumPostRepository postRepo) {
+		super();
+		this.repo = repo;
+		this.postRepo = postRepo;
+	}
+
 	@Transactional
 	public void deleteComment(Integer commentId) {
 		ForumCommentVO forumCommentVO = repo.findById(commentId)

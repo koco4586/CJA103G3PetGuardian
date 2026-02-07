@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>訊息中心 MVP | PetGuardian</title>
+    <title>訊息中心 | PetGuardian</title>
 
     <!-- Base styles -->
     <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
     <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <!-- Chat MVP styles -->
     <link rel="stylesheet" th:href="@{/css/frontend/chat/chat-mvp.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/chat/chat-btn-back.css}">
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -42,7 +43,7 @@
                         <i class="fas fa-search" style="position: absolute; left: 10px; top: 12px; color: #999;"></i>
                     </div>
                 </div>
-                <div style="overflow-y: auto;">
+                <div id="contact-list" style="overflow-y: auto;">
                     <!-- Loop through users -->
                     <!-- Loop through My Chatrooms -->
                     <div th:each="room : ${chatrooms}" class="contact-item" th:id="'contact-item-' + ${room.chatroomId}"
@@ -50,10 +51,16 @@
                         th:data-partner-id="${room.partnerId}"
                         onclick="ChatApp.selectRoom(this.dataset.chatroomId, this.dataset.partnerName, this.dataset.partnerId)">
                         <div class="d-flex justify-between w-100 align-center">
-                            <div style="display: flex; align-items: center;">
+                            <div style="display: flex; align-items: center; max-width: 80%;">
                                 <span class="unread-dot" th:classappend="${room.unread} ? '' : 'app-d-none'"></span>
-                                <strong style="font-size: 1rem; color: var(--text-color);"
+                                <strong
+                                    style="font-size: 1rem; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
                                     th:text="${room.displayName}">Room Name</strong>
+                            </div>
+                            <!-- Pin Icon -->
+                            <div class="pin-btn"
+                                th:onclick="'event.stopPropagation(); ChatApp.togglePin(' + ${room.chatroomId} + ', event)'">
+                                <i class="fas fa-thumbtack"></i>
                             </div>
                         </div>
                         <div class="contact-last-msg" th:text="${room.lastMessage} ?: '點擊開始聊天'">
@@ -72,10 +79,32 @@
 
             <!-- Main Chat Area -->
             <div class="chat-main">
-                <div class="chat-header">
-                    <div class="d-flex align-center gap-sm">
-                        <div style="display: flex; flex-direction: row; align-items: center; gap: 0.5rem;">
-                            <h4 id="chatHeaderTitle" style="margin: 0;">請選擇聊天對象</h4>
+                <div class="chat-header d-flex align-center justify-between">
+                    <!-- Name on the Left -->
+                    <div class="d-flex align-center gap-sm" style="flex: 1; min-width: 0;">
+                        <h4 id="chatHeaderTitle"
+                            style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">請選擇聊天對象
+                        </h4>
+                    </div>
+
+                    <!-- Tools/Search Area on the Right -->
+                    <div class="d-flex align-center" style="gap: 0.5rem; flex-shrink: 0;">
+                        <!-- Normal Search Icon -->
+                        <div id="header-tools">
+                            <button id="btn-toggle-search" class="btn-icon" onclick="ChatApp.toggleSearchMode()"
+                                style="background:none; border:none; cursor:pointer; color:#666;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+
+                        <!-- Embedded Search Input -->
+                        <div id="chat-search-bar" class="chat-search-bar">
+                            <input type="text" id="msg-search-input" placeholder="搜尋..."
+                                onkeypress="ChatApp.handleSearchKeyPress(event)">
+                            <button onclick="ChatApp.searchHistory()" style="padding: 4px; border-radius: 50%;"><i
+                                    class="fas fa-search" style="font-size: 0.8rem;"></i></button>
+                            <button onclick="ChatApp.toggleSearchMode()" style="padding: 4px; border-radius: 50%;"><i
+                                    class="fas fa-times" style="font-size: 0.8rem;"></i></button>
                         </div>
                     </div>
                 </div>
@@ -85,6 +114,11 @@
                         <i class="fas fa-comments"></i>
                         <p>從左側選擇一個用戶開始聊天</p>
                     </div>
+                </div>
+
+                <!-- Search Results Container -->
+                <div id="search-results-list" class="chat-messages search-results-mode" style="display: none;">
+                    <!-- Results rendered here -->
                 </div>
 
                 <!-- Reply Preview Bar -->

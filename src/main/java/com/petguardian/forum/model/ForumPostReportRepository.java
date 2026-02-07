@@ -1,10 +1,10 @@
 package com.petguardian.forum.model;
 
-import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface ForumPostReportRepository extends JpaRepository<ForumPostReportVO, Integer> {
 	
@@ -39,7 +39,7 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 			from ForumPostReportVO r
 			join r.forumPost p
 			join p.forum f
-			where p.postStatus = 1 and r.reportStatus = 2
+			where r.reportStatus = 2
 			order by r.handleTime desc
 	""")
 	public List<RejectedPostDTO> findAllRejectedPosts();
@@ -63,5 +63,7 @@ public interface ForumPostReportRepository extends JpaRepository<ForumPostReport
 			where r.reportId = :reportId
 	""")
 	public PostHandledResultDetailDTO postHandledResultDetailToDisplay(@Param("reportId") Integer reportId);
-	
+
+	// 後台dashboard統計用：計算指定檢舉狀態的檢舉單數量
+	long countByReportStatus(Integer returnStatus);
 }

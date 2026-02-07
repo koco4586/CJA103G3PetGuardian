@@ -1,7 +1,8 @@
 package com.petguardian.chat.service.status;
 
-import com.petguardian.chat.dto.ChatMessageDTO;
+import com.petguardian.chat.dto.ChatReadReceiptDTO;
 import com.petguardian.chat.dto.ChatRoomMetadataDTO;
+import com.petguardian.chat.dto.ChatMessageDTO;
 import com.petguardian.chat.service.chatroom.ChatRoomService;
 
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.event.TransactionPhase;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,6 +33,7 @@ public class ChatStatusService {
 
     private final ChatRoomService chatRoomService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     // =========================================================================
     // READ STATUS OPERATIONS
@@ -72,7 +75,23 @@ public class ChatStatusService {
     @Transactional
     public void markRoomAsRead(Integer chatroomId, Integer userId) {
         chatRoomService.updateLastReadAt(chatroomId, userId, LocalDateTime.now());
-        broadcastReadReceipt(chatroomId);
+
+        // Publish event to handle broadcast AFTER transaction commit
+        // This prevents race conditions where clients query DB before commit finishes
+        eventPublisher.publishEvent(new ChatReadReceiptDTO(chatroomId, userId, LocalDateTime.now()));
+    }
+
+    /**
+     * Handles the read receipt event after the transaction successfully commits.
+     * This ensures data consistency for clients querying the DB immediately after
+     * receiving the socket event.
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onReadReceipt(ChatReadReceiptDTO event) {
+        broadcastReadReceipt(event.getChatroomId(), event.getReaderId());
+
+        // Notify self (Internal Sync for Header Red Dot)
+        messagingTemplate.convertAndSend("/topic/user." + event.getReaderId() + ".read", event);
     }
 
     // =========================================================================
@@ -83,12 +102,11 @@ public class ChatStatusService {
      * Broadcasts a read receipt to all subscribers of the chatroom.
      *
      * @param chatroomId Chatroom ID
+     * @param readerId   The user who read the room
      */
-    public void broadcastReadReceipt(Integer chatroomId) {
-        ChatMessageDTO readReceipt = new ChatMessageDTO();
-        readReceipt.setChatroomId(chatroomId);
-        readReceipt.setIsRead(true);
-        messagingTemplate.convertAndSend("/topic/chatroom." + chatroomId + ".read", readReceipt);
+    public void broadcastReadReceipt(Integer chatroomId, Integer readerId) {
+        ChatReadReceiptDTO receipt = new ChatReadReceiptDTO(chatroomId, readerId, LocalDateTime.now());
+        messagingTemplate.convertAndSend("/topic/chatroom." + chatroomId + ".read", receipt);
     }
 
     /**

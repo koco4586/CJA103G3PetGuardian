@@ -149,6 +149,13 @@ public class BookingServiceImpl implements BookingService {
     public void completePayout(Integer orderId) {
         payoutService.completePayout(orderId);
     }
+    /**
+     * 例外保母停權後的後台操作
+     */
+    @Override
+    public void suspendSitterRefund(Integer orderId) {
+        refundService.suspendSitterRefund(orderId);
+    }
 
     // 收藏功能 
 
@@ -166,5 +173,10 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingFavoriteVO> getSitterFavoritesByMember(Integer memId) {
         return favoriteService.getSitterFavoritesByMember(memId);
+    }
+    
+    @Override
+    public List<BookingFavoriteVO> getSitterFavoritesWithDetail(Integer memId) {
+        return favoriteService.getSitterFavoritesWithDetail(memId);
     }
 }

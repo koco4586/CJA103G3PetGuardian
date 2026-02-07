@@ -11,10 +11,8 @@ public class MemberLoginRedirectController {
     @GetMapping("/loginpage")
     public String loginpage(){
 
-        return "redirect:/html/frontend/member/login/login.html";
+    	return "forward:/html/frontend/member/login/login.html";  //  改用 forward
 
     }
 
 }
-
-///

@@ -17,13 +17,8 @@ import lombok.Data;
 @Table(name = "booking_order")
 @Data
 public class BookingOrderVO {
-	
-	@Transient
-	private String memName;
-	@Transient
-	private String petName;
-	
-	@Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_order_id")
     private Integer bookingOrderId;
@@ -51,7 +46,7 @@ public class BookingOrderVO {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    // 訂單狀態(0:待確認, 1:進行中, 2:已完成, 3:已取消)
+    // // 訂單狀態(0:待確認, 1:進行中, 2:已完成, 3:申請退款中, 4:已退款, 5:已撥款, 6:保母停權)
     @Column(name = "order_status")
     private Integer orderStatus = 0;
 
@@ -64,16 +59,39 @@ public class BookingOrderVO {
     // 檢舉與取消
     @Column(name = "report_status")
     private Integer reportStatus = 0;
-    
+
     private String cancelReason;
     private LocalDateTime cancelTime;
-    
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
-    @jakarta.persistence.Transient // 告訴 JPA 不要把這個存進資料庫
+
+    // 顯示用的額外資訊 (不存入資料庫)
+    @Transient
+    private String memName; // 透過 batchEnrichOrderInfo 填入
+
+    @Transient
+    private String petName; // 透過 batchEnrichOrderInfo 填入
+
+    @Transient
+    private String serviceName; // 透過 batchEnrichOrderInfo 填入
+
+    @Transient
     private String sitterName;
-    
+
+    @Transient
+    private Integer sitterMemId;
+
+    @Transient
+    private Byte sitterStatus; // 0=啟用, 1=停用
+
+    @Transient
+    private String petImage;
+
+    @Transient
+    private String petImageUrl;
+
 }

@@ -4,25 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>PetGuardian｜會員管理</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../../css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
-        }
-
-        .brown {
-            color: brown;
+        .myatag {
+            text-align: center;
         }
     </style>
 </head>
@@ -49,9 +40,9 @@
         <div class="outer">
 
             <form>
-                <input type="text" placeholder="請輸入會員編號" class="searchmemid" required>
-                <button type="submit" class="selectsubmit">點擊查詢</button>
-            </form>
+                <input type="text" placeholder="請輸入會員編號" class="searchmemid input" required>
+                <button type="submit" class="selectsubmit mybutton">點擊查詢</button>
+            </form><br>
 
             <table>
                 <thead>
@@ -67,22 +58,24 @@
                 <tbody class="tbody"></tbody>
 
             </table>
-
+            <div class="myatag">
+                <br><br><a class="a_tag" href="/admin/index">回首頁</a>
+            </div>
         </div>
 
-        <br><br><a class="brown" href="/admin/index">回上頁</a>
+
 
     </div> <!-- header最外層<div class="main-content">結束標籤 -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="../../../js/backend/sidebar.js"></script>
+    <script src="js/backend/sidebar.js"></script>
 
     <script>
 
         function init() {
 
-            let fetch_url = "http://localhost:8080/admin/admin-member-management";
+            let fetch_url = "/admin/admin-member-management";// 拿掉 http://localhost:8080
 
             fetch(fetch_url, {
                 credentials: "include"
@@ -107,7 +100,7 @@
                             <td>${data[i].memEmail}</td>
                             <td>
                                 <form>
-                                    <button type="submit" class="btn statussubmit" data-memid="${data[i].memId}">${memchinesestatus}</button>
+                                    <button type="submit" class="mybutton statussubmit" data-memid="${data[i].memId}">${memchinesestatus}</button>
                                  </form>  
                             </td>
                             <td>${data[i].memCreatedAt}</td>
@@ -125,7 +118,7 @@
 
                 let memid = $(".searchmemid").val();
 
-                let fetch_url = `http://localhost:8080/admin/admin-member-management-searchmember?memId=${memid}`;
+                let fetch_url = `/admin/admin-member-management-searchmember?memId=${memid}`;// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     credentials: "include"
@@ -148,7 +141,7 @@
                             <td>${data.memEmail}</td>
                             <td>
                                 <form>
-                                    <button type="submit" class="statussubmit" data-memid="${data.memId}">${memchinesestatus}</button>
+                                    <button type="submit" class="mybutton statussubmit" data-memid="${data.memId}">${memchinesestatus}</button>
                                  </form>  
                             </td>
                             <td>${data.memCreatedAt}</td>
@@ -173,7 +166,7 @@
                     "memId": memberid
                 }
 
-                var fetch_url = "http://localhost:8080/admin/admin-member-management-updatestatus";
+                var fetch_url = "/admin/admin-member-management-updatestatus";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "PUT",

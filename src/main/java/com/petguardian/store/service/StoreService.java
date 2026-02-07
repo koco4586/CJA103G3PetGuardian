@@ -24,6 +24,9 @@ public interface StoreService {
     // 扣除庫存（結帳用）- 庫存歸零自動下架
     void deductStock(Integer proId, Integer quantity);
 
+    // 還原庫存（訂單取消用）
+    void restoreStock(Integer proId, Integer quantity);
+
     // 查詢賣家的其他上架商品（排除指定商品，用於加購區）
     List<Product> getOtherActiveProductsBySeller(Integer sellerId, List<Integer> excludeProIds);
 }

@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
                 <ul class="nav-links">
                     <li><a href="/" class="nav-link">首頁</a></li>
+                    <li><a href="/news/list" class="nav-link">最新消息</a></li>
                     <li><a href="/booking/services" class="nav-link">預約服務</a></li>
                     <li class="dropdown">
                         <a href="/store" class="nav-link">二手商城 <i class="fas fa-chevron-down" style="font-size: 0.8rem; margin-left: 4px;"></i></a>
@@ -19,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </li>
                     <li><a href="/forum/list-all-active-forum" class="nav-link">討論區</a></li>
-                    <li><a href="/news/list" class="nav-link">最新消息</a></li>
                 </ul>
                 <div class="d-flex align-center">
                     <a href="#" onclick="enterChat(event)" class="btn btn-outline" style="border:none; margin-right: 0.5rem; font-size: 1.2rem; position: relative; padding: 0.5rem;">
@@ -277,9 +277,14 @@ document.addEventListener('DOMContentLoaded', function () {
         stomp.connect({}, function () {
             stomp.subscribe('/topic/messages.' + currentUserId, function (msg) {
                 try {
-                    const body = JSON.parse(msg.body);
-                    // Only show dot if message is NOT sent by me
-                    if (String(body.senderId) !== String(currentUserId)) {
+                    const data = JSON.parse(msg.body);
+
+                    if (data.readerId) {
+                        // Case A: I read a room (potentially in another tab)
+                        // Refresh the dot based on exact server state
+                        refreshUnreadDot();
+                    } else if (String(data.senderId) !== String(currentUserId)) {
+                        // Case B: Someone else sent a message
                         dotEl.style.display = 'block';
                     }
                 } catch (e) {
@@ -287,5 +292,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+
+        function refreshUnreadDot() {
+            fetch(`/api/chatrooms/unread-count?userId=${currentUserId}`)
+                .then(res => res.json())
+                .then(data => {
+                    dotEl.style.display = data.hasUnread ? 'block' : 'none';
+                })
+                .catch(console.error);
+        }
     }
 });

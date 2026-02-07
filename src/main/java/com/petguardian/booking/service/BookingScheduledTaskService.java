@@ -38,58 +38,38 @@ public class BookingScheduledTaskService {
     private BookingDataIntegrationService dataService;
 
     /**
-     * 自動退款排程任務（每分鐘執行一次）
-     * 處理邏輯：
-     * 1. 查詢所有狀態為「申請退款中」(3) 的訂單
-     * 2. 檢查是否已過服務開始時間（逾期未審核）
-     * 3. 若已逾期，則自動計算退款比例並執行退款
-     * 4. 更新訂單狀態為「已退款」(4)
-     * 5. 記錄退款說明（包含系統自動判定字樣）
-     * 6. 釋放保母排程時段
-     * 執行頻率：每 60 秒（1 分鐘）執行一次
+     * 自動退款排程任務
+     * 頻率：每天凌晨 3 點執行
+     * 找出「已取消(3)」且「取消時間超過7天」的訂單，執行退款
      */
-    @Scheduled(fixedRate = 60000) // 60000 毫秒 = 1 分鐘
+     @Scheduled(cron = "0 0 3 * * ?") // 每天凌晨 3 點執行
     public void autoRefundExpiredOrders() {
         // 步驟 1：找出所有狀態為 3 (退款申請中) 的訂單
         List<BookingOrderVO> pendingOrders = orderRepository.findByOrderStatus(3);
-
         LocalDateTime now = LocalDateTime.now();
-
         for (BookingOrderVO order : pendingOrders) {
-            // 步驟 2：檢查是否已過服務開始時間
-            if (now.isAfter(order.getStartTime())) {
-
-                // 步驟 3：計算退款比例 
-                // 依申請時間（cancelTime）vs 服務開始時間計算退款比例
+            // 檢查取消時間是否已超過 7 天
+            if (order.getCancelTime() != null && now.isAfter(order.getCancelTime().plusDays(7))) {
+                // 步驟 3：計算退款比例
                 Double ratio = refundService.calculateRefundRatio(
                         order.getStartTime(),
                         order.getCancelTime()
                 );
-
-                // 步驟 4：計算金額並執行退款 
+                // 步驟 4：執行退款
                 int refundAmount = (int) (order.getReservationFee() * ratio);
                 if (refundAmount > 0) {
                     dataService.processRefund(order.getMemId(), refundAmount);
                 }
-
-                // 步驟 5：更新訂單狀態
-                order.setOrderStatus(4); // 4: 已退款
-
-                // 步驟 6：設定原因字串（包含用戶要求的特定文字）
-                String ratioText = (ratio >= 1.0) ? "全額退款"
-                                 : (ratio <= 0)   ? "不予退款"
-                                 : (int)(ratio * 100) + "% 部分退款";
-                
-                String logEntry = String.format(" [%s - 系統判定(已過審核時間)]", ratioText);
-                order.setCancelReason(order.getCancelReason() + logEntry);
-
+                // 步驟 5：更新訂單狀態為 4 (已退款)
+                order.setOrderStatus(4); 
+                // 步驟 6：記錄原因
+                String logEntry = String.format(" [系統自動退款(申請逾期7天)]");
+                String currentReason = (order.getCancelReason() == null) ? "" : order.getCancelReason();
+                order.setCancelReason(currentReason + logEntry);
                 orderRepository.save(order);
-
-                // 步驟 7：釋放保母排程時段 
+                // 步驟 7：釋放保母時段
                 scheduleInternalService.updateSitterSchedule(order, '0');
-
-                // 記錄日誌
-                System.out.println("訂單 " + order.getBookingOrderId() + " 已自動執行逾期退款。");
+                System.out.println("訂單 " + order.getBookingOrderId() + " 已自動執行退款 (超過7天)。");
             }
         }
     }
@@ -103,70 +83,55 @@ public class BookingScheduledTaskService {
      * 4. 更新訂單狀態為「已撥款」(5)
      * 執行頻率：每 3600 秒（1 小時）執行一次
      */
-    @Scheduled(fixedRate = 3600000) // 3600000 毫秒 = 1 小時
-    public void autoPayoutCompletedOrders() {
-        // 步驟 1：找出所有狀態為 2 (服務完成) 的訂單
-        List<BookingOrderVO> completedOrders = orderRepository.findByOrderStatus(2);
-
-        LocalDateTime now = LocalDateTime.now();
-
-        for (BookingOrderVO order : completedOrders) {
-            //  步驟 2：檢查是否已超過結束時間 3 天 
-            if (now.isAfter(order.getEndTime().plusDays(3))) {
-                try {
-                    // 步驟 3：執行撥款 
-                    payoutService.completePayout(order.getBookingOrderId());
-
-                    // 記錄日誌
-                    System.out.println("訂單 " + order.getBookingOrderId() + " 已自動執行撥款 (服務完成滿3天)。");
-
-                } catch (Exception e) {
-                    // 記錄錯誤日誌
-                    System.err.println("訂單 " + order.getBookingOrderId() + " 自動撥款失敗: " + e.getMessage());
-                }
-            }
-        }
-    }
-
+//    @Scheduled(fixedRate = 3600000) // 3600000 毫秒 = 1 小時
+//    public void autoPayoutCompletedOrders() {
+//        // 步驟 1：找出所有狀態為 2 (服務完成) 的訂單
+//        List<BookingOrderVO> completedOrders = orderRepository.findByOrderStatus(2);
+//
+//        LocalDateTime now = LocalDateTime.now();
+//
+//        for (BookingOrderVO order : completedOrders) {
+//            //  步驟 2：檢查是否已超過結束時間 3 天 
+//            if (now.isAfter(order.getEndTime().plusDays(3))) {
+//                try {
+//                    // 步驟 3：執行撥款 
+//                    payoutService.completePayout(order.getBookingOrderId());
+//
+//                    // 記錄日誌
+//                    System.out.println("訂單 " + order.getBookingOrderId() + " 已自動執行撥款 (服務完成滿3天)。");
+//
+//                } catch (Exception e) {
+//                    // 記錄錯誤日誌
+//                    System.err.println("訂單 " + order.getBookingOrderId() + " 自動撥款失敗: " + e.getMessage());
+//                }
+//            }
+//        }
+//    }
+    
     /**
-     * 自動接單排程任務（每小時執行一次）
-     * 處理邏輯：
-     * 1. 查詢所有狀態為「待確認」(0) 的訂單
-     * 2. 檢查訂單建立時間是否已超過 3 天
-     * 3. 若已超過 3 天保母仍未回應，則自動接單
-     * 4. 更新訂單狀態為「進行中」(1)
-     * 5. 更新保母排程（鎖定時段）
-     * 6. 記錄自動接單原因
+     * 自動接單排程任務
+     * 每天凌晨 3 點執行
+     * 保母逾期 3 天未回覆，自動接單
      */
-    @Scheduled(fixedRate = 3600000) 
+     @Scheduled(cron = "0 0 3 * * ?") // 每天凌晨 3 點執行
     public void autoAcceptPendingOrders() {
-        // 步驟 1：找出所有狀態為 0 (待確認) 的訂單
+        // 步驟 1：找出狀態為 0 (待確認) 的訂單
         List<BookingOrderVO> pendingOrders = orderRepository.findByOrderStatus(0);
-
         LocalDateTime now = LocalDateTime.now();
-
         for (BookingOrderVO order : pendingOrders) {
-            //  步驟 2：檢查是否已有建立時間，且已超過 3 天
+            // 步驟 2：檢查訂單是否已建立超過 3 天
             if (order.getCreatedAt() != null && now.isAfter(order.getCreatedAt().plusDays(3))) {
                 try {
-                    // 步驟 3：更新狀態為 1 (進行中/已接單)
+                    // 步驟 3：自動接單 (狀態改為 1)
                     order.setOrderStatus(1);
-
-                    // 步驟 4：加註原因（方便日後查詢）
+                    // 步驟 4：記錄原因
                     String currentReason = (order.getCancelReason() == null) ? "" : order.getCancelReason();
                     order.setCancelReason(currentReason + " [逾期3天未回覆，系統自動接單]");
-
                     orderRepository.save(order);
-
-                    // 步驟 5：更新保母行事曆（鎖定時段）
-                    // 參數 '1' 代表將時段設為忙碌/已預約
+                    // 步驟 5：更新保母行事曆 (鎖定時段 '1')
                     scheduleInternalService.updateSitterSchedule(order, '1');
-
-                    // 記錄日誌
-                    System.out.println("訂單 " + order.getBookingOrderId() + " 已自動接單 (逾期3天未回覆)。");
-
+                    System.out.println("訂單 " + order.getBookingOrderId() + " 已自動接單。");
                 } catch (Exception e) {
-                    // 記錄錯誤日誌
                     System.err.println("訂單 " + order.getBookingOrderId() + " 自動接單失敗: " + e.getMessage());
                 }
             }

@@ -1,0 +1,108 @@
+/* 起手式 */
+* {
+    box-sizing: border-box;
+}
+
+/* div框 */
+.outer {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    /*水平偏移,垂直偏移,模糊半徑*/
+    background-color: rgb(255, 249, 224);
+    border-radius: 30px;
+    padding: 20px;
+    margin: auto;
+}
+
+/* 必填文字樣式 */
+.mustbe {
+    color: red;
+}
+
+/* 所有input框 */
+.input {
+    width: 200px;
+    height: 40px;
+    padding: 0 0 0 10px;
+    margin: 5px;
+    border: 1px solid rgb(226, 182, 100);
+    border-radius: 50px;
+    background-color: antiquewhite;
+    color: brown;
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0.9;
+}
+
+/* 所有input框的placeholder */
+input::placeholder {
+    color: #999999;
+    opacity: 0.7;
+}
+
+/* input框特殊情況：比較長的文字 */
+.long {
+    width: 400px;
+}
+
+/* input框刻書情況：有下拉式選單或日期的部分 */
+.special_input {
+    padding: 0 10px 0 10px;
+}
+
+/* input框特殊情況：上傳檔案的部分 */
+.image_input {
+    display: none;
+}
+
+/* h標籤特殊情況：需要置中的標題文字 */
+.titlecenter {
+    color: brown;
+    text-align: center;
+}
+
+/* checkbox基本樣式 */
+.mycheckbox {
+    cursor: pointer;
+    accent-color: brown;
+}
+
+/* a標籤r基本樣式 */
+.a_tag {
+    color: rgb(255, 255, 255);
+    background-color: rgb(255, 136, 0);
+    padding: 5px;
+    margin: 5px;
+    border: none;
+    border-radius: 50px;
+}
+
+/* a標籤樣式：滑鼠滑過時的樣式變化 */
+.a_tag:hover {
+    background-color: rgb(243, 168, 82);
+    color: rgb(69, 43, 16);
+}
+
+/* 按鈕基本樣式 */
+.mybutton {
+    width: 100px;
+    height: 40px;
+    margin: 0 10px 0 10px;
+    border: none;
+    border-radius: 50px;
+    background-color: rgb(122, 96, 73);
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0.9;
+}
+
+/* 按鈕樣式：滑鼠滑過時的樣式變化 */
+.mybutton:hover {
+    background-color: rgb(227, 171, 122);
+    color: rgb(69, 43, 16);
+}
+
+/* 提示文字樣式 */
+.hintword {
+    color: rgb(162, 159, 142);
+}

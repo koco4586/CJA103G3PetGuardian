@@ -29,23 +29,38 @@ public class DashboardController {
     public String showDashboard(Model model) {
         Map<String, Object> stats = dashboardService.getDashboardStatistics();
 
-        // 會員總數（mem_status = 1 啟用）
+        // 1. 管理員總數 (adm_status = 1)
+        model.addAttribute("totalAdmins", stats.get("totalAdmins"));
+
+        // 2. 會員總數 (mem_status = 1)
         model.addAttribute("totalMembers", stats.get("totalMembers"));
 
-        // 待審保母（app_status = 0 待審核）
+        // 3. 待審保母 (app_status = 0)
         model.addAttribute("pendingSitters", stats.get("pendingSitters"));
 
-        // 預約待處理退款（booking_order 的 order_status = 3）
+        // 4. 預約待審退款 (order_status = 3)
         model.addAttribute("bookingPendingRefunds", stats.get("bookingPendingRefunds"));
 
-        // 商城待處理退款（return_order 的 return_status = 0）
-        model.addAttribute("storePendingRefunds", stats.get("storePendingRefunds"));
-
-        // 預約待處理評價（booking_order_report 的 report_status = 0）
+        // 5. 預約待審評價檢舉 (report_status = 0)
         model.addAttribute("bookingPendingReviews", stats.get("bookingPendingReviews"));
 
-        // 商城待處理評價（seller_review_report 的 report_status = 0）
+        // 6. 聊天室待審檢舉 (report_status = 0)
+        model.addAttribute("chatPendingReports", stats.get("chatPendingReports"));
+
+        // 7. 已發布文章數量 (IS_PUBLISHED = 1) -> 新增
+        model.addAttribute("publishedNewsCount", stats.get("publishedNewsCount"));
+
+        // 8. 商城待審退款 (return_status = 0)
+        model.addAttribute("storePendingRefunds", stats.get("storePendingRefunds"));
+
+        // 9. 商城待審評價檢舉 (report_status = 0)
         model.addAttribute("storePendingReviews", stats.get("storePendingReviews"));
+
+        // 10. 論壇待審留言檢舉 (report_status = 0)
+        model.addAttribute("forumPendingCommentReports", stats.get("forumPendingCommentReports"));
+
+        // 11. 論壇待審文章檢舉 (report_status = 0)
+        model.addAttribute("forumPendingPostReports", stats.get("forumPendingPostReports"));
 
         return "backend/index";
     }

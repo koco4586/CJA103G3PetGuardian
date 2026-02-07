@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/css/frontend/components.css">
     <link rel="stylesheet" href="/css/frontend/store.css">
     <style>
-    
+   
         /* --- 核心配色 --- */
         :root {
             --primary-orange: #ff9800;
@@ -184,7 +184,7 @@
                        
 						    <div class="time-box">
 						        <i class="far fa-clock"></i>
-						        <span class="need-timeago" th:datetime="${forumPostVO.lastEditedAt}"></span>
+						        <span class="need-timeago" th:datetime="${forumPostVO.createdAt}"></span>
 						    </div>
 						    
 						    <form class="fav-form" th:action="@{/forumpost/delete-collection}" method="post">

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Glassmorphism login Form Tutorial in html css</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        /* 必用：設定網頁背景色為米黃色 */
+        body {
+            background-color: #efdebd;
+        }
+
+        /* 必用：絕對定位並置中 */
+        .background {
+            width: 430px;
+            height: 520px;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            left: 50%;
+            top: 50%;
+        }
+
+        /* 定義裝飾圓形的基本樣式（絕對定位，圓角 50%） */
+        .background .shape {
+            height: 200px;
+            width: 200px;
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        /* 第一個圓形使用漸層色，位置在左上角外側 */
+        .shape:first-child {
+            background: linear-gradient(#e3a24c,
+                    #f5dcb2);
+            left: -80px;
+            top: -80px;
+        }
+
+        /* 第二個圓形使用橫向漸層色，位置在右下角外側 */
+        .shape:last-child {
+            background: linear-gradient(to right,
+                    #e2aa4e,
+                    #eedbc0);
+            right: -30px;
+            bottom: -80px;
+        }
+
+        /* 表單容器樣式 */
+        form {
+            height: 500px;
+            width: 400px;
+            background-color: rgba(255, 255, 255, 0.13);/*使用半透明白色背景*/
+            position: absolute;/*絕對定位*/
+            transform: translate(-50%, -50%);/*置中*/
+            top: 50%;
+            left: 50%;
+            border-radius: 10px;/*圓角*/
+            backdrop-filter: blur(10px);/*毛玻璃效果 */
+            border: 2px solid rgba(255, 255, 255, 0);/*白色半透明邊框*/
+            box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);/*陰影效果*/
+            padding: 50px 35px;/*內邊距 */
+        }
+
+        form * {
+            font-family: 'Poppins';/*使用 Poppins字體*/
+            color: #593a0b;
+            letter-spacing: 0.5px;
+            outline: none;
+            border: none;
+        }
+
+        form h3 {
+            font-size: 32px;
+            font-weight: 500;
+            line-height: 42px;
+            text-align: center;
+        }
+
+        form h5 {
+
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 5px;
+            text-align: center;
+
+        }
+
+        label {
+            display: block;
+            margin-top: 30px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        input {
+            display: block;
+            height: 40px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.454);
+            border-radius: 30px;
+            padding: 0 10px;
+            margin-top: px;
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        ::placeholder {
+            color: #a16e09;
+        }
+
+        button {
+            margin-top: 10px;
+            width: 100%;
+            background-color: #ffffff;
+            color: #080710;
+            padding: 5px 0;
+            font-size: 18px;
+            font-weight: 400;
+            border-radius: 50px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+    <form>
+        <h3>PetGuardian</h3>
+        <h5>會員登入</h5>
+
+        <label for="username">使用者帳號</label>
+        <input type="text" placeholder="請輸入使用者帳號" id="username">
+
+        <label for="password">使用者密碼</label>
+        <input type="password" placeholder="請輸入使用者密碼" id="password">
+
+        <button type="submit">立即登入</button>
+        <button type="reset">清除重填</button>
+        </div>
+    </form>
+</body>
+
+</html>

@@ -18,10 +18,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**test
+/**
+ * test
  * 保姆 Entity
  * 對應資料表: sitter
- * 
+ * 註解測試
  * 包含保姆基本資料、服務狀態、評價統計與排程資訊
  */
 @Entity
@@ -176,12 +177,8 @@ public class SitterVO implements Serializable {
 		this.serviceAreas = serviceAreas;
 	}
 
-	// 方便前端直接呼叫的平均評分計算 (Transient 屬性)
+	// 平均評分應由 Controller 透過 EvaluateService 注入，不再使用舊的 sitter_rating_count 計算
 	public Double getAverageRating() {
-		if (this.sitterRatingCount != null && this.sitterRatingCount > 0) {
-			double avg = (double) this.sitterStarCount / this.sitterRatingCount;
-			return Math.round(avg * 10.0) / 10.0;
-		}
-		return 0.0;
+		return null; // 返回 null，由 Controller 注入真實評價
 	}
 }

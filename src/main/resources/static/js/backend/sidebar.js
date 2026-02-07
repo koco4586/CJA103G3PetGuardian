@@ -3,6 +3,12 @@
  * 自動生成側邊欄並控制行為
  */
 
+// 全域變數，用於儲存當前登入的管理員資訊
+window.currentAdmin = {
+    adminId: null,
+    name: null
+};
+
 // 將 toggleSidebar 放在全域
 window.toggleSidebar = function () {
     const sidebar = document.getElementById('sidebar');
@@ -22,7 +28,7 @@ window.toggleSubmenu = function (e) {
 
 // 管理員登出功能
 window.adminLogout = function () {
-    window.location.href = "../../html/backend/admin/admin_logout.html";
+    window.location.href = "/admin/adminlogoutpage";
 };
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -87,12 +93,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // 根據路徑判斷當前頁面
     let pageName = "index";
 
-    // 會員管理 - 修正路徑判斷，支援靜態HTML頁面路徑
+    // 會員管理
     if (currentPath.includes("/admin/membermanagementpage") ||
         currentPath.includes("/html/backend/member/admin_member_management")) {
         pageName = "members";
     }
-    // 管理員帳號管理 - 修正路徑判斷，支援靜態HTML頁面路徑
+    // 管理員帳號管理
     else if (currentPath.includes("/admin/adminmanagementpage") ||
         currentPath.includes("/html/backend/admin/admin_admin_management")) {
         pageName = "accounts";
@@ -133,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
     else if (currentPath.includes("/admin/forum/list-all-forum")) {
         pageName = "forum";
     }
-    // 首頁 (預設)
+    // 首頁
     else if (currentPath.includes("/admin/index") || currentPath === "/admin") {
         pageName = "index";
     }
@@ -150,23 +156,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // 載入管理員名稱
-    loadAdminName();
+    loadAdminInfo();
 });
 
-// 載入管理員名稱的函數
-function loadAdminName() {
-    // 從後端取得當前登入的管理員資訊
+// 載入管理員資訊的函數
+function loadAdminInfo() {
     fetch('/admin/current-admin')
         .then(response => response.json())
         .then(data => {
-            if (data && data.name) {
-                document.getElementById('adminName').textContent = data.name;
+            if (data && data.adminId) {
+                // 更新全域變數
+                window.currentAdmin.adminId = data.adminId;
+                window.currentAdmin.name = data.name || '管理員';
+
+                // 更新畫面顯示
+                const nameElement = document.getElementById('adminName');
+                if (nameElement) {
+                    nameElement.textContent = window.currentAdmin.name;
+                }
+
+                console.log('管理員資訊已載入:', window.currentAdmin);
             }
         })
         .catch(error => {
-            console.log('無法載入管理員資訊');
+            console.log('無法載入管理員資訊:', error);
         });
 }
+
+// 提供全域函數供其他頁面取得管理員資訊
+window.getAdminInfo = function() {
+    return window.currentAdmin;
+};
 
 // 監聽視窗縮放，當視窗變大時自動關閉手機版開啟狀態
 window.addEventListener('resize', () => {

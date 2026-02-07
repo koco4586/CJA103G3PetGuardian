@@ -8,6 +8,7 @@ import org.springframework.data.domain.Persistable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,12 +21,10 @@ import jakarta.persistence.Index;
  * Represents an individual message in a chat conversation.
  * 
  * Key Design Decisions:
- * - Uses String (CHAR(13)) for IDs to store TSIDs (Time-Sorted Unique
+ * - Uses 64bit Long for IDs to store TSIDs (Time-Sorted Unique
  * Identifiers)
- * - Decoupled from ChatRoom/Member via ID references (No JPA Relations) to
- * allow
- * independent scaling or microservice extraction.
  */
+@NamedNativeQuery(name = "ChatMessageEntity.searchByMessage", query = "SELECT * FROM chat_message WHERE chatroom_id = :chatroomId AND MATCH(message) AGAINST(:keyword IN BOOLEAN MODE) ORDER BY chat_time DESC", resultClass = ChatMessageEntity.class)
 @Entity
 @Table(name = "chat_message", indexes = {
         @Index(name = "idx_chatroom_tsid", columnList = "chatroom_id, message_id DESC"),
@@ -33,11 +32,11 @@ import jakarta.persistence.Index;
 })
 @Data
 @NoArgsConstructor
-public class ChatMessageEntity implements Persistable<String>, Serializable {
+public class ChatMessageEntity implements Persistable<Long>, Serializable {
 
     @Id
-    @Column(name = "message_id", length = 13, updatable = false)
-    private String messageId; // Strategy: TSID (Application Generated)
+    @Column(name = "message_id", updatable = false)
+    private Long messageId; // Strategy: TSID (Application Generated 64bit Long)
 
     @Column(name = "chatroom_id")
     private Integer chatroomId;
@@ -51,11 +50,11 @@ public class ChatMessageEntity implements Persistable<String>, Serializable {
     @Column(name = "chat_time")
     private LocalDateTime chatTime;
 
-    @Column(name = "reply_to_message_id", length = 13)
-    private String replyToMessageId; // Reference to parent message ID
+    @Column(name = "reply_to_message_id")
+    private Long replyToMessageId; // Reference to parent message ID
 
     @Override
-    public String getId() {
+    public Long getId() {
         return messageId;
     }
 
@@ -79,7 +78,8 @@ public class ChatMessageEntity implements Persistable<String>, Serializable {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        // TSID
+        return messageId != null ? messageId.hashCode() : getClass().hashCode();
     }
 
 }

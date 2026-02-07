@@ -1,10 +1,10 @@
 package com.petguardian.forum.model;
 
-import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface ForumCommentReportRepository extends JpaRepository<ForumCommentReportVO, Integer> {
 
@@ -39,7 +39,7 @@ public interface ForumCommentReportRepository extends JpaRepository<ForumComment
 			from ForumCommentReportVO r
 			join r.forumComment c
 			join c.forumPost p
-			where c.commentStatus = 1 and r.reportStatus = 2
+			where r.reportStatus = 2
 			order by r.handleTime desc
 	""")
 	public List<RejectedCommentDTO> findAllRejectedComments();
@@ -65,5 +65,7 @@ public interface ForumCommentReportRepository extends JpaRepository<ForumComment
 			where r.reportId = :reportId
 	""")
 	public CommentHandledResultDetailDTO commentHandledResultDetailToDisplay(@Param("reportId") Integer reportId);
-	
+
+	// 後台dashboard統計用：計算指定檢舉狀態的檢舉單數量
+	long countByReportStatus(Integer returnStatus);
 }

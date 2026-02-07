@@ -22,7 +22,7 @@ public class AdminManagementUpdateInfoController {
 	private AdminManagementUpdateInfoService adminManagementUpdateInfoService;
 
 	@PutMapping("/adminupdateinfo")
-	public Admin adminupdateinfo(@RequestParam MultipartFile admImage,
+	public Admin adminupdateinfo(@RequestParam(required = false) MultipartFile admImage,//非必填
 			@ModelAttribute AdminManagementUpdateInfoDTO adminManagementUpdateInfoDTO, HttpSession session) {
 
 		Integer admId = (Integer) session.getAttribute("admId");

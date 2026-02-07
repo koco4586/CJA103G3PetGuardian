@@ -12,11 +12,14 @@
 // CONFIGURATION
 // ============================================================
 const CONFIG = {
-    PAGE_SIZE: 20,
+    PAGE_SIZE: 50,
     RECONNECT_DELAY_MS: 5000,
     RECONNECT_JITTER_MS: 2000, // Random jitter to prevent thundering herd
     SCROLL_THRESHOLD_PX: 100,
-    DEBOUNCE_DELAY_MS: 300
+    DEBOUNCE_DELAY_MS: 300,
+    // [NEW] Date Formatting
+    DATE_FORMAT_OPTIONS: { year: 'numeric', month: '2-digit', day: '2-digit' },
+    TIME_FORMAT_OPTIONS: { hour: '2-digit', minute: '2-digit', hour12: false }
 };
 
 // ============================================================
@@ -33,17 +36,15 @@ const ChatState = {
     currentPage: 0,
     isLoadingHistory: false,
     hasMoreHistory: true,
-    isLoadingHistory: false,
-    hasMoreHistory: true,
     messageIds: new Set(), // O(1) deduplication
     currentChatroomId: null,
-    // Partner context for sending messages
     currentPartnerId: null,
-    // Read receipt subscription
     readSubscription: null,
-    // Context Menu State
-    contextMenuTargetId: null, // Message TSID
-    contextMenuTargetStatus: 0 // 0: None, 1: Pending, 2: Processed
+    contextMenuTargetId: null,
+    contextMenuTargetStatus: 0,
+    isSearchMode: false,
+    isReturningToPresent: false,
+    pinnedRooms: new Set() // [NEW] Track pinned chatroom IDs
 };
 
 // ============================================================
@@ -58,6 +59,12 @@ const DOM = {
     replyPreviewBar: null,
     replyToName: null,
     replyToText: null,
+    // [NEW] Reply context for UI
+    replyToId: null,      // ID of the message being replied to
+    replyToContent: null, // Content preview of the message being replied to
+    replyToSender: null,  // Name of the sender being replied to
+    // [NEW] Search state
+    isSearchMode: false, // Track search state
     // Report Elements
     reportModal: null,
     reportReasonType: null,
@@ -117,6 +124,17 @@ function initChat() {
 
     DOM.init();
     updateSendButton(); // Initialize button state
+
+    // Load Pinned Rooms from Cookie
+    const savedPinned = getCookie('pinned_chatrooms');
+    if (savedPinned) {
+        savedPinned.split(',').forEach(id => {
+            if (id) ChatState.pinnedRooms.add(parseInt(id, 10));
+        });
+        // Initial sort after loading pinned state
+        sortContacts();
+    }
+
     connect();
 
     // [NEW] Auto-select room if requested (e.g. redirected from Store)
@@ -201,7 +219,8 @@ function onMessageReceived(dto) {
     }
 
     if (shouldAppend) {
-        appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName);
+        appendMessage(dto.content, isSentByMe, dto.senderName, dto.messageId, dto.replyToContent, dto.replyToSenderName, dto.isRead, dto.reportStatus, dto.chatTime);
+
 
         // Real-time "Mark as Read"
         if (!isSentByMe && activeChatroomId) {
@@ -262,9 +281,8 @@ function updateContactLastMessage(chatroomId, userId, content) {
         const msgDiv = contactItem.querySelector('.contact-last-msg');
         if (msgDiv) msgDiv.textContent = content;
 
-        // Move to top (Recent activity sort)
-        // const list = contactItem.parentNode;
-        // list.prepend(contactItem);
+        // Move to top (Recent activity sort) - Pinned/Regular aware
+        sortContacts();
     }
 }
 
@@ -322,30 +340,32 @@ function subscribeToReadReceipts(chatroomId) {
     if (ChatState.stompClient && ChatState.stompClient.connected) {
         ChatState.readSubscription = ChatState.stompClient.subscribe(
             '/topic/chatroom.' + chatroomId + '.read',
-            function () {
-                markLastMessageAsRead();
+            function (message) {
+                const receipt = JSON.parse(message.body);
+                // Only act if the OTHER person read it
+                if (receipt.readerId !== ChatState.currentUserId) {
+                    markAllSentMessagesAsRead();
+                }
             }
         );
     }
 }
 
 /**
- * Shows 已讀 on the last sent message only.
- * Removes any existing read status first.
+ * Marks all sent messages in the current view as "Read".
+ * Does not remove existing ones to prevent "vanishing indicator" effect.
  */
-function markLastMessageAsRead() {
-    // Remove all existing read status
-    document.querySelectorAll('.read-status').forEach(el => el.remove());
-
+function markAllSentMessagesAsRead() {
     const messages = document.querySelectorAll('.message.sent');
-    if (messages.length === 0) return;
-    const lastSent = messages[messages.length - 1];
-    if (lastSent) {
-        const span = document.createElement('span');
-        span.className = 'read-status';
-        span.textContent = '已讀';
-        lastSent.appendChild(span);
-    }
+    messages.forEach(msg => {
+        // Only add if not already present
+        if (!msg.querySelector('.read-status')) {
+            const span = document.createElement('span');
+            span.className = 'read-status';
+            span.textContent = '已讀';
+            msg.appendChild(span);
+        }
+    });
 }
 
 // ============================================================
@@ -374,84 +394,112 @@ function markAsRead(chatroomId) {
 }
 
 /**
- * Load chat history for selected user.
- * Uses requestId pattern to handle race conditions when user rapidly switches conversations.
- * 
- * Flow:
- * 1. Resolve chatroom by partner ID
- * 2. Fetch paginated messages
- * 3. Render to DOM
+ * Enhanced loadChatHistory with direction support
  */
-async function loadChatHistory(chatroomId, isLoadMore = false) {
-    // Reset pagination on new conversation
-    if (!isLoadMore) {
+async function loadChatHistory(partnerId, direction = 'INITIAL') {
+    if (!partnerId) return;
+
+    const requestId = ++ChatState.loadingRequestId;
+    ChatState.isLoadingHistory = true;
+
+    // Clear cache/state for INITIAL load
+    if (direction === 'INITIAL') {
         ChatState.currentPage = 0;
         ChatState.hasMoreHistory = true;
-        ChatState.loadingRequestId++; // Invalidate any in-flight requests
-        ChatState.messageIds.clear(); // Clear cache on new chat
+        ChatState.messageIds.clear();
+        ChatState.isReturningToPresent = false;
+        // DO NOT clear innerHTML here yet, preserve the spinner from selectRoom
+    } else if (direction === 'OLDER') {
+        // Show a small spinner at the top for infinite scroll
+        showTopLoadingIndicator();
     }
 
-    const requestId = ChatState.loadingRequestId;
-    ChatState.isLoadingHistory = true;
-    const page = ChatState.currentPage;
+    // Determine target page (don't commit to ChatState yet)
+    let targetPage = ChatState.currentPage;
+    if (direction === 'OLDER') targetPage++;
+    if (direction === 'NEWER') targetPage--;
+    if (targetPage < 0) targetPage = 0;
 
     try {
-        // Step 1: Mark as Read Immediately
-        // Optimization: Don't wait for history to mark as read
-        markAsRead(chatroomId);
+        if (direction === 'INITIAL') markAsRead(partnerId);
 
-        // Step 2: Fetch messages for specific room
         const messagesResponse = await fetch(
-            `/api/chatrooms/${chatroomId}/messages?userId=${ChatState.currentUserId}&page=${page}&size=${CONFIG.PAGE_SIZE}`
+            `/api/chatrooms/${partnerId}/messages?userId=${ChatState.currentUserId}&page=${targetPage}&size=${CONFIG.PAGE_SIZE}`
         );
 
         if (requestId !== ChatState.loadingRequestId) return;
 
-        if (!messagesResponse.ok) {
-            if (messagesResponse.status === 403) {
-                showEmptyState('Access Denied');
-            } else {
-                showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
-            }
-            ChatState.isLoadingHistory = false;
-            return;
-        }
+        if (!messagesResponse.ok) return;
 
         const messages = await messagesResponse.json();
-        ChatState.isLoadingHistory = false;
+        console.log(`[History] Loaded page ${targetPage}, messages: ${messages.length}`);
 
-        // Check if more history exists
-        if (messages.length < CONFIG.PAGE_SIZE) {
-            ChatState.hasMoreHistory = false;
+        // Commit targetPage to ChatState only on success
+        ChatState.currentPage = targetPage;
+
+        // Determine Mode
+        let renderMode = RenderMode.INITIAL;
+        if (direction === 'OLDER') {
+            renderMode = RenderMode.PREPEND;
+            if (messages.length < CONFIG.PAGE_SIZE) ChatState.hasMoreHistory = false;
+        } else if (direction === 'NEWER') {
+            renderMode = RenderMode.APPEND;
+            ChatState.hasMoreHistory = true; // Still have newer
         }
 
-        // Step 3: Render
-        if (!isLoadMore) {
-            DOM.messageList.innerHTML = '';
-            if (messages.length === 0) {
-                showEmptyState(`Start chatting with ${ChatState.selectedUserName}`);
+        if (messages.length > 0 || direction === 'INITIAL') {
+            if (messages.length === 0 && direction === 'INITIAL') {
+                showEmptyState(`Start chatting!`);
             } else {
-                renderMessagesBatch(messages, DOM.messageList, true);
-                attachScrollListener(DOM.messageList, chatroomId); // Attach to room ID
+                renderMessagesBatch(messages, DOM.messageList, renderMode);
+            }
 
-                // Check if partner has read (any message has isRead=true)
-                if (messages.some(m => m.isRead)) {
-                    markLastMessageAsRead();
+            if (direction === 'INITIAL') attachScrollListener(DOM.messageList, partnerId);
+            toggleBackToPresentBtn();
+
+            // Sequential Return Logic
+            if (ChatState.isReturningToPresent && ChatState.currentPage > 0) {
+                // Short delay for "speed scrolling" effect
+                setTimeout(() => loadChatHistory(partnerId, 'NEWER'), 100);
+            } else if (ChatState.isReturningToPresent && ChatState.currentPage === 0) {
+                ChatState.isReturningToPresent = false;
+                // Final scroll to bottom
+                if (DOM.messageList) {
+                    DOM.messageList.scrollTo({ top: DOM.messageList.scrollHeight, behavior: 'smooth' });
                 }
             }
-        } else if (messages.length > 0) {
-            renderMessagesBatch(messages, DOM.messageList, false);
         }
-
     } catch (error) {
-        if (requestId !== ChatState.loadingRequestId) return;
         console.error('[History] Error:', error);
-        ChatState.isLoadingHistory = false;
-        if (!isLoadMore) {
-            showEmptyState('Load failed', 'fa-exclamation-triangle');
+    } finally {
+        if (requestId === ChatState.loadingRequestId) {
+            ChatState.isLoadingHistory = false;
+            removeTopLoadingIndicator();
         }
     }
 }
+
+/**
+ * Shows a temporary loading indicator at the top of the message list.
+ */
+function showTopLoadingIndicator() {
+    if (!DOM.messageList || document.getElementById('top-loading-indicator')) return;
+    const indicator = document.createElement('div');
+    indicator.id = 'top-loading-indicator';
+    indicator.className = 'chat-loading-mini';
+    indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    DOM.messageList.prepend(indicator);
+}
+
+/**
+ * Removes the top loading indicator.
+ */
+function removeTopLoadingIndicator() {
+    const indicator = document.getElementById('top-loading-indicator');
+    if (indicator) indicator.remove();
+}
+
+
 
 function showEmptyState(message, icon = 'fa-comments') {
     if (DOM.messageList) {
@@ -469,8 +517,38 @@ function showEmptyState(message, icon = 'fa-comments') {
  * @param {HTMLElement} container - Target container
  * @param {boolean} scrollToBottom - true for initial load, false for history prepend
  */
-function renderMessagesBatch(messages, container, scrollToBottom) {
+const RenderMode = {
+    INITIAL: 'INITIAL',   // Append + Scroll to Bottom
+    PREPEND: 'PREPEND',   // Prepend + Maintain relative scroll
+    APPEND: 'APPEND'     // Append + No forceful scroll (for loading newer)
+};
+
+/**
+ * Batch render messages.
+ * @param {Array} messages - Message DTOs
+ * @param {HTMLElement} container - Target container
+ * @param {string} mode - RenderMode
+ */
+function renderMessagesBatch(messages, container, mode = RenderMode.INITIAL) {
+    if (!messages || messages.length === 0) return;
+
     const fragment = document.createDocumentFragment();
+    let newMsgCount = 0;
+
+    // Initialize loopLastDate for continuity
+    let loopLastDate = null;
+    if (mode === RenderMode.APPEND && container) {
+        const lastMsg = container.querySelector('.message:last-child');
+        if (lastMsg && lastMsg.dataset.timestamp) {
+            loopLastDate = getDateString(lastMsg.dataset.timestamp);
+        }
+    } else if ((mode === RenderMode.INITIAL || mode === RenderMode.PREPEND) && ChatState.hasMoreHistory) {
+        // [SEAM-AWARE] If there's more history, don't speculative-render a separator at the top.
+        // Initialize loopLastDate with the first message's date to skip its separator.
+        if (messages[0] && messages[0].chatTime) {
+            loopLastDate = getDateString(messages[0].chatTime);
+        }
+    }
 
     messages.forEach(msg => {
         // Skip duplicates (O(1) check)
@@ -480,35 +558,76 @@ function renderMessagesBatch(messages, container, scrollToBottom) {
 
         // Add to cache
         if (msg.messageId) ChatState.messageIds.add(msg.messageId);
+        newMsgCount++;
+
+        // Date Separator Logic (Fires on date change)
+        if (msg.chatTime) {
+            const msgDate = getDateString(msg.chatTime);
+            if (msgDate && msgDate !== loopLastDate) {
+                fragment.appendChild(createDateSeparator(msg.chatTime));
+                loopLastDate = msgDate;
+            }
+        }
 
         const isSentByMe = (msg.senderId === ChatState.currentUserId);
-        const reportStatus = msg.reportStatus || 0;
-        const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName, msg.isRead, reportStatus);
+        const reportStatus = (msg.reportStatus !== undefined) ? msg.reportStatus : null;
+        const msgEl = createMessageElement(msg.content, isSentByMe, msg.senderName, msg.messageId, msg.replyToContent, msg.replyToSenderName, msg.isRead, reportStatus, msg.chatTime);
         fragment.appendChild(msgEl);
     });
 
-    if (scrollToBottom) {
-        container.appendChild(fragment);
-        container.scrollTop = container.scrollHeight;
-    } else {
+    if (newMsgCount === 0 && mode !== RenderMode.INITIAL) return;
+
+    if (mode === RenderMode.INITIAL) {
+        if (container) {
+            container.innerHTML = '';
+            container.appendChild(fragment);
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+    else if (mode === RenderMode.PREPEND && container) {
         // Prepend: maintain scroll position relative to existing content
+        const oldFirstMsg = container.querySelector('.message');
         const oldScrollHeight = container.scrollHeight;
+
+        // [SEAM-AWARE] Junction Handling
+        if (oldFirstMsg) {
+            const batchEndDate = loopLastDate; // Date of the last message in prepended batch
+            const domStartDate = getDateString(oldFirstMsg.dataset.timestamp);
+
+            if (batchEndDate && domStartDate && batchEndDate !== domStartDate) {
+                // Date changed at the seam: Add separator for Day B before prepending
+                fragment.appendChild(createDateSeparator(oldFirstMsg.dataset.timestamp));
+            } else {
+                // Dates match at the seam: Ensure no orphan separator between them
+                const maybeSep = oldFirstMsg.previousElementSibling;
+                if (maybeSep && maybeSep.classList.contains('date-separator')) {
+                    maybeSep.remove();
+                }
+            }
+        }
+
         container.insertBefore(fragment, container.firstChild);
+
         const newScrollHeight = container.scrollHeight;
         container.scrollTop = newScrollHeight - oldScrollHeight;
+    }
+    else if (mode === RenderMode.APPEND && container) {
+        container.appendChild(fragment);
     }
 }
 
 /**
  * Create message DOM element (XSS-safe via createTextNode).
+ * Added chatTime parameter
  */
-function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus = 0) {
+function createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus = null, chatTime = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isSent ? 'sent' : 'received');
 
     if (messageId) {
         msgDiv.dataset.messageId = messageId;
         msgDiv.dataset.reportStatus = reportStatus; // Store status
+        if (chatTime) msgDiv.dataset.timestamp = chatTime; // for date comparison
         msgDiv.style.cursor = 'pointer';
 
         // Left click: Toggle Reply
@@ -524,12 +643,13 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
             showContextMenu(e, messageId, reportStatus);
         });
 
-        // Add visual indicator if reported (Status 1: Pending, 3: Rejected)
+        // Add visual indicator if reported (Status 0: Pending, 3: Rejected)
         // Status 2 is Hidden, so handling it separately below
-        if (reportStatus == 1 || reportStatus == 3) {
+        if (reportStatus !== null && (reportStatus === 0 || reportStatus === 3)) {
             const reportIcon = document.createElement('i');
             reportIcon.className = 'fas fa-flag';
-            reportIcon.style.cssText = 'font-size: 10px; color: #e74c3c; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+            const flagColor = (reportStatus === 3) ? '#2ecc71' : '#e74c3c'; // Green for Rejected, Red for Pending
+            reportIcon.style.cssText = `font-size: 10px; color: ${flagColor}; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);`;
             msgDiv.appendChild(reportIcon);
         }
     }
@@ -552,7 +672,7 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
         contextDiv.appendChild(nameStrong);
 
         const contentSpan = document.createElement('span');
-        contentSpan.textContent = replyToContent;
+        contentSpan.textContent = truncateText(replyToContent, 30);
         contextDiv.appendChild(contentSpan);
 
         msgDiv.appendChild(contextDiv);
@@ -561,13 +681,30 @@ function createMessageElement(content, isSent, senderName, messageId, replyToCon
     // Message body (XSS-safe)
     msgDiv.appendChild(document.createTextNode(content));
 
+    // Message Timestamp
+    if (chatTime) {
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = formatTime(chatTime);
+        msgDiv.appendChild(timeSpan);
+    }
+
+    // Precise Read Status Rendering
+    if (isSent && isRead) {
+        const span = document.createElement('span');
+        span.className = 'read-status';
+        span.textContent = '已讀';
+        msgDiv.appendChild(span);
+    }
+
     return msgDiv;
 }
+
 
 /**
  * Append single message and smart-scroll.
  */
-function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName) {
+function appendMessage(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead = false, reportStatus = null, chatTime = new Date().toISOString()) {
     // Duplicate guard (O(1))
     if (messageId && ChatState.messageIds.has(messageId)) {
         return;
@@ -581,7 +718,22 @@ function appendMessage(content, isSent, senderName, messageId, replyToContent, r
         emptyState.remove();
     }
 
-    const msgDiv = createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName);
+    const msgDiv = createMessageElement(content, isSent, senderName, messageId, replyToContent, replyToSenderName, isRead, reportStatus, chatTime); // New messages are unread by default
+
+    // [FIX] Check if we need a date separator (Reliable check against last message)
+    if (chatTime) {
+        const lastMessage = DOM.messageList.querySelector('.message:last-child');
+        if (lastMessage && lastMessage.dataset.timestamp) {
+            const lastDate = getDateString(lastMessage.dataset.timestamp);
+            const currentDate = getDateString(chatTime);
+            if (lastDate !== currentDate) {
+                DOM.messageList.appendChild(createDateSeparator(chatTime));
+            }
+        } else if (DOM.messageList.children.length === 0) {
+            // First message ever
+            DOM.messageList.appendChild(createDateSeparator(chatTime));
+        }
+    }
 
     // Smart scroll: only auto-scroll if user is near bottom or just sent a message
     const isNearBottom = (DOM.messageList.scrollHeight - DOM.messageList.scrollTop - DOM.messageList.clientHeight) < CONFIG.SCROLL_THRESHOLD_PX;
@@ -593,17 +745,74 @@ function appendMessage(content, isSent, senderName, messageId, replyToContent, r
 }
 
 // ============================================================
-// INFINITE SCROLL
+// INFINITE SCROLL & JUMP CONTROL
 // ============================================================
 function attachScrollListener(element, partnerId) {
     element.onscroll = function () {
-        // Load more when scrolled to top
+        // 1. Load Older (Top)
         if (element.scrollTop === 0 && ChatState.hasMoreHistory && !ChatState.isLoadingHistory) {
-            ChatState.currentPage++;
-            loadChatHistory(partnerId, true);
+            loadChatHistory(partnerId, 'OLDER');
         }
+
+        // 2. Load Newer (Bottom)
+        if (ChatState.currentPage > 0 && !ChatState.isLoadingHistory) {
+            if (element.scrollTop + element.clientHeight >= element.scrollHeight - 50) {
+                loadChatHistory(partnerId, 'NEWER');
+            }
+        }
+
+        // 3. Show/Hide "Back to Present" Button
+        toggleBackToPresentBtn();
     };
 }
+
+function toggleBackToPresentBtn() {
+    let btn = document.getElementById('btn-back-present');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'btn-back-present';
+        btn.innerHTML = '<i class="fas fa-arrow-down"></i>'; // Telegram style arrow
+        btn.className = 'btn-back-present';
+        btn.onclick = () => ChatApp.jumpToPresent();
+        const main = document.querySelector('.chat-main');
+        if (main) main.appendChild(btn);
+    }
+
+    if (!DOM.messageList) return;
+
+    // Show if scrolled up significantly OR if viewing history
+    const isScrolledUp = DOM.messageList.scrollTop + DOM.messageList.clientHeight < DOM.messageList.scrollHeight - 300;
+    const isDeepInHistory = ChatState.currentPage > 0;
+
+    if (isScrolledUp || isDeepInHistory) {
+        btn.style.display = 'flex';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function jumpToPresent() {
+    console.log('[ChatApp] jumpToPresent clicked, room:', ChatState.currentChatroomId, 'page:', ChatState.currentPage);
+    if (!ChatState.currentChatroomId) {
+        console.warn('[ChatApp] Cannot jump: no current room ID');
+        return;
+    }
+
+    if (ChatState.isSearchMode) {
+        window.ChatApp.toggleSearchMode();
+    }
+
+    if (ChatState.currentPage === 0) {
+        console.log('[ChatApp] Simple scroll to bottom');
+        DOM.messageList.scrollTo({ top: DOM.messageList.scrollHeight, behavior: 'smooth' });
+    } else {
+        console.log('[ChatApp] Starting sequential return from page:', ChatState.currentPage);
+        ChatState.isReturningToPresent = true;
+        ChatState.currentPage--;
+        loadChatHistory(ChatState.currentChatroomId, 'NEWER');
+    }
+}
+
 
 // ============================================================
 // MESSAGE SENDING
@@ -654,7 +863,7 @@ function toggleReply(msgElement, messageId, content, senderName) {
     msgElement.classList.add('reply-selected');
 
     DOM.replyToName.textContent = 'Reply to ' + senderName;
-    DOM.replyToText.textContent = content;
+    DOM.replyToText.textContent = truncateText(content, 30);
     DOM.replyPreviewBar.style.display = 'flex';
 
     DOM.msgInput.focus();
@@ -794,17 +1003,331 @@ function updateMessageReportStatus(messageId, status) {
 
         // Add icon if not exists
         if (!msgDiv.querySelector('.fa-flag')) {
-            const reportIcon = document.createElement('i');
-            reportIcon.className = 'fas fa-flag';
-            reportIcon.style.cssText = 'font-size: 10px; color: #e74c3c; position: absolute; top: -5px; right: 5px; background:white; border-radius:50%; padding:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
-            msgDiv.appendChild(reportIcon);
         }
     }
 }
 
 // ============================================================
+// DATE & TIME HELPERS
+// ============================================================
+
+function createDateSeparator(isoString) {
+    const div = document.createElement('div');
+    div.className = 'date-separator';
+    div.dataset.dateLabel = getDateString(isoString); // Critical for merging logic
+    div.textContent = formatDate(isoString);
+    return div;
+}
+
+function formatTime(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleTimeString([], CONFIG.TIME_FORMAT_OPTIONS); // "14:30"
+}
+
+function formatDate(isoString) {
+    const date = new Date(isoString);
+    if (!isoString || isNaN(date.getTime())) return '';
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+    } else {
+        return date.toLocaleDateString([], CONFIG.DATE_FORMAT_OPTIONS).replace(/\//g, '-');
+    }
+}
+
+function getDateString(isoString) {
+    if (!isoString) return null;
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return null;
+    return d.toDateString();
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
+function renderSearchResults(messages, keyword) {
+    const container = document.getElementById('search-results-list');
+    container.innerHTML = '';
+
+    if (messages.length === 0) {
+        container.innerHTML = '<div style="padding:2rem; text-align:center; color:#999;"><i class="fas fa-search" style="font-size:2rem;margin-bottom:1rem;display:block;"></i>找不到符合的訊息</div>';
+        return;
+    }
+
+    // Add header
+    const header = document.createElement('div');
+    header.style.padding = '0 0.5rem 1rem';
+    header.style.color = '#666';
+    header.style.fontSize = '0.9rem';
+    header.textContent = `找到 ${messages.length} 則相關訊息`;
+    container.appendChild(header);
+
+    messages.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'search-result-item'; // Use new CSS class
+        div.onclick = () => ChatApp.jumpToMessage(msg.messageId);
+
+        // Date formatting
+        const date = new Date(msg.chatTime);
+        const timeStr = date.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+        // Highlight keyword (Safe)
+        const content = msg.content || '';
+        const regex = new RegExp(`(${keyword})`, 'gi');
+        // Simple replace is insufficient for HTML if content contains tags, but MVP assumes text
+        const highlightedContent = content.replace(regex, '<mark>$1</mark>');
+
+        div.innerHTML = `
+            <div class="search-result-meta">
+                <span class="search-result-sender">${msg.senderName}</span>
+                <span>${timeStr}</span>
+            </div>
+            <div class="search-result-content">${highlightedContent}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+
+
+
+// ============================================================
+// SEARCH & JUMP LOGIC
+// ============================================================
+/**
+ * Toggle between Message List and Search Results.
+ * @param {boolean} forceValue - Optional specific state to force
+ * @param {boolean} immediate - If true, bypass animation delays for jumps
+ */
+function toggleSearchMode(forceValue = null, immediate = false) {
+    if (forceValue !== null) {
+        ChatState.isSearchMode = forceValue;
+    } else {
+        ChatState.isSearchMode = !ChatState.isSearchMode;
+    }
+
+    const searchBar = document.getElementById('chat-search-bar');
+    const headerTools = document.getElementById('header-tools');
+    const searchResults = document.getElementById('search-results-list');
+    const messageList = document.getElementById('message-list');
+    const input = document.getElementById('msg-search-input');
+
+    if (!searchBar || !headerTools || !searchResults || !messageList || !input) return;
+
+    if (ChatState.isSearchMode) {
+        searchBar.classList.add('active');
+        headerTools.style.display = 'none';
+        searchResults.style.display = 'block';
+        messageList.style.display = 'none';
+
+        if (immediate) {
+            input.focus();
+        } else {
+            setTimeout(() => input.focus(), 300);
+        }
+    } else {
+        searchBar.classList.remove('active');
+
+        const cleanup = () => {
+            headerTools.style.display = 'block';
+            searchResults.style.display = 'none';
+            messageList.style.display = 'flex';
+            searchResults.innerHTML = '';
+        };
+
+        if (immediate) {
+            cleanup();
+        } else {
+            setTimeout(cleanup, 300);
+        }
+
+        input.value = '';
+    }
+}
+
+function handleSearchKeyPress(event) {
+    if (event.code === 'Enter' || event.key === 'Enter') {
+        searchHistory();
+    }
+}
+
+function searchHistory() {
+    const input = document.getElementById('msg-search-input');
+    const keyword = input ? input.value.trim() : '';
+
+    if (!keyword) return;
+    if (!ChatState.currentChatroomId) return;
+
+    const url = `/api/chatrooms/${ChatState.currentChatroomId}/messages/search?keyword=${encodeURIComponent(keyword)}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error('Search failed');
+            return response.json();
+        })
+        .then(data => {
+            renderSearchResults(data, keyword);
+        })
+        .catch(err => console.error('Search error:', err));
+}
+
+async function jumpToMessage(messageId) {
+    if (!ChatState.currentChatroomId) return;
+
+    ChatState.isLoadingHistory = true;
+    toggleSearchMode(false, true); // Immediate UI Swap to prevent scroll view issues
+
+    const url = `/api/chatrooms/${ChatState.currentChatroomId}/messages/${messageId}/position?size=${CONFIG.PAGE_SIZE}`;
+
+    try {
+        const posRes = await fetch(url);
+        const pos = await posRes.json();
+        const targetPage = pos.page;
+
+        // Reset DOM and ID cache for clean render
+        if (DOM.messageList) {
+            DOM.messageList.innerHTML = '<div class="chat-empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>';
+            ChatState.messageIds.clear();
+        }
+
+        const msgRes = await fetch(`/api/chatrooms/${ChatState.currentChatroomId}/messages?userId=${ChatState.currentUserId}&page=${targetPage}&size=${CONFIG.PAGE_SIZE}`);
+        if (!msgRes.ok) throw new Error('Failed to fetch target page');
+
+        const messages = await msgRes.json();
+
+        // Commit state
+        ChatState.currentPage = targetPage;
+        ChatState.hasMoreHistory = (messages.length === CONFIG.PAGE_SIZE);
+
+        // Render (Treat as INITIAL for clear jump, but we've already cleared DOM)
+        renderMessagesBatch(messages, DOM.messageList, RenderMode.INITIAL);
+
+        // [TRUE SMOOTH JUMP] Wait for browser layout
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const targetEl = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (targetEl) {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight effect
+                    targetEl.style.transition = 'background-color 0.5s';
+                    targetEl.style.backgroundColor = '#fffec8';
+                    setTimeout(() => targetEl.style.backgroundColor = '', 2000);
+                } else {
+                    console.warn('[Jump] Target message element not found in DOM after render:', messageId);
+                }
+            });
+        });
+
+    } catch (err) {
+        console.error('[Jump] Error:', err);
+    } finally {
+        ChatState.isLoadingHistory = false;
+    }
+}
+
+// ============================================================
+// PINNING LOGIC
+// ============================================================
+
+/**
+ * Toggle pinning of a chatroom.
+ */
+function togglePin(chatroomId, event) {
+    if (event) event.stopPropagation();
+
+    const id = parseInt(chatroomId, 10);
+    const item = document.getElementById('contact-item-' + id);
+
+    if (ChatState.pinnedRooms.has(id)) {
+        ChatState.pinnedRooms.delete(id);
+        if (item) item.classList.remove('pinned');
+    } else {
+        ChatState.pinnedRooms.add(id);
+        if (item) item.classList.add('pinned');
+    }
+
+    // Update Cookie (3 days TTL)
+    const pinArray = Array.from(ChatState.pinnedRooms);
+    setCookie('pinned_chatrooms', pinArray.join(','), 3);
+
+    // Re-sort list
+    sortContacts();
+}
+
+/**
+ * Re-sort the contact list DOM based on pinned status and recency.
+ */
+function sortContacts() {
+    const list = document.getElementById('contact-list');
+    if (!list) return;
+
+    const items = Array.from(list.querySelectorAll('.contact-item'));
+    if (items.length === 0) return;
+
+    // Stable sort: Pinned first, then by DOM order (which reflects server-side recency)
+    items.sort((a, b) => {
+        const idA = parseInt(a.dataset.chatroomId, 10);
+        const idB = parseInt(b.dataset.chatroomId, 10);
+        const isPinnedA = ChatState.pinnedRooms.has(idA);
+        const isPinnedB = ChatState.pinnedRooms.has(idB);
+
+        if (isPinnedA && !isPinnedB) return -1;
+        if (!isPinnedA && isPinnedB) return 1;
+
+        return 0; // Maintain relative order if same pin state
+    });
+
+    // Re-append items in new order
+    items.forEach(item => {
+        // Ensure UI reflects state
+        const id = parseInt(item.dataset.chatroomId, 10);
+        if (ChatState.pinnedRooms.has(id)) {
+            item.classList.add('pinned');
+        } else {
+            item.classList.remove('pinned');
+        }
+        list.appendChild(item);
+    });
+}
+
+// ============================================================
 // UTILITIES
 // ============================================================
+
+/**
+ * Cookie Helpers
+ */
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -826,10 +1349,20 @@ window.ChatApp = {
     sendMessage,
     cancelReply,
     updateSendButton,
+    // Search public access
+    toggleSearchMode,
+    handleSearchKeyPress,
+    searchHistory,
+    jumpToMessage,
+    // Bottom Scroll public access
+    jumpToPresent,
+    toggleBackToPresentBtn,
     // Report public access
     openReportModal,
     closeReportModal,
-    submitReport
+    submitReport,
+    // [NEW] Pinning public access
+    togglePin
 };
 
 document.addEventListener('DOMContentLoaded', initChat);

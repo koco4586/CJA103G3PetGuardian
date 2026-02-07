@@ -329,11 +329,21 @@
             const container = document.getElementById('resultsContainer');
             container.innerHTML = '';
 
+            // 🔥 DEBUG: 檢查收到的資料
+            console.log('=== 收到的保姆資料 ===');
+            console.log('總數:', sitters.length);
+            sitters.forEach(s => {
+                console.log(`保姆ID: ${s.sitterId}, 姓名: ${s.sitterName}, averageRating: ${s.averageRating}`);
+            });
+
             sitters.forEach(sitter => {
                 // [NEW] 如果是自己，就跳過不顯示
                 if (currentSitterId && sitter.sitterId === currentSitterId) {
                     return;
                 }
+
+                // Debug: Check if averageRating exists
+                console.log(`Sitter ID: ${sitter.sitterId}, Rating: ${sitter.averageRating}`);
 
                 const card = createSitterCard(sitter);
                 container.appendChild(card);
@@ -346,7 +356,13 @@
             card.className = 'sitter-card';
 
             // 計算星星顯示
-            // const stars = generateStars(sitter.averageRating || 0);
+            let starsHtml = '';
+            console.log(`🔍 保姆 ${sitter.sitterName} (ID: ${sitter.sitterId}) 的 averageRating:`, sitter.averageRating, typeof sitter.averageRating);
+            if (sitter.averageRating) {
+                starsHtml = generateStars(sitter.averageRating);
+            } else {
+                starsHtml = '<span class="text-muted" style="font-size: 0.9rem;">暫未有星數</span>';
+            }
 
             // 價格顯示
             const priceText = sitter.minPrice && sitter.maxPrice
@@ -378,6 +394,7 @@
                     <div class="col-md-8">
                         <div class="d-flex align-items-center mb-2">
                              <div class="sitter-name mb-0 me-3">${sitter.sitterName}</div>
+                             <div class="rating-stars">${starsHtml}</div>
                         </div>
                         
                         <!-- 寵物類型與地區 -->

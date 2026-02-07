@@ -12,6 +12,7 @@
 	<link rel="stylesheet" th:href="@{/css/frontend/sitter/dashboard.css}">
 	<link rel="stylesheet" th:href="@{/css/frontend/booking/sitter-bookings.css}">
 	<link rel="stylesheet" th:href="@{/css/frontend/evaluate-styles.css}">
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 
 <body>
@@ -22,7 +23,10 @@
 		<div class="sidebar">
 			<div class="text-center mb-2">
 				<div class="avatar-wrapper">
-					<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sitter" class="avatar">
+					<img th:src="${sitter.memImage == null ? '/images/default-avatar.png' : 
+				             (sitter.memImage.startsWith('http') or sitter.memImage.startsWith('/') or sitter.memImage.startsWith('data:') ? 
+				              sitter.memImage : 'data:image/jpeg;base64,' + sitter.memImage)}" class="avatar"
+						onerror="this.src='/images/default-avatar.png'">
 				</div>
 				<h4 th:text="${sitter.memName}" style="margin-bottom: 2px;">保母姓名</h4>
 				<p style="color: #64748b; font-size: 0.85rem; margin-top: 0;">專業保姆專區</p>
@@ -38,7 +42,7 @@
 					<i class="fas fa-calendar-check"></i> 預約管理
 				</a>
 				<div style="border-top: 1px solid #f1f5f9; margin: 0.5rem 0;"></div>
-			<!-- 	<a href="/member/login" class="menu-item" style="color: var(--danger, #ef476f);">
+				<!-- 	<a href="/member/login" class="menu-item" style="color: var(--danger, #ef476f);">
 					<i class="fas fa-sign-out-alt"></i> 登出  -->
 				</a>
 			</nav>
@@ -94,6 +98,7 @@
 						<span th:if="${order.orderStatus == 1}" class="status-badge ongoing">進行中</span>
 						<span th:if="${order.orderStatus == 2}" class="status-badge completed">服務完成</span>
 						<span th:if="${order.orderStatus == 3}" class="status-badge cancelled">已取消</span>
+						<span th:if="${order.orderStatus == 4}" class="status-badge cancelled">已退款</span>
 						<span th:if="${order.orderStatus == 5}" class="status-badge completed">已結案</span>
 					</div>
 
@@ -101,8 +106,8 @@
 					<div class="card-body">
 						<!-- 圖片區 -->
 						<div class="avatar-area">
-							<img src="/images/pet-avatar-placeholder.png" th:src="@{/images/default-pet.png}"
-								onerror="this.src='https://placehold.co/100x100?text=Pet'" alt="Pet"
+							<img th:src="@{${order.petImage != null ? order.petImage : '/images/default-pet.png'}}"
+								onerror="this.onerror=null; this.src='/images/default-pet.png'" alt="Pet"
 								class="pet-avatar-img">
 						</div>
 
@@ -132,6 +137,16 @@
 							<div class="card-actions">
 								<!-- 待處理 -->
 								<th:block th:if="${order.orderStatus == 0}">
+									<form th:action="@{/chat/connect/sitter}" method="post" style="display:inline;">
+										<input type="hidden" name="targetUserId" th:value="${order.memId}" />
+										<input type="hidden" name="chatroomType" value="0" />
+										<button type="submit" class="btn btn-outline-secondary btn-sm">
+											<i class="far fa-comment-dots"></i> 聯絡
+										</button>
+									</form>
+
+
+
 									<button class="btn btn-primary btn-sm"
 										th:onclick="'acceptOrder(' + ${order.bookingOrderId} + ')'">
 										<i class="fas fa-check"></i> 接受
@@ -147,17 +162,29 @@
 
 								<!-- 進行中 -->
 								<th:block th:if="${order.orderStatus == 1}">
-									<button class="btn btn-outline-secondary btn-sm" onclick="alert('聯絡功能開發中')">
-										<i class="far fa-comment-dots"></i> 聯絡
-									</button>
+									<form th:action="@{/chat/connect/sitter}" method="post" style="display:inline;">
+										<input type="hidden" name="targetUserId" th:value="${order.memId}" />
+										<input type="hidden" name="chatroomType" value="0" />
+										<button type="submit" class="btn btn-outline-secondary btn-sm">
+											<i class="far fa-comment-dots"></i> 聯絡
+										</button>
+									</form>
+
+
+
 									<button class="btn btn-primary btn-sm"
 										th:onclick="'completeOrder(' + ${order.bookingOrderId} + ')'">
 										<i class="fas fa-flag-checkered"></i> 完成
 									</button>
 								</th:block>
 
-								<!-- 已完成/取消 -->
 								<th:block th:if="${order.orderStatus >= 2}">
+									<button class="btn btn-outline-info btn-sm" th:data-mem-id="${order.memId}"
+										th:data-mem-name="${order.memName}"
+										onclick="showMemberReviewModal(this.getAttribute('data-mem-id'), this.getAttribute('data-mem-name'))">
+										<i class="fas fa-user-tag"></i> 會員評價
+									</button>
+
 									<button class="btn btn-primary btn-sm"
 										th:onclick="|injectSitterEvalBox(this, ${order.bookingOrderId}, ${order.memId})|">
 										<i class="fas fa-paw"></i> 評價
@@ -196,8 +223,13 @@
 
 	<!-- Scripts -->
 	<script th:src="@{/js/frontend/main.js}"></script>
-	<script src="/js/frontend/evaluate-functions.js"></script>
-	<script>
+	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>
+	<script th:src="@{/js/frontend/complaint-functions.js}"></script>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		const contextPath = /*[[@{/}]]*/ '';
+		window.currentMemId = /*[[${session.memId}]]*/ 0;
+		/*]]>*/
 		async function updateStatus(orderId, newStatus) {
 			const statusText = {
 				1: '接受預約',

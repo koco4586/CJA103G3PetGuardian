@@ -4,33 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>PetGuardian｜管理員修改個人資料</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../../css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/style.css">
+    <link rel="stylesheet" href="/css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .selfouter {
+            width: 600px;
         }
 
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
+        .centerbutton {
+            text-align: center;
         }
 
-        .mustbe {
-            color: red;
+        .myatag {
+            text-align: right;
         }
 
-        .rightword {
-            color: rgb(57, 191, 236);
-        }
-
-        .brown {
-            color: brown;
+        .leftword {
+            margin-left: 15px;
         }
     </style>
 </head>
@@ -54,38 +49,40 @@
 
         <!-- header end -->
 
-        <div class="outer">
+        <div class="outer selfouter">
 
             <form>
-                <input type="file" class="adm_image">
-                <div class="show_image"></div>
-                <br><br><!-- 管理員頭像 -->
+                <span>管理員頭像</span><br>
+                <input type="file" id="image" class="adm_image image_input">
+                <label for="image" class="show_image"><img src="images/backend/admin/admin_insert_image.png"
+                        width="40px"></label><br>
+                <span class="hintword">↑↑↑請點擊相機圖案上傳照片</span><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>姓名</span><br>
-                <input type="text" class="adm_name" placeholder="請輸入管理員姓名" required><br><br>
+                <input type="text" class="adm_name input" placeholder="請輸入管理員姓名" required><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>帳號</span><br>
-                <input type="text" class="adm_acc" placeholder="請輸入管理員帳號" required><br><br>
+                <input type="text" class="adm_acc input" placeholder="請輸入管理員帳號" required><br><br>
 
-                <span>密碼</span><br>
-                <input type="password" class="adm_pw" placeholder="********" disabled>
-                <a class="brown" href="./admin_resetpw.html">變更密碼</a><br><br>
+                <span>密碼</span>
+                <a class="a_tag" href="/admin/adminresetpw">變更密碼</a><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>電子信箱</span><br>
-                <input type="email" class="adm_email" placeholder="請輸入管理員電子信箱" required><br><br>
+                <input type="email" class="adm_email input long" placeholder="請輸入管理員電子信箱" required><br><br>
 
                 <span>手機號碼</span><br>
-                <input type="tel" class="adm_tel" placeholder="請輸入管理員手機號碼">
-                <span class="rightword">範例：0912345678</span><br><br>
-
-                <button type="submit" class="submit">儲存變更</button>
-                <button type="reset">清除重填</button><br><br>
-
-                <a class="brown" href="./admin_admin_management.html">回上頁</a>
-
+                <input type="tel" class="adm_tel input" placeholder="請輸入管理員手機號碼"><br>
+                <span class="hintword leftword">範例：0912345678</span><br><br>
+                <div class="centerbutton">
+                    <button type="submit" class="submit mybutton">儲存變更</button>
+                    <button type="reset" class="mybutton">清除重填</button><br><br>
+                </div>
+                <div class="myatag">
+                    <a class="a_tag" href="/admin/admin-admin-management">回上頁</a>
+                </div>
             </form>
 
         </div>
@@ -95,7 +92,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="../../../js/backend/sidebar.js"></script>
+    <script src="js/backend/sidebar.js"></script>
 
     <script>
 
@@ -120,14 +117,14 @@
                 formData.append("admEmail", admEmail);
                 formData.append("admTel", admTel);
 
-                fetch("http://localhost:8080/admin/adminupdateinfo", {
+                fetch("/admin/adminupdateinfo", {// 拿掉 http://localhost:8080
                     method: "PUT",
                     credentials: "include",
                     body: formData         //FormData 是瀏覽器提供的「表單資料物件」,瀏覽器會自動Content-Type: multipart/form-data
                 }).then(res => res.json()).then(data => {
                     console.log(data);
                     alert("管理員基本資料變更成功！");
-                    $(".show_image").append(`<img src="${data.admImage}" style="width: 200px;">`);
+                    $(".show_image").html(`<img src="${data.admImage}" style="width: 200px;">`);
                 });
 
             }

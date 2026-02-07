@@ -6,4 +6,5 @@ import com.petguardian.admin.model.Admin;
 
 public interface AdminAdminManagementUpdateStatusRepository extends JpaRepository<Admin,Integer>{
 
+    
 }

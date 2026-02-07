@@ -113,6 +113,15 @@ public class EvaluateServiceImpl implements EvaluateService {
     @Override
     public List<EvaluateVO> getReviewsBySitterId(Integer sitterId) {
         List<EvaluateVO> reviews = repo.findByReceiverId(sitterId);
+
+        // 🔥 過濾條件：
+        // 1. 只保留 roleType=1 (會員評保母)
+        // 2. 過濾隱藏與刪除的評論
+        reviews = reviews.stream()
+                .filter(r -> r.getRoleType() != null && r.getRoleType() == 1) // 只要會員評保母
+                .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
+                .collect(Collectors.toList());
+
         // 填充評價者名字（會員評保母，所以 senderId 是會員ID）
         fillSenderNames(reviews);
         return reviews;
@@ -120,9 +129,14 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
     public List<EvaluateVO> getReviewsByMemberId(Integer memberId) {
-        // roleType=0 代表保母評價會員
+        // 查詢該會員收到的評價 (roleType = 0 表示保姆評會員)
         List<EvaluateVO> reviews = repo.findByReceiverIdAndRoleType(memberId, 0);
-        // 填充評價者名字（保母評會員，所以 senderId 是保母ID）
+
+        // 🔥 檢舉功能：過濾隱藏與刪除的評論
+        reviews = reviews.stream()
+                .filter(r -> r.getIsHidden() == null || r.getIsHidden() == 0)
+                .collect(Collectors.toList());
+
         fillSenderNames(reviews);
         return reviews;
     }
@@ -137,27 +151,66 @@ public class EvaluateServiceImpl implements EvaluateService {
         }
 
         for (EvaluateVO review : reviews) {
-            if (review.getSenderId() == null || review.getRoleType() == null) {
-                continue;
+            try {
+                if (review.getSenderId() == null || review.getRoleType() == null) {
+                    continue;
+                }
+
+                String senderName = null;
+                Integer senderMemId = null;
+
+                if (review.getRoleType() == 0) {
+                    // roleType=0: 保母評會員，senderId 是保母ID (sitterId)
+                    SitterVO sitter = sitterRepository.findById(review.getSenderId()).orElse(null);
+                    if (sitter != null) {
+                        senderName = sitter.getSitterName();
+                        senderMemId = sitter.getMemId();
+                    }
+                } else if (review.getRoleType() == 1) {
+                    // roleType=1: 會員評保母，senderId 是會員ID (memId)
+                    SitterMemberVO member = sitterMemberRepository.findById(review.getSenderId()).orElse(null);
+                    if (member != null) {
+                        senderName = member.getMemName();
+                        senderMemId = review.getSenderId();
+                    }
+                }
+
+                review.setSenderName(senderName);
+                review.setSenderMemId(senderMemId);
+            } catch (Exception e) {
+                System.err.println("❌ 填充評價發送者資料時出錯 (ID: " + review.getEvaluateId() + "): " + e.getMessage());
+                // 出錯時給予預設值，不中斷整組查詢
+                review.setSenderName("未知用戶");
+                review.setSenderMemId(null);
             }
-
-            String senderName = null;
-
-            if (review.getRoleType() == 0) {
-                // roleType=0: 保母評會員，senderId 是保母ID (sitterId)
-                // 從 SITTER 表查詢保母名字
-                senderName = sitterRepository.findById(review.getSenderId())
-                        .map(SitterVO::getSitterName)
-                        .orElse(null);
-            } else if (review.getRoleType() == 1) {
-                // roleType=1: 會員評保母，senderId 是會員ID (memId)
-                // 從 SITTER_MEMBER 表查詢會員名字
-                senderName = sitterMemberRepository.findById(review.getSenderId())
-                        .map(SitterMemberVO::getMemName)
-                        .orElse(null);
-            }
-
-            review.setSenderName(senderName);
         }
+    }
+
+    @Override
+    public Double getAverageRatingBySitterId(Integer sitterId) {
+        // 獲取評價 (Evaluate 表，已過濾 roleType=1)
+        List<EvaluateVO> reviews = getReviewsBySitterId(sitterId);
+        int totalSum = 0;
+        int totalCount = 0;
+
+        if (reviews != null && !reviews.isEmpty()) {
+            for (EvaluateVO vo : reviews) {
+                if (vo.getStarRating() != null && vo.getStarRating() > 0) {
+                    totalSum += vo.getStarRating();
+                    totalCount++;
+                }
+            }
+        }
+
+        // 🔥 移除舊系統假資料：不再使用 sitter_star_count 和 sitter_rating_count
+        // 只使用 evaluate 表的真實評價資料
+
+        if (totalCount == 0) {
+            return null; // 無任何評價
+        }
+
+        double average = (double) totalSum / totalCount;
+        // 四捨五入到小數點後一位
+        return Math.round(average * 10.0) / 10.0;
     }
 }

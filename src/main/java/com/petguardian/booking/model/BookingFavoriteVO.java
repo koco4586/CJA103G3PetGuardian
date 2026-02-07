@@ -32,6 +32,19 @@ public class BookingFavoriteVO implements Serializable {
 	@Transient
 	private Integer basePrice;
 
+	@Transient
+	private Double avgRating; // 平均評分
+
+	@Transient
+	private Integer ratingCount; // 評分次數
+	
+	@Transient
+	private Integer sitterMemId;
+	
+	@Transient
+	private String memImage;
+
+
 	public Integer getMemId() {
 		return memId;
 	}
@@ -70,5 +83,37 @@ public class BookingFavoriteVO implements Serializable {
 
 	public void setBasePrice(Integer basePrice) {
 		this.basePrice = basePrice;
+	}
+
+	public Double getAvgRating() {
+		return avgRating;
+	}
+
+	public void setAvgRating(Double avgRating) {
+		this.avgRating = avgRating;
+	}
+
+	public Integer getRatingCount() {
+		return ratingCount;
+	}
+
+	public void setRatingCount(Integer ratingCount) {
+		this.ratingCount = ratingCount;
+	}
+	
+	public Integer getSitterMemId() {
+	    return sitterMemId;
+	}
+
+	public void setSitterMemId(Integer sitterMemId) {
+	    this.sitterMemId = sitterMemId;
+	}
+	
+	public String getMemImage() {
+	    return memImage;
+	}
+	
+	public void setMemImage(String memImage) {
+	    this.memImage = memImage;
 	}
 }

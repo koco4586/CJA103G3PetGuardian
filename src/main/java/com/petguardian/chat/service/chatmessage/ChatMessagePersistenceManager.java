@@ -1,22 +1,26 @@
 package com.petguardian.chat.service.chatmessage;
 
-import com.petguardian.chat.service.context.MessageCreationContext;
 import com.petguardian.chat.model.ChatMessageEntity;
 import com.petguardian.chat.model.ChatMessageRepository;
+import com.petguardian.chat.model.ChatRoomEntity;
 import com.petguardian.chat.model.ChatRoomRepository;
-import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
 import com.petguardian.chat.service.chatroom.ChatRoomMetadataCache;
+import com.petguardian.chat.service.chatroom.ChatRoomMetadataService;
 import com.petguardian.chat.service.RedisJsonMapper;
+import com.petguardian.chat.dto.ChatMessageRedisDTO;
+import com.petguardian.chat.service.context.MessageCreationContext;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 /**
  * Internal Worker for Message Persistence.
@@ -40,6 +44,8 @@ class ChatMessagePersistenceManager {
     private final CircuitBreaker circuitBreaker;
 
     private static final String CIRCUIT_NAME = "redisCacheCircuit";
+    private static final int MESSAGE_FLUSH_BATCH_SIZE = 500;
+    private static final int METADATA_SYNC_BATCH_SIZE = 50;
 
     public ChatMessagePersistenceManager(
             ChatMessageRepository mysqlRepository,
@@ -72,18 +78,38 @@ class ChatMessagePersistenceManager {
         try {
             ChatMessageEntity saved = mysqlRepository.save(context.toEntity());
 
-            // Sync cache (best effort)
-            metadataService.syncRoomMetadata(context.chatroomId(), context.content(), context.createdAt(),
-                    context.senderId());
+            // 1. Sync cache (best effort - likely to fail if Redis is down)
+            try {
+                metadataService.syncRoomMetadata(context.chatroomId(), context.content(), context.createdAt(),
+                        context.senderId());
+            } catch (Exception e) {
+                // Ignore, we expect this to fail
+            }
 
-            // Sync DB (direct)
-            transactionTemplate.executeWithoutResult(status -> {
-                roomRepository.updateFullMetadata(
-                        context.chatroomId(),
-                        context.content(),
-                        context.createdAt(),
-                        context.createdAt(),
-                        null);
+            // 2. Changes: Mark this room as dirty for post-recovery invalidation
+            // Since we can't update Redis now, we must delete the stale data later
+            metadataCache.queueForRecovery(context.chatroomId());
+
+            // 3. Sync DB (direct) - Correctly identify sender's read status with regression
+            // protection
+            LocalDateTime time = context.createdAt();
+            roomRepository.findById(context.chatroomId()).ifPresent(room -> {
+                // SEQUENCE VALIDATION: Only update if this message is not "older"
+                if (room.getLastMessageAt() == null || !time.isBefore(room.getLastMessageAt())) {
+                    LocalDateTime mem1Read = context.senderId().equals(room.getMemId1()) ? time : null;
+                    LocalDateTime mem2Read = context.senderId().equals(room.getMemId2()) ? time : null;
+
+                    transactionTemplate.executeWithoutResult(status -> {
+                        roomRepository.updateFullMetadata(
+                                context.chatroomId(),
+                                context.content(),
+                                time,
+                                mem1Read,
+                                mem2Read);
+                    });
+                } else {
+                    log.info("[Persistence] Skipping metadata sync for older message: {}", context.messageId());
+                }
             });
             return saved;
         } catch (Exception e) {
@@ -94,9 +120,54 @@ class ChatMessagePersistenceManager {
 
     @Scheduled(fixedDelay = 1000)
     public void scheduleBufferFlush() {
-        // Fail-fast: If CB is OPEN, skip the entire flush cycle
-        if (circuitBreaker.getState() == CircuitBreaker.State.OPEN) {
-            return; // Silent skip - no log spam
+        // No manual circuit breaker check. Rely on executeRunnable/Supplier to handle
+        // state.
+
+        // Room Recovery - Batch Operation
+        // If Circuit Breaker is CLOSED (Redis Healthy) and we have pending
+        // invalidations
+        Set<Integer> pendingRooms = metadataCache.getRecoveryQueue();
+        if (!pendingRooms.isEmpty() && circuitBreaker.getState() != CircuitBreaker.State.OPEN) {
+            // Snapshot current items to process (avoid race with concurrent additions)
+            List<Integer> roomsToProcess = new ArrayList<>(pendingRooms);
+            try {
+                // Collect all keys to delete in a single batch
+                List<String> keysToDelete = new ArrayList<>();
+                for (Integer roomId : roomsToProcess) {
+                    keysToDelete.add("chat:room_meta:" + roomId); // Room metadata
+                    keysToDelete.add("chat:room:" + roomId + ":history"); // Message history
+                    keysToDelete.add("chat:room:" + roomId + ":warmed"); // Warmed marker
+                }
+
+                // Batch delete using UNLINK (non-blocking)
+                circuitBreaker.executeRunnable(() -> redisJsonMapper.deleteBatch(keysToDelete));
+
+                // Remove only processed items to avoid losing concurrent additions
+                roomsToProcess.forEach(pendingRooms::remove);
+                log.info("[Recovery] Batch invalidated {} rooms ({} keys)", roomsToProcess.size(), keysToDelete.size());
+            } catch (Exception e) {
+                log.debug("[Recovery] Batch room recovery failed, retrying later: {}", e.getMessage());
+            }
+        }
+
+        // User Room List Recovery - Batch Operation
+        Set<Integer> pendingUserRooms = metadataCache.getUserRoomRecoveryQueue();
+        if (!pendingUserRooms.isEmpty() && circuitBreaker.getState() != CircuitBreaker.State.OPEN) {
+            // Snapshot current items to process
+            List<Integer> usersToProcess = new ArrayList<>(pendingUserRooms);
+            try {
+                List<String> keysToDelete = usersToProcess.stream()
+                        .map(userId -> "chat:user_rooms:" + userId)
+                        .collect(Collectors.toList());
+
+                circuitBreaker.executeRunnable(() -> redisJsonMapper.deleteBatch(keysToDelete));
+
+                // Remove only processed items
+                usersToProcess.forEach(pendingUserRooms::remove);
+                log.info("[Recovery] Batch invalidated user room lists for {} users", usersToProcess.size());
+            } catch (Exception e) {
+                log.debug("[Recovery] Batch user room recovery failed, retrying later: {}", e.getMessage());
+            }
         }
 
         for (int i = 0; i < SHARD_COUNT; i++) {
@@ -135,87 +206,139 @@ class ChatMessagePersistenceManager {
     }
 
     private void flushShard(int shardId) {
-        List<Object> rawBatch = messageCache.pollPersistenceBatch(shardId, 500);
-        if (rawBatch.isEmpty())
+        // Fix: Use typed return from cache (List<ChatMessageRedisDTO>)
+        List<ChatMessageRedisDTO> batch = messageCache.pollPersistenceBatch(shardId, MESSAGE_FLUSH_BATCH_SIZE);
+        if (batch == null || batch.isEmpty())
             return;
 
-        try {
-            List<ChatMessageEntity> entities = rawBatch.stream()
-                    .map(item -> redisJsonMapper.convertValue(item, MessageCreationContext.class))
-                    .filter(java.util.Objects::nonNull)
-                    .map(MessageCreationContext::toEntity)
-                    .collect(java.util.stream.Collectors.toList());
+        List<ChatMessageEntity> validEntities = new ArrayList<>();
+        List<ChatMessageRedisDTO> validDTOs = new ArrayList<>();
 
-            if (!entities.isEmpty()) {
-                mysqlRepository.saveAll(entities);
-                log.info("[Persistence] Successfully flushed {} messages to DB for shard {}", entities.size(), shardId);
-            } else {
-                log.warn("[Persistence] Polled {} items but 0 valid messages for shard {}", rawBatch.size(), shardId);
+        // Fix: Process items individually to identify and drop poison messages
+        for (ChatMessageRedisDTO dto : batch) {
+            try {
+                if (dto != null) {
+                    ChatMessageEntity entity = dto.toEntity();
+                    if (entity != null) {
+                        validEntities.add(entity);
+                        validDTOs.add(dto);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[Persistence] Poison message discarded: {}", e.getMessage());
+                // Do NOT requeue poison messages
             }
+        }
 
-        } catch (Exception e) {
-            log.error("[Persistence] Failed to flush batch for shard {}. Re-queueing... Error: {}", shardId,
-                    e.getMessage());
-            messageCache.requeuePersistenceBatch(shardId, rawBatch);
+        if (!validEntities.isEmpty()) {
+            try {
+                // Fix: Batch save
+                mysqlRepository.saveAll(validEntities);
+                log.info("[Persistence] Flushed {} messages to DB for shard {}", validEntities.size(), shardId);
+            } catch (Exception e) {
+                log.warn("[Persistence] Batch flush failed for shard {}. Fallback to granular processing. Error: {}",
+                        shardId, e.getMessage());
+
+                // Fix: Fallback to single-item processing to isolate poison messages
+                List<ChatMessageRedisDTO> toRequeue = new ArrayList<>();
+
+                for (int i = 0; i < validEntities.size(); i++) {
+                    ChatMessageEntity entity = validEntities.get(i);
+                    ChatMessageRedisDTO dto = validDTOs.get(i);
+                    try {
+                        mysqlRepository.save(entity);
+                    } catch (DataIntegrityViolationException dive) {
+                        log.error("[Persistence] Discarding POISON message id={} due to data error: {}",
+                                entity.getMessageId(), dive.getMessage());
+                    } catch (Exception ex) {
+                        log.warn("[Persistence] Save failed for message id={}, adding to retry. Error: {}",
+                                entity.getMessageId(), ex.getMessage());
+                        toRequeue.add(dto);
+                    }
+                }
+
+                if (!toRequeue.isEmpty()) {
+                    messageCache.requeuePersistenceBatch(shardId, toRequeue);
+                }
+            }
         }
     }
 
     private void flushDirtyMetadata() {
-        for (int i = 0; i < 50; i++) {
+        Set<Integer> uniqueRoomIds = new HashSet<>();
+        for (int i = 0; i < METADATA_SYNC_BATCH_SIZE; i++) {
             Integer roomId = messageCache.popDirtyRoom();
             if (roomId == null)
                 break;
-            syncRoomToDatabase(roomId);
+            uniqueRoomIds.add(roomId);
         }
-    }
 
-    private void syncRoomToDatabase(Integer roomId) {
-        metadataCache.getRoomMeta(roomId).ifPresentOrElse(
-                dto -> {
-                    transactionTemplate.executeWithoutResult(status -> {
-                        roomRepository.updateFullMetadata(
-                                roomId,
-                                dto.getLastMessagePreview(),
-                                dto.getLastMessageAt(),
-                                dto.getMem1LastReadAt(),
-                                dto.getMem2LastReadAt());
+        if (uniqueRoomIds.isEmpty())
+            return;
+
+        // Fix: N+1 issue. Batch update in a single transaction.
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                List<ChatRoomEntity> entities = roomRepository.findAllById(uniqueRoomIds);
+                if (entities.isEmpty())
+                    return;
+
+                Map<Integer, ChatRoomEntity> entityMap = entities.stream()
+                        .collect(Collectors.toMap(ChatRoomEntity::getChatroomId, e -> e));
+
+                for (Integer roomId : uniqueRoomIds) {
+                    metadataCache.getRoomMeta(roomId).ifPresent(dto -> {
+                        ChatRoomEntity entity = entityMap.get(roomId);
+                        if (entity != null) {
+                            entity.setLastMessagePreview(dto.getLastMessagePreview());
+                            entity.setLastMessageAt(dto.getLastMessageAt());
+                            entity.setMem1LastReadAt(dto.getMem1LastReadAt());
+                            entity.setMem2LastReadAt(dto.getMem2LastReadAt());
+                        }
                     });
-                    log.debug("[Persistence] Synced metadata for room {}", roomId);
-                },
-                () -> log.warn("[Persistence] Room metadata missing in cache for room {}", roomId));
+                }
+                roomRepository.saveAll(entities);
+            });
+            log.debug("[Persistence] Batch synced metadata for rooms: {}", uniqueRoomIds);
+        } catch (Exception e) {
+            log.warn("[Persistence] Metadata batch sync failed: {}", e.getMessage());
+        }
     }
 
     private ChatMessageEntity writeToRedis(MessageCreationContext context) {
-        // Fail-fast: If CB is OPEN, throw immediately to trigger fallback
-        // This avoids waiting for Redis timeout (500ms)
-        if (circuitBreaker.getState() == CircuitBreaker.State.OPEN) {
-            throw new RuntimeException("Circuit Breaker is OPEN - Redis unavailable");
-        }
-
-        int shardId = context.chatroomId() % SHARD_COUNT;
-
-        // CRITICAL: enqueueForPersistence MUST succeed, or we lose the message
-        // We need to verify the enqueue operation succeeded
         try {
-            redisJsonMapper.getTemplate().opsForList().leftPush(
-                    String.format("chat:write_queue:%d", shardId), context);
-        } catch (Exception e) {
-            // Redis failed - throw to trigger CB fallback
-            throw new RuntimeException("Redis enqueue failed: " + e.getMessage(), e);
+            return circuitBreaker.executeSupplier(() -> {
+                int shardId = context.chatroomId() % SHARD_COUNT;
+
+                // Fix: Use DTO for Redis
+                ChatMessageRedisDTO redisDTO = ChatMessageRedisDTO.fromContext(context);
+
+                try {
+                    messageCache.enqueueForPersistence(shardId, redisDTO);
+                } catch (Exception e) {
+                    throw new RuntimeException("Redis enqueue failed: " + e.getMessage(), e);
+                }
+
+                ChatMessageEntity entity = context.toEntity();
+
+                // Fire-and-forget cache updates
+                try {
+                    messageCache.pushToHistory(context.chatroomId(), redisDTO, CACHE_LIMIT);
+
+                    metadataService.syncRoomMetadata(
+                            context.chatroomId(),
+                            entity.getMessage(),
+                            entity.getChatTime(),
+                            entity.getMemberId());
+                } catch (Exception e) {
+                    log.warn("[Persistence] partial cache update failed", e);
+                }
+
+                return entity;
+            });
+        } catch (CallNotPermittedException e) {
+            // Map CB Open to failure for fallback
+            throw new RuntimeException("Circuit Breaker is OPEN", e);
         }
-
-        ChatMessageEntity entity = context.toEntity();
-
-        // These are optional - fire-and-forget
-        messageCache.pushToHistory(context.chatroomId(), entity, CACHE_LIMIT);
-        messageCache.putRecentLog(entity.getMessageId(), entity);
-
-        metadataService.syncRoomMetadata(
-                context.chatroomId(),
-                entity.getMessage(),
-                entity.getChatTime(),
-                entity.getMemberId());
-
-        return entity;
     }
 }

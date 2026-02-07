@@ -4,18 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>PetGuardian｜後台登出成功</title>
+    <link rel="stylesheet" href="/css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .selfouter {
+            width: 500px;
+            height: 550px;
+            margin-top: 65px;
         }
 
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
+        .myimg {
+            width: 300px;
+            margin: auto;
+            border-radius: 50px;
+        }
+
+        .centerword {
+            text-align: center;
         }
     </style>
 
@@ -24,14 +31,16 @@
 <body>
 
 
-    <div class="outer">
+    <div class="outer selfouter">
 
-        <h1>PetGuardian｜寵護家</h1>
-        <h2>後台登出</h2>
-        <h3>已登出</h3>
-        <img src="../../../images/backend/admin/adminlogout/adminlogoutsuccess.jpg" width="200px">
-        <h4>您已登出管理員帳戶。</h4>
-        <a href="./admin_login.html">重新登入</a>
+        <h1 class="titlecenter">PetGuardian</h1>
+        <h2 class="titlecenter">後台登出</h2>
+        <div class="centerword">
+            <h3 class="hintword">已登出</h3>
+            <img class="myimg" src="images/backend/admin/adminlogout/adminlogoutsuccess.jpg">
+            <h4 class="hintword">您已登出管理員帳戶。</h4>
+            <a class="a_tag" href="/admin/adminlogin">重新登入</a>
+        </div>
 
     </div>
 

@@ -1,9 +1,9 @@
 package com.petguardian.forum.service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.petguardian.forum.model.ForumRepository;
@@ -12,9 +12,13 @@ import com.petguardian.forum.model.ForumVO;
 @Service
 public class ForumService {
 	
-	@Autowired
-	ForumRepository repository;
+	private final ForumRepository repository;
 	
+	public ForumService(ForumRepository repository) {
+		super();
+		this.repository = repository;
+	}
+
 	public void addForum(ForumVO forumVO) {
 		repository.save(forumVO);
 	}
@@ -24,8 +28,9 @@ public class ForumService {
 	}
 	
 	public ForumVO getOneForum(Integer forumId) {
-		Optional<ForumVO> optional = repository.findById(forumId);
-		return optional.orElseThrow(() -> new RuntimeException("找不到此討論區，編號：" + forumId));
+		ForumVO forumVO = repository.findById(forumId)
+				.orElseThrow(() -> new RuntimeException("找不到此討論區，編號：" + forumId));	
+		return forumVO;
 	}
 	
 	public List<ForumVO> getAll(){
@@ -43,6 +48,21 @@ public class ForumService {
 	
 	public List<ForumVO> getAllActive(){
 		return repository.getAllActive();
+	}
+	
+	public List<ForumVO> getTopHotForumsByForumIds(List<Integer> forumIds){
+		
+		List<ForumVO> forums = repository.findAllById(forumIds);
+		
+		Map<Integer, ForumVO> forumMap = forums.stream()
+				.collect(Collectors.toMap(forum -> forum.getForumId(), forum -> forum));
+		
+		return forumIds.stream()
+				.map(forumId -> {
+					return forumMap.get(forumId);
+				})
+				.filter(forum -> forum != null)
+				.collect(Collectors.toList());
 	}
 	
 	public byte[] getForumPic(Integer forumId){

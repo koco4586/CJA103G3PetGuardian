@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>保母詳情 - PetGuardian</title>
-
-    <!-- 統一樣式 -->
-    <link rel="stylesheet" href="/css/frontend/style.css">
-    <link rel="stylesheet" href="/css/frontend/components.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -186,9 +184,11 @@
             <div class="col-md-4">
                 <div class="profile-card">
                     <!-- 預設頭像或保母上傳的頭像 -->
-                    <!-- 預設頭像或保母上傳的頭像 -->
-                    <img th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
-                        class="profile-avatar" alt="保母頭像">
+                    <img th:if="${sitterMember != null and sitterMember.memImage != null}"
+                        th:src="${sitterMember.memImage}" class="profile-avatar" alt="保母頭像">
+                    <img th:unless="${sitterMember != null and sitterMember.memImage != null}"
+                        th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
+                        class="profile-avatar" alt="預設頭像">
 
                     <!-- B. 保母名稱 -->
                     <h2 class="mb-2" th:text="${sitter.sitterName}">保母名稱</h2>
@@ -292,7 +292,7 @@
                     th:data-sitter-name="${sitter.sitterName}">
                     <h3 class="section-title" style="cursor: pointer; user-select: none;"
                         onclick="toggleHistoryReviews('reviewsList', 'toggleIcon')">
-                        <i class="fas fa-comments"></i> 歷史評價
+                        <i class="fas fa-comments"></i> 被評價紀錄
                         <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
                             (共 <span th:text="${reviews != null ? reviews.size() : 0}">0</span> 筆)
                         </span>
@@ -357,7 +357,7 @@
             </button>
         </div>
     </div>
-
+    <!--同步services.html-->
     <!-- 預約 Modal -->
     <div id="bookingModal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
@@ -376,15 +376,12 @@
                         <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
 
                         <option th:each="pet : ${myPets}" th:value="${pet.petId}"
-                            th:text="${pet.petName} + ' (種類ID: ' + ${pet.typeId} + ')'">
+                            th:text="${pet.petName} + ' (' + ${pet.petTypeName} + ')'">
                         </option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">服務項目</label> <select class="form-control" id="serviceItemId">
-                        <option value="1">散步遛狗</option>
-                        <option value="2">到府餵食</option>
-                        <option value="3">洗澡美容</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -410,19 +407,22 @@
     <footer id="main-footer" class="footer"></footer>
 
     <!-- JS -->
-    <script src="/js/frontend/main.js"></script>
-    <script src="/js/frontend/evaluate-functions.js"></script>
-    <script src="/js/frontend/complaint-functions.js"></script>
+    <!-- Scripts moved to bottom for consistency -->
 
-    <script>
-        // 1. 開啟預約彈窗
-        function openBookingModal(name, id) {
-            console.log("正在開啟預約彈窗 (SitterDetail):", name, id);
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const contextPath = /*[[@{/}]]*/ '';
+        /*]]>*/
+
+        // 1. 開啟預約彈窗 (同步 services.html 邏輯)
+        async function openBookingModal(name, id) {
+            console.log("正在開啟預約彈窗 (Async/Detail):", name, id);
             const modal = document.getElementById('bookingModal');
             const sitterNameSpan = document.getElementById('sitterName');
             const sitterIdInput = document.getElementById('modalSitterId');
             const startInput = document.getElementById('startTime');
             const endInput = document.getElementById('endTime');
+            const serviceSelect = document.getElementById('serviceItemId');
 
             if (!modal || !sitterNameSpan || !sitterIdInput) {
                 console.error("找不到必要的彈窗元件");
@@ -432,9 +432,41 @@
             sitterNameSpan.innerText = name;
             sitterIdInput.value = id;
 
+            // 重置並載入服務項目
+            serviceSelect.innerHTML = '<option>正在載入服務...</option>';
+            serviceSelect.disabled = true;
+
+            try {
+                // 發送請求去後端 API 抓取服務資料
+                const response = await fetch(`/booking/api/sitter/${id}/services`);
+                if (!response.ok) throw new Error("資料讀取失敗");
+
+                const services = await response.json();
+
+                // 載入完成，重置選單
+                serviceSelect.innerHTML = '';
+                serviceSelect.disabled = false;
+
+                if (services.length === 0) {
+                    let opt = document.createElement('option');
+                    opt.text = "此保母暫無服務項目";
+                    serviceSelect.add(opt);
+                } else {
+                    services.forEach(svc => {
+                        let opt = document.createElement('option');
+                        opt.value = svc.id;
+                        opt.text = svc.name;
+                        serviceSelect.add(opt);
+                    });
+                }
+            } catch (error) {
+                console.error("載入服務失敗:", error);
+                serviceSelect.innerHTML = '<option>載入失敗，請重試</option>';
+                serviceSelect.disabled = false;
+            }
+
             // 自動設定時間限制 (現在當下 ~ 60天內)
             const now = new Date();
-            // 已移除 2 小時限制，允許選取最近的時間
             const minDate = new Date(now.getTime());
             const maxDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
 
@@ -521,23 +553,25 @@
                 alert("發生系統錯誤");
             }
         }
-
-        // 註：檢舉功能已改用 complaint-functions.js 的 injectReportBox()
-
-        // 5. 載入評價資料（從 DOM 讀取 sitterId，避免 Lint 警告）
-        const reviewsCard = document.getElementById('reviews');
-        if (reviewsCard) {
-            const sitterId = reviewsCard.getAttribute('data-sitter-id');
-            const sitterName = reviewsCard.getAttribute('data-sitter-name');
-            if (sitterId) {
-                loadAndDisplayReviews(sitterId, '#reviewsList', 'span', sitterName);
-            }
-        }
     </script>
 
-    <script src="/js/frontend/complaint-functions.js"></script>
-    <script src="/js/frontend/evaluate-functions.js"></script>
+    <script th:src="@{/js/frontend/main.js}"></script>
+    <script th:src="@{/js/frontend/evaluate-functions.js}"></script>
+    <script th:src="@{/js/frontend/complaint-functions.js}"></script>
 
+    <script th:inline="javascript">
+        // 5. 載入評價資料 (延遲到 DOM 與 JS 檔案載入完成)
+        document.addEventListener('DOMContentLoaded', function () {
+            const reviewsCard = document.getElementById('reviews');
+            if (reviewsCard) {
+                const sitterId = reviewsCard.getAttribute('data-sitter-id');
+                const sitterName = reviewsCard.getAttribute('data-sitter-name');
+                if (sitterId && typeof loadAndDisplayReviews === 'function') {
+                    loadAndDisplayReviews(sitterId, '#reviewsList', 'span', sitterName);
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  * Service for Chat Room and Member Metadata (Domain Layer).
@@ -89,15 +90,13 @@ public class ChatRoomMetadataService {
         if (memberIds == null || memberIds.isEmpty())
             return Collections.emptyMap();
 
-        // 1. Try Cache
-        Map<Integer, MemberProfileDTO> resultMap = new java.util.HashMap<>();
-        List<Integer> missingIds = new java.util.ArrayList<>();
+        // 1. Try Cache (Batch)
+        Map<Integer, MemberProfileDTO> resultMap = new HashMap<>(
+                metadataCache.getMemberProfileBatch(memberIds));
 
-        for (Integer id : memberIds) {
-            metadataCache.getMemberProfile(id).ifPresentOrElse(
-                    dto -> resultMap.put(id, dto),
-                    () -> missingIds.add(id));
-        }
+        List<Integer> missingIds = memberIds.stream()
+                .filter(id -> !resultMap.containsKey(id))
+                .collect(Collectors.toList());
 
         // 2. DB Fallback for misses
         if (!missingIds.isEmpty()) {
@@ -119,9 +118,10 @@ public class ChatRoomMetadataService {
         List<Integer> roomIds = metadataCache.getUserRoomIds(userId);
         if (!roomIds.isEmpty()) {
             List<ChatRoomMetadataDTO> cached = metadataCache.getRoomMetaBatch(roomIds);
-            // CRITICAL: If cache returned data, use it. Otherwise fallback to DB.
-            // This handles the case where Redis goes down after we got room IDs.
-            if (!cached.isEmpty()) {
+            // CRITICAL:
+            // In migration/outage scenarios, partial data is dangerous. Fallback to DB if
+            // counts mismatch.
+            if (!cached.isEmpty() && cached.size() == roomIds.size()) {
                 return cached;
             }
             // Cache failed to return data - fall through to DB
@@ -143,31 +143,43 @@ public class ChatRoomMetadataService {
         return dtos;
     }
 
-    public Optional<ChatRoomMetadataDTO> findRoomByMembers(Integer memId1, Integer memId2) {
+    public Optional<ChatRoomMetadataDTO> findRoomByMembersAndType(Integer memId1, Integer memId2, Integer type) {
         if (memId1 == null || memId2 == null)
             return Optional.empty();
 
+        int safeType = type != null ? type : 0;
+
         // 1. Check Lookup Cache
-        return metadataCache.getRoomIdByMembers(memId1, memId2)
-                .map(this::getRoomMetadata)
+        return metadataCache.getRoomIdByMembers(memId1, memId2, safeType)
+                .flatMap(roomId -> Optional.ofNullable(getRoomMetadata(roomId)))
                 .or(() -> {
                     // 2. Fallback to DB
                     int id1 = Math.min(memId1, memId2);
                     int id2 = Math.max(memId1, memId2);
-                    return chatRoomRepository.findByMemId1AndMemId2AndChatroomType(id1, id2, 1)
+
+                    return chatRoomRepository.findByMemId1AndMemId2AndChatroomType(id1, id2, safeType)
                             .map(entity -> {
                                 ChatRoomMetadataDTO dto = mapper.toMetadataDto(entity);
-                                metadataCache.setRoomIdLookup(memId1, memId2, dto.getChatroomId());
+                                metadataCache.setRoomIdLookup(memId1, memId2, safeType, dto.getChatroomId());
                                 metadataCache.setRoomMeta(dto.getChatroomId(), dto);
                                 return dto;
                             });
-                })
-                .map(Optional::ofNullable) // Flatten possible null from getRoomMetadata
-                .orElse(Optional.empty());
+                });
     }
 
+    // Deprecated legacy method
+    public Optional<ChatRoomMetadataDTO> findRoomByMembers(Integer memId1, Integer memId2) {
+        return findRoomByMembersAndType(memId1, memId2, 0);
+    }
+
+    public void cacheRoomLookup(Integer memId1, Integer memId2, Integer type, Integer chatroomId) {
+        int safeType = type != null ? type : 0;
+        metadataCache.setRoomIdLookup(memId1, memId2, safeType, chatroomId);
+    }
+
+    // Deprecated legacy method
     public void cacheRoomLookup(Integer memId1, Integer memId2, Integer chatroomId) {
-        metadataCache.setRoomIdLookup(memId1, memId2, chatroomId);
+        cacheRoomLookup(memId1, memId2, 0, chatroomId);
     }
 
     // =================================================================================
@@ -175,23 +187,7 @@ public class ChatRoomMetadataService {
     // =================================================================================
 
     public void syncRoomMetadata(Integer chatroomId, String preview, LocalDateTime time, Integer senderId) {
-        metadataCache.getRoomMeta(chatroomId).ifPresent(dto -> {
-            dto.setLastMessagePreview(preview);
-            dto.setLastMessageAt(time);
-
-            // Sync sender's read status
-            List<Integer> members = dto.getMemberIds();
-            if (members != null && !members.isEmpty()) {
-                if (senderId.equals(members.get(0))) {
-                    dto.setMem1LastReadAt(time);
-                } else if (members.size() > 1 && senderId.equals(members.get(1))) {
-                    dto.setMem2LastReadAt(time);
-                }
-            }
-
-            metadataCache.setRoomMeta(chatroomId, dto);
-            metadataCache.markAsDirty(chatroomId);
-        });
+        metadataCache.updateMessageMetadataAtomic(chatroomId, preview, time, senderId);
     }
 
     public void updateLastReadAt(Integer chatroomId, Integer userId, LocalDateTime time) {
@@ -203,6 +199,12 @@ public class ChatRoomMetadataService {
             log.debug("[MetadataService] Redis unavailable, updating read status directly in MySQL for room {}",
                     chatroomId);
             chatRoomRepository.updateMemberReadStatus(chatroomId, userId, time);
+
+            // Only queue for recovery if Redis is actually down (CB Open)
+            // A simple cache miss (CB Closed) should not trigger invalidation
+            if (metadataCache.isCircuitBreakerOpen()) {
+                metadataCache.queueForRecovery(chatroomId);
+            }
         }
     }
 

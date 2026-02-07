@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.petguardian.chat.dto.ChatRoomDTO;
@@ -44,6 +45,18 @@ public class ChatPageController {
     // =========================================================================
     // VIEW ENDPOINTS
     // =========================================================================
+
+    // =========================================================================
+    // CONSTANTS
+    // =========================================================================
+
+    private static final int TYPE_SITTER = 0;
+    private static final int TYPE_STORE = 1;
+    private static final int TYPE_SENTINEL = -1;
+
+    private static final String SOURCE_STORE = "store";
+    private static final String SOURCE_BOOKING = "booking";
+    private static final String SOURCE_SITTER = "sitter";
 
     /**
      * Entry Point: Chat MVP Interface.
@@ -89,29 +102,48 @@ public class ChatPageController {
     // =========================================================================
 
     /**
-     * Handles connection requests from external modules (Store).
+     * Handles connection requests from external modules (Store, Booking, Sitter).
      * Creates/Finds a chatroom and redirects to the chat page with the room active.
      */
-    @PostMapping("/chat/connect/store")
-    public String connectToStoreChat(
+    @PostMapping("/chat/connect/{source}")
+    public String connectToChat(
+            @PathVariable String source,
             @RequestParam Integer targetUserId,
-            @RequestParam(defaultValue = "1") Integer chatroomType,
+            @RequestParam(defaultValue = "-1") Integer chatroomType,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
         Integer currentUserId = authStrategyService.getCurrentUserId(request);
-        if (currentUserId == null) {
-            return "redirect:/store";
+
+        // Resolve Fallback URL & Default Type (Case Insensitive)
+        String fallbackUrl = "/";
+        int defaultType = TYPE_SITTER;
+
+        if (SOURCE_STORE.equalsIgnoreCase(source)) {
+            fallbackUrl = "/store";
+            defaultType = TYPE_STORE;
+        } else if (SOURCE_BOOKING.equalsIgnoreCase(source)) {
+            fallbackUrl = "/booking/memberOrders";
+            defaultType = TYPE_SITTER;
+        } else if (SOURCE_SITTER.equalsIgnoreCase(source)) {
+            fallbackUrl = "/sitter/bookings";
+            defaultType = TYPE_SITTER;
         }
+
+        if (currentUserId == null)
+            return "redirect:" + fallbackUrl;
 
         // Prevent Self-Chat
         if (currentUserId.equals(targetUserId)) {
-            return "redirect:/store";
+            return "redirect:" + fallbackUrl;
         }
+
+        // Use resolved default if parameter was not provided (Sentinel check)
+        int finalType = (chatroomType == TYPE_SENTINEL) ? defaultType : chatroomType;
 
         // Create or find chatroom (via unified facade)
         ChatRoomDTO room = chatRoomService.findOrCreateChatroom(
-                currentUserId, targetUserId, chatroomType);
+                currentUserId, targetUserId, finalType);
 
         redirectAttributes.addFlashAttribute("activeRoomId", room.getChatroomId());
         return "redirect:/chat";

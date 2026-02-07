@@ -89,21 +89,21 @@ public class ChatMessageService {
     }
 
     @CircuitBreaker(name = "messageRead", fallbackMethod = "fallbackFindById")
-    public Optional<ChatMessageEntity> findById(String messageId) {
+    public Optional<ChatMessageEntity> findById(Long messageId) {
         return retrievalManager.findById(messageId);
     }
 
-    protected Optional<ChatMessageEntity> fallbackFindById(String messageId, Throwable t) {
+    protected Optional<ChatMessageEntity> fallbackFindById(Long messageId, Throwable t) {
         log.warn("[Facade] FindById failed: {}", t.getMessage());
         return Optional.empty();
     }
 
     @CircuitBreaker(name = "messageRead", fallbackMethod = "fallbackFindAllById")
-    public List<ChatMessageEntity> findAllById(Iterable<String> messageIds) {
+    public List<ChatMessageEntity> findAllById(Iterable<Long> messageIds) {
         return retrievalManager.findAllById(messageIds);
     }
 
-    protected List<ChatMessageEntity> fallbackFindAllById(Iterable<String> messageIds, Throwable t) {
+    protected List<ChatMessageEntity> fallbackFindAllById(Iterable<Long> messageIds, Throwable t) {
         log.warn("[Facade] FindAllById failed: {}", t.getMessage());
         return List.of(); // Return empty immutable list
     }

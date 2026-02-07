@@ -29,7 +29,7 @@ window.openComplaintModal = function (bookingOrderId) {
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 11000;
             backdrop-filter: blur(3px);
         ">
             <div style="
@@ -46,6 +46,27 @@ window.openComplaintModal = function (bookingOrderId) {
                     @keyframes modalFadeIn {
                         from { opacity: 0; transform: translateY(-20px); }
                         to { opacity: 1; transform: translateY(0); }
+                    }
+                    /* 🔥 動態注入檢舉標籤樣式，確保所有頁面皆可正常顯示 */
+                    .report-tag {
+                        display: inline-block;
+                        padding: 6px 14px;
+                        margin: 5px;
+                        background: #fff;
+                        border: 1px solid #ffcdd2;
+                        border-radius: 20px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                        color: #c62828;
+                        transition: all 0.2s;
+                    }
+                    .report-tag.selected {
+                        background: #ffcdd2;
+                        font-weight: bold;
+                        color: #b71c1c;
+                    }
+                    .report-tag:hover {
+                        background: #ffebee;
                     }
                 </style>
 
@@ -169,17 +190,18 @@ window.submitComplaint = function (bookingOrderId) {
     formData.append('reportReason', reason);
     formData.append('bookingOrderId', bookingOrderId);
 
+    const base = typeof contextPath !== 'undefined' ? contextPath : '';
     // 送出到後端
-    fetch('/pet/submitComplaint', {
+    fetch(base + '/pet/submitComplaint', {
         method: 'POST',
         body: formData
     })
         .then(response => {
             if (response.ok || response.redirected) {
-                alert('✅ 申訴成功！\n您的申訴已收到，請耐心等待管理員審核。');
+                alert('✅ 檢舉已送出！\n您的檢舉已收到，管理員將進行審核。\n評論將立即隱藏。');
                 closeComplaintModal();
-                // 可選：重新載入頁面
-                // window.location.reload();
+                // 立即刷新以更新狀態
+                window.location.reload();
             } else {
                 alert('❌ 提交失敗，請稍後再試');
             }
@@ -196,13 +218,9 @@ window.submitComplaint = function (bookingOrderId) {
  * @param {number} orderId - 訂單 ID
  */
 window.reportReview = function (button, orderId) {
-    // 檢查第一個參數是否為按鈕（相容舊版呼叫）
-    if (typeof button === 'number') {
-        // 如果傳入的是 ID 而非按鈕，則嘗試開啟彈窗（後台或特殊頁面）
-        openComplaintModal(button);
-    } else {
-        injectReportBox(button, orderId);
-    }
+    // 統一改為彈窗模式 (不論第一個參數是按鈕還是 ID)
+    const finalOrderId = typeof button === 'number' ? button : orderId;
+    openComplaintModal(finalOrderId);
 }
 
 /**
@@ -333,26 +351,36 @@ function sendReportToBackend(orderId, reason, reportBox, isModal = false) {
     formData.append('reportReason', reason);
     formData.append('bookingOrderId', orderId);
 
-    fetch('/pet/submitComplaint', {
+    const base = typeof contextPath !== 'undefined' ? contextPath : '';
+    let finalBase = base;
+    if (finalBase === '/') finalBase = '';
+
+    if (!confirm('確定要提交您的檢舉嗎？')) return;
+
+    fetch(finalBase + '/pet/submitComplaint', {
         method: 'POST',
         body: formData
     })
-        .then(response => {
+        .then(async response => {
             if (response.ok || response.redirected) {
-                alert('✅ 檢舉已送出！\n您的檢舉已收到，請耐心等待管理員審核。');
+                alert('✅ 檢舉已送出！\n您的檢舉已收到，管理員將進行審核。\n評論將立即隱藏。');
 
                 if (isModal) {
                     closeComplaintModal();
                 } else if (reportBox) {
-                    // 收合內嵌式輸入框
                     reportBox.classList.remove('active');
-                    // 清空內容
                     const textarea = reportBox.querySelector('.report-content');
                     if (textarea) textarea.value = '';
                     reportBox.querySelectorAll('.report-tag.selected').forEach(tag => tag.classList.remove('selected'));
                 }
+
+                // 🔥 檢舉功能：延遲刷新以確保 alert 完全關閉
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
             } else {
-                alert('❌ 送出失敗，請稍後再試');
+                const errorMsg = await response.text();
+                alert('❌ 送出失敗：' + (errorMsg || '請稍後再試'));
             }
         })
         .catch(error => {

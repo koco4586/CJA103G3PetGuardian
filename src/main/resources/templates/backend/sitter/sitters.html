@@ -29,11 +29,11 @@
         <section>
             <div class="tab-container">
                 <button class="tab-btn active" onclick="switchTab('audit')">
-                    <i class="fa-solid fa-file-signature"></i> 文件/證明審核
+                    <i class="fa-solid fa-file-signature"></i> 保姆資料審核
                 </button>
 
                 <button class="tab-btn" onclick="switchTab('access')">
-                    <i class="fa-solid fa-user-slash"></i> 帳號停權控制
+                    <i class="fa-solid fa-user-slash"></i> 保姆停權控制
                 </button>
             </div>
 
@@ -41,7 +41,7 @@
                 <div class="card">
                     <h3>待審核申請列表</h3>
                     <div class="sub" style="margin-bottom:15px; color:#666;">
-                        審核通過後，系統將自動發送 Email 通知申請人。
+
                     </div>
                     <table>
                         <thead>
@@ -165,7 +165,7 @@
                                 <th>保母姓名</th>
                                 <th>服務評價</th>
                                 <th>目前狀態</th>
-                                <th>上次登入</th>
+
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -214,10 +214,7 @@
                                     <span th:if="${sitter.sitterStatus == 1}"
                                         style="color:red; font-weight:bold;">已停權</span>
                                 </td>
-                                <td>
-                                    <!-- 上次登入暫無資料，顯示固定文字或從 member 關聯取得 -->
-                                    <span style="color:#999;">-</span>
-                                </td>
+
                                 <td>
                                     <!-- 狀態為 0 (正常) -> 顯示停權按鈕 -->
                                     <form th:if="${sitter.sitterStatus == 0}"

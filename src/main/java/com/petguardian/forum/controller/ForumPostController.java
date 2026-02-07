@@ -1,10 +1,8 @@
 package com.petguardian.forum.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -22,6 +20,7 @@ import com.petguardian.forum.service.ForumPostPicsService;
 import com.petguardian.forum.service.ForumPostReportService;
 import com.petguardian.forum.service.ForumPostService;
 import com.petguardian.forum.service.ForumService;
+import com.petguardian.forum.service.RedisService;
 import com.petguardian.member.model.Member;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,54 +39,72 @@ import com.petguardian.common.service.AuthStrategyService;
 @RequestMapping("/forumpost")
 public class ForumPostController {
 
-	@Autowired
-	AuthStrategyService authStrategyService;
+	private final AuthStrategyService authStrategyService;
+	private final RedisService redisService;
+	private final ForumService forumService;
+	private final ForumPostService forumPostService;
+	private final ForumCommentService forumCommentService;
+	private final ForumPostPicsService forumPostPicsService;
+	private final ForumPostReportService forumPostReportService;
+	private final ForumCommentReportService forumCommentReportService;
 
-	@Autowired
-	ForumService forumService;
-
-	@Autowired
-	ForumPostService forumPostService;
-
-	@Autowired
-	ForumCommentService forumCommentService;
-
-	@Autowired
-	ForumPostPicsService forumPostPicsService;
-
-	@Autowired
-	ForumPostReportService forumPostReportService;
-
-	@Autowired
-	ForumCommentReportService forumCommentReportService;
+	public ForumPostController(AuthStrategyService authStrategyService, RedisService redisService,
+			ForumService forumService, ForumPostService forumPostService, ForumCommentService forumCommentService,
+			ForumPostPicsService forumPostPicsService, ForumPostReportService forumPostReportService,
+			ForumCommentReportService forumCommentReportService) {
+		super();
+		this.authStrategyService = authStrategyService;
+		this.redisService = redisService;
+		this.forumService = forumService;
+		this.forumPostService = forumPostService;
+		this.forumCommentService = forumCommentService;
+		this.forumPostPicsService = forumPostPicsService;
+		this.forumPostReportService = forumPostReportService;
+		this.forumCommentReportService = forumCommentReportService;
+	}
 
 	@GetMapping("get-forum-id-for-posts")
 	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, ModelMap model) {
+		
 		List<ForumPostVO> postList = forumPostService.getAllActiveByForumId(forumId);
+		
+		redisService.incrementForumViewCount(forumId);
+		// redis處理熱門貼文邏輯
+		List<Integer> postIds = redisService.getTopHotPostIds(5);
+		List<ForumPostVO> topHotPostList = forumPostService.getTopHotPostsByPostIds(postIds);
+		
+		// redis拿取瀏覽次數邏輯
+		for(ForumPostVO post : postList) {
+			Integer postViewCount = redisService.getPostViewCount(post.getPostId());
+			if(postViewCount != null) {
+				post.setPostViews(postViewCount);
+			}
+		}
+		
 		model.addAttribute("postList", postList);
-		// model.addAttribute("forumName", forumName);
-		// model.addAttribute("forumId", forumId);
-		String forumName = forumService.getOneForum(forumId).getForumName();
-		model.addAttribute("forumName", forumName);
+		model.addAttribute("topHotPostList", topHotPostList);
+		model.addAttribute("forumName", forumService.getOneForum(forumId).getForumName());
+		
 		return "frontend/forum/list-all-active-posts";
 	}
 
 	@GetMapping("get-post-id-for-one-post")
 	public String getPostIdForOnePost(@RequestParam("postId") Integer postId, ModelMap model, HttpServletRequest request) {
-
+		
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		
+		// redis處理瀏覽次數邏輯
+		redisService.incrementPostViewCount(postId);
+		
 		// 開始查詢資料
-		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
+		ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
-		List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
 
 		// 查詢完成，交給負責的html顯示
 		model.addAttribute("forumPostVO", forumPostVO);
 		model.addAttribute("picsId", picsId);
-		model.addAttribute("commentList", commentList);
-		model.addAttribute("forumCommentVO", new ForumCommentVO());
 		model.addAttribute("userId", userId);
+		model.addAttribute("forumCommentVO", new ForumCommentVO());
 
 		return "frontend/forum/one-post";
 	}
@@ -350,12 +367,11 @@ public class ForumPostController {
 		// Java Bean Validation 錯誤處理
 		if (result.hasErrors()) {
 
-			ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
-			List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
+			ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
 			model.addAttribute("forumPostVO", forumPostVO);
-			model.addAttribute("commentList", commentList);
 			model.addAttribute("picsId", picsId);
+			model.addAttribute("userId", userId);
 
 			return "frontend/forum/one-post";
 		}
@@ -388,13 +404,13 @@ public class ForumPostController {
 		
 		if (result.hasErrors()) {
 			
-			ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
-			List<ForumCommentVO> commentList = forumCommentService.getCommentsByPostId(postId);
+			ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+			
 			model.addAttribute("forumPostVO", forumPostVO);
-			model.addAttribute("commentList", commentList);
 			model.addAttribute("picsId", picsId);
 			model.addAttribute("forumName", forumName);
+			model.addAttribute("userId", userId);
 			
 			return "frontend/forum/one-post";
 		}
@@ -413,12 +429,16 @@ public class ForumPostController {
 	public String getKeywordForPosts(@RequestParam("keyword") String keyword, @RequestParam("forumId") Integer forumId,
 			ModelMap model) {
 
+		List<Integer> postIds = redisService.getTopHotPostIds(5);
+		
 		// 空字串驗證，沒輸入資料forward回原頁面
 		if (keyword == null || keyword.trim().isEmpty()) {
 			// 重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 			// model.addAttribute("forumId", forumId);
 			model.addAttribute("errorMsgs", "請輸入欲查詢的內容");
-			model.addAttribute("postList", new ArrayList<ForumPostVO>(forumPostService.getAllActiveByForumId(forumId)));
+			model.addAttribute("postList", forumPostService.getAllActiveByForumId(forumId));
+			model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
+			
 			return "frontend/forum/list-all-active-posts";
 		}
 
@@ -430,7 +450,9 @@ public class ForumPostController {
 			// 【重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 			// model.addAttribute("forumId", forumId);
 			model.addAttribute("errorMsgs", "查無相關貼文");
-			model.addAttribute("postList", new ArrayList<ForumPostVO>(forumPostService.getAllActiveByForumId(forumId)));
+			model.addAttribute("postList", forumPostService.getAllActiveByForumId(forumId));
+			model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
+			
 			return "frontend/forum/list-all-active-posts";
 		}
 
@@ -438,6 +460,8 @@ public class ForumPostController {
 		// 【重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 		// model.addAttribute("forumId", forumId);
 		model.addAttribute("postList", postList);
+		model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
+		
 		return "frontend/forum/list-all-active-posts";
 	}
 
@@ -601,7 +625,7 @@ public class ForumPostController {
 			return "redirect:/html/frontend/member/login/login.html";
 		}
 		
-		model.addAttribute("collectionList", new ArrayList<ForumPostVO>(forumPostService.getAllPostCollectionsByMemId(userId)));
+		model.addAttribute("collectionList", forumPostService.getAllPostCollectionsByMemId(userId));
 		
 		return "frontend/forum/post-collection";
 	}
@@ -647,7 +671,7 @@ public class ForumPostController {
 		
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
-
+	
 	@ModelAttribute
 	public void addAttribute(@RequestParam(value = "forumId", required = false) Integer forumId,
 			@RequestParam(value = "forumName", required = false) String forumName, ModelMap model) {

@@ -101,8 +101,51 @@ public class ChatApiController {
         }
 
         try {
-            List<ChatMessageDTO> dtos = chatService.getChatHistory(chatroomId, currentUserId, page, size);
-            return ResponseEntity.ok(dtos);
+            List<ChatMessageDTO> history = chatService.getChatHistory(chatroomId, currentUserId, page, size);
+            return ResponseEntity.ok(history);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{chatroomId}/messages/search")
+    public ResponseEntity<List<ChatMessageDTO>> searchChat(
+            HttpServletRequest request,
+            @PathVariable Integer chatroomId,
+            @RequestParam String keyword) {
+
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        try {
+            List<ChatMessageDTO> results = chatService.searchChatHistory(chatroomId, keyword, currentUserId);
+            return ResponseEntity.ok(results);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{chatroomId}/messages/{messageId}/position")
+    public ResponseEntity<Map<String, Integer>> getMessagePosition(
+            HttpServletRequest request,
+            @PathVariable Integer chatroomId,
+            @PathVariable String messageId,
+            @RequestParam(defaultValue = "50") Integer size) {
+
+        Integer currentUserId = authStrategyService.getCurrentUserId(request);
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        try {
+            Map<String, Integer> position = chatService.getMessagePosition(chatroomId, messageId, size);
+            return ResponseEntity.ok(position);
         } catch (SecurityException e) {
             return ResponseEntity.status(403).build();
         } catch (IllegalArgumentException e) {

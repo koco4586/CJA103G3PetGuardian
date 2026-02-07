@@ -4,21 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">  <!--  添加這行 -->
     <title>會員登入｜Petguardian</title>
-    <link rel="stylesheet" href="../../../../css/frontend/style.css">
-    <link rel="stylesheet" href="../../../../css/frontend/components.css">
+    <link rel="stylesheet" href="css/frontend/style.css">
+    <link rel="stylesheet" href="css/frontend/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/frontend/member/member.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .selfouter {
+            width: 500px;
+            height: 500px;
+            margin-top: 50px;
         }
 
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
+        .inner_box {
+            text-align: center;
+        }
+
+        .leftword {
+            display: inline-block;
+            width: 180px;
+            text-align: left;
+        }
+
+        .centerword {
+            margin-top: 40px;
         }
     </style>
 
@@ -29,21 +40,22 @@
     <!-- Header 容器 -->
     <header id="main-header" class="header"></header>
 
-    <div class="outer">
+    <div class="outer selfouter">
+        <div class="centerword">
+            <h1 class="titlecenter">PetGuardian寵護家</h1>
 
-        <div>PetGuardian寵護家</div>
-
-        <h2>會員登入</h2>
-
-        <form>
-            <span>使用者帳號</span><br>
-            <input type="text" placeholder="請輸入使用者帳號" class="loginacc" required><br><br>
-            <span>使用者密碼</span><br>
-            <input type="password" placeholder="請輸入使用者密碼" class="loginpw" required><br><br>
-            <button type="submit" class="submit">立即登入</button>
-            <button type="reset">清除重填</button>
-        </form>
-
+            <h2 class="titlecenter">會員登入</h2>
+            <div class="inner_box">
+                <form>
+                    <span class="leftword">使用者帳號</span><br>
+                    <input type="text" placeholder="請輸入使用者帳號" class="loginacc input" required><br><br>
+                    <span class="leftword">使用者密碼</span><br>
+                    <input type="password" placeholder="請輸入使用者密碼" class="loginpw input" required><br><br>
+                    <button type="submit" class="submit mybutton">立即登入</button>
+                    <button type="reset" class="mybutton">清除重填</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Footer 容器 -->
@@ -51,10 +63,10 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="../../../../js/frontend/main.js"></script>
+    <script src="js/frontend/main.js"></script>  <!-- 移除 ../../../../ -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	
+
     <script>
 
         function init() {
@@ -72,7 +84,7 @@
                 }
 
 
-                let fetch_url = "http://localhost:8080/front/login";
+                let fetch_url = "/front/login";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "POST",
@@ -91,7 +103,7 @@
                     }
                     else if (data.result === "登入成功") {
                         alert("登入成功，PetGuardian寵護家歡迎您～");
-                        window.location.href = "./memberloginsuccess.html";//要小心，配置 Spring Boot 的靜態資源路徑,在 application.properties中添加，此行設定告訴 Spring Boot：「請把這些目錄當作靜態資源目錄」
+                        window.location.href = "/front/loginsuccesspage";  //  改用絕對路徑//要小心，配置 Spring Boot 的靜態資源路徑,在 application.properties中添加，此行設定告訴 Spring Boot：「請把這些目錄當作靜態資源目錄」
                     }
                 });
             };
@@ -103,7 +115,7 @@
         $(window).on("load", init);
 
         // 羽澈
-        $(window).on("load", function() {
+        $(window).on("load", function () {
             // 取得網址列的參數
             const urlParams = new URLSearchParams(window.location.search);
             const errorMsgs = urlParams.get('error');
@@ -115,7 +127,7 @@
                     text: errorMsgs,
                     confirmButtonColor: '#ff9800'
                 });
-                
+
                 // (選配) 清除網址上的參數，避免重新整理又彈窗
                 window.history.replaceState({}, document.title, window.location.pathname);
             }

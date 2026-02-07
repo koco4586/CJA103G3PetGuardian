@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.Base64;
 
 @Service
 @Transactional
@@ -52,17 +51,16 @@ public class OrdersServiceImpl implements OrdersService {
     public static final Integer STATUS_REFUNDING = 4; // 申請退貨中
     public static final Integer STATUS_REFUNDED = 5; // 退貨完成
 
-    // 預設佔位圖（1x1 灰色像素）
-    private static final String DEFAULT_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    // 預設佔位圖
+    private static final String DEFAULT_IMAGE = "/images/default-product.png";
 
     /**
-     * 取得商品圖片的 Base64 字串
+     * 取得商品圖片 URL
      */
-    private String getProductImageBase64(Integer proId) {
+    private String getProductImageUrl(Integer proId) {
         List<ProductPic> pics = productPicDAO.findByProduct_ProId(proId);
-        if (!pics.isEmpty() && pics.get(0).getProPic() != null) {
-            byte[] imageBytes = pics.get(0).getProPic();
-            return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
+        if (!pics.isEmpty() && pics.get(0).getProPic() != null && !pics.get(0).getProPic().isEmpty()) {
+            return pics.get(0).getProPic();
         }
         return DEFAULT_IMAGE;
     }
@@ -247,7 +245,7 @@ public class OrdersServiceImpl implements OrdersService {
             Product product = productDAO.findById(item.getProId()).orElse(null);
             if (product != null) {
                 itemData.put("productTitle", product.getProName());
-                itemData.put("productImg", getProductImageBase64(item.getProId()));
+                itemData.put("productImg", getProductImageUrl(item.getProId()));
             } else {
                 itemData.put("productTitle", "商品已下架");
                 itemData.put("productImg", DEFAULT_IMAGE);
@@ -293,7 +291,7 @@ public class OrdersServiceImpl implements OrdersService {
                 Product product = productDAO.findById(item.getProId()).orElse(null);
                 if (product != null) {
                     itemData.put("productTitle", product.getProName());
-                    itemData.put("productImg", getProductImageBase64(item.getProId()));
+                    itemData.put("productImg", getProductImageUrl(item.getProId()));
                 } else {
                     itemData.put("productTitle", "商品已下架");
                     itemData.put("productImg", DEFAULT_IMAGE);
@@ -340,7 +338,7 @@ public class OrdersServiceImpl implements OrdersService {
                 Product product = productDAO.findById(item.getProId()).orElse(null);
                 if (product != null) {
                     itemData.put("productTitle", product.getProName());
-                    itemData.put("productImg", getProductImageBase64(item.getProId()));
+                    itemData.put("productImg", getProductImageUrl(item.getProId()));
                 } else {
                     itemData.put("productTitle", "商品已下架");
                     itemData.put("productImg", DEFAULT_IMAGE);
@@ -446,6 +444,12 @@ public class OrdersServiceImpl implements OrdersService {
         // 更新訂單狀態為已取消
         order.setOrderStatus(STATUS_CANCELED);
         ordersDAO.save(order);
+
+        // 還原庫存
+        List<OrderItemVO> orderItems = orderItemDAO.findByOrderId(orderId);
+        for (OrderItemVO item : orderItems) {
+            productService.restoreStock(item.getProId(), item.getQuantity());
+        }
 
         // 退款到買家錢包
         refundToBuyerWallet(orderId);

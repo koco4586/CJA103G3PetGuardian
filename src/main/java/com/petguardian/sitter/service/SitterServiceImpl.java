@@ -263,13 +263,17 @@ public class SitterServiceImpl implements SitterService {
     @Override
     @Transactional(readOnly = true)
     public SitterDashboardDTO getDashboardData(Integer memId) {
-        // 1. 查詢保姆資料
-        SitterVO sitter = repository.findByMemId(memId);
+        // 1. 查詢保姆資料 (使用優化版查詢，一次載入關聯的 ServiceArea 和 Area)
+        SitterVO sitter = repository.findByMemIdWithAreas(memId);
         if (sitter == null) {
             return null;
         }
 
         // 2. 統計數據
+        // [NEW] 一次性查詢會員資料，避免重複查詢
+        SitterMemberVO member = sitterMemberRepository.findById(memId).orElse(null);
+        String memImage = member != null ? member.getMemImage() : null;
+
         // 服務數量
         // [Refactor] 使用 PetSitterService 取得服務列表，減少直接 Repository 依賴
         List<PetSitterServiceVO> services = petSitterService.getServicesBySitter(sitter.getSitterId());
@@ -293,6 +297,8 @@ public class SitterServiceImpl implements SitterService {
                         .serviceTime(sitter.getServiceTime())
                         .ratingCount(sitter.getSitterRatingCount())
                         .starCount(sitter.getSitterStarCount())
+                        // 使用已查詢的會員大頭貼
+                        .memImage(memImage)
                         .build())
                 .serviceCount(services.size())
                 .areaCount(areas != null ? areas.size() : 0)
@@ -301,6 +307,7 @@ public class SitterServiceImpl implements SitterService {
                 .services(services)
                 .areas(areas)
                 .pendingOrders(pendingOrders)
+                .member(member) // [NEW] 加入會員資料供 Controller 重用
                 .build();
     }
 

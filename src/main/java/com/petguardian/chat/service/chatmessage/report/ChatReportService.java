@@ -2,11 +2,11 @@ package com.petguardian.chat.service.chatmessage.report;
 
 import com.petguardian.chat.model.ChatReport;
 import com.petguardian.chat.model.ChatReportRepository;
+import com.petguardian.chat.service.RedisJsonMapper;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -37,15 +36,15 @@ public class ChatReportService {
     private static final String CIRCUIT_NAME = "reportCircuit";
 
     private final ChatReportRepository chatReportRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisJsonMapper redisJsonMapper;
     private final CircuitBreaker circuitBreaker;
 
     public ChatReportService(
             ChatReportRepository chatReportRepository,
-            RedisTemplate<String, Object> redisTemplate,
+            RedisJsonMapper redisJsonMapper,
             CircuitBreakerRegistry circuitBreakerRegistry) {
         this.chatReportRepository = chatReportRepository;
-        this.redisTemplate = redisTemplate;
+        this.redisJsonMapper = redisJsonMapper;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(CIRCUIT_NAME);
     }
 
@@ -53,14 +52,14 @@ public class ChatReportService {
      * Batch retrieves report status for multiple messages.
      * Uses HMGET to fetch only requested fields.
      */
-    public Map<String, Integer> getBatchStatus(Integer reporterId, List<String> messageIds) {
+    public Map<Long, Integer> getBatchStatus(Integer reporterId, List<Long> messageIds) {
         if (reporterId == null || messageIds == null || messageIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
         // 1. Try Cache
         try {
-            Map<String, Integer> cached = circuitBreaker.executeSupplier(() -> getFromRedis(reporterId, messageIds));
+            Map<Long, Integer> cached = circuitBreaker.executeSupplier(() -> getFromRedis(reporterId, messageIds));
             if (cached != null) {
                 return cached;
             }
@@ -70,7 +69,7 @@ public class ChatReportService {
 
         // 2. Cache Miss: Fetch FULL state for this user to simplify cache structure
         try {
-            Map<String, Integer> fullState = getAllFromMysql(reporterId);
+            Map<Long, Integer> fullState = getAllFromMysql(reporterId);
 
             // Repopulate Cache (Functional API)
             try {
@@ -80,8 +79,8 @@ public class ChatReportService {
             }
 
             // Filter results for requested messageIds
-            Map<String, Integer> results = new HashMap<>();
-            for (String mid : messageIds) {
+            Map<Long, Integer> results = new HashMap<>();
+            for (Long mid : messageIds) {
                 if (fullState.containsKey(mid)) {
                     results.put(mid, fullState.get(mid));
                 }
@@ -95,16 +94,17 @@ public class ChatReportService {
 
     @Transactional
     public void submitReport(Integer reporterId, String messageId, int type, String reason) {
-        if (chatReportRepository.existsByReporterIdAndMessageId(reporterId, messageId)) {
+        Long messageIdLong = io.hypersistence.tsid.TSID.from(messageId).toLong();
+        if (chatReportRepository.existsByReporterIdAndMessageId(reporterId, messageIdLong)) {
             throw new IllegalStateException("Message already reported by this user.");
         }
 
         ChatReport report = new ChatReport();
         report.setReporterId(reporterId);
-        report.setMessageId(messageId);
+        report.setMessageId(messageIdLong);
         report.setReportType(type);
         report.setReportReason(reason);
-        report.setReportStatus(1); // Pending
+        report.setReportStatus(0); // 0: Pending (待處理)
         report.setReportTime(LocalDateTime.now());
         report.setUpdatedAt(LocalDateTime.now());
 
@@ -115,7 +115,7 @@ public class ChatReportService {
     }
 
     public List<ChatReport> getPendingReports() {
-        return chatReportRepository.findByReportStatus(1);
+        return chatReportRepository.findByReportStatus(0); // 0: Pending
     }
 
     public List<ChatReport> getClosedReports() {
@@ -151,14 +151,18 @@ public class ChatReportService {
         return REDIS_KEY_PREFIX + reporterId;
     }
 
-    public Map<String, Integer> getFromRedis(Integer reporterId, List<String> messageIds) {
+    public Map<Long, Integer> getFromRedis(Integer reporterId, List<Long> messageIds) {
         String key = getRedisKey(reporterId);
 
         List<Object> hashKeys = new ArrayList<>(messageIds.size() + 1);
-        hashKeys.addAll(messageIds);
+        messageIds.forEach(id -> hashKeys.add(io.hypersistence.tsid.TSID.from(id).toString()));
         hashKeys.add("_init");
 
-        List<Object> values = redisTemplate.opsForHash().multiGet(key, hashKeys);
+        // Use MultiGet via String Template (returns Strings)
+        // Note: GenericJackson2JsonRedisSerializer might have been used before.
+        // If we switched to StringRedisTemplate, multiGet returns List<String>.
+        // We cast to List<Object> here just to iterate, but values are Strings.
+        List<Object> values = redisJsonMapper.getStringTemplate().opsForHash().multiGet(key, hashKeys);
 
         if (values == null || values.size() != hashKeys.size()) {
             return null;
@@ -169,18 +173,14 @@ public class ChatReportService {
             return null;
         }
 
-        Map<String, Integer> result = new HashMap<>();
+        Map<Long, Integer> result = new HashMap<>();
         for (int i = 0; i < messageIds.size(); i++) {
             Object val = values.get(i);
             if (val != null) {
                 try {
-                    if (val instanceof Integer intVal) {
-                        result.put(messageIds.get(i), intVal);
-                    } else if (val instanceof String strVal) {
-                        result.put(messageIds.get(i), Integer.parseInt(strVal));
-                    } else if (val instanceof Number num) {
-                        result.put(messageIds.get(i), num.intValue());
-                    }
+                    // It should be a string now (from StringRedisTemplate)
+                    String strVal = val.toString();
+                    result.put(messageIds.get(i), Integer.parseInt(strVal));
                 } catch (NumberFormatException e) {
                     log.warn("[Report] Failed to parse Redis value: {}", val);
                 }
@@ -189,7 +189,7 @@ public class ChatReportService {
         return result;
     }
 
-    private Map<String, Integer> getAllFromMysql(Integer reporterId) {
+    private Map<Long, Integer> getAllFromMysql(Integer reporterId) {
         try {
             List<ChatReport> reports = chatReportRepository.findByReporterId(reporterId);
             return reports.stream()
@@ -209,6 +209,7 @@ public class ChatReportService {
                         circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
                     } catch (Exception e) {
                         log.warn("[Report] Invalidation Failed: {}", e.getMessage());
+                        // Note: Throwing here might not roll back committed TX, but logs error.
                     }
                 }
             });
@@ -217,22 +218,25 @@ public class ChatReportService {
                 circuitBreaker.executeRunnable(() -> performInvalidation(reporterId));
             } catch (Exception e) {
                 log.warn("[Report] Invalidation Failed: {}", e.getMessage());
+                // Do not throw - next DB fallback will repopulate cache
             }
         }
     }
 
     public void performInvalidation(Integer reporterId) {
-        redisTemplate.delete(getRedisKey(reporterId));
+        redisJsonMapper.delete(getRedisKey(reporterId));
     }
 
-    public void repopulateRedis(Integer reporterId, Map<String, Integer> statusMap) {
+    public void repopulateRedis(Integer reporterId, Map<Long, Integer> statusMap) {
         String key = getRedisKey(reporterId);
-        Map<String, Object> writeMap = new HashMap<>();
+        // We need Map<String, String> for StringRedisTemplate
+        Map<String, String> writeMap = new HashMap<>();
         if (statusMap != null) {
-            writeMap.putAll(statusMap);
+            statusMap.forEach((k, v) -> writeMap.put(io.hypersistence.tsid.TSID.from(k).toString(), String.valueOf(v)));
         }
-        writeMap.put("_init", 1);
-        redisTemplate.opsForHash().putAll(key, writeMap);
-        redisTemplate.expire(key, TTL_DAYS, TimeUnit.DAYS);
+        writeMap.put("_init", "1");
+
+        redisJsonMapper.getStringTemplate().opsForHash().putAll(key, writeMap);
+        redisJsonMapper.expire(key, java.time.Duration.ofDays(TTL_DAYS));
     }
 }

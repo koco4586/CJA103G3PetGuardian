@@ -23,6 +23,6 @@ public class ChatMessageDTO {
     private String replyToSenderName;
     private Integer chatroomId;
     private Boolean isRead;
-    private Integer reportStatus; // 0:None, 1:Pending, 2:Processed, 3:Rejected
+    private Integer reportStatus; // null:None, 0:Pending, 2:Processed, 3:Rejected
     private LocalDateTime chatTime;
 }

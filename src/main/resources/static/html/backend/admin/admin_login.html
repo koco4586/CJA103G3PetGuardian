@@ -4,18 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/"> <!--  添加這行 -->
     <title>Petguardian｜後台登入</title>
+    <link rel="stylesheet" href="css/backend/admin/admin.css">
 
     <style>
-        * {
-            box-sizing: border-box;
+        .selfouter {
+            width: 500px;
+            height: 500px;
+            margin-top: 85px;
+            padding-top: 40px;
         }
 
-        .outer {
-            border: 1px solid lightgray;
-            background-color: lightcyan;
-            border-radius: 30px;
-            padding: 20px;
+        .inner_box {
+            text-align: center;
+        }
+
+        .leftword {
+            display: inline-block;
+            width: 180px;
+            text-align: left;
+        }
+
+        .centerword {
+            margin-top: 40px;
         }
     </style>
 
@@ -23,22 +35,25 @@
 
 <body>
 
-    <div class="outer">
+    <div class="outer selfouter">
 
-        <h1>PetGuardian｜寵護家</h1>
-        <h2>後台登入</h2>
+        <h1 class="titlecenter">PetGuardian｜寵護家</h1>
+        <h2 class="titlecenter">後台登入</h2>
+        <div class="centerword">
+            <div class="inner_box">
+                <form>
 
-        <form>
+                    <span class="leftword">使用者帳號</span><br>
+                    <input type="text" placeholder="請輸入使用者帳號" class="loginacc input" required><br><br>
+                    <span class="leftword">使用者密碼</span><br>
+                    <input type="password" placeholder="請輸入使用者密碼" class="loginpw input" required><br><br>
+                    <button type="submit" class="submit mybutton">立即登入</button>
+                    <button type="reset" class="mybutton">清除重填</button>
 
-            <span>使用者帳號</span><br>
-            <input type="text" placeholder="請輸入使用者帳號" class="loginacc" required><br><br>
-            <span>使用者密碼</span><br>
-            <input type="password" placeholder="請輸入使用者密碼" class="loginpw" required><br><br>
-            <button type="submit" class="submit">立即登入</button>
-            <button type="reset">清除重填</button>
-
-        </form>
-
+                </form>
+            </div>
+        </div>
+    </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -59,7 +74,7 @@
                     "admPassword": loginpassword
                 }
 
-                let fetch_url = "http://localhost:8080/admin/adminlogin";
+                let fetch_url = "/admin/adminlogin";// 拿掉 http://localhost:8080
 
                 fetch(fetch_url, {
                     method: "POST",
@@ -77,7 +92,7 @@
                         alert("此帳號已被停權，無法登入，如有疑問請聯繫本平台資訊科，服務專線：(03)425-1108。");
                     } else if (data.result === "登入成功") {
                         alert("PetGuardiab後台登入成功");
-                        window.location.href = "./admin_login_success.html";
+                        window.location.href = "/admin/adminloginsuccess";//記得補這個controller
                     }
                 });
 

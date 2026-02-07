@@ -168,14 +168,13 @@ public class ProductFavoriteListServiceImpl implements ProductFavoriteListServic
                 favData.put("productPrice", product.getProPrice());
                 favData.put("stockQuantity", product.getStockQuantity());
 
-                // 取得商品圖片並轉為 Base64
-                String base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="; // 預設圖片
+                // 取得商品圖片 URL
+                String imageUrl = "/images/default-product.png"; // 預設圖片
                 List<ProductPic> pics = productPicDAO.findByProduct_ProId(product.getProId());
-                if (!pics.isEmpty() && pics.get(0).getProPic() != null) {
-                    base64Image = "data:image/jpeg;base64,"
-                            + Base64.getEncoder().encodeToString(pics.get(0).getProPic());
+                if (!pics.isEmpty() && pics.get(0).getProPic() != null && !pics.get(0).getProPic().isEmpty()) {
+                    imageUrl = pics.get(0).getProPic();
                 }
-                favData.put("productImg", base64Image);
+                favData.put("productImg", imageUrl);
 
                 // proState: 0=待售, 1=已售出, 2=下架
                 String status;

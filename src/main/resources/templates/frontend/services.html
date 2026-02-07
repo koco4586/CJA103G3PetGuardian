@@ -26,16 +26,20 @@
             margin-bottom: 3rem;
             margin-top: 1rem;
         }
-		.filter-section .form-group {
-		    margin-bottom: 0 !important; 
-		}
-		.filter-section .d-flex {
-		    align-items: flex-end !important; 
-		}
-		#searchArea {
-		    height: 48px;
-		    box-sizing: border-box;
-		}
+
+        .filter-section .form-group {
+            margin-bottom: 0 !important;
+        }
+
+        .filter-section .d-flex {
+            align-items: flex-end !important;
+        }
+
+        #searchArea {
+            height: 48px;
+            box-sizing: border-box;
+        }
+
         .sitter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -59,13 +63,23 @@
 
         .img-container {
             position: relative;
-            height: 220px;
+            width: 100%;
+            padding-top: 75%;
+            height: 0;
+            border-radius: 1.5rem 1.5rem 0 0;
+            background-color: #f8f9fa;
+            overflow: hidden;
         }
 
         .img-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            padding: 10px;
+            transition: transform 0.4s ease;
         }
 
         .price-badge {
@@ -88,6 +102,41 @@
             border-radius: 0.5rem;
             font-size: 0.8rem;
             font-weight: 500;
+        }
+
+        .card-premium:hover .img-container img {
+            transform: scale(1.05);
+        }
+
+        .pagination-container {
+            margin-top: 3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .pagination-container .btn-outline {
+            padding: 0.6rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 2rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .pagination-container .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .page-info {
+            font-weight: 700;
+            color: #444;
+            background: #eee;
+            padding: 0.4rem 1rem;
+            border-radius: 1rem;
         }
     </style>
 </head>
@@ -126,46 +175,69 @@
 
         <div class="sitter-grid" id="sitter-list">
             <!-- 動態迴圈渲染保母 -->
-            <div class="card-premium" th:each="sitter : ${sitters}">
+            <div class="card-premium" th:each="sitter : ${sitters}"
+                th:if="${currentMemId == null or sitter.sitter.memId != currentMemId}">
                 <div class="img-container">
                     <a th:href="@{/frontend/public/sitter/detail/{id}(id=${sitter.sitter.sitterId})}">
-                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400"
-                            alt="保姆照片" class="sitter-img">
+                        <img th:src="${sitter.memImage != null ? sitter.memImage : '/images/default-avatar.png'}"
+                            alt="保母照片" class="sitter-img">
                     </a>
-                    <div class="price-badge">
+                    <!--       <div class="price-badge">
                         $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
-                    </div>
-                    <button class="btn-like" 
-					        th:classappend="${sitter.isFavorited ? 'active' : ''}"
-					        th:onclick="'handleToggleFavorite(' + ${sitter.sitter.sitterId} + ', this)'"
-					        style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
-					    <i class="fa-heart" th:classappend="${sitter.isFavorited ? 'fa-solid text-danger' : 'fa-regular'}"></i>
-					</button>
+                    </div>-->
+                    <button class="btn-like" th:classappend="${sitter.isFavorited ? 'active' : ''}"
+                        th:onclick="'handleToggleFavorite(' + ${sitter.sitter.sitterId} + ', this)'"
+                        style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
+                        <i class="fa-heart"
+                            th:classappend="${sitter.isFavorited ? 'fa-solid text-danger' : 'fa-regular'}"></i>
+                    </button>
                 </div>
                 <div class="content" style="padding: 1.5rem;">
                     <div class="d-flex justify-between align-center mb-1">
-                        <h4 th:text="${sitter.sitter.sitterName}" style="margin: 0; font-size: 1.2rem; font-weight: 700;">保母姓名
+                        <h4 th:text="${sitter.sitter.sitterName}"
+                            style="margin: 0; font-size: 1.2rem; font-weight: 700;">保母姓名
                         </h4>
                         <div style="color: #ffb800; font-size: 0.9rem;">
-                            <i class="fa-solid fa-star"></i>
-                            <span
-                                th:text="${sitter.sitter.sitterRatingCount != null && sitter.sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitter.sitterStarCount * 1.0 / sitter.sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
+                            <!-- 如果有評分 -->
+                            <th:block th:if="${sitter.avgRating != null}">
+                                <i class="fa-solid fa-star"></i>
+                                <span th:text="${#numbers.formatDecimal(sitter.avgRating, 1, 1)}">0.0</span>
+                            </th:block>
+                            <!-- 如果沒有評分 -->
+                            <th:block th:if="${sitter.avgRating == null}">
+                                <span style="color: #999; font-size: 0.85rem;">暫未有星數</span>
+                            </th:block>
                         </div>
                     </div>
-                    <p style="color: #666; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.2rem;"
-                        th:text="${sitter.sitter.sitterAdd}">保母地址</p>
-                    <div class="d-flex gap-xs mb-2">
-                        <span class="category-tag"
-                            th:text="${sitter.sitter.sitterAdd != null and sitter.sitter.sitterAdd.length() >= 3 ? sitter.sitter.sitterAdd.substring(0,3) : '服務中'}">區域</span>
-                        <span class="category-tag">到府照顧</span>
+                    <div class="d-flex gap-xs mb-2" style="flex-wrap: wrap; align-items: center; min-height: 50px;">
+                        <i class="fas fa-map-marker-alt"
+                            style="color: #4f46e5; font-size: 0.9rem; margin-right: 4px;"></i>
+                        <span class="category-tag" style="background: #eef2ff; color: #4338ca; font-weight: 700;"
+                            th:text="${sitter.servicesJson}">台北市</span>
+                        <span th:each="sa : ${sitter.sitter.serviceAreas}" class="category-tag"
+                            th:text="${sa.area.district}">
+                            行政區
+                        </span>
+                        <span th:if="${#lists.isEmpty(sitter.sitter.serviceAreas)}" class="category-tag"
+                            style="background: #fdf2f2; color: #991b1b;">全區服務</span>
                     </div>
                     <button class="btn btn-primary btn-booking-trigger" style="width: 100%; border-radius: 3rem;"
-                        th:data-name="${sitter.sitter.sitterName}" th:data-id="${sitter.sitter.sitterId}" th:data-services="${sitter.servicesJson}">
+                        th:data-name="${sitter.sitter.sitterName}" th:data-id="${sitter.sitter.sitterId}"
+                        th:data-services="${sitter.servicesJson}">
                         立即預約</button>
                 </div>
             </div>
         </div>
     </main>
+    <div class="pagination-container mt-4 d-flex justify-content-center gap-2" th:if="${totalPages > 1}">
+        <a th:if="${currentPage > 0}" th:href="@{/booking/services(page=${currentPage - 1})}"
+            class="btn btn-outline">上一頁</a>
+
+        <span class="page-info" th:text="${currentPage + 1} + ' / ' + ${totalPages}">1 / 5</span>
+
+        <a th:if="${currentPage + 1 < totalPages}" th:href="@{/booking/services(page=${currentPage + 1})}"
+            class="btn btn-outline">下一頁</a>
+    </div>
 
     <!-- 預約 Modal -->
     <div id="bookingModal"
@@ -216,8 +288,8 @@
 
     <script>
         // 1. 確保關鍵函數在最外層全域作用域，保證隨時可被呼叫
-        function openBookingModal(name, id, servicesJson) {
-            console.log("正在開啟預約彈窗 (Global):", name, id);
+        async function openBookingModal(name, id) {
+            console.log("正在開啟預約彈窗 (Async):", name, id);
             const modal = document.getElementById('bookingModal');
             const sitterNameSpan = document.getElementById('sitterName');
             const sitterIdInput = document.getElementById('modalSitterId');
@@ -226,34 +298,46 @@
             const serviceSelect = document.getElementById('serviceItemId');
 
             if (!modal || !sitterNameSpan || !sitterIdInput) {
-                console.error("找不到必要的彈窗元件");
+                console.error("找不到服務");
                 return;
             }
 
             sitterNameSpan.innerText = name;
             sitterIdInput.value = id;
-            serviceSelect.innerHTML = '';
-            
-            let services = [];
+
+            serviceSelect.innerHTML = '<option>正在載入服務...</option>';
+            serviceSelect.disabled = true;
+
             try {
-                services = JSON.parse(servicesJson || '[]');
-            } catch(e) {
-                console.error("解析服務列表失敗", e);
-            }
-            if (services.length === 0) {
-                let opt = document.createElement('option');
-                opt.text = "此保母暫無服務項目";
-                serviceSelect.add(opt);
-            } else {
-                services.forEach(svc => {
+                // 發送請求去後端 API 抓取服務資料
+                const response = await fetch(`/booking/api/sitter/${id}/services`);
+                if (!response.ok) throw new Error("資料讀取失敗");
+
+                const services = await response.json();
+
+                //  載入完成，重置選單
+                serviceSelect.innerHTML = '';
+                serviceSelect.disabled = false;
+
+                if (services.length === 0) {
                     let opt = document.createElement('option');
-                    opt.value = svc.id;
-                    opt.text = svc.name;
+                    opt.text = "此保母暫無服務項目";
                     serviceSelect.add(opt);
-                });
+                } else {
+                    services.forEach(svc => {
+                        let opt = document.createElement('option');
+                        opt.value = svc.id;
+                        opt.text = svc.name;
+                        serviceSelect.add(opt);
+                    });
+                }
+            } catch (error) {
+                console.error("載入服務失敗:", error);
+                serviceSelect.innerHTML = '<option>載入失敗，請重試</option>';
+                serviceSelect.disabled = false;
             }
 
-            // 自動設定時間限制 (現在 + 2小時 ~ 60天內)
+            // 自動設定時間限制 
             const now = new Date();
             const minDate = new Date(now.getTime());
             const maxDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
@@ -299,8 +383,7 @@
                 if (btn) {
                     const name = btn.getAttribute('data-name');
                     const id = btn.getAttribute('data-id');
-                    const services = btn.getAttribute('data-services');
-                    openBookingModal(name, id, services);
+                    openBookingModal(name, id);
                 }
             });
 
@@ -362,7 +445,7 @@
             const area = document.getElementById('searchArea').value;
             window.location.href = `/booking/search?area=${encodeURIComponent(area)}`;
         }
-        
+
         async function handleToggleFavorite(sitterId, btn) {
             try {
                 const response = await fetch(`/booking/toggleFavorite/${sitterId}`, {
@@ -378,7 +461,7 @@
                 if (response.ok) {
                     const result = await response.text();
                     const icon = btn.querySelector('i');
-                    
+
                     if (result === "added") {
                         // 變為已收藏狀態 (紅色實心)
                         icon.classList.remove('fa-regular');
@@ -398,7 +481,7 @@
             }
         }
 
-        // 借用你收藏頁面的提示訊息功能
+        // 收藏頁面的提示訊息功能
         function showFlashMessage(text) {
             const msg = document.createElement('div');
             msg.className = 'flash-message success';

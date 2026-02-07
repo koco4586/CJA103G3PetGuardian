@@ -44,6 +44,9 @@ public class ForumVO implements Serializable{
 	@Column(name = "forum_status", insertable = false)
 	private Integer forumStatus;
 	
+	@Column(name = "forum_views", nullable = true, insertable = false)
+	private Integer forumViews;
+	
 	@Transient
 	private MultipartFile upFile;
 	
@@ -103,6 +106,14 @@ public class ForumVO implements Serializable{
 		this.forumStatus = forumStatus;
 	}
 	
+	public Integer getForumViews() {
+		return forumViews;
+	}
+
+	public void setForumViews(Integer forumViews) {
+		this.forumViews = forumViews;
+	}
+
 	public byte[] getForumPic() {
 		return forumPic;
 	}

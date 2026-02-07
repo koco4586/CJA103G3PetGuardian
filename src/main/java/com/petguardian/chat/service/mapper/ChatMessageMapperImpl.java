@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.petguardian.chat.dto.MemberProfileDTO;
 import com.petguardian.chat.dto.ChatMessageDTO;
 import com.petguardian.chat.model.ChatMessageEntity;
+import io.hypersistence.tsid.TSID;
 
 @Service
 public class ChatMessageMapperImpl implements ChatMessageMapper {
@@ -18,17 +19,17 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
             String replySenderName,
             Integer currentUserId, Integer partnerId, Integer reportStatus) {
         ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
-        chatMessageDTO.setMessageId(chatMessageEntity.getMessageId());
+        chatMessageDTO.setMessageId(TSID.from(chatMessageEntity.getMessageId()).toString());
         chatMessageDTO.setSenderId(chatMessageEntity.getMemberId());
         chatMessageDTO.setReceiverId(chatMessageEntity.getMemberId().equals(currentUserId) ? partnerId : currentUserId);
         chatMessageDTO.setContent(chatMessageEntity.getMessage());
         chatMessageDTO.setSenderName(sender != null ? sender.getMemberName() : "Unknown");
         chatMessageDTO.setChatroomId(chatMessageEntity.getChatroomId());
         chatMessageDTO.setChatTime(chatMessageEntity.getChatTime());
-        chatMessageDTO.setReportStatus(reportStatus != null ? reportStatus : 0);
+        chatMessageDTO.setReportStatus(reportStatus);
 
         if (chatMessageEntity.getReplyToMessageId() != null) {
-            chatMessageDTO.setReplyToId(chatMessageEntity.getReplyToMessageId());
+            chatMessageDTO.setReplyToId(TSID.from(chatMessageEntity.getReplyToMessageId()).toString());
             chatMessageDTO.setReplyToContent(replyContent);
             chatMessageDTO.setReplyToSenderName(replySenderName);
         }
@@ -46,8 +47,8 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
     public List<ChatMessageDTO> toDtoList(List<ChatMessageEntity> chatMessageEntities, Integer currentUserId,
             Integer partnerId,
             Map<Integer, MemberProfileDTO> memberMap,
-            Map<String, ChatMessageEntity> replyMap,
-            Map<String, Integer> reportStatusMap) {
+            Map<Long, ChatMessageEntity> replyMap,
+            Map<Long, Integer> reportStatusMap) {
         if (chatMessageEntities.isEmpty()) {
             return Collections.emptyList();
         }
@@ -66,8 +67,8 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
      */
     private ChatMessageDTO mapToDto(ChatMessageEntity msg,
             Map<Integer, MemberProfileDTO> memberMap,
-            Map<String, ChatMessageEntity> replyMap,
-            Map<String, Integer> reportStatusMap,
+            Map<Long, ChatMessageEntity> replyMap,
+            Map<Long, Integer> reportStatusMap,
             Integer currentUserId,
             Integer partnerId) {
         // Resolve Sender
@@ -87,7 +88,7 @@ public class ChatMessageMapperImpl implements ChatMessageMapper {
         }
 
         // Resolve Report Status
-        Integer status = reportStatusMap != null ? reportStatusMap.getOrDefault(msg.getMessageId(), 0) : 0;
+        Integer status = reportStatusMap != null ? reportStatusMap.get(msg.getMessageId()) : null;
 
         // Delegate to base mapper
         return toDto(msg, sender, replyContent, replySenderName, currentUserId, partnerId, status);

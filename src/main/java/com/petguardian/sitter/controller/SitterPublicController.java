@@ -25,6 +25,8 @@ import com.petguardian.sitter.model.SitterMemberDTO;
 import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.service.SitterSearchService;
 
+import com.petguardian.evaluate.service.EvaluateService;
+
 import com.petguardian.petsitter.service.PetSitterService;
 import com.petguardian.service.service.ServiceAreaService;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
@@ -75,6 +77,9 @@ public class SitterPublicController {
 
     @Autowired
     private PetRepository petRepository;
+
+    @Autowired
+    private EvaluateService evaluateService;
 
     /**
      * 顯示公開的保姆搜尋頁面
@@ -127,6 +132,17 @@ public class SitterPublicController {
                 results = sitterSearchService.searchSitters(criteria);
             }
 
+            // 🔥 注入平均星數
+            for (SitterSearchDTO dto : results) {
+                Double avgRating = evaluateService.getAverageRatingBySitterId(dto.getSitterId());
+                if (avgRating != null) {
+                    System.out.println("DEBUG_SEARCH_API: Sitter=" + dto.getSitterId() + ", Rating=" + avgRating);
+                    dto.setAverageRating(avgRating);
+                } else {
+                    System.out.println("DEBUG_SEARCH_API: Sitter=" + dto.getSitterId() + " has NULL rating");
+                }
+            }
+
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             e.printStackTrace();
@@ -145,6 +161,18 @@ public class SitterPublicController {
     public ResponseEntity<List<SitterSearchDTO>> getAllSitters() {
         try {
             List<SitterSearchDTO> results = sitterSearchService.getAllActiveSitters();
+
+            // 🔥 注入平均星數
+            for (SitterSearchDTO dto : results) {
+                Double avgRating = evaluateService.getAverageRatingBySitterId(dto.getSitterId());
+                if (avgRating != null) {
+                    System.out.println("DEBUG_SEARCH_ALL: Sitter=" + dto.getSitterId() + ", Rating=" + avgRating);
+                    dto.setAverageRating(avgRating);
+                } else {
+                    System.out.println("DEBUG_SEARCH_ALL: Sitter=" + dto.getSitterId() + " has NULL rating");
+                }
+            }
+
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             e.printStackTrace();
@@ -239,14 +267,10 @@ public class SitterPublicController {
                 }
             }
 
-            /*
-             * [FUTURE] 未來功能：查詢保姆的會員頭像
-             * SitterMemberVO sitterMember =
-             * sitterService.getSitterMemberById(sitter.getMemId());
-             * if (sitterMember != null) {
-             * model.addAttribute("sitterMember", sitterMember);
-             * }
-             */
+            SitterMemberVO sitterMember = sitterService.getSitterMemberById(sitter.getMemId());
+            if (sitterMember != null) {
+                model.addAttribute("sitterMember", sitterMember);
+            }
 
             // 歷史評價 (僅查詢有文字評論的訂單)
             List<BookingOrderVO> reviews = sitterService.getSitterReviews(sitterId);
@@ -265,13 +289,6 @@ public class SitterPublicController {
                 // [NEW] 載入會員寵物 (供預約視窗使用)
                 myPets = petRepository.findByMemId(memId);
             }
-
-            // --- 測試用代碼：手動加入一隻假寵物 (保持與 BookingFrontendController 一致邏輯) ---
-            PetVO dummyPet = new PetVO();
-            dummyPet.setPetId(999);
-            dummyPet.setPetName("測試小黑");
-            myPets.add(dummyPet);
-            // -------------------------------------------------------------
 
             // 4. 將所有資料加入 Model 傳遞給前端
             model.addAttribute("sitter", sitter);

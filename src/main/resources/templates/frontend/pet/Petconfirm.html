@@ -1,166 +1,176 @@
 <!DOCTYPE html>
 <html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>確認寵物資料圖片</title>
-    
-    	<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
-	    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
-	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-	    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
     <style>
         /* 原有的樣式維持不變 */
         /* ✅ 修改：讓內容可以滾動，不要鎖死在螢幕中央 */
-/* --- 基礎佈局優化 --- */
-body {
-    display: block; 
-    min-height: 100vh;
-    margin: 0;
-    /* 這裡維持你的背景圖 */
-    background-image: url("/images/pet/dc.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    font-family: sans-serif;
-    overflow-y: auto;
-}
+        /* --- 基礎佈局優化 --- */
+        body {
+            display: block;
+            min-height: 100vh;
+            margin: 0;
+            /* 這裡維持你的背景圖 */
+            background-image: url("/images/pet/dc.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            font-family: sans-serif;
+            overflow-y: auto;
+        }
 
 
 
 
-body > .container.pet-form-container {
-  background-color: #ffffff !important;
-  width: 90%;
-  max-width: 600px;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  border: 2px solid #ddd;
-  margin: 120px auto 30px auto;
-}
+        body>.container.pet-form-container {
+            background-color: #ffffff !important;
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 2px solid #ddd;
+            margin: 120px auto 30px auto;
+        }
 
-.pet-form-container table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0 auto;
-}
+        .pet-form-container table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
 
-.pet-form-container table td,
-.pet-form-container table th {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: left;
-  vertical-align: middle;
-}
+        .pet-form-container table td,
+        .pet-form-container table th {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
 
-.pet-form-container table td:first-child {
-  width: 120px;
-  font-weight: 600;
-  background-color: #f9f9f9;
-}
+        .pet-form-container table td:first-child {
+            width: 120px;
+            font-weight: 600;
+            background-color: #f9f9f9;
+        }
 
-/* ✅ 倒數計時區：置中顯示 */
-.timer-text {
-    font-size: 0.95rem;
-    margin: 0 auto 12px auto; /* 改這裡：加 auto */
-    padding: 6px 12px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    display: block; /* 改成 block */
-    width: fit-content; /* 改成 fit-content */
-    border: 1px solid #eee;
-    text-align: center; /* 確保文字置中 */
-}
+        /* ✅ 倒數計時區：置中顯示 */
+        .timer-text {
+            font-size: 0.95rem;
+            margin: 0 auto 12px auto;
+            /* 改這裡：加 auto */
+            padding: 6px 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            display: block;
+            /* 改成 block */
+            width: fit-content;
+            /* 改成 fit-content */
+            border: 1px solid #eee;
+            text-align: center;
+            /* 確保文字置中 */
+        }
 
-/* 圖片區：限制高度 */
-.preview-img {
-    display: block;
-    margin: 0 auto 15px auto;
-    max-width: 100%;
-    max-height: 280px;
-    height: auto;
-    border-radius: 8px;
-    object-fit: contain;
-}
+        /* 圖片區：限制高度 */
+        .preview-img {
+            display: block;
+            margin: 0 auto 15px auto;
+            max-width: 100%;
+            max-height: 280px;
+            height: auto;
+            border-radius: 8px;
+            object-fit: contain;
+        }
 
-/* 資料顯示區：緊湊排列 */
-.data-display {
-    text-align: left;
-    width: 100%;
-    background: transparent;
-    padding: 0;
-    margin-top: 5px;
-}
+        /* 資料顯示區：緊湊排列 */
+        .data-display {
+            text-align: left;
+            width: 100%;
+            background: transparent;
+            padding: 0;
+            margin-top: 5px;
+        }
 
-.data-display p {
-    margin: 6px 0;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 6px;
-    font-size: 0.95rem;
-    line-height: 1.4;
-}
+        .data-display p {
+            margin: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 6px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
 
-.data-display p:last-child {
-    border-bottom: none;
-}
+        .data-display p:last-child {
+            border-bottom: none;
+        }
 
-/* 按鈕群組：收攏間距 */
-.btn-group {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 15px;
-}
+        /* 按鈕群組：收攏間距 */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
 
-button {
-    padding: 8px 25px;
-    font-size: 0.95rem;
-    border-radius: 6px;
-    cursor: pointer;
-    border: none;
-}
+        button {
+            padding: 8px 25px;
+            font-size: 0.95rem;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+        }
 
-/* ✅ 保持閃爍動畫 */
-.flash {
-    color: #ff4d4d;
-    font-weight: bold;
-    animation: blinker 0.6s linear infinite;
-}
+        /* ✅ 保持閃爍動畫 */
+        .flash {
+            color: #ff4d4d;
+            font-weight: bold;
+            animation: blinker 0.6s linear infinite;
+        }
 
-@keyframes blinker { 
-    50% { opacity: 0; } 
-}
+        @keyframes blinker {
+            50% {
+                opacity: 0;
+            }
+        }
 
-/* ✅ 確保 footer 不受影響 */
-#main-footer {
-    background-color: #f9f9f9 !important; /* 強制保持原色 */
-    margin-top: 4rem;
-}
+        /* ✅ 確保 footer 不受影響 */
+        #main-footer {
+            background-color: #f9f9f9 !important;
+            /* 強制保持原色 */
+            margin-top: 4rem;
+        }
 
-#main-footer .container {
-    background-color: transparent !important; /* footer 內的 container 保持透明 */
-}
+        #main-footer .container {
+            background-color: transparent !important;
+            /* footer 內的 container 保持透明 */
+        }
     </style>
 </head>
+
 <body>
 
-<header id="main-header" class="header"></header>
+    <header id="main-header" class="header"></header>
 
 
 
-<input type="hidden" name="petId" id="petId" th:value="${petId}">
+    <input type="hidden" name="petId" id="petId" th:value="${petId}">
 
-	
+
 
     <div class="container pet-form-container">
-        
+
         <div id="timer_container" class="timer-text">
-    確認資料中... (<span id="timer_display">10</span>s)
-</div>
-        
+            確認資料中... (<span id="timer_display">10</span>s)
+        </div>
+
         <div id="display_area">
-    	</div>
+        </div>
 
         <div class="btn-group">
             <button id="btn_confirm">確認送出</button>
@@ -168,164 +178,182 @@ button {
         </div>
     </div>
 
-<script th:inline="javascript">
-    // --- 1. 判斷來源路徑 ---
-    // 取得前一頁的網址
-    
-    let pendingData = JSON.parse(sessionStorage.getItem("pending_data"));
-    let countdown; // 宣告在這裡
-    let hasJumped = false;
+    <script th:inline="javascript">
+        // --- 1. 判斷來源路徑 ---
+        // 取得前一頁的網址
 
-    
-    let timer_el;
-    let timer_container;
-    // 定義返回函數 (同樣放在全域)
-    function goBackWithData() {
-        if (hasJumped) return;
-        hasJumped = true;
-        if (countdown) clearInterval(countdown); // 停止計時器
-        
-        const referrer = document.referrer;
-        let backUrl = (pendingData && pendingData.fromPage) ? pendingData.fromPage : referrer;
-        if (!backUrl || backUrl.includes("confirm")) backUrl = "/pet/dashboard";
-        location.href = backUrl;
-    }
-    
-    
-    function startTheTimer() {
- // --- 3. 倒數計時：修復計時不動問題 ---
-    let time = 10;
-    if (!timer_el) timer_el = document.getElementById("timer_display");
-    if (!timer_container) timer_container = document.getElementById("timer_container");
+        let pendingData = JSON.parse(sessionStorage.getItem("pending_data"));
+        let countdown; // 宣告在這裡
+        let hasJumped = false;
 
-    if (countdown) clearInterval(countdown);
- 
-    // ✅ 確保計時器 ID 被全域變數 countdown 接收，這樣返回按鈕才能清除它
-    countdown = setInterval(() => {
-        time--;
-        if (timer_el) {
-            timer_el.textContent = time;
+
+        let timer_el;
+        let timer_container;
+        // 定義返回函數 (同樣放在全域)
+        function goBackWithData() {
+            if (hasJumped) return;
+            hasJumped = true;
+            if (countdown) clearInterval(countdown); // 停止計時器
+
+            const referrer = document.referrer;
+            let backUrl = (pendingData && pendingData.fromPage) ? pendingData.fromPage : referrer;
+            if (!backUrl || backUrl.includes("confirm")) backUrl = "/pet/dashboard";
+            location.href = backUrl;
         }
-        // 倒數 3 秒開始閃爍
-        if (time <= 3 && time > 0) {
-            timer_container.classList.add("flash");
+
+
+        function startTheTimer() {
+            // --- 3. 倒數計時：修復計時不動問題 ---
+            let time = 10;
+            if (!timer_el) timer_el = document.getElementById("timer_display");
+            if (!timer_container) timer_container = document.getElementById("timer_container");
+
+            if (countdown) clearInterval(countdown);
+
+            // ✅ 確保計時器 ID 被全域變數 countdown 接收，這樣返回按鈕才能清除它
+            countdown = setInterval(() => {
+                time--;
+                if (timer_el) {
+                    timer_el.textContent = time;
+                }
+                // 倒數 3 秒開始閃爍
+                if (time <= 3 && time > 0) {
+                    timer_container.classList.add("flash");
+                }
+                // 時間到處理
+                if (time <= 0) {
+                    clearInterval(countdown);
+                    if (!hasJumped) {
+                        // ✅ 修改：時間到不直接返回，而是執行自動送出 (或根據你需求改為自動返回)
+                        alert("確認超時，系統將自動送出！");
+                        goBackWithData();
+                    }
+                }
+            }, 1000);
         }
-        // 時間到處理
-        if (time <= 0) {
-            clearInterval(countdown);
-            if (!hasJumped) {
-                // ✅ 修改：時間到不直接返回，而是執行自動送出 (或根據你需求改為自動返回)
-                alert("確認超時，系統將自動送出！");
-                goBackWithData();
+        document.addEventListener("DOMContentLoaded", function () {
+            const displayArea = document.getElementById("display_area");
+            timer_el = document.getElementById("timer_display");
+            timer_container = document.getElementById("timer_container");
+            const petIdInput = document.getElementById("petId");
+
+            // 1. 確保 pendingData 存在
+            if (!pendingData) {
+                alert("無暫存資料，請返回");
+                location.href = "/pet/dashboard";
+                return;
             }
-        }
-    }, 1000);
-    }
-    document.addEventListener("DOMContentLoaded", function() {
-        const displayArea = document.getElementById("display_area");
-        timer_el = document.getElementById("timer_display");
-        timer_container = document.getElementById("timer_container");
-        const petIdInput = document.getElementById("petId");
 
-     // 1. 確保 pendingData 存在
-        if (!pendingData) {
-            alert("無暫存資料，請返回");
-            location.href = "/pet/dashboard";
-            return;
-        }
+            // 將 petId 補上
+            if (pendingData.petId) {
+                petIdInput.value = pendingData.petId;
+            }
+            // 2. 顯示資料
+            let currentImg = pendingData.petImage;
+            let finalImageHtml = "";
 
-        // 將 petId 補上
-        if (pendingData.petId) {
-            petIdInput.value = pendingData.petId;
-        }
-        let currentImg = pendingData.petImage;
-        let finalImageHtml = "";
-
-        // ✅ 判斷：如果是保留原圖，currentImg 會是舊圖路徑；如果不保留，會是 "NONE"
-        if (currentImg && currentImg !== "NONE" && currentImg.trim() !== "") {
-        	finalImageHtml = `<img src="${currentImg}" class="preview-img">`;
-        } else {
-        	finalImageHtml = `
+            // ✅ 修改：只要不是 NONE 且有值，就顯示圖片 (相容 Base64 與原始 URL)
+            if (currentImg && currentImg !== "NONE" && currentImg.trim() !== "") {
+                finalImageHtml = `<img src="${currentImg}" class="preview-img">`;
+            } else {
+                finalImageHtml = `
                 <div style="background:#fff3cd; color:#856404; padding:20px; border-radius:10px; border:1px solid #ffeeba; margin-bottom:15px; text-align:center;">
                     <i class="fa-solid fa-circle-exclamation"></i> 暫無圖片，僅更新文字
                 </div>`;
-        }
+            }
 
-        displayArea.innerHTML = `
+            displayArea.innerHTML = `
             <div class="confirm-img-wrapper" style="text-align:center;">
                 ${finalImageHtml}
             </div>
             <div class="data-display">
                 <p><b>寵物名稱：</b>${pendingData.petName || '未填寫'}</p>
                 <p><b>寵物種類：</b>${pendingData.typeId == '1' ? '貓' : '狗'}</p>
-                <p><b>寵物性別：</b>${pendingData.petGender == '1' ? '公' : '母'}</p>
+                <p><b>寵物性別：</b>${pendingData.petGender == '0' ? '母' : '公'}</p>
                 <p><b>寵物年齡：</b>${pendingData.petAge || '0'} 歲</p>
                 <p><b>寵物尺寸：</b>${pendingData.sizeId == '1' ? '小型' : (pendingData.sizeId == '2' ? '中型' : '大型')}</p>
                 <p><b>備註內容：</b><br>${pendingData.petDescription || '無備註'}</p>
             </div>
         `;
-        
-        startTheTimer();
 
-        
-        
-        // --- 4. 確認送出按鈕：修正圖片與 ID 傳送 ---
-        document.getElementById("btn_confirm").addEventListener("click", function() {
-            if (countdown) clearInterval(countdown);
-            const btn = this;
-            if (btn.disabled) return;
-            
-            btn.disabled = true;
-            btn.innerText = "處理中...";
-            
-            const params = new FormData();
-            
-            let finalImg = (pendingData.petImage === "NONE") ? "" : pendingData.petImage;
-            let finalId = petIdInput.value;
+            startTheTimer();
 
-            const isUpdate = (finalId != null && String(finalId).trim() !== "" && String(finalId) !== "null");
-            let targetUrl = isUpdate ? "/pet/update" : "/pet/insertBase64";
-            
-            params.append("petId", isUpdate ? finalId : "");
-            params.append("petImageBase64", finalImg || "");
-            params.append("petName", pendingData.petName || "");
-            params.append("typeId", pendingData.typeId || "1");
-            params.append("petGender", pendingData.petGender || "0");
-            params.append("petAge", pendingData.petAge || "0");
-            params.append("sizeId", pendingData.sizeId || "1");
-            params.append("petDescription", pendingData.petDescription || "");
-            params.append("lng", pendingData.lng || "");
-            params.append("lat", pendingData.lat || "");
 
-            fetch(targetUrl, { method: "POST", body: params })
-            .then(res => res.text())
-            .then(text => {
-                if (text.includes("success") || text.includes("pet/one")) {
-                    alert("存檔成功！");
-                    sessionStorage.removeItem("pending_data");
-                    window.location.href = "/pet/dashboard";
-                } else {
-                    alert("存取失敗");
-                    btn.disabled = false;
-                    btn.innerText = "確認送出";
+
+            // --- 4. 確認送出按鈕：修正圖片與 ID 傳送 ---
+            document.getElementById("btn_confirm").addEventListener("click", function () {
+                if (countdown) clearInterval(countdown);
+                const btn = this;
+                if (btn.disabled) return;
+
+                if (!pendingData.petName || !pendingData.petName.trim()) {
+                    alert("請回上一頁輸入寵物名稱！");
+                    return;
                 }
-            })
-            .catch(err => {
-                alert("發生錯誤");
-                btn.disabled = false;
+
+                // 根據 petId 判斷是新增還是修改 (null 或空字串代表新增)
+                const finalId = petIdInput.value;
+                const isUpdate = (finalId != null && String(finalId).trim() !== "" && String(finalId) !== "null");
+
+                // 新增時強制檢查圖片
+                if (!isUpdate && (!pendingData.petImage || pendingData.petImage === "NONE")) {
+                    alert("請回上一頁選取寵物圖片！");
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerText = "處理中...";
+
+                const params = new FormData();
+                let finalImg = (pendingData.petImage === "NONE") ? "" : pendingData.petImage;
+
+                let targetUrl = isUpdate ? "/pet/update" : "/pet/insertBase64";
+
+                params.append("petId", isUpdate ? finalId : "");
+                params.append("petImageBase64", finalImg || "");
+                params.append("deleteImage", (pendingData.petImage === "NONE" ? "true" : "false"));
+                params.append("petName", pendingData.petName || "");
+                params.append("typeId", pendingData.typeId || "1");
+                params.append("petGender", pendingData.petGender || "0");
+                params.append("petAge", pendingData.petAge || "0");
+                params.append("sizeId", pendingData.sizeId || "1");
+                params.append("petDescription", pendingData.petDescription || "");
+                params.append("lng", pendingData.lng || "");
+                params.append("lat", pendingData.lat || "");
+
+                fetch(targetUrl, { method: "POST", body: params })
+                    .then(res => res.text())
+                    .then(text => {
+                        if (text.includes("success") || text.includes("pet/one")) {
+                            alert("存檔成功！");
+                            sessionStorage.removeItem("pending_data");
+                            window.location.href = "/pet/dashboard";
+                        } else {
+                            // 修正：顯示後端具體報錯訊息
+                            let errorMsg = text.startsWith("error:") ? text.replace("error: ", "") : text;
+                            alert("存取失敗：" + errorMsg);
+                            btn.disabled = false;
+                            btn.innerText = "確認送出";
+                        }
+                    })
+                    .catch(err => {
+                        alert("發生網路連線錯誤：" + err);
+                        btn.disabled = false;
+                        btn.innerText = "確認送出";
+                    });
             });
+
+            // --- 5. 返回按鈕 ---
+            document.getElementById("btn_back").addEventListener("click", goBackWithData);
         });
 
-        // --- 5. 返回按鈕 ---
-        document.getElementById("btn_back").addEventListener("click", goBackWithData);
-    });
-     
-</script>
+    </script>
 
-	<footer id="main-footer" style="margin-top: 4rem;"></footer>
+    <footer id="main-footer" style="margin-top: 4rem;"></footer>
 
     <script th:src="@{/js/frontend/main.js}">
     </script>
 
 </body>
+
 </html>

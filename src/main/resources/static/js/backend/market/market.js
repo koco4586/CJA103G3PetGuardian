@@ -89,15 +89,16 @@ function showReturnDetail(returnId) {
                 const imagesContainer = document.getElementById('modal-images-container');
                 const imagesDiv = document.getElementById('modal-images');
 
+                // 退貨圖片以 URL 路徑方式讀取（存放於 /images/return/ 內）
                 if (data.hasImages && data.returnImages && data.returnImages.length > 0) {
                     imagesDiv.innerHTML = '';
-                    data.returnImages.forEach((imageBase64, index) => {
+                    data.returnImages.forEach(function(imageUrl, index) {
                         const img = document.createElement('img');
-                        img.src = imageBase64;
+                        img.src = imageUrl;
                         img.alt = '退貨圖片 ' + (index + 1);
                         img.style.cssText = 'width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;';
                         img.onclick = function() {
-                            window.open(imageBase64, '_blank');
+                            window.open(imageUrl, '_blank');
                         };
                         imagesDiv.appendChild(img);
                     });
