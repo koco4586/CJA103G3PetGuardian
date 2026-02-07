@@ -60,6 +60,7 @@ public class BookingOrderVO {
     @Column(name = "report_status")
     private Integer reportStatus = 0;
 
+    @Column(name = "cancel_reason", length = 200)
     private String cancelReason;
     private LocalDateTime cancelTime;
 

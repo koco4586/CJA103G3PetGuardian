@@ -36,7 +36,7 @@
 								style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #888;"></i>
 							<select class="form-control" id="citySelect"
 								style="padding-left: 2.8rem; height: 48px;">
-								<option value="">選擇縣市</option>
+								<option value="">請先選擇縣市</option>
 								<option th:each="city : ${availableCities}" th:value="${city}"
 									th:text="${city}">台北市</option>
 							</select>
@@ -47,7 +47,7 @@
 								style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #888;"></i>
 							<select class="form-control" id="districtSelect"
 								style="padding-left: 2.8rem; height: 48px;">
-								<option value="">請先選擇縣市</option>
+								<option value="">選擇行政區</option>
 							</select>
 						</div>
 					</div>
@@ -375,21 +375,19 @@
         }
         
         async function handleToggleFavorite(sitterId, btn) {
+        	const icon = btn.querySelector('i');
             try {
                 const response = await fetch(`/booking/toggleFavorite/${sitterId}`, {
                     method: 'POST'
                 });
 
-                if (response.status === 401) {
-                    alert("請先登入後再收藏保姆");
-                    window.location.href = "/member/login";
-                    return;
-                }
-
                 if (response.ok) {
                     const result = await response.text();
-                    const icon = btn.querySelector('i');
                     
+                    if (result === "NOT_LOGGED_IN") {
+                        alert("請先登入才能收藏保母喔！");
+                        return; 
+                    }
                     if (result === "added") {
                         // 變為已收藏狀態 (紅色實心)
                         icon.classList.remove('fa-regular');

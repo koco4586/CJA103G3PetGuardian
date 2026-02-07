@@ -165,6 +165,11 @@
 								<span th:if="${order.orderStatus == 4}" class="badge-pill status-cancelled">已退款</span>
 								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>
 							</div>
+							<div th:if="${order.orderStatus == 3 and order.cancelReason != null}" 
+							     style="margin-top: 8px; padding: 8px 12px; background: #fff5f5; border-left: 3px solid #fa5252; border-radius: 4px; font-size: 0.85rem; color: #c92a2a;">
+							    <i class="fas fa-info-circle"></i> <strong>取消原因：</strong>
+							    <span th:text="${order.cancelReason}">理由內容</span>
+							</div>
 							<div style="color: #666; font-size: 0.9rem;">
 								<i class="far fa-clock"></i> <span
 									th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"></span>
