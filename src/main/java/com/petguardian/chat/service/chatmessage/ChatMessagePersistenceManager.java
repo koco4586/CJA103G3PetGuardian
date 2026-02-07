@@ -20,6 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 /**
  * Internal Worker for Message Persistence.
@@ -89,14 +90,26 @@ class ChatMessagePersistenceManager {
             // Since we can't update Redis now, we must delete the stale data later
             metadataCache.queueForRecovery(context.chatroomId());
 
-            // 3. Sync DB (direct)
-            transactionTemplate.executeWithoutResult(status -> {
-                roomRepository.updateFullMetadata(
-                        context.chatroomId(),
-                        context.content(),
-                        context.createdAt(),
-                        context.createdAt(),
-                        null);
+            // 3. Sync DB (direct) - Correctly identify sender's read status with regression
+            // protection
+            LocalDateTime time = context.createdAt();
+            roomRepository.findById(context.chatroomId()).ifPresent(room -> {
+                // SEQUENCE VALIDATION: Only update if this message is not "older"
+                if (room.getLastMessageAt() == null || !time.isBefore(room.getLastMessageAt())) {
+                    LocalDateTime mem1Read = context.senderId().equals(room.getMemId1()) ? time : null;
+                    LocalDateTime mem2Read = context.senderId().equals(room.getMemId2()) ? time : null;
+
+                    transactionTemplate.executeWithoutResult(status -> {
+                        roomRepository.updateFullMetadata(
+                                context.chatroomId(),
+                                context.content(),
+                                time,
+                                mem1Read,
+                                mem2Read);
+                    });
+                } else {
+                    log.info("[Persistence] Skipping metadata sync for older message: {}", context.messageId());
+                }
             });
             return saved;
         } catch (Exception e) {
