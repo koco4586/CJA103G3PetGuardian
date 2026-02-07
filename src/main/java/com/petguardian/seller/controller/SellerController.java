@@ -90,7 +90,7 @@ public class SellerController {
         model.addAttribute("productsWithImages", productsWithImages);
         model.addAttribute("proTypes", proTypes);
         model.addAttribute("currentView", "products");
-        // 傳入時間戳，讓前端圖片 URL 帶上此參數，防止瀏覽器快取舊圖
+        // 傳入時間戳，讓前端圖片 URL 帶上此參數防止瀏覽器快取舊圖
         model.addAttribute("cacheBuster", System.currentTimeMillis());
 
         return "frontend/store-seller";
@@ -163,6 +163,8 @@ public class SellerController {
 
         Path targetPath = uploadDir.resolve(newFilename).normalize();
         file.transferTo(targetPath.toFile());
+
+        System.out.println("圖片已存到: " + targetPath.toString());
 
         // 回傳相對路徑供前端讀取
         return "/" + UPLOAD_SUB_PATH + newFilename;
