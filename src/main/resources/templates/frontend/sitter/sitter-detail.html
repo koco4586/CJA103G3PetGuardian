@@ -301,28 +301,7 @@
                     </h3>
 
                     <div id="reviewsList" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease;">
-                        <div th:if="${reviews != null and !reviews.isEmpty()}">
-                            <div class="review-card" th:each="review : ${reviews}">
-                                <div class="review-header">
-                                    <!-- 顯示評價者 (會員 ID 或 名稱，這裡暫用 ID) -->
-                                    <div>
-                                        <strong>會員 <span th:text="${review.memId}">ID</span></strong>
-                                        <button class="btn btn-sm btn-outline-danger ms-2"
-                                            style="padding: 0px 6px; font-size: 0.8rem;"
-                                            th:onclick="'reportReview(' + ${review.bookingOrderId} + ', ' + ${review.evaluateId} + ')'">
-                                            <i class="fas fa-flag"></i> 檢舉
-                                        </button>
-                                    </div>
-                                    <div style="color: #ffc107;" th:if="${review.sitterRating != null}">
-                                        <i class="fas fa-star"
-                                            th:each="i : ${#numbers.sequence(1, review.sitterRating)}"></i>
-                                    </div>
-                                </div>
-                                <p class="mb-0 text-muted" th:text="${review.sitterReview}">很棒的保母！</p>
-                                <small class="text-muted"
-                                    th:text="${#temporals.format(review.endTime, 'yyyy-MM-dd')}">2023-10-10</small>
-                            </div>
-                        </div>
+                        <!-- 评价内容将由 JavaScript 动态加载 -->
                     </div>
 
                     <div th:if="${reviews == null or reviews.isEmpty()}" class="text-center text-muted py-3">

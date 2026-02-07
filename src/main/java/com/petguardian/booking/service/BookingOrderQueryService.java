@@ -38,6 +38,9 @@ public class BookingOrderQueryService {
     @Autowired
     private com.petguardian.pet.model.PetRepository petRepository;
 
+    @Autowired
+    private com.petguardian.complaint.model.Complaintrepository complaintRepository;
+
     /**
      * 查詢會員的所有訂單
      */
@@ -138,6 +141,7 @@ public class BookingOrderQueryService {
         java.util.Set<Integer> memIds = new java.util.HashSet<>();
         java.util.Set<Integer> petIds = new java.util.HashSet<>();
         java.util.Set<Integer> serviceIds = new java.util.HashSet<>();
+        java.util.Set<Integer> orderIds = new java.util.HashSet<>(); // 🔥 新增：收集訂單 ID
         java.util.Map<Integer, String> petNameMap = new java.util.HashMap<>();
         java.util.Map<Integer, String> petImageMap = new java.util.HashMap<>();
 
@@ -148,6 +152,8 @@ public class BookingOrderQueryService {
                 petIds.add(order.getPetId());
             if (order.getServiceItemId() != null)
                 serviceIds.add(order.getServiceItemId()); // 蒐集服務 ID
+            if (order.getBookingOrderId() != null)
+                orderIds.add(order.getBookingOrderId()); // 🔥 蒐集訂單 ID
         }
 
         if (!petIds.isEmpty()) {
@@ -183,7 +189,16 @@ public class BookingOrderQueryService {
                 memNameMap.put(m.getMemId(), m.getMemName());
         }
 
-        // 4. 填回 BookingOrderVO 暫存欄位 (Transient)
+        // 4. 批次統計檢舉次數 (解決 N+1)
+        java.util.Map<Integer, Long> complaintCountMap = new java.util.HashMap<>();
+        if (!orderIds.isEmpty()) {
+            List<Object[]> counts = complaintRepository.countComplaintsByBookingOrderIds(orderIds);
+            for (Object[] row : counts) {
+                complaintCountMap.put((Integer) row[0], (Long) row[1]);
+            }
+        }
+
+        // 5. 填回 BookingOrderVO 暫存欄位 (Transient)
         for (BookingOrderVO order : orderList) {
             // A. 填入保母與服務相關資訊
             String key = order.getSitterId() + "_" + order.getServiceItemId();
@@ -211,6 +226,9 @@ public class BookingOrderQueryService {
                     && (order.getCancelReason() == null || order.getCancelReason().isBlank())) {
                 order.setCancelReason("保母忙碌中，暫時無法接單");
             }
+
+            // E. 填入檢舉次數
+            order.setComplaintCount(complaintCountMap.getOrDefault(order.getBookingOrderId(), 0L));
         }
     }
 }

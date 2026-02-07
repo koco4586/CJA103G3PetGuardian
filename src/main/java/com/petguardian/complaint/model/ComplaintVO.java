@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
 import jakarta.persistence.Table;
 
 @SuppressWarnings("serial")
@@ -44,6 +43,12 @@ public class ComplaintVO implements java.io.Serializable {
 
     @jakarta.persistence.Transient
     private String reportedContent; // 被檢舉的評價內容
+
+    @jakarta.persistence.Transient
+    private Long evaluationComplaintCount = 0L; // 該評價被檢舉的總次數 (全域統計)
+
+    @jakarta.persistence.Transient
+    private Integer reportSequence = 1; // 該評價在本筆紀錄中是第幾次被檢舉 (1=首報, 2=二報...)
 
     // --- 以下為 Getter & Setter ---
     public Integer getBookingReportId() {
@@ -124,6 +129,22 @@ public class ComplaintVO implements java.io.Serializable {
 
     public void setReportedContent(String reportedContent) {
         this.reportedContent = reportedContent;
+    }
+
+    public Long getEvaluationComplaintCount() {
+        return evaluationComplaintCount;
+    }
+
+    public void setEvaluationComplaintCount(Long evaluationComplaintCount) {
+        this.evaluationComplaintCount = evaluationComplaintCount;
+    }
+
+    public Integer getReportSequence() {
+        return reportSequence;
+    }
+
+    public void setReportSequence(Integer reportSequence) {
+        this.reportSequence = reportSequence;
     }
 
 }
