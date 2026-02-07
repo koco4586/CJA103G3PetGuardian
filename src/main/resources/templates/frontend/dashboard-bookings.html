@@ -108,6 +108,24 @@
 		.submit-report-btn:hover {
 			background: #ff5252;
 		}
+		.static-page-box {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			height: 34px; 
+			width: 65px; 
+			border: 1px solid #e2e8f0; /* 灰藍色邊框 */
+			border-radius: 18px; /* 圓角 */
+			color: #64748b; /* 灰藍色文字 */
+			font-size: 0.85rem; /* 字體稍微縮小 */
+			font-weight: 500;
+			background-color: #f8fafc; /* 極淺底色 */
+			margin: 0 5px;
+			pointer-events: none;
+			cursor: default;
+			user-select: none; /* 防止文字被藍色選取 */
+		}
+		
 	</style>
 
 </head>
@@ -239,6 +257,30 @@
 			</div>
 		</div>
 	</div>
+	<!-- 分頁控制項 -->
+	<div class="mt-5" th:if="${totalPages > 1}" 
+     style="display: flex !important; justify-content: center !important; align-items: center !important; width: 100% !important; gap: 10px;">
+    
+    <a th:href="@{/booking/memberOrders(page=0, status=${currentStatus})}" 
+       class="btn btn-outline btn-sm" th:if="${currentPage > 0}" style="border-radius: 20px;">第一頁</a>
+    
+    <a th:href="@{/booking/memberOrders(page=${currentPage - 1}, status=${currentStatus})}" 
+       class="btn btn-outline btn-sm" th:if="${currentPage > 0}" style="border-radius: 20px;">
+       <i class="fas fa-chevron-left"></i> 上一頁
+    </a>
+
+    <span class="static-page-box" style="margin: 0;">
+        <th:block th:text="${currentPage + 1}">1</th:block> / <th:block th:text="${totalPages}">2</th:block>
+    </span>
+
+    <a th:href="@{/booking/memberOrders(page=${currentPage + 1}, status=${currentStatus})}" 
+       class="btn btn-outline btn-sm" th:if="${currentPage < totalPages - 1}" style="border-radius: 20px;">
+       下一頁 <i class="fas fa-chevron-right"></i>
+    </a>
+    
+    <a th:href="@{/booking/memberOrders(page=${totalPages - 1}, status=${currentStatus})}" 
+       class="btn btn-outline btn-sm" th:if="${currentPage < totalPages - 1}" style="border-radius: 20px;">最後一頁</a>
+</div>
 	<footer id="main-footer" style="background-color: #f9f9f9; margin-top: 4rem;"></footer>
 	<script th:src="@{/js/frontend/main.js}"></script>
 	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>

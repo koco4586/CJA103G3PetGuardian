@@ -1,5 +1,6 @@
 package com.petguardian.booking.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class BookingDashboardController {
     private com.petguardian.evaluate.service.EvaluateService evaluateService;
 
     @GetMapping("/favorites/sitters") // 收藏的網址，可以改
-    public String showSitterFavorites(HttpServletRequest request, Model model) {
+    public String showSitterFavorites( @RequestParam(defaultValue = "0") int page, HttpServletRequest request, Model model) {
         // 1. 取得當前登入會員 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
 
@@ -47,9 +48,19 @@ public class BookingDashboardController {
                 }
             }
         }
+        int pageSize = 6;
+        int totalRecords = favorites.size();
+        int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+        int start = page * pageSize;
+        int end = Math.min(start + pageSize, totalRecords);
+        List<BookingFavoriteVO> pagedList = (totalRecords > 0) ? favorites.subList(start, end) : new ArrayList<>();
 
         // 4. 傳遞給前端
-        model.addAttribute("sitterFavorites", favorites);
+        model.addAttribute("sitterFavorites", pagedList);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
 
         return "frontend/dashboard-favorites-sitters";
     }
@@ -57,6 +68,7 @@ public class BookingDashboardController {
     @GetMapping("/bookings")
     public String listMemberOrders(
             @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "0") int page,
             HttpServletRequest request,
             Model model) {
 
@@ -77,9 +89,23 @@ public class BookingDashboardController {
         if (currentMember != null) {
             model.addAttribute("currentMember", currentMember);
         }
-
-        model.addAttribute("bookingList", bookingList); // 預約列表
+        
+        int pageSize = 6;
+        int totalRecords = bookingList.size(); 
+        int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+        int start = page * pageSize;
+        int end = Math.min(start + pageSize, totalRecords);
+        List<BookingOrderVO> pagedList = (totalRecords > 0) 
+            ? bookingList.subList(start, end) 
+            : new ArrayList<>();
+        
+        model.addAttribute("bookingList", pagedList); // 預約列表
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
         model.addAttribute("currentStatus", status); // 當前篩選的狀態（用於 UI 高亮）
+        model.addAttribute("status", status);
         model.addAttribute("memId", memId); // 會員 ID
         model.addAttribute("memName", authStrategyService.getCurrentUserName(request)); // 會員姓名
 

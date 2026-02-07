@@ -59,7 +59,8 @@ public class SitterBookingController {
      */
     @GetMapping("/bookings")
     public String listSitterOrders(@RequestParam(required = false) Integer status,
-            HttpServletRequest request,
+    		@RequestParam(defaultValue = "0") int page,
+    		HttpServletRequest request,
             Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
 //        if (memId == null)
@@ -78,9 +79,12 @@ public class SitterBookingController {
 
         var member = dataService.getMemberInfo(memId);
 
-        // 加上本月收入計算邏輯
+     
+     // 加上本月收入計算邏輯 (僅計算本月且已完成/已撥款)
+        LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0);
         int income = bookingList.stream()
                 .filter(o -> o.getOrderStatus() != null && (o.getOrderStatus() == 2 || o.getOrderStatus() == 5))
+                .filter(o -> o.getStartTime().isAfter(startOfMonth)) // 僅計入本月
                 .mapToInt(BookingOrderVO::getReservationFee)
                 .sum();
         bookingList = bookingList.stream()
@@ -107,8 +111,24 @@ public class SitterBookingController {
         	        }
         	    })
         	    .collect(Collectors.toList());
+        
+        int pageSize = 6;
+        int totalRecords = bookingList.size();
+        int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
-        model.addAttribute("bookingList", bookingList);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+
+        int start = page * pageSize;
+        int end = Math.min(start + pageSize, totalRecords);
+
+        List<BookingOrderVO> pagedList = (totalRecords > 0) 
+            ? bookingList.subList(start, end) 
+            : new java.util.ArrayList<>();
+
+        model.addAttribute("bookingList", pagedList);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
         model.addAttribute("sitter", sitter); 
         model.addAttribute("currentMember", member); 
         model.addAttribute("monthlyIncome", income);

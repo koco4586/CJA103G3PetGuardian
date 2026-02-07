@@ -1,6 +1,7 @@
 package com.petguardian.booking.controller;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,8 @@ import com.petguardian.petsitter.model.PetSitterServiceRepository;
 import com.petguardian.sitter.model.SitterMemberRepository;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.wallet.model.Wallet;
+import com.petguardian.wallet.model.WalletRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -66,7 +69,12 @@ public class BookingViewController {
 
     @Autowired
     private AreaService areaService;
+    
+    @Autowired
     private EvaluateService evaluateService;
+    
+    @Autowired
+    private WalletRepository walletRepository;
 
     /**
      * 【顯示保姆服務列表頁面】
@@ -138,11 +146,24 @@ public class BookingViewController {
 
                     return dto;
                 }).collect(Collectors.toList());
+        if (currentMemId != null) {
+            int balance = walletRepository.findByMemId(currentMemId)
+                    .map(Wallet::getBalance).orElse(0);
+            model.addAttribute("walletBalance", balance);
+        }
+        int totalPages = sitterPage.getTotalPages();
+        int actualDisplayCount = displayList.size();
+        int adjustedTotalPages = totalPages;
+        // 如果第一頁過濾後少於 6 筆，說明總數需要調整
+        if (page == 0 && actualDisplayCount < 6 && totalPages > 1) {
+            adjustedTotalPages = totalPages - 1;
+        }
+
 
         // 6. 將資料傳給前端頁面
         model.addAttribute("sitters", displayList);
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", sitterPage.getTotalPages());
+        model.addAttribute("totalPages", adjustedTotalPages);
         model.addAttribute("currentMemId", currentMemId);
         model.addAttribute("availableCities", areaService.getAllCities());
 
@@ -248,6 +269,7 @@ public class BookingViewController {
     @GetMapping("/memberOrders")
     public String listMemberOrders(
             @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "0") int page,
             HttpServletRequest request,
             Model model) {
 
@@ -262,6 +284,16 @@ public class BookingViewController {
                 ? bookingService.findByMemberAndStatus(memId, status)
                 : bookingService.getOrdersByMemberId(memId);
 
+        int pageSize = 6;
+        int totalRecords = bookingList.size();
+        int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+        int start = page * pageSize;
+        int end = Math.min(start + pageSize, totalRecords);
+        
+        List<BookingOrderVO> pagedList = (totalRecords > 0) ? bookingList.subList(start, end) : new ArrayList<>();
+        
         bookingList = bookingList.stream()
         	    .filter(order -> {
         	        // [篩選] 已取消的訂單若超過一個月則不顯示
@@ -289,7 +321,10 @@ public class BookingViewController {
         	    })
         	    .collect(Collectors.toList());
         // 3.傳遞資料給前端
-        model.addAttribute("bookingList", bookingList);
+        model.addAttribute("bookingList", pagedList);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("status", status);
         model.addAttribute("currentStatus", status);
         model.addAttribute("memId", memId);
         model.addAttribute("memName", authStrategyService.getCurrentUserName(request));

@@ -246,3 +246,59 @@
         flex: 1;
     }
 }
+/* 確保外層容器佔滿 100% 並水平居中 */
+.pagination-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 40px 0;
+}
+
+.pagination-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-group {
+    display: flex;
+    gap: 8px;
+}
+
+/* 模仿評價按鈕的顏色與樣式 */
+.btn-eval-style {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 20px;
+    background-color: #c88d5e; /* 評價按鈕的核心橘色 */
+    color: white !important;
+    border: none;
+    border-radius: 50px; /* 圓角膠囊狀 */
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(200, 141, 94, 0.2);
+}
+
+.btn-eval-style:hover {
+    background-color: #b07a4e; /* 懸停時顏色加深 */
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(200, 141, 94, 0.3);
+}
+
+.page-indicator {
+    background: #f8f9fa;
+    color: #64748b;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid #e2e8f0;
+}
+
+/* 針對 FontAwesome 圖示微調 */
+.btn-eval-style i {
+    font-size: 0.8rem;
+    margin: 0 5px;
+}

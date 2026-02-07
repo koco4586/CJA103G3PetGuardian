@@ -73,12 +73,12 @@
 			<div class="card-premium" th:each="sitter : ${sitters}"
 				th:if="${currentMemId == null or sitter.sitter.memId != currentMemId}">
 				<div class="img-container">
-					<a
-						th:href="@{/frontend/public/sitter/detail/{id}(id=${sitter.sitter.sitterId})}">
-						<img
-						th:src="${sitter.memImage != null ? sitter.memImage : '/images/default-avatar.png'}"
-						alt="保母照片" class="sitter-img">
-					</a>
+					<img th:if="${sitter.memImage != null}"
+					    th:src="@{${sitter.memImage}}" 
+					    alt="保母照片" class="sitter-img">
+					<img th:unless="${sitter.memImage != null}"
+					    src="/images/member/aed4ec81-2887-41e6-8ed3-cd4cd6aa17f3_petguardianMember01.png" 
+					    alt="預設頭像" class="sitter-img">
 					<!--       <div class="price-badge">
                         $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
                     </div>-->
@@ -106,10 +106,6 @@
                                 <span style="color: #999; font-size: 0.85rem;">暫未有星數</span>
                             </th:block>
                         </div>
-						<div style="color: #ffb800; font-size: 0.9rem;">
-							<i class="fa-solid fa-star"></i> <span
-								th:text="${sitter.sitter.sitterRatingCount != null && sitter.sitter.sitterRatingCount > 0} ? ${#numbers.formatDecimal(sitter.sitter.sitterStarCount * 1.0 / sitter.sitter.sitterRatingCount, 1, 1)} : '5.0'">5.0</span>
-						</div>
 					</div>
 					<div class="d-flex gap-xs mb-2"
 						style="flex-wrap: wrap; align-items: center; min-height: 50px;">
@@ -132,16 +128,23 @@
 			</div>
 		</div>
 	</main>
-	<div
-		class="pagination-container mt-4 d-flex justify-content-center gap-2"
-		th:if="${totalPages > 1}">
-		<a th:if="${currentPage > 0}"
-			th:href="@{/booking/services(page=${currentPage - 1})}"
-			class="btn btn-outline">上一頁</a> <span class="page-info"
-			th:text="${currentPage + 1} + ' / ' + ${totalPages}">1 / 5</span> <a
-			th:if="${currentPage + 1 < totalPages}"
-			th:href="@{/booking/services(page=${currentPage + 1})}"
-			class="btn btn-outline">下一頁</a>
+	<div class="pagination-container mt-4 d-flex justify-content-center align-items-center gap-2" 
+     th:if="${totalPages > 1}">
+	    <a th:href="@{/booking/services(page=0)}" 
+	       class="btn btn-outline btn-sm" th:if="${currentPage > 0}">第一頁</a>
+	    <a th:href="@{/booking/services(page=${currentPage - 1})}" 
+	       class="btn btn-outline btn-sm" th:if="${currentPage > 0}">
+	       <i class="fas fa-chevron-left"></i> 上一頁
+	    </a>
+	    <span class="static-page-box">
+	        <th:block th:text="${currentPage + 1}">1</th:block> / <th:block th:text="${totalPages}">5</th:block>
+	    </span>
+	    <a th:href="@{/booking/services(page=${currentPage + 1})}" 
+	       class="btn btn-outline btn-sm" th:if="${currentPage + 1 < totalPages}">
+	       下一頁 <i class="fas fa-chevron-right"></i>
+	    </a>
+	    <a th:href="@{/booking/services(page=${totalPages - 1})}" 
+	       class="btn btn-outline btn-sm" th:if="${currentPage + 1 < totalPages}">最後一頁</a>
 	</div>
 	<!-- 預約 Modal -->
 	<div id="bookingModal"
@@ -179,6 +182,12 @@
                     <label class="form-label">結束時間</label> <input type="datetime-local" id="endTime"
                         class="form-control">
                 </div>
+                <div class="form-group mb-2">
+				    <div style="background: #f8fafc; padding: 0.8rem; border-radius: 0.8rem; border: 1px dashed #cbd5e1;">
+				        <span style="font-size: 0.9rem; color: #64748b;">您的錢包餘額：</span>
+				        <span style="font-weight: 700; color: #1e293b;" th:text="'$ ' + ${walletBalance != null ? walletBalance : 0}">$ 0</span>
+				    </div>
+				</div>
 				<div class="form-group">
 					<label class="form-label">特別需求</label>
 					<textarea class="form-control" id="bookingNotes" rows="2"
