@@ -43,7 +43,7 @@
                         <i class="fas fa-search" style="position: absolute; left: 10px; top: 12px; color: #999;"></i>
                     </div>
                 </div>
-                <div style="overflow-y: auto;">
+                <div id="contact-list" style="overflow-y: auto;">
                     <!-- Loop through users -->
                     <!-- Loop through My Chatrooms -->
                     <div th:each="room : ${chatrooms}" class="contact-item" th:id="'contact-item-' + ${room.chatroomId}"
@@ -51,10 +51,16 @@
                         th:data-partner-id="${room.partnerId}"
                         onclick="ChatApp.selectRoom(this.dataset.chatroomId, this.dataset.partnerName, this.dataset.partnerId)">
                         <div class="d-flex justify-between w-100 align-center">
-                            <div style="display: flex; align-items: center;">
+                            <div style="display: flex; align-items: center; max-width: 80%;">
                                 <span class="unread-dot" th:classappend="${room.unread} ? '' : 'app-d-none'"></span>
-                                <strong style="font-size: 1rem; color: var(--text-color);"
+                                <strong
+                                    style="font-size: 1rem; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
                                     th:text="${room.displayName}">Room Name</strong>
+                            </div>
+                            <!-- Pin Icon -->
+                            <div class="pin-btn"
+                                th:onclick="'event.stopPropagation(); ChatApp.togglePin(' + ${room.chatroomId} + ', event)'">
+                                <i class="fas fa-thumbtack"></i>
                             </div>
                         </div>
                         <div class="contact-last-msg" th:text="${room.lastMessage} ?: '點擊開始聊天'">

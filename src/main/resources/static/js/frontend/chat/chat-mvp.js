@@ -43,7 +43,8 @@ const ChatState = {
     contextMenuTargetId: null,
     contextMenuTargetStatus: 0,
     isSearchMode: false,
-    isReturningToPresent: false
+    isReturningToPresent: false,
+    pinnedRooms: new Set() // [NEW] Track pinned chatroom IDs
 };
 
 // ============================================================
@@ -123,6 +124,17 @@ function initChat() {
 
     DOM.init();
     updateSendButton(); // Initialize button state
+
+    // Load Pinned Rooms from Cookie
+    const savedPinned = getCookie('pinned_chatrooms');
+    if (savedPinned) {
+        savedPinned.split(',').forEach(id => {
+            if (id) ChatState.pinnedRooms.add(parseInt(id, 10));
+        });
+        // Initial sort after loading pinned state
+        sortContacts();
+    }
+
     connect();
 
     // [NEW] Auto-select room if requested (e.g. redirected from Store)
@@ -269,9 +281,8 @@ function updateContactLastMessage(chatroomId, userId, content) {
         const msgDiv = contactItem.querySelector('.contact-last-msg');
         if (msgDiv) msgDiv.textContent = content;
 
-        // Move to top (Recent activity sort)
-        // const list = contactItem.parentNode;
-        // list.prepend(contactItem);
+        // Move to top (Recent activity sort) - Pinned/Regular aware
+        sortContacts();
     }
 }
 
@@ -1225,8 +1236,98 @@ async function jumpToMessage(messageId) {
 }
 
 // ============================================================
+// PINNING LOGIC
+// ============================================================
+
+/**
+ * Toggle pinning of a chatroom.
+ */
+function togglePin(chatroomId, event) {
+    if (event) event.stopPropagation();
+
+    const id = parseInt(chatroomId, 10);
+    const item = document.getElementById('contact-item-' + id);
+
+    if (ChatState.pinnedRooms.has(id)) {
+        ChatState.pinnedRooms.delete(id);
+        if (item) item.classList.remove('pinned');
+    } else {
+        ChatState.pinnedRooms.add(id);
+        if (item) item.classList.add('pinned');
+    }
+
+    // Update Cookie (3 days TTL)
+    const pinArray = Array.from(ChatState.pinnedRooms);
+    setCookie('pinned_chatrooms', pinArray.join(','), 3);
+
+    // Re-sort list
+    sortContacts();
+}
+
+/**
+ * Re-sort the contact list DOM based on pinned status and recency.
+ */
+function sortContacts() {
+    const list = document.getElementById('contact-list');
+    if (!list) return;
+
+    const items = Array.from(list.querySelectorAll('.contact-item'));
+    if (items.length === 0) return;
+
+    // Stable sort: Pinned first, then by DOM order (which reflects server-side recency)
+    items.sort((a, b) => {
+        const idA = parseInt(a.dataset.chatroomId, 10);
+        const idB = parseInt(b.dataset.chatroomId, 10);
+        const isPinnedA = ChatState.pinnedRooms.has(idA);
+        const isPinnedB = ChatState.pinnedRooms.has(idB);
+
+        if (isPinnedA && !isPinnedB) return -1;
+        if (!isPinnedA && isPinnedB) return 1;
+
+        return 0; // Maintain relative order if same pin state
+    });
+
+    // Re-append items in new order
+    items.forEach(item => {
+        // Ensure UI reflects state
+        const id = parseInt(item.dataset.chatroomId, 10);
+        if (ChatState.pinnedRooms.has(id)) {
+            item.classList.add('pinned');
+        } else {
+            item.classList.remove('pinned');
+        }
+        list.appendChild(item);
+    });
+}
+
+// ============================================================
 // UTILITIES
 // ============================================================
+
+/**
+ * Cookie Helpers
+ */
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -1259,7 +1360,9 @@ window.ChatApp = {
     // Report public access
     openReportModal,
     closeReportModal,
-    submitReport
+    submitReport,
+    // [NEW] Pinning public access
+    togglePin
 };
 
 document.addEventListener('DOMContentLoaded', initChat);
