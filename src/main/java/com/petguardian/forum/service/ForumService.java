@@ -1,6 +1,8 @@
 package com.petguardian.forum.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -46,6 +48,21 @@ public class ForumService {
 	
 	public List<ForumVO> getAllActive(){
 		return repository.getAllActive();
+	}
+	
+	public List<ForumVO> getTopHotForumsByForumIds(List<Integer> forumIds){
+		
+		List<ForumVO> forums = repository.findAllById(forumIds);
+		
+		Map<Integer, ForumVO> forumMap = forums.stream()
+				.collect(Collectors.toMap(forum -> forum.getForumId(), forum -> forum));
+		
+		return forumIds.stream()
+				.map(forumId -> {
+					return forumMap.get(forumId);
+				})
+				.filter(forum -> forum != null)
+				.collect(Collectors.toList());
 	}
 	
 	public byte[] getForumPic(Integer forumId){

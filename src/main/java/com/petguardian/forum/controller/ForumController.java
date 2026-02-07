@@ -1,6 +1,5 @@
 package com.petguardian.forum.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -28,7 +27,10 @@ public class ForumController {
 
 	@GetMapping("list-all-active-forum")
 	public String listAllActiveForum(ModelMap model) {
+		
 		List<ForumVO> forumList = forumService.getAllActive();
+		List<Integer> forumIds = redisService.getTopHotForumIds(5);
+		List<ForumVO> topHotForumList = forumService.getTopHotForumsByForumIds(forumIds);
 		
 		for(ForumVO forum : forumList) {
 			Integer forumViewCount = redisService.getForumViewCount(forum.getForumId());
@@ -37,17 +39,24 @@ public class ForumController {
 			}
 		}
 		
+		model.addAttribute("topHotForumList", topHotForumList);
 		model.addAttribute("forumList", forumList);
+		
 		return "frontend/forum/list-all-active-forum";
 	}
 
 	@GetMapping("get-forum-name-for-display")
 	public String getForumNameForDisplay(@RequestParam("forumName") String forumName, ModelMap model) {
 
+		List<Integer> forumIds = redisService.getTopHotForumIds(5);
+		
 		// 空字串驗證，沒輸入資料forward回原頁面
 		if (forumName == null || forumName.trim().isEmpty()) {
+			
 			model.addAttribute("errorMsgs", "請輸入欲查詢的討論區名稱");
-			model.addAttribute("forumList", new ArrayList<ForumVO>(forumService.getAllActive()));
+			model.addAttribute("forumList", forumService.getAllActive());
+			model.addAttribute("topHotForumList", forumService.getTopHotForumsByForumIds(forumIds));
+			
 			return "frontend/forum/list-all-active-forum";
 		}
 
@@ -56,13 +65,18 @@ public class ForumController {
 
 		// 查無資料，forward回原頁面
 		if (forumList == null || forumList.isEmpty()) {
+			
 			model.addAttribute("errorMsgs", "查無相關討論區");
 			model.addAttribute("forumList", forumService.getAllActive());
+			model.addAttribute("topHotForumList", forumService.getTopHotForumsByForumIds(forumIds));
+			
 			return "frontend/forum/list-all-active-forum";
 		}
 
 		// 有資料，將資料放入model並forward至顯示頁面
 		model.addAttribute("forumList", forumList);
+		model.addAttribute("topHotForumList", forumService.getTopHotForumsByForumIds(forumIds));
+		
 		return "frontend/forum/list-all-active-forum";
 
 	}
