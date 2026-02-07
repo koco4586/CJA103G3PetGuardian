@@ -27,6 +27,12 @@ public interface ForumRepository extends JpaRepository<ForumVO, Integer>{
 	@Query(value = "update ForumVO f set f.forumStatus = :forumStatus where f.forumId = :forumId")
 	public void updateStatus(@Param("forumStatus") Integer forumStatus, @Param("forumId") Integer forumId);
 	
+	//	將Redis裡存的討論區瀏覽次數寫回MySQL
+	@Modifying
+	@Transactional
+	@Query(value = "update forum set forum_views = :forumViewCount where forum_id = :forumId", nativeQuery = true)
+	public void saveForumViewCountToDatabase(@Param("forumId") Integer forumId, @Param("forumViewCount") Integer forumViewCount);
+	
 	//	只拿圖片方法
 	@Query(value = "select f.forumPic from ForumVO f where f.forumId = :forumId")
 	public byte[] getPicture(@Param("forumId") Integer forumId);

@@ -7,11 +7,11 @@ import org.springframework.stereotype.Component;
 import com.petguardian.forum.service.RedisService;
 
 @Component
-public class PostRankingSetupListener {
+public class ForumPostRankingSetupListener {
 	
 	private final RedisService redisService;
 
-	public PostRankingSetupListener(RedisService redisService) {
+	public ForumPostRankingSetupListener(RedisService redisService) {
 		super();
 		this.redisService = redisService;
 	}
@@ -20,6 +20,7 @@ public class PostRankingSetupListener {
 	public void onApplicationReady() {
 		try {	
 			redisService.setPostViewsToRedis();
+			redisService.setForumViewsToRedis();
 		}catch(Exception e) {
 			System.err.println("Redis 連線失敗，請檢查 Redis 是否已啟動。");
 		}
