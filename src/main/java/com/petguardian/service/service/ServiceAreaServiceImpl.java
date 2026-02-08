@@ -52,8 +52,13 @@ public class ServiceAreaServiceImpl implements ServiceAreaService {
         AreaVO area = areaRepository.findById(areaId)
                 .orElseThrow(() -> new IllegalArgumentException("地區不存在: " + areaId));
 
-        // 3. 檢查是否已存在
-        if (repository.existsBySitter_SitterIdAndArea_AreaId(sitterId, areaId)) {
+        // 3. 檢查是否已存在 (使用自定義查詢與 Log)
+        boolean exists = repository.checkAreaExisting(sitterId, areaId);
+        System.out.println(
+                "Checking duplicate service area: sitterId=" + sitterId + ", areaId=" + areaId + ", exists=" + exists);
+
+        if (exists) {
+            System.err.println("Duplicate service area detected! Blocking add.");
             throw new IllegalStateException("此服務地區已存在");
         }
 

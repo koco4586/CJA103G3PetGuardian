@@ -16,43 +16,49 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ServiceAreaRepository extends JpaRepository<ServiceAreaVO, ServiceAreaId> {
 
-    /**
-     * 查詢某保姆的所有服務地區
-     * 
-     * @param sitterId 保姆編號
-     * @return List<ServiceAreaVO> 該保姆的所有服務地區
-     */
-    List<ServiceAreaVO> findBySitter_SitterId(Integer sitterId);
+        /**
+         * 查詢某保姆的所有服務地區
+         * 
+         * @param sitterId 保姆編號
+         * @return List<ServiceAreaVO> 該保姆的所有服務地區
+         */
+        List<ServiceAreaVO> findBySitter_SitterId(Integer sitterId);
 
-    /**
-     * 查詢某保姆的所有服務地區 (優化版 - 使用 JOIN FETCH 避免 N+1)
-     * 
-     * 一次性載入 ServiceArea 和 Area 的資料
-     * 用於 Sitter Detail 等需要完整關聯資料的場景
-     * 
-     * @param sitterId 保姆編號
-     * @return List<ServiceAreaVO> 該保姆的所有服務地區，包含已載入的地區資訊
-     */
-    @Query("SELECT sa FROM ServiceAreaVO sa " +
-            "LEFT JOIN FETCH sa.area " +
-            "WHERE sa.sitter.sitterId = :sitterId")
-    List<ServiceAreaVO> findBySitterIdWithArea(
-            @Param("sitterId") Integer sitterId);
+        /**
+         * 查詢某保姆的所有服務地區 (優化版 - 使用 JOIN FETCH 避免 N+1)
+         * 
+         * 一次性載入 ServiceArea 和 Area 的資料
+         * 用於 Sitter Detail 等需要完整關聯資料的場景
+         * 
+         * @param sitterId 保姆編號
+         * @return List<ServiceAreaVO> 該保姆的所有服務地區，包含已載入的地區資訊
+         */
+        @Query("SELECT sa FROM ServiceAreaVO sa " +
+                        "LEFT JOIN FETCH sa.area " +
+                        "WHERE sa.sitter.sitterId = :sitterId")
+        List<ServiceAreaVO> findBySitterIdWithArea(
+                        @Param("sitterId") Integer sitterId);
 
-    /**
-     * 查詢某地區的所有保姆
-     * 
-     * @param areaId 地區編號
-     * @return List<ServiceAreaVO> 該地區的所有保姆
-     */
-    List<ServiceAreaVO> findByArea_AreaId(Integer areaId);
+        /**
+         * 查詢某地區的所有保姆
+         * 
+         * @param areaId 地區編號
+         * @return List<ServiceAreaVO> 該地區的所有保姆
+         */
+        List<ServiceAreaVO> findByArea_AreaId(Integer areaId);
 
-    /**
-     * 檢查某保姆是否服務某地區
-     * 
-     * @param sitterId 保姆編號
-     * @param areaId   地區編號
-     * @return boolean true:服務, false:不服務
-     */
-    boolean existsBySitter_SitterIdAndArea_AreaId(Integer sitterId, Integer areaId);
+        /**
+         * 檢查某保姆是否服務某地區
+         * 
+         * @param sitterId 保姆編號
+         * @param areaId   地區編號
+         * @return boolean true:服務, false:不服務
+         */
+        boolean existsBySitter_SitterIdAndArea_AreaId(Integer sitterId, Integer areaId);
+
+        /**
+         * 自定義檢查是否存在 (避免 JPA Derived Query 可能的問題)
+         */
+        @Query("SELECT COUNT(sa) > 0 FROM ServiceAreaVO sa WHERE sa.sitter.sitterId = :sitterId AND sa.area.areaId = :areaId")
+        boolean checkAreaExisting(@Param("sitterId") Integer sitterId, @Param("areaId") Integer areaId);
 }
