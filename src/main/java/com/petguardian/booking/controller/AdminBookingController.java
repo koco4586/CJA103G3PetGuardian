@@ -2,6 +2,7 @@ package com.petguardian.booking.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,10 +34,27 @@ public class AdminBookingController {
     @GetMapping("/all")
     public String listAllBookings(Model model) {
         // 1. 抓取所有預約訂單
-        List<BookingOrderVO> allBookings = orderRepository.findAll();
+        List<BookingOrderVO> allBookingsRaw = orderRepository.findAll();
 
+        // 新增：一個月留存過濾邏輯
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+        
+        List<BookingOrderVO> allBookings = allBookingsRaw.stream()
+            .filter(order -> {
+                // 如果是 0:待確認 或 1:進行中，不論多久都顯示 (管理員必須看到未結案的)
+                if (order.getOrderStatus() == 0 || order.getOrderStatus() == 1) return true;
+                
+                // 其他已結束或特殊狀態 (2:服務完成, 3:取消中, 4:已退款, 5:已結案, 6:保母停權)
+                // 檢查最後更新時間（或開始時間）是否在一個月內
+                LocalDateTime compareDate = (order.getUpdatedAt() != null) ? order.getUpdatedAt() : order.getStartTime();
+                return compareDate.isAfter(oneMonthAgo);
+            })
+            .collect(Collectors.toList());
+        
         // 2. 抓取所有「退款中」或「有取消原因」的訂單
-        List<BookingOrderVO> refundRequests = orderRepository.findByOrderStatus(3);
+        List<BookingOrderVO> refundRequests = allBookings.stream()
+                .filter(o -> o.getOrderStatus() == 3)
+                .collect(Collectors.toList());
         
         // 批次抓取保姆狀態
         java.util.Set<Integer> sitterIds = allBookings.stream()

@@ -278,9 +278,6 @@ public class BookingViewController {
 
         // 1. 取得當前登入使用者 ID
         Integer memId = authStrategyService.getCurrentUserId(request);
-//        if (memId == null) {
-//            return "redirect:/front/loginpage"; // 未登入，導向登入頁
-//        }
 
         List<BookingOrderVO> bookingList;
         if (status != null) {
@@ -291,7 +288,7 @@ public class BookingViewController {
                         .filter(o -> o.getOrderStatus() == 3 || o.getOrderStatus() == 4 || o.getOrderStatus() == 6)
                         .collect(Collectors.toList());
             } else {
-                // 其他一般狀態 (如 0:待確認, 1:進行中) 照舊
+                // 其他一般狀態 (如 0:待確認, 1:進行中) 
                 bookingList = bookingService.findByMemberAndStatus(memId, status);
             }
         } else {
@@ -299,16 +296,18 @@ public class BookingViewController {
             bookingList = bookingService.getOrdersByMemberId(memId);
         }
 
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+        
         bookingList = bookingList.stream()
-        	    .filter(order -> {
-        	        //  已取消的訂單若超過一個月則不顯示
-        	        if (order.getOrderStatus() == 3 || order.getOrderStatus() == 4 || order.getOrderStatus() == 6) {
-        	            LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
-        	            LocalDateTime compareDate = (order.getUpdatedAt() != null) ? order.getUpdatedAt() : order.getStartTime();
-        	            return compareDate.isAfter(oneMonthAgo);
-        	        }
-        	        return true;
-        	    })
+        		.filter(order -> {
+                    // 如果是 0:待確認 或 1:進行中，不論多久都顯示（確保會員能看到未完成的交易）
+                    if (order.getOrderStatus() == 0 || order.getOrderStatus() == 1) return true;
+                    
+                    // 其他狀態 (2:服務完成, 3:取消中, 4:已退款, 5:已結案, 6:保母停權)
+                    // 檢查最後更新時間（或開始時間）是否在一個月內
+                    LocalDateTime compareDate = (order.getUpdatedAt() != null) ? order.getUpdatedAt() : order.getStartTime();
+                    return compareDate.isAfter(oneMonthAgo);
+                })
         	    .sorted((o1, o2) -> {
         	        //  1. 優先權 (進行中=1, 即將到來=2, 服務完成=3, 取消=4)
         	        int p1 = getOrderPriority(o1.getOrderStatus());

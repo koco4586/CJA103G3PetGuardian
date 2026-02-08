@@ -63,10 +63,8 @@ public class SitterBookingController {
     		HttpServletRequest request,
             Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
-//        if (memId == null)
-//            return "redirect:/front/loginpage";
 
-        // [Fix] 用 MemId 查 SitterId
+        // 用 MemId 查 SitterId
         SitterVO sitter = sitterService.getSitterByMemId(memId);
         if (sitter == null) {
             return "redirect:/sitter/apply";
@@ -79,6 +77,33 @@ public class SitterBookingController {
 
         var member = dataService.getMemberInfo(memId);
 
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+        
+        bookingList = bookingList.stream()
+                .filter(order -> {
+                    // 如果是 0:待確認 或 1:已確認(進行中)，不論多久都顯示
+                    if (order.getOrderStatus() == 0 || order.getOrderStatus() == 1) return true;
+                    
+                    // 其他狀態 (2:服務完成, 3:取消中, 4:已退款, 5:已結案, 6:保母停權相關)
+                    // 檢查最後更新時間（或開始時間）是否在一個月內
+                    LocalDateTime compareDate = (order.getUpdatedAt() != null) ? order.getUpdatedAt() : order.getStartTime();
+                    return compareDate.isAfter(oneMonthAgo);
+                })
+                .sorted((o1, o2) -> {
+                    // 保持原有的權重排序：已確認(0優先) -> 待確認(1) -> 服務完成(2) -> 取消/退款(3)
+                    int p1 = getPriority(o1.getOrderStatus());
+                    int p2 = getPriority(o2.getOrderStatus());
+                    
+                    if (p1 != p2) return p1 - p2;
+                    
+                    // 同一等級內的排序邏輯
+                    if (p1 == 0 || p1 == 1) { // 已確認與待確認：時間由近到遠 (昇冪)
+                        return o1.getStartTime().compareTo(o2.getStartTime());
+                    } else { // 其他（已結束）：時間由新到舊 (降冪)
+                        return o2.getStartTime().compareTo(o1.getStartTime());
+                    }
+                })
+                .collect(Collectors.toList());
      
      // 加上本月收入計算邏輯 (僅計算本月且已完成/已撥款)
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0);
@@ -87,30 +112,6 @@ public class SitterBookingController {
                 .filter(o -> o.getStartTime() != null && o.getStartTime().isAfter(startOfMonth)) // 僅計入本月
                 .mapToInt(BookingOrderVO::getReservationFee)
                 .sum();
-        bookingList = bookingList.stream()
-        	    .filter(order -> {
-        	        // 過濾一個月前的取消訂單
-        	        if (order.getOrderStatus() == 3 || order.getOrderStatus() == 4 || order.getOrderStatus() == 6) {
-        	            LocalDateTime limit = LocalDateTime.now().minusMonths(1);
-        	            return order.getUpdatedAt() != null && order.getUpdatedAt().isAfter(limit);
-        	        }
-        	        return true;
-        	    })
-        	    .sorted((o1, o2) -> {
-        	        // 定義狀態權重 (1=0, 0=1, 2/5=2, 3/4/6=3)
-        	        int p1 = getPriority(o1.getOrderStatus());
-        	        int p2 = getPriority(o2.getOrderStatus());
-        	        
-        	        if (p1 != p2) return p1 - p2;
-        	        
-        	        // 同一等級內的次要排序
-        	        if (p1 == 1) { // 即將到來：時間由近到遠 (昇冪)
-        	            return o1.getStartTime().compareTo(o2.getStartTime());
-        	        } else { // 其他：時間由新到舊 (降冪)
-        	            return o2.getStartTime().compareTo(o1.getStartTime());
-        	        }
-        	    })
-        	    .collect(Collectors.toList());
         
         int pageSize = 6;
         int totalRecords = bookingList.size();

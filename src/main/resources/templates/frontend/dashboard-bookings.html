@@ -181,8 +181,8 @@
 								<span th:if="${order.orderStatus == 2}" class="badge-pill status-completed">服務完成</span>
 								<span th:if="${order.orderStatus == 3}" class="badge-pill status-cancelled">已取消</span>
 								<span th:if="${order.orderStatus == 4}" class="badge-pill status-cancelled">已退款</span>
-								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>
-								<span th:if="${order.orderStatus == 6}" class="badge-pill status-cancelled">已退款</span>
+								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已撥款</span>
+								<span th:if="${order.orderStatus == 6}" class="badge-pill status-cancelled">保母停權</span>
 							</div>
 							<div th:if="${(order.orderStatus == 3 or order.orderStatus == 4 or order.orderStatus == 6) and order.cancelReason != null}" 
 							     style="margin-top: 8px; padding: 8px 12px; background: #fff5f5; border-left: 3px solid #fa5252; border-radius: 4px; font-size: 0.85rem; color: #c92a2a;">
