@@ -13,17 +13,23 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Domain Facade for Chat Messages.
+ * Domain Facade and Orchestrator for Chat Messages.
  * 
  * Responsibilities:
- * 1. Unified Entry Point for all Message Data Operations.
- * 2. Resilience Aspect Boundary (@CircuitBreaker).
- * 3. Coordinates Internal Workers (PersistenceManager, RetrievalManager).
+ * - Strategic Orchestration: Dynamically coordinates internal workers
+ * (Persistence & Retrieval)
+ * - Pure Encapsulation: Shields upper layers from dual-tier (Redis + MySQL)
+ * complexity
+ * - Resilience Boundary: Authoritative layer for Distributed Fault Tolerance
  * 
- * Design:
- * - Pure Encapsulation: Controllers and ChatServiceImpl do not know about
- * Redis/MySQL.
- * - Thin Facade: Delegates implementation to package-private managers.
+ * Design Principles:
+ * - Orchestration over Implementation: Delegates specialized logic to
+ * package-private managers
+ * - Transparency: Provides a unified API while maintaining strict internal
+ * modularity
+ * 
+ * @see ChatMessagePersistenceManager Strategy for Write-Behind Persistence
+ * @see ChatMessageRetrievalManager Strategy for Multi-Tiered History Retrieval
  */
 @Slf4j
 @Service
@@ -47,8 +53,12 @@ public class ChatMessageService {
     // =================================================================================
 
     /**
-     * Persists a message with High Availability.
-     * Uses "Redis Write-Behind" by default, falls back to "MySQL Direct Write".
+     * Persists a message using a High Availability strategy.
+     * Logic: Orchestrates "Redis Write-Behind" with automatic state
+     * synchronization.
+     * 
+     * @param context Immutable context containing message TSID and content
+     * @return The persisted {@link ChatMessageEntity}
      */
     @CircuitBreaker(name = "messageWrite", fallbackMethod = "fallbackSave")
     public ChatMessageEntity save(MessageCreationContext context) {
@@ -56,8 +66,10 @@ public class ChatMessageService {
     }
 
     /**
-     * Fallback for save() when Redis is down/unstable.
-     * Guaranteed to be called by Resilience4j on open circuit or exception.
+     * Fallback Strategy for Message Persistence.
+     * State: Graceful Degradation (Triggered during Redis outages or circuit OPEN).
+     * Dispatches a direct synchronous write to MySQL to ensure absolute data
+     * persistence.
      */
     protected ChatMessageEntity fallbackSave(MessageCreationContext context, Throwable t) {
         if (log.isDebugEnabled()) {
@@ -71,13 +83,24 @@ public class ChatMessageService {
     // =================================================================================
 
     /**
-     * Retrieves chat history with High Availability.
+     * Retrieves historical conversation data using Multi-Tiered Retrieval.
+     * Strategy: Primary lookup via Redis (MGET) for speed, with auto-fallback to
+     * MySQL.
+     * 
+     * @param chatroomId Target Chatroom identifier
+     * @param pageable   Standard pagination metadata
+     * @return List of persisted {@link ChatMessageEntity}
      */
     @CircuitBreaker(name = "messageRead", fallbackMethod = "fallbackHistory")
     public List<ChatMessageEntity> fetchHistory(Integer chatroomId, Pageable pageable) {
         return retrievalManager.fetchHistory(chatroomId, pageable);
     }
 
+    /**
+     * Fallback Strategy for Chat History Retrieval.
+     * Maintains UI consistency by projecting history directly from MySQL when cache
+     * is cold or failed.
+     */
     protected List<ChatMessageEntity> fallbackHistory(Integer chatroomId, Pageable pageable, Throwable t) {
         log.warn("[Facade] Redis unavailable for history. Falling back to MySQL. Reason: {}", t.getMessage());
         try {
@@ -88,21 +111,33 @@ public class ChatMessageService {
         }
     }
 
+    /**
+     * Specialized retrieval of a single message by ID.
+     */
     @CircuitBreaker(name = "messageRead", fallbackMethod = "fallbackFindById")
     public Optional<ChatMessageEntity> findById(Long messageId) {
         return retrievalManager.findById(messageId);
     }
 
+    /**
+     * Fallback Strategy for Single Message Resolution.
+     */
     protected Optional<ChatMessageEntity> fallbackFindById(Long messageId, Throwable t) {
         log.warn("[Facade] FindById failed: {}", t.getMessage());
         return Optional.empty();
     }
 
+    /**
+     * Batch retrieval of multiple messages by their TSIDs.
+     */
     @CircuitBreaker(name = "messageRead", fallbackMethod = "fallbackFindAllById")
     public List<ChatMessageEntity> findAllById(Iterable<Long> messageIds) {
         return retrievalManager.findAllById(messageIds);
     }
 
+    /**
+     * Fallback Strategy for Batch Message Resolution.
+     */
     protected List<ChatMessageEntity> fallbackFindAllById(Iterable<Long> messageIds, Throwable t) {
         log.warn("[Facade] FindAllById failed: {}", t.getMessage());
         return List.of(); // Return empty immutable list

@@ -24,10 +24,9 @@ import java.util.stream.Collectors;
  * Domain Facade for Chat Room Operations.
  * 
  * Responsibilities:
- * Unified Entry Point for all Chatroom and Member Profile data
- * operations
- * Resilience Aspect Boundary ({@code @CircuitBreaker})
- * Coordinates Internal Workers (DataManager, Creator, Verifier)
+ * - Unified Entry Point for all Chatroom and Member Profile data operations
+ * - Resilience Aspect Boundary ({@code @CircuitBreaker})
+ * - Coordinates Internal Workers (DataManager, Creator, Verifier)
  * 
  * Design Principles:
  * - Pure Encapsulation: Controllers and ChatServiceImpl do not know about
@@ -36,8 +35,8 @@ import java.util.stream.Collectors;
  * - Batch Optimization: Uses MGET operations where possible to reduce N+1 query
  * patterns
  * 
- * @see ChatRoomMetadataService Internal data manager (now package-private)
- * @see ChatMessageService Parallel facade for messages
+ * @see ChatRoomMetadataService Internal data manager (package-private)
+ * @see ChatRoomCreationStrategy Strategy for idling/new room resolution
  */
 @Slf4j
 @Service
@@ -65,7 +64,9 @@ public class ChatRoomService {
     }
 
     /**
-     * Fallback for getMemberProfile when circuit is open.
+     * Fallback Strategy for Profile Retrieval.
+     * State: Graceful Degradation (Triggered when Redis/DB is saturated or circuit
+     * is OPEN).
      */
     protected MemberProfileDTO fallbackGetMemberProfile(Integer memberId, Throwable t) {
         log.warn("[ChatRoomService] getMemberProfile fallback for memberId={}: {}",
@@ -88,6 +89,11 @@ public class ChatRoomService {
         return dataManager.getMemberProfiles(memberIds);
     }
 
+    /**
+     * Fallback Strategy for Batch Profile Retrieval.
+     * Ensures UI stability by returning empty context instead of failing the
+     * request.
+     */
     protected Map<Integer, MemberProfileDTO> fallbackGetMemberProfiles(List<Integer> memberIds, Throwable t) {
         log.warn("[ChatRoomService] getMemberProfiles fallback: {}", t.getMessage());
         return Collections.emptyMap();
@@ -108,6 +114,10 @@ public class ChatRoomService {
         return dataManager.getRoomMetadata(chatroomId);
     }
 
+    /**
+     * Fallback Strategy for Room Metadata.
+     * Maintains system availability under high load or network partitions.
+     */
     protected ChatRoomMetadataDTO fallbackGetRoomMetadata(Integer chatroomId, Throwable t) {
         log.warn("[ChatRoomService] getRoomMetadata fallback for chatroomId={}: {}",
                 chatroomId, t.getMessage());
@@ -115,15 +125,15 @@ public class ChatRoomService {
     }
 
     /**
-     * Retrieves all chatrooms for a user, formatted for sidebar display.
-     * This method:
-     * Fetches chatroom metadata list for user
-     * Batch loads partner profiles
-     * Maps to DTOs with display names
-     * Sorts by latest activity
+     * Retrieves all chatrooms for a user with partner profile synchronization.
+     * 
+     * Workflow:
+     * 1. Snapshot: Fetch base chatroom identities for target user
+     * 2. Batch Projection: Resolve all partner profiles in a single I/O pass
+     * 3. Transformation: Map to display-optimized DTOs sorted by message recency
      *
      * @param userId User ID
-     * @return List of ChatRoomDTO sorted by lastMessageTime descending
+     * @return List of {@link ChatRoomDTO} sorted by lastMessageTime descending
      */
     @CircuitBreaker(name = "chatroomRead", fallbackMethod = "fallbackGetUserChatrooms")
     public List<ChatRoomDTO> getUserChatrooms(Integer userId) {
@@ -151,6 +161,10 @@ public class ChatRoomService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Fallback Strategy for User Chatroom List.
+     * Prevents cascading failures in sidebar rendering.
+     */
     protected List<ChatRoomDTO> fallbackGetUserChatrooms(Integer userId, Throwable t) {
         log.error("[ChatRoomService] getUserChatrooms fallback for userId={}: {}",
                 userId, t.getMessage());
@@ -162,12 +176,12 @@ public class ChatRoomService {
     // =========================================================================
 
     /**
-     * Retrieves all data needed for the Chat Page in a single batch context.
-     * Including: Current User Profile, Chat Room List, Partner Profiles.
-     * Eliminates N+1 queries by batching all Member Profile Lookups.
+     * Batch Context Projection for the Chat Main Page.
+     * Resolves Current User Profile, Room List, and Partner Identities in a
+     * single coherent context. Eliminates N+1 query patterns.
      * 
      * @param userId Current User ID
-     * @return ChatPageContext containing all page data
+     * @return {@link ChatPageContext} containing all page-level dependencies
      */
     @CircuitBreaker(name = "chatroomRead", fallbackMethod = "fallbackGetUserChatroomsWithContext")
     public ChatPageContext getUserChatroomsWithCurrentUser(Integer userId) {
@@ -211,6 +225,10 @@ public class ChatRoomService {
                 .build();
     }
 
+    /**
+     * Fallback Strategy for Chat Page Context.
+     * Reconstructs a minimal valid state for the UI to prevent total page crash.
+     */
     protected ChatPageContext fallbackGetUserChatroomsWithContext(Integer userId,
             Throwable t) {
         log.error("[ChatRoomService] Page Context Fallback: {}", t.getMessage());
@@ -239,13 +257,14 @@ public class ChatRoomService {
     // =========================================================================
 
     /**
-     * Finds an existing chatroom or creates a new one.
-     * Uses normalized ID ordering (smaller ID first) to prevent duplicates.
+     * Idempotent Resolution for Chatrooms.
+     * Retrieves an existing room or initializes a new normalized state.
+     * Uses normalized ID ordering to prevent cross-account duplicates.
      *
      * @param userA        First user ID
      * @param userB        Second user ID
      * @param chatroomType Room type (0=Service, 1=Product)
-     * @return ChatRoomDTO representing the chatroom
+     * @return {@link ChatRoomDTO} representing the unique room identity
      */
     public ChatRoomDTO findOrCreateChatroom(Integer userA, Integer userB, Integer chatroomType) {
         ChatRoomEntity entity = roomCreator.findOrCreate(userA, userB, chatroomType);
@@ -259,16 +278,14 @@ public class ChatRoomService {
     }
 
     /**
-     * Resolves an existing chatroom or creates a new one.
-     * 
-     * Returns ChatRoomEntity for internal use by ChatServiceImpl during
-     * message processing. Unlike findOrCreateChatroom(), this method does not
-     * transform to DTO.
+     * Internal State Reconstruction for Message Flow.
+     * Hydrates a minimal persistence entity from the current metadata context.
+     * Optimized for high-frequency writes during message processing.
      *
      * @param chatroomId Optional existing chatroom ID
      * @param senderId   Sender ID (used if creating new room)
      * @param receiverId Receiver ID (used if creating new room)
-     * @return ChatRoomEntity
+     * @return {@link ChatRoomEntity}
      */
     public ChatRoomEntity resolveOrCreateChatroom(Integer chatroomId, Integer senderId, Integer receiverId) {
         if (chatroomId != null) {
@@ -318,12 +335,13 @@ public class ChatRoomService {
     // =========================================================================
 
     /**
-     * Verifies that a user is a member of the specified chatroom.
-     * Throws SecurityException if access is denied.
+     * Access Control Guard for Room Entry.
+     * Enforces membership invariants and throws exceptions upon violation.
+     * Strategy: Fail-Fast (Prevents unauthorized processing of downstream logic).
      *
      * @param chatroomId Chatroom ID
      * @param userId     User ID to verify
-     * @return ChatRoomMetadataDTO if verification succeeds
+     * @return {@link ChatRoomMetadataDTO} if verification succeeds
      * @throws IllegalArgumentException if chatroom not found
      * @throws SecurityException        if user is not a member
      */
