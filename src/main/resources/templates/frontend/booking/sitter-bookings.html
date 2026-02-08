@@ -157,9 +157,6 @@
 										th:onclick="'rejectOrder(' + ${order.bookingOrderId} + ')'">
 										<i class="fas fa-times"></i> 拒絕
 									</button>
-									<button class="btn btn-outline-secondary btn-sm" onclick="alert('聯絡功能開發中')">
-										<i class="far fa-comment-dots"></i> 聯絡
-									</button>
 								</th:block>
 
 								<!-- 進行中 -->
@@ -173,18 +170,18 @@
 									</form>
 
 									<th:block th:with="
-    now=${#temporals.createNow()},
-    startTimeBound=${order.endTime.minusMinutes(30)},
-    endTimeBound=${order.endTime.plusMinutes(30)},
-    isWithinTime=${now.isAfter(startTimeBound) && now.isBefore(endTimeBound)}">
-    
-    <button class="btn btn-primary btn-sm"
-        th:onclick="|handleComplete(${order.bookingOrderId}, ${isWithinTime})|"
-        th:classappend="${!isWithinTime} ? 'btn-secondary' : 'btn-primary'"
-        th:title="${isWithinTime ? '點擊完成訂單' : '服務結束前後 30 分鐘內才可點擊'}">
-        <i class="fas fa-flag-checkered"></i> 完成
-    </button>
-</th:block>
+									    now=${#temporals.createNow()},
+									    startTimeBound=${order.endTime.minusMinutes(30)},
+									    endTimeBound=${order.endTime.plusMinutes(30)},
+									    isWithinTime=${now.isAfter(startTimeBound) && now.isBefore(endTimeBound)}">
+									    
+									    <button class="btn btn-primary btn-sm"
+									        th:onclick="|handleComplete(${order.bookingOrderId}, ${isWithinTime})|"
+									        th:classappend="${!isWithinTime} ? 'btn-secondary' : 'btn-primary'"
+									        th:title="${isWithinTime ? '點擊完成訂單' : '服務結束前後 30 分鐘內才可點擊'}">
+									        <i class="fas fa-flag-checkered"></i> 完成
+									    </button>
+									</th:block>
 								</th:block>
 
 								<th:block th:if="${order.orderStatus >= 2}">
