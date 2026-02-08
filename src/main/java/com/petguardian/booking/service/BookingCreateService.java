@@ -88,6 +88,8 @@ public class BookingCreateService {
         if (wallet.getBalance() < order.getReservationFee()) {
             throw new IllegalArgumentException("預約失敗：錢包餘額不足 (剩餘: " + wallet.getBalance() + " 元)。");
         }
+        wallet.setBalance(wallet.getBalance() - order.getReservationFee());
+        walletRepository.save(wallet);
         // 設定訂單狀態為待確認
         order.setOrderStatus(0);
 
@@ -124,7 +126,7 @@ public class BookingCreateService {
 
         // 檢查：需提前1小時預約（目前已註解，可依需求啟用）
          if (order.getStartTime().isBefore(now.plusHours(1))) {
-             throw new IllegalArgumentException("需兩小時前預約");
+             throw new IllegalArgumentException("不接受即時預約，請提前 2 小時預約");
          }
 
         // 檢查：不可跨日（開始日期和結束日期必須相同）

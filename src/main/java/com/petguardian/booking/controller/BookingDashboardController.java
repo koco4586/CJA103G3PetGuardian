@@ -90,6 +90,7 @@ public class BookingDashboardController {
             model.addAttribute("currentMember", currentMember);
         }
         
+        
         int pageSize = 6;
         int totalRecords = bookingList.size(); 
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);

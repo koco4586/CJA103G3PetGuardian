@@ -8,6 +8,7 @@ public class BookingDisplayDTO {
 	private String servicesJson; // 服務列表
 	private String memImage;// 會員頭像路徑
 	private Double avgRating; // 平均評分(來自 EvaluateService)
+	private String serviceArea; // 服務地區
 
 	public BookingDisplayDTO(SitterVO sitter, boolean isFavorited) {
 		this.sitter = sitter;
@@ -54,5 +55,11 @@ public class BookingDisplayDTO {
 
 	public void setAvgRating(Double avgRating) {
 		this.avgRating = avgRating;
+	}
+	public String getServiceArea() {
+	    return serviceArea;
+	}
+	public void setServiceArea(String serviceArea) {
+	    this.serviceArea = serviceArea;
 	}
 }

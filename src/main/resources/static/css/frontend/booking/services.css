@@ -175,3 +175,33 @@
     background-image: none !important;
     padding-right: 1rem !important;
 }
+/* 預設綠色 (成功) */
+.flash-message.success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+/* 紅色 (移除/錯誤) */
+.flash-message.remove {
+    background-color: #fee2e2; /* 淺紅色背景 */
+    color: #991b1b;           /* 深紅色文字 */
+    border: 1px solid #f87171; /* 紅色邊框 */
+}
+
+/* 基礎樣式 (確保動畫正常) */
+.flash-message {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    transition: opacity 0.3s ease;
+}

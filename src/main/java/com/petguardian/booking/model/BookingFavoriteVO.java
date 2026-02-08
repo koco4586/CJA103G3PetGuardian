@@ -36,14 +36,16 @@ public class BookingFavoriteVO implements Serializable {
 	private Double avgRating; // 平均評分
 
 	@Transient
+	private String serviceArea;
+
+	@Transient
 	private Integer ratingCount; // 評分次數
-	
+
 	@Transient
 	private Integer sitterMemId;
-	
+
 	@Transient
 	private String memImage;
-
 
 	public Integer getMemId() {
 		return memId;
@@ -100,20 +102,29 @@ public class BookingFavoriteVO implements Serializable {
 	public void setRatingCount(Integer ratingCount) {
 		this.ratingCount = ratingCount;
 	}
-	
+
 	public Integer getSitterMemId() {
-	    return sitterMemId;
+		return sitterMemId;
 	}
 
 	public void setSitterMemId(Integer sitterMemId) {
-	    this.sitterMemId = sitterMemId;
+		this.sitterMemId = sitterMemId;
 	}
-	
+
 	public String getMemImage() {
-	    return memImage;
+		return memImage;
 	}
-	
+
 	public void setMemImage(String memImage) {
-	    this.memImage = memImage;
+		this.memImage = memImage;
 	}
+
+	public String getServiceArea() {
+		return serviceArea;
+	}
+
+	public void setServiceArea(String serviceArea) {
+		this.serviceArea = serviceArea;
+	}
+
 }

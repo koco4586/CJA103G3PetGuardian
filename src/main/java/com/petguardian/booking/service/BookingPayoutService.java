@@ -38,18 +38,18 @@ public class BookingPayoutService {
     public void completePayout(Integer orderId) {
         // 步驟 1：查詢訂單 
         BookingOrderVO order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("找不到訂單"));
+                .orElseThrow(() -> new IllegalArgumentException("找不到訂單"));
 
         // 步驟 2：驗證訂單狀態
         // 只有狀態為 2（已完成服務）的訂單才能進行撥款
         if (order.getOrderStatus() != 2) {
-            throw new RuntimeException("訂單尚未完成服務。");
+            throw new IllegalStateException("只有已完成的訂單才能撥款");
         }
 
         //  步驟 3：查詢保母資料 
         // 透過保母ID查詢保母資料
         SitterVO sitter = sitterRepository.findById(order.getSitterId())
-                .orElseThrow(() -> new RuntimeException("找不到保姆資料"));
+                .orElseThrow(() -> new IllegalStateException("找不到保姆資料"));
 
         // 取得保母對應的會員ID（因為撥款是撥到會員帳戶）
         Integer sitterMemId = sitter.getMemId();

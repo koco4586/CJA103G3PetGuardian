@@ -89,10 +89,13 @@ public class BookingViewController {
             HttpServletRequest request,
             Model model) { // 這裡只需一組括號
 
-        // 1. 先查出該頁面的 6 位保母 (分頁關鍵)
-        Pageable pageable = PageRequest.of(page, 6);
-        Page<SitterVO> sitterPage = sitterRepository.findAllActive(pageable);
-
+    	 Integer currentMemId = authStrategyService.getCurrentUserId(request);
+    	
+    	// 1. 如果已登入，多取 1 位保母以應對過濾
+    	 int fetchSize = (currentMemId != null) ? 7 : 6;
+    	    Pageable pageable = PageRequest.of(page, fetchSize);
+    	    Page<SitterVO> sitterPage = sitterRepository.findAllActive(pageable);
+    	
         // 2. 蒐集這 6 位保母的 ID 並補齊「服務地區」
         List<Integer> sitterIds = sitterPage.getContent().stream()
                 .map(SitterVO::getSitterId)
@@ -110,8 +113,6 @@ public class BookingViewController {
             memberImageMap.put(m.getMemId(), img);
         });
 
-        Integer currentMemId = authStrategyService.getCurrentUserId(request);
-
         // 4. 建立收藏保姆 ID 的集合 (修正變數名稱與類型)
         java.util.Set<Integer> favSitterIds = new java.util.HashSet<>();
 
@@ -124,8 +125,10 @@ public class BookingViewController {
         }
 
         final java.util.Set<Integer> finalFavIds = favSitterIds;
+        final Integer finalCurrentMemId = currentMemId;
         List<BookingDisplayDTO> displayList = fullSitters.stream()
-                .filter(s -> currentMemId == null || !s.getMemId().equals(currentMemId))
+                .filter(s -> currentMemId == null || !s.getMemId().equals(finalCurrentMemId))
+                .limit(6) // 確保最多只顯示 6 位
                 .map(s -> {
                     BookingDisplayDTO dto = new BookingDisplayDTO(s, finalFavIds.contains(s.getSitterId()));
                     dto.setMemImage(memberImageMap.getOrDefault(s.getMemId(), "/images/default-avatar.png"));
@@ -140,7 +143,7 @@ public class BookingViewController {
                     }
                     dto.setServicesJson(city);
 
-                    // 🔥 注入平均星數
+                    // 注入平均星數
                     Double avgRating = evaluateService.getAverageRatingBySitterId(s.getSitterId());
                     dto.setAvgRating(avgRating);
 
@@ -151,19 +154,19 @@ public class BookingViewController {
                     .map(Wallet::getBalance).orElse(0);
             model.addAttribute("walletBalance", balance);
         }
-        int totalPages = sitterPage.getTotalPages();
-        int actualDisplayCount = displayList.size();
-        int adjustedTotalPages = totalPages;
-        // 如果第一頁過濾後少於 6 筆，說明總數需要調整
-        if (page == 0 && actualDisplayCount < 6 && totalPages > 1) {
-            adjustedTotalPages = totalPages - 1;
+        
+        long totalSitters = sitterPage.getTotalElements();
+        // 如果已登入，總數要減 1（排除自己）
+        if (currentMemId != null) {
+            totalSitters = totalSitters - 1;
         }
+        int totalPages = (int) Math.ceil((double) totalSitters / 6);
 
 
         // 6. 將資料傳給前端頁面
         model.addAttribute("sitters", displayList);
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", adjustedTotalPages);
+        model.addAttribute("totalPages", totalPages);
         model.addAttribute("currentMemId", currentMemId);
         model.addAttribute("availableCities", areaService.getAllCities());
 
@@ -284,6 +287,31 @@ public class BookingViewController {
                 ? bookingService.findByMemberAndStatus(memId, status)
                 : bookingService.getOrdersByMemberId(memId);
 
+        bookingList = bookingList.stream()
+        	    .filter(order -> {
+        	        //  已取消的訂單若超過一個月則不顯示
+        	        if (order.getOrderStatus() == 3 || order.getOrderStatus() == 4 || order.getOrderStatus() == 6) {
+        	            LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+        	            LocalDateTime compareDate = (order.getUpdatedAt() != null) ? order.getUpdatedAt() : order.getStartTime();
+        	            return compareDate.isAfter(oneMonthAgo);
+        	        }
+        	        return true;
+        	    })
+        	    .sorted((o1, o2) -> {
+        	        //  1. 優先權 (進行中=1, 即將到來=2, 服務完成=3, 取消=4)
+        	        int p1 = getOrderPriority(o1.getOrderStatus());
+        	        int p2 = getOrderPriority(o2.getOrderStatus());
+        	        
+        	        if (p1 != p2) return p1 - p2;
+        	        
+        	        // 2. 同等級內部的細分排序
+        	        if (p1 == 2) { // 即將到來：時間由近到遠 (昇冪)
+        	            return o1.getStartTime().compareTo(o2.getStartTime());
+        	        } else { // 其他：時間由新到舊 (降冪)
+        	            return o2.getStartTime().compareTo(o1.getStartTime());
+        	        }
+        	    })
+        	    .collect(Collectors.toList());
         int pageSize = 6;
         int totalRecords = bookingList.size();
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
@@ -291,35 +319,8 @@ public class BookingViewController {
         if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
         int start = page * pageSize;
         int end = Math.min(start + pageSize, totalRecords);
-        
         List<BookingOrderVO> pagedList = (totalRecords > 0) ? bookingList.subList(start, end) : new ArrayList<>();
         
-        bookingList = bookingList.stream()
-        	    .filter(order -> {
-        	        // [篩選] 已取消的訂單若超過一個月則不顯示
-        	        if (order.getOrderStatus() == 3 || order.getOrderStatus() == 4 || order.getOrderStatus() == 6) {
-        	            LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
-        	            // 建議使用 updatedAt 判斷，若無則用 startTime
-        	            LocalDateTime compareDate = (order.getUpdatedAt() != null) ? order.getUpdatedAt() : order.getStartTime();
-        	            return compareDate.isAfter(oneMonthAgo);
-        	        }
-        	        return true;
-        	    })
-        	    .sorted((o1, o2) -> {
-        	        // [排序] 1. 優先權 (進行中=1, 即將到來=2, 服務完成=3, 取消=4)
-        	        int p1 = getOrderPriority(o1.getOrderStatus());
-        	        int p2 = getOrderPriority(o2.getOrderStatus());
-        	        
-        	        if (p1 != p2) return p1 - p2;
-        	        
-        	        // [排序] 2. 同等級內部的細分排序
-        	        if (p1 == 2) { // 即將到來：時間由近到遠 (昇冪)
-        	            return o1.getStartTime().compareTo(o2.getStartTime());
-        	        } else { // 其他（服務中、完成、取消）：時間由新到舊 (降冪)
-        	            return o2.getStartTime().compareTo(o1.getStartTime());
-        	        }
-        	    })
-        	    .collect(Collectors.toList());
         // 3.傳遞資料給前端
         model.addAttribute("bookingList", pagedList);
         model.addAttribute("currentPage", page);

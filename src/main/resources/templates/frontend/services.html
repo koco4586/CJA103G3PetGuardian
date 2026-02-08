@@ -71,7 +71,9 @@
 		<div class="sitter-grid" id="sitter-list">
 			<!-- 動態迴圈渲染保母 -->
 			<div class="card-premium" th:each="sitter : ${sitters}"
-				th:if="${currentMemId == null or sitter.sitter.memId != currentMemId}">
+			    th:if="${currentMemId == null or sitter.sitter.memId != currentMemId}"
+			    style="cursor: pointer;"
+			    th:onclick="'window.location.href=\'/frontend/public/sitter/detail/' + ${sitter.sitter.sitterId} + '\''">
 				<div class="img-container">
 					<img th:if="${sitter.memImage != null}"
 					    th:src="@{${sitter.memImage}}" 
@@ -83,12 +85,12 @@
                         $500 <span style="font-size: 0.7rem; font-weight: 400;">/小時</span>
                     </div>-->
 					<button class="btn-like"
-						th:classappend="${sitter.isFavorited ? 'active' : ''}"
-						th:onclick="'handleToggleFavorite(' + ${sitter.sitter.sitterId} + ', this)'"
-						style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
-						<i class="fa-heart"
-							th:classappend="${sitter.isFavorited ? 'fa-solid text-danger' : 'fa-regular'}"></i>
-					</button>
+    th:classappend="${sitter.isFavorited ? 'active' : ''}"
+    th:onclick="'event.stopPropagation(); handleToggleFavorite(' + ${sitter.sitter.sitterId} + ', this)'"
+    style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.8); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
+    <i class="fa-heart"
+        th:classappend="${sitter.isFavorited ? 'fa-solid text-danger' : 'fa-regular'}"></i>
+</button>
 				</div>
 				<div class="content" style="padding: 1.5rem;">
 					<div class="d-flex justify-between align-center mb-1">
@@ -119,11 +121,14 @@
 							th:if="${#lists.isEmpty(sitter.sitter.serviceAreas)}"
 							class="category-tag" style="background: #fdf2f2; color: #991b1b;">全區服務</span>
 					</div>
-					<button class="btn btn-primary btn-booking-trigger"
-						style="width: 100%; border-radius: 3rem;"
-						th:data-name="${sitter.sitter.sitterName}"
-						th:data-id="${sitter.sitter.sitterId}"
-						th:data-services="${sitter.servicesJson}">立即預約</button>
+					<button type="button" 
+        class="btn btn-primary btn-booking-trigger"
+        style="width: 100%; border-radius: 3rem;"
+        th:data-name="${sitter.sitter.sitterName}"
+        th:data-id="${sitter.sitter.sitterId}"
+        onclick="handleBookingClick(event, this)"> 
+    立即預約
+</button>
 				</div>
 			</div>
 		</div>
@@ -290,13 +295,14 @@
 
         // 2. 監聽器初始化
         document.addEventListener('DOMContentLoaded', function () {
-            console.log("預約系統已完全就緒");
             const modal = document.getElementById('bookingModal');
 
             // 使用事件委派監聽點擊， closest 確保點擊按鈕內部也能觸發
             document.addEventListener('click', function (e) {
-                const btn = e.target.closest('.btn-booking-trigger');
+            	const btn = e.target.closest('.btn-booking-trigger');
                 if (btn) {
+                	e.preventDefault();
+                    e.stopPropagation(); 
                     const name = btn.getAttribute('data-name');
                     const id = btn.getAttribute('data-id');
                     openBookingModal(name, id);
@@ -411,13 +417,13 @@
                         icon.classList.remove('fa-regular');
                         icon.classList.add('fa-solid', 'text-danger');
                         btn.classList.add('active');
-                        showFlashMessage("已加入收藏列表");
+                        showFlashMessage("已加入收藏列表", "success");
                     } else {
                         // 變為未收藏狀態 (灰色空心)
                         icon.classList.remove('fa-solid', 'text-danger');
                         icon.classList.add('fa-regular');
                         btn.classList.remove('active');
-                        showFlashMessage("已從收藏移除");
+                        showFlashMessage("已從收藏移除", "remove");
                     }
                 }
             } catch (error) {
@@ -426,15 +432,30 @@
         }
 
         // 收藏頁面的提示訊息功能
-        function showFlashMessage(text) {
+        function showFlashMessage(text, type = 'success') {
             const msg = document.createElement('div');
-            msg.className = 'flash-message success';
-            msg.innerHTML = `<i class="fas fa-check-circle"></i> <span>${text}</span>`;
+            msg.className = `flash-message ${type}`;
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+            msg.innerHTML = `<i class="fas ${iconClass}"></i> <span>${text}</span>`;
             document.body.appendChild(msg);
             setTimeout(() => {
                 msg.style.opacity = '0';
                 setTimeout(() => msg.remove(), 300);
             }, 2000);
+        }
+        function handleBookingClick(event, btnElement) {
+            // 1. 阻止事件冒泡與跳轉
+            event.stopPropagation();
+            event.preventDefault();
+            
+            // 2. 從 data 屬性取得資料
+            const name = btnElement.dataset.name;
+            const id = btnElement.dataset.id;
+            
+            console.log("攔截成功，保母:", name, "ID:", id);
+            
+            // 3. 呼叫原本的開啟彈窗邏輯
+            openBookingModal(name, id);
         }
     </script>
 	<footer id="main-footer"

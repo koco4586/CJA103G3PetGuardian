@@ -123,9 +123,10 @@
 							</div>
 
 							<div class="info-row">
-								<i class="far fa-clock"></i>
-								<span>預約時間：<span th:text="${#temporals.format(order.startTime, 'yyyy/MM/dd HH:mm')}"
-										style="color: #1e293b;"></span></span>
+								<i class="far fa-clock"></i> 
+    <span th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}">開始時間</span>
+    ~ 
+    <span th:text="${#temporals.format(order.endTime, 'yyyy-MM-dd HH:mm')}">結束時間</span>
 							</div>
 
 
@@ -171,12 +172,19 @@
 										</button>
 									</form>
 
-
-
-									<button class="btn btn-primary btn-sm"
-										th:onclick="'completeOrder(' + ${order.bookingOrderId} + ')'">
-										<i class="fas fa-flag-checkered"></i> 完成
-									</button>
+									<th:block th:with="
+    now=${#temporals.createNow()},
+    startTimeBound=${order.endTime.minusMinutes(30)},
+    endTimeBound=${order.endTime.plusMinutes(30)},
+    isWithinTime=${now.isAfter(startTimeBound) && now.isBefore(endTimeBound)}">
+    
+    <button class="btn btn-primary btn-sm"
+        th:onclick="|handleComplete(${order.bookingOrderId}, ${isWithinTime})|"
+        th:classappend="${!isWithinTime} ? 'btn-secondary' : 'btn-primary'"
+        th:title="${isWithinTime ? '點擊完成訂單' : '服務結束前後 30 分鐘內才可點擊'}">
+        <i class="fas fa-flag-checkered"></i> 完成
+    </button>
+</th:block>
 								</th:block>
 
 								<th:block th:if="${order.orderStatus >= 2}">
@@ -317,6 +325,17 @@
 			if (event.target == modal) {
 				closeRejectModal();
 			}
+		}
+		function handleComplete(orderId, isWithinTime) {
+		    if (!isWithinTime) {
+		        alert('請在預約結束前後 30 分鐘內按完成按鈕');
+		        return false;
+		    }
+		    
+		    // 如果在時間內，執行原本的完成邏輯
+		    if (confirm('確定要將此訂單標記為完成嗎？')) {
+		        completeOrder(orderId);
+		    }
 		}
 	</script>
 </body>

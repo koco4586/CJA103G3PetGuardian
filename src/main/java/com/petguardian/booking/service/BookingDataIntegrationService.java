@@ -52,7 +52,7 @@ public class BookingDataIntegrationService {
     @Transactional
     public void processPayout(Integer sitterMemId, int amount) {
         Wallet wallet = walletRepository.findByMemId(sitterMemId)
-                .orElseThrow(() -> new RuntimeException("找不到保母錢包，無法撥款"));
+                .orElseThrow(() -> new IllegalArgumentException("找不到保母錢包，無法撥款"));
         wallet.setBalance(wallet.getBalance() + amount);
         walletRepository.save(wallet);
     }

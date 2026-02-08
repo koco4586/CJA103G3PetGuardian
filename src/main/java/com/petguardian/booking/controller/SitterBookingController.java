@@ -84,7 +84,7 @@ public class SitterBookingController {
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0);
         int income = bookingList.stream()
                 .filter(o -> o.getOrderStatus() != null && (o.getOrderStatus() == 2 || o.getOrderStatus() == 5))
-                .filter(o -> o.getStartTime().isAfter(startOfMonth)) // 僅計入本月
+                .filter(o -> o.getStartTime() != null && o.getStartTime().isAfter(startOfMonth)) // 僅計入本月
                 .mapToInt(BookingOrderVO::getReservationFee)
                 .sum();
         bookingList = bookingList.stream()

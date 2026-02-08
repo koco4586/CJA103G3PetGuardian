@@ -81,9 +81,9 @@
 									</th:block>
 								</span>
 							</div>
-							<div class="product-price" style="margin: 0.5rem 0;">
+							<!--  <div class="product-price" style="margin: 0.5rem 0;">
 								NT$ <span th:text="${fav.basePrice}">500</span> / 小時
-							</div>
+							</div>-->
 							<a th:href="@{/frontend/public/sitter/detail/{id}(id=${fav.sitterId})}" class="btn-buy-now">
 								<i class="fas fa-calendar-check"></i>
 								立即預約
@@ -164,7 +164,7 @@
                             
                             // 3. 不需要重新整理頁面
                             setTimeout(() => {
-                                card.remove();
+                            	location.reload();
                                 
                                 // 4.如果卡片刪光了，顯示「目前沒有收藏」的提示
                                 const remainingCards = document.querySelectorAll('.store-product-card');
