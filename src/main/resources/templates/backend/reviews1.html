@@ -105,6 +105,11 @@
                                     被檢舉人：<span
                                         th:text="${complaint.accusedName ?: '未知 (ID:' + complaint.toReportedMemId + ')'}"></span>
                                 </div>
+                                <div th:if="${complaint.createdAt != null}"
+                                    style="color: #7f8c8d; font-size: 0.85rem; margin-top: 8px;">
+                                    <i class="fas fa-clock"></i> 報案時間：<span
+                                        th:text="${#dates.format(complaint.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+                                </div>
                             </td>
                             <td style="max-width: 300px;">
                                 <div
@@ -175,6 +180,11 @@
                                 <div style="color: #c62828; margin-top: 5px;">
                                     被檢舉人：<span
                                         th:text="${complaint.accusedName ?: '未知 (ID:' + complaint.toReportedMemId + ')'}"></span>
+                                </div>
+                                <div th:if="${complaint.updatedAt != null}"
+                                    style="color: #7f8c8d; font-size: 0.85rem; margin-top: 8px;">
+                                    <i class="fas fa-calendar-check"></i> 完結時間：<span
+                                        th:text="${#dates.format(complaint.updatedAt, 'yyyy-MM-dd HH:mm')}"></span>
                                 </div>
                             </td>
                             <td style="max-width: 300px;">

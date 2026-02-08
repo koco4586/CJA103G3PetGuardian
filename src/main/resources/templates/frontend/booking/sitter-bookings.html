@@ -194,9 +194,11 @@
 										<i class="fas fa-user-tag"></i> 會員評價
 									</button>
 
-									<!-- 🔥 限制：被檢舉兩次則隱藏評價按鈕 -->
+									<!-- 🔥 限制：被檢舉兩次則隱藏，且單筆訂單最多評價會員兩次（達標時按鈕反灰） -->
 									<button th:if="${order.complaintCount < 2}" class="btn btn-primary btn-sm"
-										th:onclick="|injectSitterEvalBox(this, ${order.bookingOrderId}, ${order.memId})|">
+										th:classappend="${order.sitterEvalCount >= 2} ? 'btn-disabled-gray' : ''"
+										th:onclick="${order.sitterEvalCount < 2} ? |injectSitterEvalBox(this, ${order.bookingOrderId}, ${order.memId})| : ''"
+										th:title="${order.sitterEvalCount >= 2} ? '單筆訂單評價次數已達上限' : ''">
 										<i class="fas fa-paw"></i> 評價
 									</button>
 								</th:block>

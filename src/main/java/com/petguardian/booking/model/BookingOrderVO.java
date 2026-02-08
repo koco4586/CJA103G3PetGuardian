@@ -104,6 +104,12 @@ public class BookingOrderVO {
     @Transient
     private Long complaintCount = 0L; // 🔥 新增：檢舉總數
 
+    @Transient
+    private Integer memberEvalCount = 0; // 會員對保姆的評價次數
+
+    @Transient
+    private Integer sitterEvalCount = 0; // 保姆對會員的評價次數
+
     public Integer getEvaluateId() {
         return evaluateId;
     }

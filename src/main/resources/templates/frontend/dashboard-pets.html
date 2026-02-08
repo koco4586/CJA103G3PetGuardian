@@ -24,10 +24,22 @@
             <div id="pets">
                 <div class="d-flex justify-between align-center mb-2">
                     <h2>我的寵物</h2>
-                    <a th:href="@{/pet/add_page}" class="btn btn-primary btn-sm"
-                        style="text-decoration: none; display: inline-flex; align-items: center;">
-                        <i class="fas fa-plus"></i> 新增寵物
-                    </a>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <a th:href="@{/pet/services}" class="btn btn-outline btn-sm"
+                            style="text-decoration: none; display: inline-flex; align-items: center; background: #e0f2f1; color: #00796b; border-color: #4db6ac; font-size: 0.85rem;">
+                            <i class="fas fa-paw"></i> &nbsp;寵物服務
+                        </a>
+
+                        <a th:href="@{/pet/all}" class="btn btn-outline btn-sm"
+                            style="text-decoration: none; display: inline-flex; align-items: center; background: white; font-size: 0.85rem;">
+                            <i class="fas fa-list"></i> &nbsp;所有寵物
+                        </a>
+
+                        <a th:href="@{/pet/add_page}" class="btn btn-primary btn-sm"
+                            style="text-decoration: none; display: inline-flex; align-items: center;">
+                            <i class="fas fa-plus"></i> 新增寵物
+                        </a>
+                    </div>
                 </div>
 
                 <div class="pets-grid">

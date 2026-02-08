@@ -34,40 +34,40 @@ public class AdminStoreController {
             @RequestParam(defaultValue = "pending") String orderTab,
             Model model) {
 
-        // 取得訂單相關資料
-        List<Map<String, Object>> pendingOrders = adminStoreService.getPendingOrders();
-        List<Map<String, Object>> closedOrders = adminStoreService.getClosedOrders();
-        List<Map<String, Object>> returnOrders = adminStoreService.getReturnOrders();
-        List<Map<String, Object>> returnsWithDetails = adminStoreService.getReturnOrdersWithDetails();
+            // 取得訂單相關資料
+            List<Map<String, Object>> pendingOrders = adminStoreService.getPendingOrders();
+            List<Map<String, Object>> closedOrders = adminStoreService.getClosedOrders();
+            List<Map<String, Object>> returnOrders = adminStoreService.getReturnOrders();
+            List<Map<String, Object>> returnsWithDetails = adminStoreService.getReturnOrdersWithDetails();
 
-        model.addAttribute("pendingOrders", pendingOrders);
-        model.addAttribute("closedOrders", closedOrders);
-        model.addAttribute("returnOrders", returnOrders);
-        model.addAttribute("returnsWithDetails", returnsWithDetails);
-        model.addAttribute("orderTab", orderTab);
+            model.addAttribute("pendingOrders", pendingOrders);
+            model.addAttribute("closedOrders", closedOrders);
+            model.addAttribute("returnOrders", returnOrders);
+            model.addAttribute("returnsWithDetails", returnsWithDetails);
+            model.addAttribute("orderTab", orderTab);
 
-        model.addAttribute("pendingCount", pendingOrders.size());
-        model.addAttribute("closedCount", closedOrders.size());
-        model.addAttribute("returnCount", returnOrders.size());
-        model.addAttribute("refundPendingCount",
-                returnsWithDetails.stream()
-                        .filter(r -> Boolean.TRUE.equals(r.get("isPending")))
-                        .count());
+            model.addAttribute("pendingCount", pendingOrders.size());
+            model.addAttribute("closedCount", closedOrders.size());
+            model.addAttribute("returnCount", returnOrders.size());
+            model.addAttribute("refundPendingCount",
+                    returnsWithDetails.stream()
+                            .filter(r -> Boolean.TRUE.equals(r.get("isPending")))
+                            .count());
 
-        // 取得商品類別資料
-        List<ProType> proTypes = proTypeService.getAllProTypes();
-        List<Map<String, Object>> proTypesWithCount = new java.util.ArrayList<>();
-        for (ProType proType : proTypes) {
-            Map<String, Object> typeData = new HashMap<>();
-            typeData.put("proType", proType);
-            typeData.put("productCount", proTypeService.countProductsByProType(proType.getProTypeId()));
-            proTypesWithCount.add(typeData);
+            // 取得商品類別資料
+            List<ProType> proTypes = proTypeService.getAllProTypes();
+            List<Map<String, Object>> proTypesWithCount = new java.util.ArrayList<>();
+            for (ProType proType : proTypes) {
+                Map<String, Object> typeData = new HashMap<>();
+                typeData.put("proType", proType);
+                typeData.put("productCount", proTypeService.countProductsByProType(proType.getProTypeId()));
+                proTypesWithCount.add(typeData);
+            }
+            model.addAttribute("proTypesWithCount", proTypesWithCount);
+            model.addAttribute("proTypeCount", proTypes.size());
+
+            return "backend/market";
         }
-        model.addAttribute("proTypesWithCount", proTypesWithCount);
-        model.addAttribute("proTypeCount", proTypes.size());
-
-        return "backend/market";
-    }
 
     // ==================== 退貨相關 ====================
 
@@ -133,7 +133,15 @@ public class AdminStoreController {
 
         return "redirect:/admin/store/manage?orderTab=closed";
     }
-
+    /**
+     * 取得訂單詳情（AJAX）
+     * 後台訂單列表點擊「查閱」按鈕時呼叫
+     */
+    @GetMapping("/order/{orderId}/detail")
+    @ResponseBody
+    public Map<String, Object> getOrderDetail(@PathVariable Integer orderId) {
+        return adminStoreService.getOrderDetailForAdmin(orderId);
+    }
     // ==================== 商品類別管理 ====================
 
     /**

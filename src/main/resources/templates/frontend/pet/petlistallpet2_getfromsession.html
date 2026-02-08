@@ -1,231 +1,277 @@
 <!DOCTYPE html>
 <html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>寵物資料詳情</title>
 
-		<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
-	    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
-	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-	    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+<head>
+    <title>所有寵物</title>
+
+    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/frontend/dashboard.css}">
+
     <style>
-      /* 1. 設定背景底圖 */
-  body {
-            background-image: url("/images/pet/dog_and_cat_by_fukidesign.jpg");
+        body {
+            background-image: url("/images/pet/83099.jpg");
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
             background-attachment: fixed;
-            
-            display: flex;
-            flex-direction: column; /* 讓 Footer 能被推到底部 */
-            min-height: 100vh;
         }
-/* 白色半透明容器 (把表格包起來) */
-        .content-wrapper {
-            flex: 1 0 auto; /* 撐開內容區，將 footer 推到底部 */
-            padding: 100px 20px 50px; /* 預留 Header 空間 */
+
+        table#table-1 {
+            width: 900px;
+            margin: 0 auto 10px;
+            border: none;
+            background-color: transparent;
+        }
+
+        .header-container {
+            position: relative;
+            width: 100%;
+            padding: 200px 0;
+            margin-top: -150px;
+            margin-bottom: -180px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
+            align-items: center;
         }
 
-        .white-glass-card {
-            background: rgba(255, 255, 255, 0.9); /* 白色半透明 */
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 1200px;
-            color: #333; /* 文字改為深色 */
+        .header-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("/images/pet/labels.png");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.8;
+            z-index: -1;
         }
 
-        /* 表格樣式優化 */
-        .standard-table {
-            width: 100%;
+        .header-container h3 {
+            font-size: 2rem;
+            color: #333;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .header-container a {
+            font-size: 1rem;
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+            border-bottom: 2px solid #333;
+        }
+
+        table#table-1 h3 {
+            color: #333;
+            margin: 10px 0;
+        }
+
+        table {
+            width: 1000px;
+            background-color: white;
+            margin-top: 5px;
+            margin-bottom: 5px;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin: 0 auto;
         }
 
-        .standard-table th {
-            background: #f8f9fa;
-            color: #555;
-            padding: 15px;
-            border-bottom: 2px solid #dee2e6;
+        th {
+            background-color: #F2F2F2;
         }
 
-        .standard-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .table-img {
-            width: 80px;
-            height: 80px;
+        img.pet-img {
+            max-width: 120px;
+            height: 120px;
             object-fit: cover;
-            border-radius: 10px;
-            border: 2px solid white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 5px;
         }
 
-        /* 分頁連結樣式 */
-        .pagination-links {
+        table#table-1,
+        table#table-1 th,
+        table#table-1 td {
+            border: none !important;
+        }
+
+        table:not(#table-1),
+        table:not(#table-1) th,
+        table:not(#table-1) td {
+            border: 1px solid #CCCCFF !important;
+            padding: 8px;
+            text-align: center;
+        }
+
+        table:not(#table-1) {
+            width: 1100px;
+            background-color: white;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        .badge-mine {
+            background: #e1f5fe;
+            color: #0288d1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .badge-other {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .btn-view {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .btn-edit {
+            color: #2ecc71;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .btn-delete {
+            color: #e74c3c;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #main-footer {
+            background-color: #f9f9f9 !important;
+            margin-top: 4rem;
+        }
+
+        #main-footer .container {
+            background-color: transparent !important;
+        }
+
+        .pagination-group {
+            text-align: center;
             margin-top: 30px;
-            text-align: center;
+            margin-bottom: 30px;
         }
 
-        /* Footer 樣式 */
-        .footer {
-            flex-shrink: 0;
-            background: white;
-            padding: 20px 0;
-            text-align: center;
-            border-top: 1px solid #eee;
+        .pagination-group a {
+            text-decoration: none;
+            color: #3498db;
+            font-weight: bold;
+            margin: 0 5px;
         }
-/* 圖片樣式優化 */
-.table-img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* 按鈕改為較亮的顏色以在深底中突出 */
-.btn-view { color: #64b5f6; }
-.btn-edit { color: #81c784; }
-.btn-delete { color: #e57373; }
-  </style>
+    </style>
 </head>
 
 <body>
 
-<header id="main-header" class="header"></header>
+    <header id="main-header" class="header"></header>
 
-<main class="content-wrapper">
-    <div class="white-glass-card">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h3 style="margin: 0; font-size: 1.5rem; color: #222;"><i class="fa-solid fa-paw"></i> 寵物資料詳情</h3>
-            <a th:href="@{/pet/dashboard}" class="btn-view" style="font-size: 1rem;"><i class="fa-solid fa-circle-left"></i> 回首頁</a>
-        </div>
+    <div align="center">
+        <table id="table-1">
+            <tr>
+                <td>
+                    <div class="header-container">
+                        <h3 class="title-text">所有寵物</h3>
+                        <div class="nav-label">
+                            <h4><a th:href="@{/pet/dashboard}">回首頁</a></h4>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
 
-        <table class="standard-table">
+        <table>
             <thead>
                 <tr>
-                    <th>寵物編號</th>
-                    <th>寵物姓名</th>
-                    <th>寵物種類</th>
-                    <th>寵物體型</th> 
-                    <th>寵物年齡</th> 
-                    <th>寵物圖片</th> 
-                    <th>寵物性別</th>   
-                    <th>寵物備註</th>  
+                    <th>編號</th>
+                    <th>姓名</th>
+                    <th>種類</th>
+                    <th>體型</th>
+                    <th>年齡</th>
+                    <th>圖片</th>
+                    <th>性別</th>
+                    <th>備註</th>
                     <th>建立時間</th>
-    				<th>最後更新</th>
-    				<th>功能</th>
+                    <th>最後更新</th>
+                    <th>功能</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="pet : ${petlist}">
                     <td th:text="${pet.petId}"></td>
                     <td th:text="${pet.petName}" style="font-weight: bold;"></td>
-                    <td th:text="${pet.typeId}"></td>
-                    <td th:text="${pet.sizeId}"></td> 
-                    <td th:text="${pet.petAge} + ' 歲'"></td>
+                    <td th:text="${pet.typeName}"></td>
+                    <td th:text="${pet.sizeName}"></td>
+                    <td th:text="${pet.petAge != null ? pet.petAge + ' 歲' : '未填寫'}"></td>
                     <td>
-                        <img th:src="@{/pet/img/{id}(id=${pet.petId})}" class="table-img"
-                             alt="無圖片"onerror="this.onerror=null;">
+                        <img class="pet-img" th:if="${pet.hasImage == true}" th:src="@{/pet/img/{id}(id=${pet.petId})}"
+                            alt="寵物圖片">
+                        <span th:if="${pet.hasImage == null or pet.hasImage == false}" style="color:#ccc;">(無圖片)</span>
                     </td>
-                    <td></td>
-                     <td th:text="${pet.petDescription}"></td>
-    				 <td th:text="${pet.createdTimeText}"></td>
-					 <td th:text="${pet.updatedAtText}"></td>
+                    <td th:text="${pet.petGender == 0 ? '母' : '公'}"></td>
+                    <td th:text="${pet.petDescription}"></td>
+                    <td th:text="${pet.createdTimeText}"></td>
+                    <td th:text="${pet.updatedAtText}"></td>
                     <td>
                         <a th:href="@{/pet/one(petId=${pet.petId})}" class="btn-view">查看</a>
-
-                        <span style="margin-left: 5px;">
-                            <small th:if="${session.memId == pet.memId}" class="badge-mine">我的</small>
-                            <small th:if="${session.memId != pet.memId}" class="badge-other">受託</small>
-                        </span>
-
                         <span th:if="${session.memId != null and session.memId == pet.memId}">
-                            | 
-                            <a th:href="@{/pet/getOne_For_Update(petId=${pet.petId})}" class="btn-edit">修改</a>
-                            | 
-                            <a href="javascript:void(0);" th:onclick="'deletePet(' + ${pet.petId} + ')'" class="btn-delete">刪除</a>
-                        </span>
-
-                        <span th:if="${session.memId != null and session.memId != pet.memId}" class="text-readonly">
-                            | (唯讀)
+                            | <a th:href="@{/pet/getOne_For_Update(petId=${pet.petId})}" class="btn-edit">修改</a>
+                            | <a href="javascript:void(0);" th:onclick="'deletePet(' + ${pet.petId} + ')'"
+                                class="btn-delete">刪除</a>
                         </span>
                     </td>
                 </tr>
             </tbody>
         </table>
-
-        <div class="pagination-links" th:if="${pageNumber > 1}" style="margin-top: 30px; text-align: center;">
-            <span th:if="${whichPage > 1}">
-                <a th:href="@{/pet/all(whichPage=1)}">至第一頁</a>&nbsp;
-                <a th:href="@{/pet/all(whichPage=${whichPage - 1})}">上一頁</a>&nbsp;
-            </span>
-            第 <span th:text="${whichPage}" style="font-weight: bold; color: #007bff;"></span> / <span th:text="${pageNumber}"></span> 頁
-            <span th:if="${whichPage < pageNumber}">
-                <a th:href="@{/pet/all(whichPage=${whichPage + 1})}">下一頁</a>&nbsp;
-                <a th:href="@{/pet/all(whichPage=${pageNumber})}">至最後一頁</a>&nbsp;
-            </span>
-        </div>
     </div>
-</main>
 
-<footer class="footer">
-    <p>© 2024 PetGuardian. All rights reserved.</p>
-</footer>
+    <!-- 分頁邏輯：滿 9 隻才顯示 -->
+    <div class="pagination-group" th:if="${rowNumber >= 9}">
+        <span th:if="${whichPage > 1}">
+            <a th:href="@{/pet/all(whichPage=1)}">至第一頁</a>
+            <a th:href="@{/pet/all(whichPage=${whichPage - 1})}">◀ 上一頁</a>
+        </span>
 
-<form id="deleteForm" th:action="@{/pet/delete}" method="post" style="display:none;">
-    <input type="hidden" id="deletePetId" name="petId">
-</form>
+        &nbsp;[ 第 <span th:text="${whichPage}"></span> / <span th:text="${pageNumber}"></span> 頁 ]&nbsp;
 
-<script>
+        <span th:if="${whichPage < pageNumber}">
+            <a th:href="@{/pet/all(whichPage=${whichPage + 1})}">下一頁 ▶</a>
+            <a th:href="@{/pet/all(whichPage=${pageNumber})}">至最後一頁</a>
+        </span>
+    </div>
 
-function deletePet(petId) {
-    if (!confirm("確定要刪除嗎？")) return;
+    <footer id="main-footer"></footer>
 
-    fetch(`/pet/delete?petId=${petId}`, { method: 'POST' })
-        .then(res => {
-            // 檢查伺服器回應狀態 (如 404, 500 等)
-            if (!res.ok) {
-                throw new Error("網路回應不正確");
-            }
-            return res.text();
-        })
-        .then(text => {
-            if (text === "success") {
-                alert("刪除成功！");
-                
-                // --- 保留你原本的跳轉判斷邏輯 ---
-                if (window.location.pathname.includes("all")) {
-                    location.href = "/pet/all";       // 留在列表頁
-                } else {
-                    location.href = "/pet/dashboard"; // 回到儀表板
-                }
-            } else {
-                // 處理後端回傳不是 "success" 的情況 (例如：權限不足、資料不存在)
-                alert("刪除失敗：" + text);
-            }
-        })
-        .catch(error => {
-            // 處理網路斷線或發生 Exception 的情況
-            console.error("發生錯誤:", error);
-            alert("系統發生錯誤，請稍後再試。");
-        });
-}
-
-</script>
-
-<script th:src="@{/js/frontend/main.js}">
+    <script th:src="@{/js/frontend/main.js}"></script>
+    <script>
+        function deletePet(petId) {
+            if (!confirm("確定要刪除嗎？")) return;
+            fetch(`/pet/delete?petId=${petId}`, { method: 'POST' })
+                .then(res => res.text())
+                .then(text => {
+                    if (text === "success") {
+                        alert("刪除成功！");
+                        location.reload();
+                    } else {
+                        alert("刪除失敗：" + text);
+                    }
+                })
+                .catch(error => {
+                    console.error("發生錯誤:", error);
+                    alert("系統發生錯誤，請稍後再試。");
+                });
+        }
     </script>
 
 </body>
+
 </html>

@@ -2,16 +2,13 @@
 // 1. 分頁切換邏輯 (Tabs)
 // ==========================================
 
-// 對應 HTML 中的 onclick="switchTab('...')"
+// 主分頁切換
 function switchTab(tabName) {
     const event = window.event;
-    // 移除所有主分頁按鈕與面板的 active 狀態
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
 
-    // 設置當前點擊的按鈕與面板為 active
     if (event) {
-        // 使用 closest 確保點擊到按鈕內的圖標(i標籤)也能正確抓到按鈕
         event.target.closest('.tab-btn').classList.add('active');
     }
 
@@ -21,7 +18,7 @@ function switchTab(tabName) {
     }
 }
 
-// 對應 HTML 中的 onclick="switchOrderTab('...')"
+// 訂單子分頁切換
 function switchOrderTab(tabName) {
     const event = window.event;
     document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -64,90 +61,184 @@ function editCategory(btn) {
 }
 
 // ==========================================
-// 3. 退貨詳情 Modal 相關 (Return)
+// 3. 退貨詳情 Modal 相關 (Return Detail)
 // ==========================================
 
-function formatDateTime(dateTimeStr) {
-    if (!dateTimeStr) return '-';
-    return dateTimeStr.replace('T', ' ').substring(0, 19);
-}
-
-// 顯示退貨詳情
-function showReturnDetail(returnId) {
+function openModal(returnId) {
     fetch('/admin/store/return/' + returnId)
-        .then(response => response.json())
-        .then(data => {
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
             if (data.success) {
-                document.getElementById('modal-returnId').textContent = '#' + data.returnId;
-                document.getElementById('modal-orderId').textContent = '#' + data.orderId;
-                document.getElementById('modal-buyerName').textContent = data.buyerName || '-';
-                document.getElementById('modal-sellerName').textContent = data.sellerName || '-';
-                document.getElementById('modal-refundAmount').textContent = '$' + (data.refundAmount || 0);
-                document.getElementById('modal-applyTime').textContent = formatDateTime(data.applyTime);
-                document.getElementById('modal-returnReason').textContent = data.returnReason || '-';
+                document.getElementById('modal-returnId').innerText = '#REF-' + data.returnId;
+                document.getElementById('modal-orderId').innerText = '#' + data.orderId;
+                document.getElementById('modal-buyerName').innerText = data.buyerName || '-';
+                document.getElementById('modal-sellerName').innerText = data.sellerName || '-';
+                document.getElementById('modal-refundAmount').innerText = '$' + data.refundAmount;
+                document.getElementById('modal-applyTime').innerText = (data.applyTime ? data.applyTime.replace('T', ' ') : '-');                document.getElementById('modal-returnReason').innerText = data.returnReason || '無';
 
-                const imagesContainer = document.getElementById('modal-images-container');
-                const imagesDiv = document.getElementById('modal-images');
-
-                // 退貨圖片以 URL 路徑方式讀取（存放於 /images/return/ 內）
-                if (data.hasImages && data.returnImages && data.returnImages.length > 0) {
+                // 處理退貨圖片
+                var imagesContainer = document.getElementById('modal-images-container');
+                var imagesDiv = document.getElementById('modal-images');
+                if (data.images && data.images.length > 0) {
+                    imagesContainer.style.display = 'block';
                     imagesDiv.innerHTML = '';
-                    data.returnImages.forEach(function(imageUrl, index) {
-                        const img = document.createElement('img');
-                        img.src = imageUrl;
-                        img.alt = '退貨圖片 ' + (index + 1);
-                        img.style.cssText = 'width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;';
+                    data.images.forEach(function(url) {
+                        var img = document.createElement('img');
+                        img.src = url;
+                        img.alt = '退貨圖片';
+                        img.style.cssText = 'width: 120px; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer;';
                         img.onclick = function() {
-                            window.open(imageUrl, '_blank');
+                            window.open(url, '_blank');
                         };
                         imagesDiv.appendChild(img);
                     });
-                    imagesContainer.style.display = 'block';
                 } else {
                     imagesContainer.style.display = 'none';
                 }
 
                 document.getElementById('returnDetailModal').classList.add('active');
             } else {
-                alert('載入退貨詳情失敗: ' + (data.error || '未知錯誤'));
+                alert('無法取得退貨詳情');
             }
         })
-        .catch(error => {
+        .catch(function(error) {
             console.error('Error:', error);
-            alert('載入退貨詳情失敗');
+            alert('取得退貨詳情失敗');
         });
 }
 
-// 對應 HTML 中的 onclick="closeModal()"
 function closeModal() {
-    const returnModal = document.getElementById('returnDetailModal');
-    if (returnModal) {
-        returnModal.classList.remove('active');
-    }
+    document.getElementById('returnDetailModal').classList.remove('active');
 }
 
 // ==========================================
-// 4. 初始化與點擊外部關閉邏輯
+// 4. 後台訂單詳情 Modal 邏輯（新增）
 // ==========================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    // 類別 Modal 外部點擊關閉
-    const categoryModal = document.getElementById('categoryModal');
-    if (categoryModal) {
-        categoryModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeCategoryModal();
+// 開啟訂單詳情 Modal，透過 AJAX 取得資料
+function openAdminOrderDetail(orderId) {
+    var modal = document.getElementById('adminOrderDetailModal');
+    var loading = document.getElementById('adminOrderLoading');
+    var content = document.getElementById('adminOrderContent');
+
+    // 顯示 Modal 及載入狀態
+    modal.classList.add('active');
+    loading.style.display = 'block';
+    content.style.display = 'none';
+
+    // 設定訂單編號
+    document.getElementById('adminDetailOrderId').innerText = '#' + orderId;
+
+    // 呼叫後台 API 取得訂單詳情
+    fetch('/admin/store/order/' + orderId + '/detail')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) {
+                alert('取得訂單詳情失敗：' + (data.message || '未知錯誤'));
+                closeAdminOrderDetail();
+                return;
             }
+
+            // 填入訂單狀態
+            fillAdminOrderStatus(data.orderStatus);
+
+            // 填入訂單基本資訊
+            document.getElementById('adminDetailOrderTime').innerText = (data.orderTime ? data.orderTime.replace('T', ' ') : '-');            document.getElementById('adminDetailBuyerName').innerText = data.buyerName || '-';
+            document.getElementById('adminDetailOrderTotal').innerText = '$' + (data.orderTotal || 0);
+
+            // 填入收件資訊
+            document.getElementById('adminDetailReceiverName').innerText = data.receiverName || '-';
+            document.getElementById('adminDetailReceiverPhone').innerText = data.receiverPhone || '-';
+            document.getElementById('adminDetailReceiverAddress').innerText = data.receiverAddress || '-';
+
+            // 備註欄位（有備註才顯示）
+            var specialRow = document.getElementById('adminDetailSpecialRow');
+            if (data.specialInstructions && data.specialInstructions.trim() !== '') {
+                specialRow.style.display = 'flex';
+                document.getElementById('adminDetailSpecialInstructions').innerText = data.specialInstructions;
+            } else {
+                specialRow.style.display = 'none';
+            }
+
+            // 填入商品明細
+            fillAdminOrderItems(data.items || []);
+
+            // 隱藏載入、顯示內容
+            loading.style.display = 'none';
+            content.style.display = 'block';
+        })
+        .catch(function(error) {
+            console.error('取得訂單詳情失敗:', error);
+            alert('取得訂單詳情失敗，請稍後再試');
+            closeAdminOrderDetail();
         });
+}
+
+// 關閉訂單詳情 Modal
+function closeAdminOrderDetail() {
+    document.getElementById('adminOrderDetailModal').classList.remove('active');
+}
+
+// 根據訂單狀態碼產生對應的狀態標籤
+function fillAdminOrderStatus(status) {
+    var el = document.getElementById('adminDetailStatus');
+    var map = {
+        0: { text: '已付款', bg: '#fff3cd', color: '#856404' },
+        1: { text: '已出貨', bg: '#cce5ff', color: '#004085' },
+        2: { text: '已完成', bg: '#d4edda', color: '#155724' },
+        3: { text: '已取消', bg: '#f8d7da', color: '#721c24' },
+        4: { text: '申請退貨中', bg: '#fff3cd', color: '#856404' },
+        5: { text: '退貨完成', bg: '#f8d7da', color: '#721c24' },
+        6: { text: '已撥款', bg: '#d4edda', color: '#155724' }
+    };
+
+    var info = map[status] || { text: '未知', bg: '#eee', color: '#666' };
+    el.innerHTML = '<span style="background:' + info.bg + '; color:' + info.color
+        + '; padding:4px 10px; border-radius:20px; font-size:0.85rem; font-weight:600;">'
+        + info.text + '</span>';
+}
+
+// 動態產生訂單商品明細列表
+function fillAdminOrderItems(items) {
+    var container = document.getElementById('adminOrderItemsContainer');
+    container.innerHTML = '';
+
+    if (!items || items.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center;">無商品明細</p>';
+        return;
     }
 
-    // 退貨 Modal 外部點擊關閉
-    const returnModal = document.getElementById('returnDetailModal');
-    if (returnModal) {
-        returnModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-    }
-});
+    items.forEach(function(item) {
+        var itemDiv = document.createElement('div');
+        itemDiv.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0;';
+
+        // 商品圖片
+        var img = document.createElement('img');
+        img.src = item.productImage || '/images/default-product.png';
+        img.alt = item.productName || '';
+        img.style.cssText = 'width: 50px; height: 50px; object-fit: cover; border-radius: 8px;';
+        img.onerror = function() {
+            this.src = '/images/default-product.png';
+        };
+
+        // 商品名稱和單價
+        var info = document.createElement('div');
+        info.style.cssText = 'flex: 1;';
+        info.innerHTML = '<div style="font-weight: 600;">' + (item.productName || '-') + '</div>'
+            + '<div style="color: #999; font-size: 0.85rem;">$' + (item.proPrice || 0) + ' x ' + (item.quantity || 0) + '</div>';
+
+        // 小計金額
+        var subtotal = document.createElement('div');
+        subtotal.style.cssText = 'font-weight: 700; color: var(--orange, #e67e22);';
+        subtotal.innerText = '$' + (item.subtotal || 0);
+
+        itemDiv.appendChild(img);
+        itemDiv.appendChild(info);
+        itemDiv.appendChild(subtotal);
+        container.appendChild(itemDiv);
+    });
+}

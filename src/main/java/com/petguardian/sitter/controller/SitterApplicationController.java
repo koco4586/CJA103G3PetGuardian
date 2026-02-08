@@ -215,21 +215,18 @@ public class SitterApplicationController {
      * 
      * 當表單驗證失敗時，重新載入頁面所需的顯示資料
      * 
+     * @param request HttpServletRequest
      * @param session HttpSession
      * @param model   Spring Model
      */
     private void prepareModelAttributes(HttpServletRequest request, HttpSession session,
             Model model) {
-        String memName = authStrategyService.getCurrentUserName(request);
-        String memPhone = (String) session.getAttribute("memPhone");
+        Integer memId = authStrategyService.getCurrentUserId(request);
         String avatarUrl = (String) session.getAttribute("avatarUrl");
 
-        model.addAttribute("memName", memName != null ? memName : "會員姓名");
-        model.addAttribute("memPhone", memPhone != null ? memPhone : "未設定");
-        model.addAttribute("avatarUrl", avatarUrl);
-        model.addAttribute("memberRole", "一般會員");
-        model.addAttribute("defaultCity", "台北市");
-        model.addAttribute("defaultDistrict", "大安區");
+        // [Refactor] 使用 Service 方法統一準備資料，確保 currentMember 也被傳遞
+        Map<String, Object> initData = service.getApplyFormInitData(memId, avatarUrl);
+        model.addAllAttributes(initData);
     }
 
     /**

@@ -220,19 +220,21 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
 
         String memName = "會員姓名";
         String memPhone = "未設定";
+        SitterMemberVO currentMember = null;
 
         if (memId != null) {
             Optional<SitterMemberVO> memberOpt = sitterMemberRepository.findById(memId);
             if (memberOpt.isPresent()) {
-                SitterMemberVO member = memberOpt.get();
-                memName = member.getMemName();
-                memPhone = member.getMemTel();
+                currentMember = memberOpt.get();
+                memName = currentMember.getMemName();
+                memPhone = currentMember.getMemTel();
             }
         }
 
         data.put("memName", memName != null ? memName : "會員姓名");
         data.put("memPhone", memPhone != null ? memPhone : "未設定");
         data.put("avatarUrl", avatarUrl);
+        data.put("currentMember", currentMember); // 新增：傳遞完整會員物件供 sidebar 使用
         data.put("memberRole", "一般會員");
         data.put("defaultCity", "台北市");
         data.put("defaultDistrict", "大安區");
