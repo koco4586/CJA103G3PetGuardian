@@ -63,27 +63,37 @@ public class SitterController {
             @RequestParam(required = false) String reviewNote,
             RedirectAttributes redirectAttributes) {
 
+        System.out.println("=== 審核通過請求 ===");
+        System.out.println("申請 ID: " + appId);
+        System.out.println("審核備註: " + reviewNote);
+
         try {
             SitterApplicationVO application = applicationService.getApplicationById(appId);
 
             if (application == null) {
+                System.out.println("錯誤: 申請不存在");
                 redirectAttributes.addFlashAttribute("errorMessage", "申請不存在");
                 return "redirect:/admin/sitter/manage";
             }
 
             if (application.getAppStatus() != 0) {
+                System.out.println("錯誤: 此申請已審核過，狀態: " + application.getAppStatus());
                 redirectAttributes.addFlashAttribute("errorMessage", "此申請已審核過");
                 return "redirect:/admin/sitter/manage";
             }
 
             // 更新申請狀態為「通過」
             // Service 內部會自動處理：建立保母資料、更新會員狀態
+            System.out.println("開始審核通過流程...");
             applicationService.reviewApplication(appId, (byte) 1, reviewNote);
+            System.out.println("審核通過流程完成！");
 
             redirectAttributes.addFlashAttribute("successMessage",
                     "申請已通過！保母帳號已建立。");
 
         } catch (Exception e) {
+            System.out.println("審核失敗: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "審核失敗：" + e.getMessage());
         }
 
