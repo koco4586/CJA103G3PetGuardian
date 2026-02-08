@@ -163,7 +163,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>保母姓名</th>
+                                <th>保母名稱</th>
                                 <th>服務評價</th>
                                 <th>目前狀態</th>
 
@@ -200,7 +200,7 @@
                             <!-- [NEW] 動態資料 (Thymeleaf) -->
                             <tr th:each="sitter : ${sitters}">
                                 <td th:text="${sitter.sitterId}">S-001</td>
-                                <td th:text="${sitter.sitterName}">保母姓名</td>
+                                <td th:text="${sitter.sitterName}">保母名稱</td>
                                 <td>
                                     <!-- 評價暫時顯示預設值或從 VO 取得 (若有) -->
                                     <i class="fa-solid fa-star" style="color:gold"></i>

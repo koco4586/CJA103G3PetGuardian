@@ -430,7 +430,7 @@
             if (pendingCount > 0 && !hasNotified) {
                 // 使用 setTimeout 確保頁面渲染完成後彈出
                 setTimeout(() => {
-                    alert(`親愛的保母您好：\\n目前有 ${pendingCount} 筆新的預約等待您的確認！\\n請前往「預約管理」查看。`);
+                    alert(`您有 ${pendingCount} 筆預約，請前往「預約管理」查看。`);
                     // 設定已通知標記，避免重複彈出
                     sessionStorage.setItem(storageKey, 'true');
                 }, 500);
@@ -674,6 +674,7 @@
         // 儲存設定
         function saveDaySchedule() {
             const newStatusStr = modalCurrentStatus.join('');
+            console.log('🚀 開始儲存:', modalCurrentDate, newStatusStr);
 
             fetch('/sitter/api/schedule', {
                 method: 'POST',
@@ -685,21 +686,57 @@
                     status: newStatusStr
                 })
             })
-                .then(res => res.text())
-                .then(result => {
-                    if (result === 'success') {
-                        // 更新快取並重繪月曆
-                        scheduleCache[modalCurrentDate] = newStatusStr;
-                        renderGrid(document.getElementById('calendar-grid'));
-                        closeModal();
-                        // alert('儲存成功');
-                    } else {
-                        alert('儲存失敗: ' + result);
+                .then(res => {
+                    console.log('📡 收到回應，狀態碼:', res.status, 'OK:', res.ok);
+
+                    // 先檢查 HTTP 狀態碼
+                    if (!res.ok) {
+                        return res.json().then(errData => {
+                            throw new Error(errData.message || `HTTP ${res.status}`);
+                        }).catch(() => {
+                            throw new Error(`HTTP ${res.status}`);
+                        });
                     }
+
+                    // 解析成功的 JSON 回應
+                    return res.json();
+                })
+                .then(data => {
+                    console.log('✅ 儲存成功，伺服器回應:', data);
+                    console.log('📅 更新日期:', modalCurrentDate);
+                    console.log('🕐 新狀態:', newStatusStr);
+
+                    // 更新快取
+                    scheduleCache[modalCurrentDate] = newStatusStr;
+                    console.log('💾 快取已更新:', scheduleCache[modalCurrentDate]);
+
+                    // 重繪月曆
+                    const grid = document.getElementById('calendar-grid');
+                    renderGrid(grid);
+                    console.log('🔄 月曆已重繪');
+
+                    // 關閉 Modal
+                    closeModal();
+
+                    // 顯示成功的視覺回饋（綠色閃爍效果）
+                    const calendarCard = document.getElementById('calendar-card');
+                    calendarCard.style.transition = 'box-shadow 0.3s';
+                    calendarCard.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.6)';
+                    setTimeout(() => {
+                        calendarCard.style.boxShadow = '';
+                    }, 800);
                 })
                 .catch(err => {
-                    alert('系統錯誤');
-                    console.error(err);
+                    console.error('❌ 儲存失敗:', err);
+                    console.error('錯誤詳情:', err.message);
+
+                    // 顯示錯誤的視覺回饋（紅色閃爍效果）
+                    const calendarCard = document.getElementById('calendar-card');
+                    calendarCard.style.transition = 'box-shadow 0.3s';
+                    calendarCard.style.boxShadow = '0 0 20px rgba(244, 67, 54, 0.6)';
+                    setTimeout(() => {
+                        calendarCard.style.boxShadow = '';
+                    }, 800);
                 });
         }
 
