@@ -108,7 +108,7 @@ public class AdminStoreController {
 
         try {
             adminStoreService.rejectReturn(returnId);
-            redirectAttributes.addFlashAttribute("successMessage", "已駁回退款申請並撥款至賣家錢包");
+            redirectAttributes.addFlashAttribute("successMessage", "已駁回退款申請並移至結案訂單");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "駁回退款失敗：" + e.getMessage());
         }
