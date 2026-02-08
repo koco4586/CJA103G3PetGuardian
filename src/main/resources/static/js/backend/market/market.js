@@ -81,10 +81,10 @@ function openModal(returnId) {
                 // 處理退貨圖片
                 var imagesContainer = document.getElementById('modal-images-container');
                 var imagesDiv = document.getElementById('modal-images');
-                if (data.images && data.images.length > 0) {
+                if (data.returnImages && data.returnImages.length > 0) {
                     imagesContainer.style.display = 'block';
                     imagesDiv.innerHTML = '';
-                    data.images.forEach(function(url) {
+                    data.returnImages.forEach(function(url) {
                         var img = document.createElement('img');
                         img.src = url;
                         img.alt = '退貨圖片';
