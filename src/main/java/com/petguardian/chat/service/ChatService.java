@@ -3,17 +3,15 @@ package com.petguardian.chat.service;
 import java.util.List;
 import java.util.Map;
 
-import com.petguardian.chat.service.chatroom.ChatRoomService;
 import com.petguardian.chat.dto.ChatMessageDTO;
 
 /**
  * Service Interface for Core Chat Message Operations.
  * Defines the contract for:
- * Handling incoming real-time messages
- * Retrieving historical conversation data
- * Managing read status
- * Note: Chatroom creation/lookup is handled by
- * {@link ChatRoomService}.
+ * - Handling incoming real-time messages with Zero-SQL pre-loading
+ * - Orchestrating historical conversation retrieval with pagination
+ * - Executing keyword-based search via specialized Retrieval Strategy
+ * - Managing real-time synchronization of read status
  */
 public interface ChatService {
 
@@ -21,8 +19,8 @@ public interface ChatService {
      * Processes an incoming message payload.
      * 
      * @param dto The message data transfer object
-     * @return The persisted message DTO, enriched with system metadata (ID,
-     *         timestamp)
+     * @return The persisted message DTO, enriched with context metadata (TSID,
+     *         sender profiles, and timestamps)
      */
     ChatMessageDTO handleIncomingMessage(ChatMessageDTO dto);
 
@@ -54,14 +52,24 @@ public interface ChatService {
     void markRoomAsRead(Integer chatroomId, Integer userId);
 
     /**
-     * Search chat history for a keyword.
-     * Returns all matching messages (non-paginated).
+     * Executes a keyword search within the chatroom's historical context.
+     * Results are enriched with full sender and reply metadata.
+     * 
+     * @param chatroomId  The target chatroom identifier
+     * @param keyword     The search query
+     * @param requesterId The user performing the search (for consistency checks)
+     * @return Enriched list of matching {@link ChatMessageDTO}
      */
     List<ChatMessageDTO> searchChatHistory(Integer chatroomId, String keyword, Integer requesterId);
 
     /**
-     * Calculate the page number and index for a specific message.
-     * Used for "Jump to Message" functionality.
+     * Calculates the exact page position of a specific message in the timeline.
+     * Used for the "Jump to Message" functionality to maintain UX context.
+     * 
+     * @param chatroomId Chatroom Identifier
+     * @param messageId  Target Message TSID (String format)
+     * @param pageSize   Standard pagination size
+     * @return A map containing the calculated 'page' index
      */
     Map<String, Integer> getMessagePosition(Integer chatroomId, String messageId, Integer pageSize);
 }

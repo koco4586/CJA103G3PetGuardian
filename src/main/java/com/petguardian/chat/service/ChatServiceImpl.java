@@ -43,6 +43,8 @@ import lombok.RequiredArgsConstructor;
  * Architecture Note:
  * Chatroom operations delegated to {@link ChatRoomService} (Facade)
  * Message operations delegated to {@link ChatMessageService} (Facade)
+ * Search & Retrieval logic orchestrated via {@link ChatMessageRetrievalManager}
+ * (Strategy)
  * Status/Notification delegated to {@link ChatStatusService} (Facade)
  * DTO mapping delegated to {@link ChatMessageMapper}
  */
@@ -228,7 +230,8 @@ public class ChatServiceImpl implements ChatService {
             return;
         }
 
-        // Correct Partner Identification: If I am member 0, partner is member 1.
+        // Partner Identity Resolution: Map current user to corresponding read-status
+        // slot (Mem1 vs Mem2)
         LocalDateTime partnerLastReadAt = currentUserId.equals(chatroom.getMemberIds().get(0))
                 ? chatroom.getMem2LastReadAt() // Partner is Member 2
                 : chatroom.getMem1LastReadAt(); // Partner is Member 1
@@ -237,8 +240,8 @@ public class ChatServiceImpl implements ChatService {
             return;
         }
 
-        // Mark all messages as read if sent by current user and chatTime <=
-        // partnerLastReadAt
+        // Read-Status Projection: Mark applicable messages as 'Read' based on partner's
+        // last synchronization point
         for (ChatMessageDTO msg : dtos) {
             if (currentUserId.equals(msg.getSenderId())) {
                 if (msg.getChatTime() != null && !msg.getChatTime().isAfter(partnerLastReadAt)) {
@@ -280,7 +283,8 @@ public class ChatServiceImpl implements ChatService {
             return Collections.emptyMap();
         }
 
-        // Try to find reply messages in the current batch first
+        // Optimize: Attempt local batch resolution from current message set before
+        // hitting database
         Map<Long, ChatMessageEntity> foundInBatch = messages.stream()
                 .filter(msg -> replyIds.contains(msg.getMessageId()))
                 .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity()));
@@ -293,7 +297,7 @@ public class ChatServiceImpl implements ChatService {
             return foundInBatch;
         }
 
-        // Only query the facade (which might hit MySQL) for missing IDs
+        // Sync: Fetch missing reply identities via ChatMessageService Facade (fallback)
         Map<Long, ChatMessageEntity> results = new HashMap<>(foundInBatch);
         results.putAll(chatMessageService.findAllById(missingIds).stream()
                 .collect(Collectors.toMap(ChatMessageEntity::getMessageId, Function.identity())));
@@ -321,31 +325,25 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public List<ChatMessageDTO> searchChatHistory(Integer chatroomId, String keyword, Integer requesterId) {
-        // 1. Validate membership AND get metadata
+        // 1. Validate membership and retrieve room context
         ChatRoomMetadataDTO chatroom = chatRoomService.verifyMembership(chatroomId, requesterId);
 
-        // 2. Search messages (RetrievalManager -> Repository)
+        // 2. Execute keyword search via specialized Retrieval Strategy
         List<ChatMessageEntity> entities = retrievalManager.searchMessage(chatroomId, keyword);
 
         if (entities.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // 4. Convert to DTOs
-        // Using Mapper for consistency.
-        // We need 'partnerId' for the mapper.
-        // Reusing 'chatroom' metadata from step 1
-
+        // 3. Resolve partner identity from pre-loaded context
         Integer partnerId = chatroom.getMemberIds().stream()
                 .filter(id -> !id.equals(requesterId))
                 .findFirst()
                 .orElse(null);
 
-        // We also need replyMap for proper DTO structure if we want consistency
-        // But for search results, reply context might be optional or we can fetch it.
-        // Let's resolve context to be safe.
-        Map<Long, ChatMessageEntity> replyMap = resolveReplyMap(entities); // Reuse private helper
-        Map<Integer, MemberProfileDTO> memberMap = resolveMemberMap(entities, replyMap); // Reuse private helper
+        // 4. Transform results with full context enrichment (Reply & Member Profiles)
+        Map<Long, ChatMessageEntity> replyMap = resolveReplyMap(entities);
+        Map<Integer, MemberProfileDTO> memberMap = resolveMemberMap(entities, replyMap);
         Map<Long, Integer> reportStatusMap = Collections.emptyMap();
 
         return messageMapper.toDtoList(entities, requesterId, partnerId, memberMap, replyMap, reportStatusMap);
@@ -354,10 +352,10 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Integer> getMessagePosition(Integer chatroomId, String messageId, Integer pageSize) {
-        // 1. Calculate page index
+        // 1. Calculate relative page index via Retrieval Strategy
         int page = retrievalManager.getMessagePage(chatroomId, TSID.from(messageId).toLong(), pageSize);
 
-        // Return as map
+        // 2. Encapsulate result for API response
         Map<String, Integer> result = new HashMap<>();
         result.put("page", page);
         return result;
