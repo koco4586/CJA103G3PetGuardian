@@ -69,12 +69,14 @@ public class BookingFavoriteService {
         List<Integer> memIds = sitters.stream()
                 .map(SitterVO::getMemId)
                 .collect(Collectors.toList());
-        Map<Integer, String> memberImageMap = sitterMemberRepository.findAllById(memIds).stream()
-                .collect(Collectors.toMap(
-                    com.petguardian.sitter.model.SitterMemberVO::getMemId,
-                    com.petguardian.sitter.model.SitterMemberVO::getMemImage,
-                    (v1, v2) -> v1
-                ));
+        Map<Integer, String> memberImageMap = new java.util.HashMap<>();
+        sitterMemberRepository.findAllById(memIds).forEach(m -> {
+        	String imgPath = m.getMemImage();
+            if (imgPath == null || imgPath.trim().isEmpty()) {
+                imgPath = "/images/default-avatar.png";
+            }
+            memberImageMap.put(m.getMemId(), imgPath);
+        });
         // 4. 填回 VO
         for (BookingFavoriteVO fav : favorites) {
             SitterVO s = sitterMap.get(fav.getSitterId());

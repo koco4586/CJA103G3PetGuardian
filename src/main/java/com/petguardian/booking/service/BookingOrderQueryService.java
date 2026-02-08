@@ -41,6 +41,9 @@ public class BookingOrderQueryService {
     @Autowired
     private com.petguardian.complaint.model.Complaintrepository complaintRepository;
 
+    @Autowired
+    private com.petguardian.evaluate.model.EvaluateRepository evaluateRepository;
+
     /**
      * 查詢會員的所有訂單
      */
@@ -169,7 +172,7 @@ public class BookingOrderQueryService {
             }
         }
         // 2. 批次查詢保母與服務詳細資訊
-        java.util.Map<String, com.petguardian.petsitter.model.PetSitterServiceVO> svcDetailMap = new java.util.HashMap<>();
+        java.util.Map<String, PetSitterServiceVO> svcDetailMap = new java.util.HashMap<>();
         if (!serviceIds.isEmpty()) { // 修正為 serviceIds
             List<com.petguardian.petsitter.model.PetSitterServiceVO> services = petSitterServiceRepository
                     .findByServiceItemIdIn(serviceIds); // 修正為 serviceIds
@@ -181,13 +184,20 @@ public class BookingOrderQueryService {
             }
         }
 
-        // 3. 批次查詢會員名稱
+        // 3. 批次查詢會員名稱與圖片
         java.util.Map<Integer, String> memNameMap = new java.util.HashMap<>();
+        java.util.Map<Integer, String> memImageMap = new java.util.HashMap<>();
         if (!memIds.isEmpty()) {
             List<Member> members = memberRepository.findAllById(memIds);
-            for (Member m : members)
+            for (Member m : members) {
                 memNameMap.put(m.getMemId(), m.getMemName());
+	         	// 如果沒圖片，使用預設圖路徑
+	            String img = (m.getMemImage() != null) ? m.getMemImage() : "/images/default-avatar.png";
+	            memImageMap.put(m.getMemId(), img);
+            }
         }
+        
+        
 
         // 4. 批次統計檢舉次數 (解決 N+1)
         java.util.Map<Integer, Long> complaintCountMap = new java.util.HashMap<>();
@@ -198,7 +208,26 @@ public class BookingOrderQueryService {
             }
         }
 
-        // 5. 填回 BookingOrderVO 暫存欄位 (Transient)
+        // 5. 批次查詢評價次數 (解決 N+1)
+        java.util.Map<Integer, Integer> memberEvalCountMap = new java.util.HashMap<>();
+        java.util.Map<Integer, Integer> sitterEvalCountMap = new java.util.HashMap<>();
+        if (!orderIds.isEmpty()) {
+            List<com.petguardian.evaluate.model.EvaluateVO> evaluations = evaluateRepository
+                    .findByBookingOrderIdIn(orderIds);
+            for (com.petguardian.evaluate.model.EvaluateVO eval : evaluations) {
+                if (eval.getRoleType() == null)
+                    continue;
+                if (eval.getRoleType() == 1) { // 會員評保母
+                    memberEvalCountMap.put(eval.getBookingOrderId(),
+                            memberEvalCountMap.getOrDefault(eval.getBookingOrderId(), 0) + 1);
+                } else if (eval.getRoleType() == 0) { // 保母評會員
+                    sitterEvalCountMap.put(eval.getBookingOrderId(),
+                            sitterEvalCountMap.getOrDefault(eval.getBookingOrderId(), 0) + 1);
+                }
+            }
+        }
+
+        // 6. 填回 BookingOrderVO 暫存欄位 (Transient)
         for (BookingOrderVO order : orderList) {
             // A. 填入保母與服務相關資訊
             String key = order.getSitterId() + "_" + order.getServiceItemId();
@@ -216,7 +245,8 @@ public class BookingOrderQueryService {
 
             // B. 填入會員名稱
             order.setMemName(memNameMap.getOrDefault(order.getMemId(), "未知會員"));
-
+            order.setMemImage(memImageMap.get(order.getMemId())); // 填入圖片
+            
             // C. 填入寵物名稱
             order.setPetName(petNameMap.getOrDefault(order.getPetId(), "未知寵物"));
             order.setPetImage(petImageMap.get(order.getPetId()));
@@ -229,6 +259,10 @@ public class BookingOrderQueryService {
 
             // E. 填入檢舉次數
             order.setComplaintCount(complaintCountMap.getOrDefault(order.getBookingOrderId(), 0L));
+
+            // F. 填入評價次數
+            order.setMemberEvalCount(memberEvalCountMap.getOrDefault(order.getBookingOrderId(), 0));
+            order.setSitterEvalCount(sitterEvalCountMap.getOrDefault(order.getBookingOrderId(), 0));
         }
     }
 }

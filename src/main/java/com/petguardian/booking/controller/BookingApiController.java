@@ -53,9 +53,7 @@ public class BookingApiController {
         
         // 2. 檢查是否登入
         if (memId == null) {
-            return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)  // 401 未授權
-                .body("請先登入");
+        	return ResponseEntity.ok("NOT_LOGGED_IN");
         }
 
         // 3. 呼叫 Service 執行「切換收藏」邏輯

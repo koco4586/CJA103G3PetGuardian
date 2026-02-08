@@ -1,6 +1,8 @@
 package com.petguardian.booking.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.booking.service.BookingService;
 import com.petguardian.common.service.AuthStrategyService;
-import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.model.SitterVO;
+import com.petguardian.sitter.service.SitterService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -57,7 +59,8 @@ public class SitterBookingController {
      */
     @GetMapping("/bookings")
     public String listSitterOrders(@RequestParam(required = false) Integer status,
-            HttpServletRequest request,
+    		@RequestParam(defaultValue = "0") int page,
+    		HttpServletRequest request,
             Model model) {
         Integer memId = authStrategyService.getCurrentUserId(request);
 //        if (memId == null)
@@ -76,15 +79,58 @@ public class SitterBookingController {
 
         var member = dataService.getMemberInfo(memId);
 
-        // 加上本月收入計算邏輯
+     
+     // 加上本月收入計算邏輯 (僅計算本月且已完成/已撥款)
+        LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0);
         int income = bookingList.stream()
                 .filter(o -> o.getOrderStatus() != null && (o.getOrderStatus() == 2 || o.getOrderStatus() == 5))
+                .filter(o -> o.getStartTime().isAfter(startOfMonth)) // 僅計入本月
                 .mapToInt(BookingOrderVO::getReservationFee)
                 .sum();
+        bookingList = bookingList.stream()
+        	    .filter(order -> {
+        	        // 過濾一個月前的取消訂單
+        	        if (order.getOrderStatus() == 3 || order.getOrderStatus() == 4 || order.getOrderStatus() == 6) {
+        	            LocalDateTime limit = LocalDateTime.now().minusMonths(1);
+        	            return order.getUpdatedAt() != null && order.getUpdatedAt().isAfter(limit);
+        	        }
+        	        return true;
+        	    })
+        	    .sorted((o1, o2) -> {
+        	        // 定義狀態權重 (1=0, 0=1, 2/5=2, 3/4/6=3)
+        	        int p1 = getPriority(o1.getOrderStatus());
+        	        int p2 = getPriority(o2.getOrderStatus());
+        	        
+        	        if (p1 != p2) return p1 - p2;
+        	        
+        	        // 同一等級內的次要排序
+        	        if (p1 == 1) { // 即將到來：時間由近到遠 (昇冪)
+        	            return o1.getStartTime().compareTo(o2.getStartTime());
+        	        } else { // 其他：時間由新到舊 (降冪)
+        	            return o2.getStartTime().compareTo(o1.getStartTime());
+        	        }
+        	    })
+        	    .collect(Collectors.toList());
+        
+        int pageSize = 6;
+        int totalRecords = bookingList.size();
+        int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
-        model.addAttribute("bookingList", bookingList);
-        model.addAttribute("sitter", member);
-        model.addAttribute("currentStatus", status);
+        if (page < 0) page = 0;
+        if (totalPages > 0 && page >= totalPages) page = totalPages - 1;
+
+        int start = page * pageSize;
+        int end = Math.min(start + pageSize, totalRecords);
+
+        List<BookingOrderVO> pagedList = (totalRecords > 0) 
+            ? bookingList.subList(start, end) 
+            : new java.util.ArrayList<>();
+
+        model.addAttribute("bookingList", pagedList);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("sitter", sitter); 
+        model.addAttribute("currentMember", member); 
         model.addAttribute("monthlyIncome", income);
 
         return "frontend/booking/sitter-bookings";
@@ -107,6 +153,19 @@ public class SitterBookingController {
             return ResponseEntity.ok("更新成功");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    private int getPriority(Integer status) {
+        if (status == null) return 99;
+        switch (status) {
+            case 1: return 0; // 已確認
+            case 0: return 1; // 待確認
+            case 2:
+            case 5: return 2; // 服務中、已評價
+            case 3:
+            case 4:
+            case 6: return 3; // 已取消、已拒絕、退款
+            default: return 99;
         }
     }
 }

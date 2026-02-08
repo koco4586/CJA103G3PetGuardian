@@ -60,6 +60,7 @@ public class BookingOrderVO {
     @Column(name = "report_status")
     private Integer reportStatus = 0;
 
+    @Column(name = "cancel_reason", length = 200)
     private String cancelReason;
     private LocalDateTime cancelTime;
 
@@ -72,6 +73,9 @@ public class BookingOrderVO {
     // 顯示用的額外資訊 (不存入資料庫)
     @Transient
     private String memName; // 透過 batchEnrichOrderInfo 填入
+    
+    @Transient
+    private String memImage;
 
     @Transient
     private String petName; // 透過 batchEnrichOrderInfo 填入
@@ -99,6 +103,12 @@ public class BookingOrderVO {
 
     @Transient
     private Long complaintCount = 0L; // 🔥 新增：檢舉總數
+
+    @Transient
+    private Integer memberEvalCount = 0; // 會員對保姆的評價次數
+
+    @Transient
+    private Integer sitterEvalCount = 0; // 保姆對會員的評價次數
 
     public Integer getEvaluateId() {
         return evaluateId;

@@ -113,6 +113,7 @@ public class Complaintcontroller {
             // 狀態 2 -> 4 (審核駁回且已處理評論)
             if (vo.getReportStatus() != null && (vo.getReportStatus() == 1 || vo.getReportStatus() == 2)) {
                 vo.setReportStatus(vo.getReportStatus() + 2);
+                vo.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                 complaintservice.insert(vo);
             }
 
