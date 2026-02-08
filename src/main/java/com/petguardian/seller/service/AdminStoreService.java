@@ -1,5 +1,7 @@
 package com.petguardian.seller.service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Map;
 
@@ -20,4 +22,8 @@ public interface AdminStoreService {
     void rejectReturn(Integer returnId);
 
     void payoutToSeller(Integer orderId);
+
+    @Transactional(readOnly = true)
+    Map<String, Object> getOrderDetailForAdmin(Integer orderId);
+
 }

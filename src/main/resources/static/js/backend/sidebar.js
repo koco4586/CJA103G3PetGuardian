@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <i class="fa-solid fa-chevron-down arrow"></i>
                     </a>
                     <ul class="submenu">
-                        <li data-page="market-manage"><a href="/admin/store/manage"><i class="fa-solid fa-box"></i> 商品管理</a></li>
+                        <li data-page="market-manage"><a href="/admin/store/manage"><i class="fa-solid fa-box"></i> 商城管理</a></li>
                         <li data-page="market-reviews"><a href="/admin/store-reviews"><i class="fa-solid fa-flag"></i> 評價管理</a></li>
                     </ul>
                 </li>
@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
     else if (currentPath.includes("/admin/store-reviews")) {
         pageName = "market-reviews";
     }
-    // 二手商城 - 商品管理
+    // 二手商城 - 商城管理
     else if (currentPath.includes("/admin/store/manage") || currentPath.includes("/admin/store")) {
         pageName = "market-manage";
     }
