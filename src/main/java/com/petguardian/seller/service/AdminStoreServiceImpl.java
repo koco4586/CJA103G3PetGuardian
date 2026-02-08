@@ -174,6 +174,7 @@ public class AdminStoreServiceImpl implements AdminStoreService {
         return result;
     }
 
+    // 批准退貨申請，更新訂單狀態並撥款給買家
     @Override
     public void approveReturn(Integer returnId) {
         ReturnOrderVO returnOrder = returnOrderRepository.findById(returnId)
@@ -199,6 +200,7 @@ public class AdminStoreServiceImpl implements AdminStoreService {
         walletRepository.save(buyerWallet);
     }
 
+    // 拒絕退貨申請，更新訂單狀態並撥款給賣家
     @Override
     public void rejectReturn(Integer returnId) {
         ReturnOrderVO returnOrder = returnOrderRepository.findById(returnId)
@@ -223,7 +225,7 @@ public class AdminStoreServiceImpl implements AdminStoreService {
         sellerWallet.setBalance(sellerWallet.getBalance() + payoutAmount);
         walletRepository.save(sellerWallet);
     }
-
+    // 撥款給賣家，更新訂單狀態
     @Override
     public void payoutToSeller(Integer orderId) {
         OrdersVO order = ordersRepository.findById(orderId)
@@ -244,6 +246,82 @@ public class AdminStoreServiceImpl implements AdminStoreService {
         ordersRepository.save(order);
     }
 
+    // 取得訂單詳情（包含買家、賣家名稱及訂單項目），給管理員使用
+    @Transactional(readOnly = true)
+    @Override
+    public Map<String, Object> getOrderDetailForAdmin(Integer orderId) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            // 查詢訂單基本資料
+            OrdersVO order = ordersRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("訂單不存在"));
+
+            result.put("success", true);
+            result.put("orderId", order.getOrderId());
+            result.put("orderStatus", order.getOrderStatus());
+            result.put("orderTotal", order.getOrderTotal());
+
+            // 格式化下單時間
+            String orderTimeStr = "-";
+            if (order.getOrderTime() != null) {
+                orderTimeStr = order.getOrderTime().toString().replace("T", " ");
+                if (orderTimeStr.length() > 16) {
+                    orderTimeStr = orderTimeStr.substring(0, 16);
+                }
+            }
+            result.put("orderTime", orderTimeStr);
+
+            // 收件資訊
+            result.put("receiverName", order.getReceiverName());
+            result.put("receiverPhone", order.getReceiverPhone());
+            result.put("receiverAddress", order.getReceiverAddress());
+            result.put("specialInstructions", order.getSpecialInstructions());
+
+            // 買家名稱
+            memberRepository.findById(order.getBuyerMemId())
+                    .ifPresent(buyer -> result.put("buyerName", buyer.getMemName()));
+
+            // 賣家名稱
+            memberRepository.findById(order.getSellerMemId())
+                    .ifPresent(seller -> result.put("sellerName", seller.getMemName()));
+
+            // 利用已注入的 ordersService 取得商品明細（不需額外注入其他 Repository）
+            try {
+                Map<String, Object> orderWithItems = ordersService.getOrderWithItems(orderId);
+                List<Map<String, Object>> orderItems =
+                        (List<Map<String, Object>>) orderWithItems.get("orderItems");
+
+                // 整理商品資料，統一欄位名稱給前端使用
+                List<Map<String, Object>> itemList = new ArrayList<>();
+                if (orderItems != null) {
+                    for (Map<String, Object> item : orderItems) {
+                        Map<String, Object> itemData = new HashMap<>();
+                        itemData.put("proId", item.get("proId"));
+                        itemData.put("proPrice", item.get("proPrice"));
+                        itemData.put("quantity", item.get("quantity"));
+                        itemData.put("subtotal", item.get("subtotal"));
+                        // ordersService 回傳的欄位名稱是 productTitle 和 productImg
+                        itemData.put("productName", item.get("productTitle"));
+                        itemData.put("productImage", item.get("productImg"));
+                        itemList.add(itemData);
+                    }
+                }
+                result.put("items", itemList);
+            } catch (Exception e) {
+                // 若取得商品明細失敗，回傳空陣列
+                result.put("items", new ArrayList<>());
+            }
+
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+
+        return result;
+    }
+
+    // 建立訂單資料的輔助方法，包含買家、賣家名稱及訂單項目
     private Map<String, Object> buildOrderData(OrdersVO order) {
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("order", order);
