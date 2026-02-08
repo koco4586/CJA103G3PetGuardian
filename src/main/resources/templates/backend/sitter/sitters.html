@@ -127,12 +127,13 @@
                                     <div th:if="${app.appStatus == 0}" style="display:flex; gap:5px;">
                                         <form th:action="@{/admin/sitter/approve/{id}(id=${app.appId})}" method="post"
                                             style="display:inline;">
-                                            <button class="btn" onclick="return confirm('確定審核通過？')">通過</button>
+                                            <button type="submit" class="btn"
+                                                onclick="return confirm('確定審核通過？')">通過</button>
                                         </form>
                                         <form th:action="@{/admin/sitter/reject/{id}(id=${app.appId})}" method="post"
                                             style="display:inline;">
                                             <input type="hidden" name="reviewNote" value="資料審核不符">
-                                            <button class="btn ghost" style="color:red; border-color:red;"
+                                            <button type="submit" class="btn ghost" style="color:red; border-color:red;"
                                                 onclick="return confirm('確定駁回？')">駁回</button>
                                         </form>
                                     </div>

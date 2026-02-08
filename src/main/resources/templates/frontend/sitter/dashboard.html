@@ -422,15 +422,17 @@
 
             // [NEW] 檢查是否有待確認訂單並顯示通知
             const pendingCount = /*[[${pendingCount}]]*/ 0;
-            // 檢查 sessionStorage 是否已經通知過
-            const hasNotified = sessionStorage.getItem('pendingOrderNotified');
+            const memId = /*[[${sitter.memId}]]*/ 0;
+            // 檢查 sessionStorage 是否已經通知過（使用會員 ID 作為 Key）
+            const storageKey = `pendingOrderNotified_${memId}`;
+            const hasNotified = sessionStorage.getItem(storageKey);
 
             if (pendingCount > 0 && !hasNotified) {
                 // 使用 setTimeout 確保頁面渲染完成後彈出
                 setTimeout(() => {
-                    alert(`親愛的保母您好：\n目前有 ${pendingCount} 筆新的預約等待您的確認！\n請前往「預約管理」查看。`);
+                    alert(`親愛的保母您好：\\n目前有 ${pendingCount} 筆新的預約等待您的確認！\\n請前往「預約管理」查看。`);
                     // 設定已通知標記，避免重複彈出
-                    sessionStorage.setItem('pendingOrderNotified', 'true');
+                    sessionStorage.setItem(storageKey, 'true');
                 }, 500);
             }
 

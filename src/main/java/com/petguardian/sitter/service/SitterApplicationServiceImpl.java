@@ -104,11 +104,19 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
                     // 會員資料存在,使用實際資料
                     SitterMemberVO member = memberOpt.get();
                     sitterName = member.getMemName();
-                    sitterAdd = member.getMemAdd() != null ? member.getMemAdd() : "未設定地址";
+
+                    // 檢查會員地址是否有效
+                    String memberAddress = member.getMemAdd();
+                    if (memberAddress != null && memberAddress.trim().length() >= 5) {
+                        sitterAdd = memberAddress;
+                    } else {
+                        // 會員地址為空或太短，使用預設值（符合驗證規則：至少5字元）
+                        sitterAdd = "台北市大安區";
+                    }
                 } else {
                     // 會員資料不存在,使用預設值 (待會員功能完成後可移除此邏輯)
                     sitterName = "會員" + memId;
-                    sitterAdd = "未設定地址";
+                    sitterAdd = "台北市大安區";
                 }
 
                 // 3.3 建立保姆資料
@@ -128,6 +136,7 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
         }
 
         return repository.save(vo);
+
     }
 
     /**
