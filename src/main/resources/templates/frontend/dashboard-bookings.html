@@ -190,8 +190,10 @@
 							    <span th:text="${order.cancelReason}">理由內容</span>
 							</div>
 							<div style="color: #666; font-size: 0.9rem;">
-								<i class="far fa-clock"></i> <span
-									th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"></span>
+							    <i class="far fa-clock"></i> 
+							    <!-- 顯示格式：yyyy-MM-dd HH:mm ~ HH:mm -->
+							    <span th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"></span>
+							    <span th:text="' ~ ' + ${#temporals.format(order.endTime, 'HH:mm')}"></span>
 							</div>
 						</div>
 					</div>

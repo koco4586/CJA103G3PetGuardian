@@ -124,9 +124,8 @@
 
 							<div class="info-row">
 								<i class="far fa-clock"></i> 
-    <span th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}">開始時間</span>
-    ~ 
-    <span th:text="${#temporals.format(order.endTime, 'yyyy-MM-dd HH:mm')}">結束時間</span>
+							    <span th:text="${#temporals.format(order.startTime, 'yyyy-MM-dd HH:mm')}"></span>
+							    <span th:text="' ~ ' + ${#temporals.format(order.endTime, 'HH:mm')}"></span>
 							</div>
 
 
