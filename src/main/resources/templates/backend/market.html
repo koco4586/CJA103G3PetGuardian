@@ -379,7 +379,6 @@
                                       onsubmit="return confirm('確定要刪除這個類別嗎？如果此類別下有商品將無法刪除。');">
                                     <input type="hidden" name="proTypeId" th:value="${typeData.proType.proTypeId}">
                                     <button type="submit" class="btn ghost"
-                                            th:disabled="${typeData.productCount > 0}"
                                             style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:6px; cursor:pointer;">
                                         刪除
                                     </button>
