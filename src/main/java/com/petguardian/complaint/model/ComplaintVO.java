@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.sql.Timestamp;
 
 @SuppressWarnings("serial")
 @Entity
@@ -33,6 +34,12 @@ public class ComplaintVO implements java.io.Serializable {
 
     @Column(name = "report_status")
     private Integer reportStatus = 0;
+
+    @Column(name = "created_at", insertable = true, updatable = false)
+    private Timestamp createdAt; // 報案時間
+
+    @Column(name = "updated_at", insertable = true, updatable = true)
+    private Timestamp updatedAt; // 完結時間
 
     // --- 擴充欄位 (供後台管理顯示用) ---
     @jakarta.persistence.Transient
@@ -105,6 +112,22 @@ public class ComplaintVO implements java.io.Serializable {
 
     public void setReportStatus(Integer reportStatus) {
         this.reportStatus = reportStatus;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public String getReporterName() {

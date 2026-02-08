@@ -452,7 +452,7 @@ window.loadAndDisplayReviews = function (sitterId, containerSelector, countSelec
                         // 保留 icon 和筆數 span，只改文字
                         const safeName = (sitterName && sitterName !== '""' && sitterName !== "''") ? sitterName : '保母';
                         h3.innerHTML = `
-                            <i class="fas fa-comments"></i> ${safeName} 的歷史評價
+                            <i class="fas fa-comments"></i> ${safeName} 的被評價記錄
                             <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
                                 (共 <span id="sitterReviewCount">${reviews.length}</span> 筆)
                             </span>
@@ -663,7 +663,7 @@ window.loadAndDisplayReviewsForDashboard = function (sitterId, containerSelector
                 h3.style.cursor = 'pointer';
                 h3.style.userSelect = 'none';
                 h3.innerHTML = `
-                    <i class="fas fa-comments"></i> ${safeName} 的歷史評價
+                    <i class="fas fa-comments"></i> ${safeName} 的被評價記錄
                     <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
                         (共 <span id="dashboardReviewCount">${reviews.length}</span> 筆)
                     </span>

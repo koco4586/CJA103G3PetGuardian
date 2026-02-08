@@ -41,6 +41,18 @@ public class EvaluateServiceImpl implements EvaluateService {
                 vo.setRoleType(1); // 1 = 會員
             }
         }
+
+        // 🔥 限制：檢查同一方向評價次數是否已達上限 (2次)
+        if (vo.getBookingOrderId() != null) {
+            List<EvaluateVO> existing = repo.findByBookingOrderId(vo.getBookingOrderId());
+            long count = existing.stream()
+                    .filter(e -> e.getRoleType() != null && e.getRoleType().equals(vo.getRoleType()))
+                    .count();
+            if (count >= 2) {
+                throw new RuntimeException("該訂單評價次數已達上限 (2次)");
+            }
+        }
+
         repo.save(vo);
     }
 

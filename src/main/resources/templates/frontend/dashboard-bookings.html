@@ -199,9 +199,11 @@
 								<th:block
 									th:if="${order.orderStatus == 2 or order.orderStatus == 5 or ((order.orderStatus == 0 or order.orderStatus == 1) and isPast)}">
 									<!-- <button class="btn btn-outline btn-sm">查看照顧紀錄</button> -->
-									<!-- 🔥 限制：被檢舉兩次則隱藏評價按鈕 -->
+									<!-- 🔥 限制：被檢舉兩次則隱藏，且單筆訂單最多評價保母兩次（達標時按鈕反灰） -->
 									<button th:if="${order.complaintCount < 2}" class="btn btn-outline btn-sm"
-										th:onclick="|injectEvalBox(this, ${order.bookingOrderId}, ${order.sitterMemId})|">評價保母</button>
+										th:classappend="${order.memberEvalCount >= 2} ? 'btn-disabled-gray' : ''"
+										th:onclick="${order.memberEvalCount < 2} ? |injectEvalBox(this, ${order.bookingOrderId}, ${order.sitterMemId})| : ''"
+										th:title="${order.memberEvalCount >= 2} ? '單筆訂單評價次數已達上限' : ''">評價保母</button>
 								</th:block>
 
 								<th:block th:if="${order.orderStatus == 3}">
