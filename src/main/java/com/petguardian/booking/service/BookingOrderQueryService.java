@@ -172,7 +172,7 @@ public class BookingOrderQueryService {
             }
         }
         // 2. 批次查詢保母與服務詳細資訊
-        java.util.Map<String, com.petguardian.petsitter.model.PetSitterServiceVO> svcDetailMap = new java.util.HashMap<>();
+        java.util.Map<String, PetSitterServiceVO> svcDetailMap = new java.util.HashMap<>();
         if (!serviceIds.isEmpty()) { // 修正為 serviceIds
             List<com.petguardian.petsitter.model.PetSitterServiceVO> services = petSitterServiceRepository
                     .findByServiceItemIdIn(serviceIds); // 修正為 serviceIds
@@ -184,13 +184,20 @@ public class BookingOrderQueryService {
             }
         }
 
-        // 3. 批次查詢會員名稱
+        // 3. 批次查詢會員名稱與圖片
         java.util.Map<Integer, String> memNameMap = new java.util.HashMap<>();
+        java.util.Map<Integer, String> memImageMap = new java.util.HashMap<>();
         if (!memIds.isEmpty()) {
             List<Member> members = memberRepository.findAllById(memIds);
-            for (Member m : members)
+            for (Member m : members) {
                 memNameMap.put(m.getMemId(), m.getMemName());
+	         	// 如果沒圖片，使用預設圖路徑
+	            String img = (m.getMemImage() != null) ? m.getMemImage() : "/images/default-avatar.png";
+	            memImageMap.put(m.getMemId(), img);
+            }
         }
+        
+        
 
         // 4. 批次統計檢舉次數 (解決 N+1)
         java.util.Map<Integer, Long> complaintCountMap = new java.util.HashMap<>();
@@ -238,7 +245,8 @@ public class BookingOrderQueryService {
 
             // B. 填入會員名稱
             order.setMemName(memNameMap.getOrDefault(order.getMemId(), "未知會員"));
-
+            order.setMemImage(memImageMap.get(order.getMemId())); // 填入圖片
+            
             // C. 填入寵物名稱
             order.setPetName(petNameMap.getOrDefault(order.getPetId(), "未知寵物"));
             order.setPetImage(petImageMap.get(order.getPetId()));

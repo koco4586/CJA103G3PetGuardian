@@ -23,12 +23,13 @@
 		<div class="sidebar">
 			<div class="text-center mb-2">
 				<div class="avatar-wrapper">
-					<img th:src="${sitter.memImage == null ? '/images/default-avatar.png' : 
-				             (sitter.memImage.startsWith('http') or sitter.memImage.startsWith('/') or sitter.memImage.startsWith('data:') ? 
-				              sitter.memImage : 'data:image/jpeg;base64,' + sitter.memImage)}" class="avatar"
-						onerror="this.src='/images/default-avatar.png'">
+					<img th:if="${currentMember != null and currentMember.memImage != null}"
+					    th:src="@{${currentMember.memImage}}" class="avatar" alt="會員頭像">
+					<img th:unless="${currentMember != null and currentMember.memImage != null}"
+					    src="/images/member/aed4ec81-2887-41e6-8ed3-cd4cd6aa17f3_petguardianMember01.png" 
+					    class="avatar" alt="預設頭像">
 				</div>
-				<h4 th:text="${sitter.memName}" style="margin-bottom: 2px;">保母姓名</h4>
+				<h4 th:text="${sitter != null and sitter.sitterName != null and sitter.sitterName != ''} ? ${sitter.sitterName} : ${currentMember.memName}">名稱</h4>
 				<p style="color: #64748b; font-size: 0.85rem; margin-top: 0;">專業保姆專區</p>
 			</div>
 			<nav style="margin-top: 1.5rem;">
@@ -107,7 +108,7 @@
 						<!-- 圖片區 -->
 						<div class="avatar-area">
 							<img th:src="@{${order.petImage != null ? order.petImage : '/images/default-pet.png'}}"
-								onerror="this.onerror=null; this.src='/images/default-pet.png'" alt="Pet"
+								onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=Pet'" alt="Pet"
 								class="pet-avatar-img">
 						</div>
 
@@ -154,6 +155,9 @@
 									<button class="btn btn-outline-danger btn-sm"
 										th:onclick="'rejectOrder(' + ${order.bookingOrderId} + ')'">
 										<i class="fas fa-times"></i> 拒絕
+									</button>
+									<button class="btn btn-outline-secondary btn-sm" onclick="alert('聯絡功能開發中')">
+										<i class="far fa-comment-dots"></i> 聯絡
 									</button>
 								</th:block>
 
@@ -210,7 +214,9 @@
 		<div class="modal-content">
 			<h3 class="modal-title">婉拒預約</h3>
 			<p style="color: #64748b; margin-bottom: 1rem;">為了讓飼主了解原因，請建議填寫簡短說明：</p>
-			<textarea id="rejectReason" rows="4" placeholder="例如：不好意思，該時段家中臨時有事，無法提供服務..."></textarea>
+			<textarea id="rejectReason" rows="4" 
+		          maxlength="200" 
+		          placeholder="例如：不好意思，該時段家中臨時有事，無法提供服務(字數限制:4~200字)..."></textarea>
 			<div style="display: flex; gap: 12px; justify-content: flex-end;">
 				<button class="btn btn-outline-secondary" onclick="closeRejectModal()">再來想想</button>
 				<button class="btn btn-primary" style="background-color: #ef476f; border-color: #ef476f;"
@@ -218,7 +224,26 @@
 			</div>
 		</div>
 	</div>
-
+	<div class="pagination-wrapper">
+	    <div class="pagination-container mt-4 d-flex justify-content-center align-items-center gap-2" th:if="${totalPages > 1}">
+	        <a th:href="@{/sitter/bookings(page=0, status=${status})}" 
+	           class="btn btn-outline btn-sm" th:if="${currentPage > 0}">第一頁</a>
+	        <a th:href="@{/sitter/bookings(page=${currentPage - 1}, status=${status})}" 
+	           class="btn btn-outline btn-sm" th:if="${currentPage > 0}">
+	           <i class="fas fa-chevron-left"></i> 上一頁
+	        </a>
+	        <span class="static-page-box">
+	            <th:block th:text="${currentPage + 1}">1</th:block> / <th:block th:text="${totalPages}">1</th:block>
+	        </span>
+	        <a th:href="@{/sitter/bookings(page=${currentPage + 1}, status=${status})}" 
+	           class="btn btn-outline btn-sm" th:if="${currentPage < totalPages - 1}">
+	           下一頁 <i class="fas fa-chevron-right"></i>
+	        </a>
+	        
+	        <a th:href="@{/sitter/bookings(page=${totalPages - 1}, status=${status})}" 
+	           class="btn btn-outline btn-sm" th:if="${currentPage < totalPages - 1}">最後一頁</a>
+	    </div>
+	</div>
 	<footer id="main-footer"></footer>
 
 	<!-- Scripts -->
@@ -270,6 +295,10 @@
 		document.getElementById('confirmRejectBtn').onclick = function () {
 			const reason = document.getElementById('rejectReason').value;
 
+			 if (reason.length < 4 || reason.length > 200) {
+			        alert("為了讓飼主了解原因，婉拒理由請填寫 4 至 200 個字之間喔！");
+			        return;
+			    }
 			$.post(`/sitter/updateStatus/${currentRejectOrderId}`, {
 				newStatus: 3,
 				reason: reason

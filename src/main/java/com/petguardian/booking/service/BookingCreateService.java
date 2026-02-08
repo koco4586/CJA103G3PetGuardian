@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.petguardian.booking.model.BookingOrderRepository;
 import com.petguardian.booking.model.BookingOrderVO;
 import com.petguardian.petsitter.model.PetSitterServiceVO;
+import com.petguardian.wallet.model.Wallet;
+import com.petguardian.wallet.model.WalletRepository;
 
 /**
  * 訂單建立服務
@@ -27,6 +29,9 @@ public class BookingCreateService {
 
     @Autowired
     private BookingDataIntegrationService dataService;
+    
+    @Autowired
+    private WalletRepository walletRepository;
 
     /**
      * 建立預約訂單
@@ -77,6 +82,12 @@ public class BookingCreateService {
         // 設定預約金額（時數 × 單價）
         order.setReservationFee((int) (hours * sitterService.getDefaultPrice()));
         
+        //餘額檢查
+        Wallet wallet = walletRepository.findByMemId(order.getMemId())
+                .orElseThrow(() -> new IllegalArgumentException("您的錢包尚未啟用。"));
+        if (wallet.getBalance() < order.getReservationFee()) {
+            throw new IllegalArgumentException("預約失敗：錢包餘額不足 (剩餘: " + wallet.getBalance() + " 元)。");
+        }
         // 設定訂單狀態為待確認
         order.setOrderStatus(0);
 

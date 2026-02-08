@@ -126,12 +126,16 @@ public class BookingScheduleInternalService {
 
     public void autoUpdateExpiredOrders(List<BookingOrderVO> orders) {
         LocalDateTime now = LocalDateTime.now();
+        boolean changed = false;
         for (BookingOrderVO order : orders) {
             if ((order.getOrderStatus() == 0 || order.getOrderStatus() == 1)
                     && order.getEndTime().isBefore(now)) {
                 order.setOrderStatus(2);
-                orderRepository.save(order);
+                changed = true;
             }
+        }
+        if (changed) {
+            orderRepository.saveAll(orders); // 一次性更新
         }
     }
 }

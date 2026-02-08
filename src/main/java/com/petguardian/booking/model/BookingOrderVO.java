@@ -60,6 +60,7 @@ public class BookingOrderVO {
     @Column(name = "report_status")
     private Integer reportStatus = 0;
 
+    @Column(name = "cancel_reason", length = 200)
     private String cancelReason;
     private LocalDateTime cancelTime;
 
@@ -72,6 +73,9 @@ public class BookingOrderVO {
     // 顯示用的額外資訊 (不存入資料庫)
     @Transient
     private String memName; // 透過 batchEnrichOrderInfo 填入
+    
+    @Transient
+    private String memImage;
 
     @Transient
     private String petName; // 透過 batchEnrichOrderInfo 填入
