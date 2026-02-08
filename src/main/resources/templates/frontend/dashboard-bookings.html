@@ -182,8 +182,9 @@
 								<span th:if="${order.orderStatus == 3}" class="badge-pill status-cancelled">已取消</span>
 								<span th:if="${order.orderStatus == 4}" class="badge-pill status-cancelled">已退款</span>
 								<span th:if="${order.orderStatus == 5}" class="badge-pill status-completed">已結案</span>
+								<span th:if="${order.orderStatus == 6}" class="badge-pill status-cancelled">已退款</span>
 							</div>
-							<div th:if="${order.orderStatus == 3 and order.cancelReason != null}" 
+							<div th:if="${(order.orderStatus == 3 or order.orderStatus == 4 or order.orderStatus == 6) and order.cancelReason != null}" 
 							     style="margin-top: 8px; padding: 8px 12px; background: #fff5f5; border-left: 3px solid #fa5252; border-radius: 4px; font-size: 0.85rem; color: #c92a2a;">
 							    <i class="fas fa-info-circle"></i> <strong>取消原因：</strong>
 							    <span th:text="${order.cancelReason}">理由內容</span>
@@ -302,24 +303,24 @@
 			const infoBox = document.getElementById('refundInfoBox');
 
 			// 計算退費邏輯
-			const today = new Date();
+			const now = new Date(); 
 			const bookingDate = new Date(startDateStr);
-			const diffTime = bookingDate - today;
-			const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+			const diffMs = bookingDate - now;
+			const diffHours = diffMs / (1000 * 60 * 60);
 
-			if (diffDays >= 7) {
-				infoBox.innerHTML = `
-                <p style="color:#2f9e44; font-weight:600; margin:0;">符合全額退費條件</p>
-                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務還有 ${diffDays} 天，取消將退還 100% 預約金。</p>`;
-			} else if (diffDays > 0) {
-				infoBox.innerHTML = `
-                <p style="color:#ea580c; font-weight:600; margin:0;">酌收手續費 (退還 50%)</p>
-                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務僅剩 ${diffDays} 天，取消將退還 50% 預約金。</p>`;
-			} else {
-				infoBox.innerHTML = `
-                <p style="color:#fa5252; font-weight:600; margin:0;">不可退費</p>
-                <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>服務已開始或即將開始，目前取消不予退費。</p>`;
-			}
+			if (diffHours >= 24) {
+		        infoBox.innerHTML = `
+		            <p style="color:#2f9e44; font-weight:600; margin:0;">符合全額退費條件</p>
+		            <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務還有超過 24 小時，取消將退還 100% 預約金。</p>`;
+		    } else if (diffHours >= 12) {
+		        infoBox.innerHTML = `
+		            <p style="color:#ea580c; font-weight:600; margin:0;">酌收手續費 (退還 50%)</p>
+		            <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br>距離服務僅剩 ${Math.floor(diffHours)} 小時，取消將退還 50% 預約金。</p>`;
+		    } else {
+		        infoBox.innerHTML = `
+		            <p style="color:#fa5252; font-weight:600; margin:0;">無法退款</p>
+		            <p style="font-size:0.85rem; color:#666; margin:0.5rem 0 0 0;">預約編號：#BK-${orderId}<br><strong style="color:#fa5252;">因為距離服務不足 12 小時，所以無法退款。</strong><br>但您仍可取消預約以釋出保母時段。</p>`;
+		    }
 
 			document.getElementById('cancelBookingModal').style.display = 'flex';
 

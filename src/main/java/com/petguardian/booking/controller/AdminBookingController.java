@@ -1,5 +1,6 @@
 package com.petguardian.booking.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,13 @@ public class AdminBookingController {
         allBookings.forEach(o -> o.setSitterStatus(sitterStatusMap.get(o.getSitterId())));
         refundRequests.forEach(o -> o.setSitterStatus(sitterStatusMap.get(o.getSitterId())));
         
+        allBookings.sort((o1, o2) -> {
+            int p1 = getAdminSortPriority(o1);
+            int p2 = getAdminSortPriority(o2);
+            if (p1 != p2) return p1 - p2;
+            // 若優先權相同，則按預約開始時間排序 (即將開始的在前)
+            return o1.getStartTime().compareTo(o2.getStartTime());
+        });
         // 3. 將資料存入 model 傳給 Thymeleaf
         model.addAttribute("allBookings", allBookings);
         model.addAttribute("refundRequests", refundRequests);
@@ -64,6 +72,10 @@ public class AdminBookingController {
     	try {
             // 1. 撈出訂單
             BookingOrderVO order = orderRepository.findById(orderId).orElseThrow();
+            
+            LocalDateTime actualCancelTime = (order.getCancelTime() != null) 
+                    ? order.getCancelTime() 
+                    : LocalDateTime.now();
             
             // 2. 讓系統計算比例
             Double calculatedRatio = bookingService.calculateRefundRatio(order.getStartTime(), order.getCancelTime());
@@ -149,6 +161,31 @@ public class AdminBookingController {
         } catch (Exception e) {
             return "error: " + e.getMessage();
         }
+    }
+    
+    // 排序優先權輔助方法 
+    private int getAdminSortPriority(BookingOrderVO order) {
+        // 服務完成 (最高優先，因為後台可能要趕快撥款)
+        if (order.getOrderStatus() == 2) return 1;
+        // 保母已停權且訂單尚未處置 (待處置)
+        if (order.getSitterStatus() != null && order.getSitterStatus() == 1 
+            && (order.getOrderStatus() == 0 || order.getOrderStatus() == 1)) {
+            return 2;
+        }
+        // 進行中
+        if (order.getOrderStatus() == 1) return 3;
+        
+        // 待確認
+        if (order.getOrderStatus() == 0) return 4;
+        
+        // 已結案
+        if (order.getOrderStatus() == 5) return 5;
+        
+        // 已退款
+        if (order.getOrderStatus() == 4) return 6;
+        
+        // 其他
+        return 7;
     }
 
 }

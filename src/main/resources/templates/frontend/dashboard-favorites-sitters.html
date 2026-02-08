@@ -150,12 +150,10 @@
 
                 if (response.ok) {
                     const result = await response.text(); 
-                    const icon = btn.querySelector('i');
                     
                     if (result === 'removed') {
                         // 1. 找到這張保母卡片
                         const card = btn.closest('.store-product-card');
-                        
                         if (card) {
                             // 2. 執行淡出動畫
                             card.style.transition = 'all 0.4s ease';
@@ -173,7 +171,7 @@
                                 }
                             }, 400);
                         }
-                        showFlashMessage("已移除收藏");
+                        showFlashMessage("已移除收藏", "remove");
                     } else {
                     	icon.classList.remove('fa-regular');
                         icon.classList.add('fa-solid');
@@ -192,7 +190,8 @@
         function showFlashMessage(text, type = 'success') {
             const msg = document.createElement('div');
             msg.className = `flash-message ${type}`;
-            msg.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> <span>${text}</span>`;
+            const iconClass = type === 'remove' ? 'fa-times-circle' : (type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle');
+            msg.innerHTML = `<i class="fas ${iconClass}"></i> <span>${text}</span>`;
             document.body.appendChild(msg);
             setTimeout(() => {
                 msg.style.opacity = '0';

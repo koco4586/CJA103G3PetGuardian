@@ -282,10 +282,22 @@ public class BookingViewController {
 //            return "redirect:/front/loginpage"; // 未登入，導向登入頁
 //        }
 
-        // 2. 根據狀態查詢預約（有 status 參數則過濾，沒有則查全部）
-        List<BookingOrderVO> bookingList = (status != null)
-                ? bookingService.findByMemberAndStatus(memId, status)
-                : bookingService.getOrdersByMemberId(memId);
+        List<BookingOrderVO> bookingList;
+        if (status != null) {
+            if (status == 3) {
+                // 如果前端傳來 status=3 (取消頁籤)，我們同時抓取 3, 4, 6 的資料
+                // 先抓出該會員所有訂單，再篩選出 3, 4, 6
+                bookingList = bookingService.getOrdersByMemberId(memId).stream()
+                        .filter(o -> o.getOrderStatus() == 3 || o.getOrderStatus() == 4 || o.getOrderStatus() == 6)
+                        .collect(Collectors.toList());
+            } else {
+                // 其他一般狀態 (如 0:待確認, 1:進行中) 照舊
+                bookingList = bookingService.findByMemberAndStatus(memId, status);
+            }
+        } else {
+            // 沒傳 status 則查全部
+            bookingList = bookingService.getOrdersByMemberId(memId);
+        }
 
         bookingList = bookingList.stream()
         	    .filter(order -> {

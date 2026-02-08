@@ -49,6 +49,8 @@ public class BookingOrderVO {
     // // 訂單狀態(0:待確認, 1:進行中, 2:已完成, 3:申請退款中, 4:已退款, 5:已撥款, 6:保母停權)
     @Column(name = "order_status")
     private Integer orderStatus = 0;
+    
+    
 
     // 評價相關
     private Integer sitterRating;
@@ -62,6 +64,8 @@ public class BookingOrderVO {
 
     @Column(name = "cancel_reason", length = 200)
     private String cancelReason;
+    
+    @Column(name = "cancel_time")
     private LocalDateTime cancelTime;
 
     @Column(name = "created_at", insertable = false, updatable = false)

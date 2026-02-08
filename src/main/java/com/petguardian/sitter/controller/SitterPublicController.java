@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,32 +16,30 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.petguardian.area.model.AreaVO;
+// [Refactored] Use Service interfaces instead of Repositories
+import com.petguardian.area.service.AreaService;
+import com.petguardian.booking.model.BookingOrderVO;
+import com.petguardian.common.service.AuthStrategyService;
+import com.petguardian.evaluate.service.EvaluateService;
+import com.petguardian.pet.model.PetRepository;
+import com.petguardian.pet.model.PetVO;
+import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
+import com.petguardian.petsitter.model.PetSitterServiceVO;
+import com.petguardian.petsitter.model.ServiceType;
+import com.petguardian.petsitter.service.PetSitterService;
+import com.petguardian.petsitter.service.PetSitterServicePetTypeService;
+import com.petguardian.service.model.ServiceAreaVO;
+import com.petguardian.service.service.ServiceAreaService;
+import com.petguardian.sitter.model.SitterMemberDTO;
+import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterSearchCriteria;
 import com.petguardian.sitter.model.SitterSearchDTO;
 import com.petguardian.sitter.model.SitterVO;
-import com.petguardian.sitter.model.SitterMemberVO;
-import com.petguardian.sitter.model.SitterMemberDTO;
-import com.petguardian.sitter.service.SitterService;
 import com.petguardian.sitter.service.SitterSearchService;
-
-import com.petguardian.evaluate.service.EvaluateService;
-
-import com.petguardian.petsitter.service.PetSitterService;
-import com.petguardian.service.service.ServiceAreaService;
-import com.petguardian.petsitter.model.PetSitterServiceVO;
-import com.petguardian.service.model.ServiceAreaVO;
-import com.petguardian.common.service.AuthStrategyService;
-
-import com.petguardian.petsitter.model.ServiceType;
-
-// [Refactored] Use Service interfaces instead of Repositories
-import com.petguardian.area.service.AreaService;
-import com.petguardian.petsitter.service.PetSitterServicePetTypeService;
-import com.petguardian.petsitter.model.PetSitterServicePetTypeVO;
-import com.petguardian.pet.model.PetRepository;
-import com.petguardian.pet.model.PetVO;
-import com.petguardian.area.model.AreaVO;
-import com.petguardian.booking.model.BookingOrderVO;
+import com.petguardian.sitter.service.SitterService;
+import com.petguardian.wallet.model.Wallet;
+import com.petguardian.wallet.model.WalletRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -80,6 +77,9 @@ public class SitterPublicController {
 
     @Autowired
     private EvaluateService evaluateService;
+    
+    @Autowired
+    private WalletRepository walletRepository;
 
     /**
      * 顯示公開的保姆搜尋頁面
@@ -288,6 +288,10 @@ public class SitterPublicController {
 
                 // [NEW] 載入會員寵物 (供預約視窗使用)
                 myPets = petRepository.findByMemId(memId);
+                
+                int balance = walletRepository.findByMemId(memId)
+                        .map(Wallet::getBalance).orElse(0);
+                model.addAttribute("walletBalance", balance);
             }
 
             // 4. 將所有資料加入 Model 傳遞給前端
