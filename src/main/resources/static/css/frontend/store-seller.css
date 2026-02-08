@@ -278,11 +278,14 @@
     border-radius: 16px;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow-x: auto; /* 允許水平滾動 */
+    -webkit-overflow-scrolling: touch; /* iOS平滑滾動 */
 }
 
 table {
     font-size: 0.95rem;
     width: 100%;
+    min-width: 800px; /* 確保表格有最小寬度 */
 }
 
 table thead tr {
@@ -361,7 +364,41 @@ table tbody tr:hover {
 /* ========================================
    7. 響應式設計
    ======================================== */
+/* 中等螢幕優化 (1200px 以下) */
+@media (max-width: 1200px) {
+    table {
+        min-width: 900px;
+        font-size: 0.9rem;
+    }
+
+    table th,
+    table td {
+        padding: 10px 8px;
+    }
+}
+
+/* 平板尺寸優化 (992px 以下) */
+@media (max-width: 992px) {
+    /* 側邊欄調整為垂直排列 */
+    .seller-sidebar {
+        position: static;
+        flex: 0 0 100% !important;
+        margin-bottom: 1.5rem;
+    }
+
+    /* 主容器改為垂直排列 */
+    .container > .d-flex {
+        flex-direction: column;
+    }
+
+    table {
+        font-size: 0.85rem;
+    }
+}
+
+/* 手機尺寸優化 (768px 以下) */
 @media (max-width: 768px) {
+    /* 表單調整 */
     .form-grid {
         grid-template-columns: 1fr;
     }
@@ -370,18 +407,97 @@ table tbody tr:hover {
         grid-template-columns: 1fr;
     }
 
+    /* Modal 調整 */
     .modal .modal-content {
         width: 95%;
         padding: 1.5rem;
     }
 
+    /* 統計數字調整 */
     .stat-number {
         font-size: 2rem;
     }
+
+    /* 卡片內距縮小 */
+    .card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    /* 表格持續保持最小寬度 */
+    table {
+        min-width: 700px;
+        font-size: 0.8rem;
+    }
+
+    table th,
+    table td {
+        padding: 8px 6px;
+    }
+
+    /* 商品圖片縮小 */
+    table td img {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    /* 按鈕緊湊化 */
+    .btn-sm {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+
+    /* 統計卡片調整 */
+    .stat-card {
+        min-width: 140px !important;
+    }
 }
 
-@media (max-width: 992px) {
-    .seller-sidebar {
-        position: static;
+/* 小手機尺寸優化 (576px 以下) */
+@media (max-width: 576px) {
+    table {
+        min-width: 600px;
+        font-size: 0.75rem;
     }
+
+    table th,
+    table td {
+        padding: 6px 4px;
+    }
+
+    /* 圖片進一步縮小 */
+    table td img {
+        width: 35px !important;
+        height: 35px !important;
+    }
+
+    /* 按鈕更緊湊 */
+    .btn-sm {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+    }
+
+    .badge {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+    }
+}
+
+/* 滾動條美化 */
+.card::-webkit-scrollbar {
+    height: 8px;
+}
+
+.card::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.card::-webkit-scrollbar-thumb {
+    background: #d4a373;
+    border-radius: 4px;
+}
+
+.card::-webkit-scrollbar-thumb:hover {
+    background: #c89660;
 }

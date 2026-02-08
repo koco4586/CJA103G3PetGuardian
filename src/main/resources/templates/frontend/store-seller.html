@@ -219,90 +219,93 @@
                 </div>
 
                 <div class="card" style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; min-width: 700px;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 700px; table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 80px;">
+                            <col style="width: 90px;">
+                            <col style="width: 110px;">
+                            <col style="width: auto;">
+                            <col style="width: 100px;">
+                            <col style="width: 80px;">
+                            <col style="width: 90px;">
+                            <col style="width: 120px;">
+                        </colgroup>
                         <thead>
                         <tr>
-                            <th
-                                    style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left; white-space: nowrap;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
                                 圖片
                             </th>
-                            <th
-                                    style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left; white-space: nowrap;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
                                 商品編號
                             </th>
-                            <th
-                                    style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left; white-space: nowrap;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
                                 商品類別
                             </th>
-                            <th style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: left;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: left;">
                                 商品名稱
                             </th>
-                            <th
-                                    style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: right; white-space: nowrap;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: right; white-space: nowrap;">
                                 單價
                             </th>
-                            <th
-                                    style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
                                 庫存
                             </th>
-                            <th
-                                    style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
                                 狀態
                             </th>
-                            <th
-                                    style="padding: 14px 12px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
+                            <th style="padding: 14px 10px; border-bottom: 2px solid #f0f0f0; text-align: center; white-space: nowrap;">
                                 操作
                             </th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="item : ${productsWithImages}">
-                            <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0;">
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center;">
                                 <img th:src="${item.mainImage + '?t=' + cacheBuster}" alt="商品圖片"
                                      style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
                             </td>
-                            <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;"
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; white-space: nowrap;"
                                 th:text="${item.product.proId}">0
                             </td>
-                            <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;"
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; white-space: nowrap;"
                                 th:text="${item.product.proType?.proTypeName}">類別
                             </td>
-                            <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0;"
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: left;"
                                 th:text="${item.product.proName}">商品名稱
                             </td>
-                            <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: right; white-space: nowrap; color: var(--primary-color); font-weight: 600;"
-                                th:text="'$' + ${item.product.proPrice}">$0
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: right; white-space: nowrap; color: var(--primary-color); font-weight: 600;">
+                                <span th:text="'$' + ${item.product.proPrice}">$0</span>
                             </td>
-                            <td style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;"
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; white-space: nowrap;"
                                 th:text="${item.product.stockQuantity}">0
                             </td>
-                            <td
-                                    style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center;">
-                                        <span th:if="${item.product.proState == 1}"
-                                              class="badge badge-success">上架中</span>
-                                <span th:unless="${item.product.proState == 1}"
-                                      class="badge badge-secondary">已下架</span>
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center;">
+                                <span class="badge"
+                                      th:classappend="${item.product.proState == 1 ? 'badge-success' : 'badge-secondary'}"
+                                      th:text="${item.product.proState == 1 ? '上架中' : '已下架'}">
+                                    狀態
+                                </span>
                             </td>
-                            <td
-                                    style="padding: 14px 12px; border-bottom: 1px solid #f0f0f0; text-align: center; white-space: nowrap;">
-                                <button class="btn btn-sm btn-outline edit-product-btn"
-                                        th:data-pro-id="${item.product.proId}"
-                                        th:data-pro-name="${item.product.proName}"
-                                        th:data-pro-type-id="${item.product.proType.proTypeId}"
-                                        th:data-pro-price="${item.product.proPrice}"
-                                        th:data-pro-description="${item.product.proDescription}"
-                                        th:data-stock-quantity="${item.product.stockQuantity}"
-                                        th:data-pro-state="${item.product.proState}"
-                                        onclick="openEditProductModal(this)" title="編輯">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <!-- 刪除按鈕已移除 -->
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                    <button class="btn btn-sm btn-outline" onclick="openEditProductModal(this)"
+                                            th:data-pro-id="${item.product.proId}"
+                                            th:data-pro-name="${item.product.proName}"
+                                            th:data-pro-type-id="${item.product.proType?.proTypeId}"
+                                            th:data-pro-price="${item.product.proPrice}"
+                                            th:data-pro-description="${item.product.proDescription}"
+                                            th:data-stock-quantity="${item.product.stockQuantity}"
+                                            th:data-pro-state="${item.product.proState}"
+                                            title="編輯商品">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(productsWithImages)}">
                             <td colspan="8" style="text-align: center; padding: 3rem; color: #999;">
                                 <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                                <p>目前還沒有商品，快來上架吧！</p>
+                                <p>目前還沒有商品,快來上架吧!</p>
                             </td>
                         </tr>
                         </tbody>
