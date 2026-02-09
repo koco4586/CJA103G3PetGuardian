@@ -10,7 +10,7 @@ public class MemberManagementResetPwRedirectController {
 
     @GetMapping("/resetpwpage")
     public String resetpwpage(){
-        return "redirect:/html/frontend/member/management/member_management_resetpw.html";
+        return "forward:/html/frontend/member/management/member_management_resetpw.html";
     }
 
 }

@@ -14,6 +14,7 @@ import com.petguardian.admin.model.Admin;
 import com.petguardian.admin.service.login.AdminLoginService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/admin")
@@ -23,7 +24,7 @@ public class AdminLoginController {
 	private AdminLoginService adminLoginService;
 
 	@PostMapping("/adminlogin")
-	public Map<String, String> adminlogin(@RequestBody AdminLoginDTO adminLoginDTO, HttpSession session) {
+	public Map<String, String> adminlogin(@RequestBody @Valid AdminLoginDTO adminLoginDTO, HttpSession session) {
 
 		Map<String, String> map = new HashMap<>();
 
@@ -40,7 +41,7 @@ public class AdminLoginController {
 		else if (admin.getAdmStatus() == 0) {
 
 			map.put("result", "此帳號已被停權,無法登入");
-			
+
 			return map;
 
 		}
