@@ -3,6 +3,8 @@ package com.petguardian.member.controller.management;
 import com.petguardian.member.dto.MemberManagementResetPwDTO;
 import com.petguardian.member.service.management.MemberManagementResetPwService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +22,7 @@ public class MemberManagementResetPwController {
     private MemberManagementResetPwService memberManagementResetPwService;
 
     @PutMapping("/resetpw")
-    public Map<String,String> resetpw(@RequestBody MemberManagementResetPwDTO memberManagementResetPwDTO, HttpSession session){
+    public Map<String,String> resetpw(@RequestBody @Valid MemberManagementResetPwDTO memberManagementResetPwDTO, HttpSession session){
 
         Map<String,String> map = new HashMap<>();
 

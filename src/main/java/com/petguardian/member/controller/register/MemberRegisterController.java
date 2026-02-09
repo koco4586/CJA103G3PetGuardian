@@ -2,6 +2,9 @@ package com.petguardian.member.controller.register;
 
 import com.petguardian.member.dto.MemberRegisterDTO;
 import com.petguardian.member.service.register.MemberRegisterService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +22,7 @@ public class MemberRegisterController {
     private MemberRegisterService memberRegisterService;
 
     @PostMapping("/register")
-    public Map<String,String> register(@RequestBody MemberRegisterDTO memberRegisterDTO){
+    public Map<String,String> register(@RequestBody @Valid MemberRegisterDTO memberRegisterDTO){
 
         Map<String,String> map = new HashMap<>();
 

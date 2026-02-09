@@ -1,13 +1,25 @@
 package com.petguardian.admin.dto.updateinfo;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class AdminManagementUpdateInfoDTO {
 
+	@NotBlank(message = "管理員姓名不得為空值或空白")
 	private String admName;
-	
+
+	@NotBlank(message = "管理員帳號不得為空值或空白")
+	@Size(min = 8, max = 16, message = "管理員帳號長度應介於8-16碼")
+	@Pattern(regexp = "^[a-zA-Z0-9]+$", message = "管理員帳號應不含特殊符號") // ^ 表示字串開始+：表示可以有一個或多個符合的字元$表示字串結束
 	private String admAccount;
-	
+
+	@NotBlank(message = "管理員電子信箱不得為空值或空白")
+	@Email(message = "管理員電子信箱應為合法的信箱格式")
 	private String admEmail;
-	
+
+	@NotBlank(message = "管理員電話不得為空值或空白")
 	private String admTel;
 
 	public String getAdmName() {
@@ -41,7 +53,5 @@ public class AdminManagementUpdateInfoDTO {
 	public void setAdmTel(String admTel) {
 		this.admTel = admTel;
 	}
-	
-	
-	
+
 }

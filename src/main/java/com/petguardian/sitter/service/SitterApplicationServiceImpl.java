@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import com.petguardian.sitter.model.*;
+import com.petguardian.wallet.model.Wallet;
+import com.petguardian.wallet.model.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,9 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
 
     @Autowired
     private SitterService sitterService;
+
+    @Autowired
+    private WalletRepository walletRepository;
 
     /**
      * 會員申請成為保姆
@@ -133,6 +138,21 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
              * 目標：當審核通過時，同步更新 Member 資料表的 mem_sitter_status 欄位
              */
             sitterMemberRepository.updateMemSitterStatus(memId, 1); // 1: 啟用保姆權限
+
+            // [NEW] 審核通過，發送 500 元獎勵金
+            Wallet wallet = walletRepository.findByMemId(memId).orElse(null);
+
+            if (wallet == null) {
+                // 若無錢包，建立新錢包
+                wallet = new Wallet();
+                wallet.setMemId(memId);
+                wallet.setBalance(500);
+            } else {
+                // 若有錢包，增加餘額
+                wallet.setBalance(wallet.getBalance() + 500);
+            }
+
+            walletRepository.save(wallet);
         }
 
         return repository.save(vo);

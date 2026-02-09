@@ -10,6 +10,6 @@ public class MemberRegisterSuccessRedirectController {
 
 	@GetMapping("/registersuccesspage")
 	public String registersuccesspage() {
-		return "forward:/html/frontend/member/register/memberregistersuccess.html";
+		return "forward:/html/frontend/member/register/registersuccess.html";
 	}
 }
