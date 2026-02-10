@@ -44,4 +44,7 @@ public class SitterMemberVO implements Serializable {
 
     @Column(name = "mem_image")
     private String memImage;
+    
+    @Column(name = "mem_status")
+    private Integer memStatus;
 }

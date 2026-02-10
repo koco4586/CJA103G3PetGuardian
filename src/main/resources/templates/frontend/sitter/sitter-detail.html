@@ -2,198 +2,238 @@
 <html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保母詳情 - PetGuardian</title>
-    <link rel="stylesheet" th:href="@{/css/frontend/style.css}">
-    <link rel="stylesheet" th:href="@{/css/frontend/components.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保母詳情 - PetGuardian</title>
+<link rel="stylesheet" th:href="@{/css/frontend/style.css}">
+<link rel="stylesheet" th:href="@{/css/frontend/components.css}">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        .profile-header {
-            background: linear-gradient(to bottom, #f8f9fa 50%, transparent 50%);
-            padding-top: 2rem;
-        }
+<style>
+.profile-header {
+	background: linear-gradient(to bottom, #f8f9fa 50%, transparent 50%);
+	padding-top: 2rem;
+}
 
-        .profile-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
+.profile-card {
+	background: white;
+	border-radius: 16px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+	padding: 2rem;
+	margin-bottom: 2rem;
+	text-align: center;
+}
 
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1rem;
-        }
+.profile-avatar {
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 4px solid white;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	margin-bottom: 1rem;
+}
 
-        .section-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
+.section-card {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+	padding: 1.5rem;
+	margin-bottom: 1.5rem;
+}
 
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #f0f0f0;
-            color: var(--primary-color);
-        }
+.section-title {
+	font-size: 1.2rem;
+	font-weight: 700;
+	margin-bottom: 1rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 2px solid #f0f0f0;
+	color: var(--primary-color);
+}
 
-        .service-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 0;
-            border-bottom: 1px dashed #eee;
-        }
+.service-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.8rem 0;
+	border-bottom: 1px dashed #eee;
+}
 
-        .service-item:last-child {
-            border-bottom: none;
-        }
+.service-item:last-child {
+	border-bottom: none;
+}
 
-        .price-text {
-            color: var(--danger);
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
+.price-text {
+	color: var(--danger);
+	font-weight: 600;
+	font-size: 1.1rem;
+}
 
-        .area-tag {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-            display: inline-block;
-            font-size: 0.9rem;
-        }
+.area-tag {
+	background: #e3f2fd;
+	color: #1976d2;
+	padding: 0.4rem 0.8rem;
+	border-radius: 20px;
+	margin-right: 0.5rem;
+	margin-bottom: 0.5rem;
+	display: inline-block;
+	font-size: 0.9rem;
+}
 
-        .review-card {
-            border-bottom: 1px solid #eee;
-            padding: 1.5rem 1.2rem;
-        }
+.review-card {
+	border-bottom: 1px solid #eee;
+	padding: 1.5rem 1.2rem;
+}
 
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
+.review-header {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
 
-        .booking-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 1rem;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-        }
-    </style>
-    <style>
-        /* 檢舉輸入框樣式 */
-        .dynamic-report-wrapper {
-            overflow: hidden;
-            max-height: 0;
-            opacity: 0;
-            margin-top: 0;
-            padding: 0 20px;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #fff5f5;
-            border-radius: 15px;
-            border: 1px solid transparent;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.booking-bar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: white;
+	padding: 1rem;
+	box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	z-index: 1000;
+}
+</style>
+<style>
+/* 檢舉輸入框樣式 */
+.dynamic-report-wrapper {
+	overflow: hidden;
+	max-height: 0;
+	opacity: 0;
+	margin-top: 0;
+	padding: 0 20px;
+	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	background: #fff5f5;
+	border-radius: 15px;
+	border: 1px solid transparent;
+	width: 100%;
+	box-sizing: border-box;
+}
 
-        .dynamic-report-wrapper.active {
-            max-height: 800px;
-            opacity: 1;
-            margin-top: 15px;
-            padding: 20px;
-            border: 1px solid #ffcdd2;
-            box-shadow: 0 4px 15px rgba(255, 205, 210, 0.3);
-        }
+.dynamic-report-wrapper.active {
+	max-height: 800px;
+	opacity: 1;
+	margin-top: 15px;
+	padding: 20px;
+	border: 1px solid #ffcdd2;
+	box-shadow: 0 4px 15px rgba(255, 205, 210, 0.3);
+}
 
-        .report-tag {
-            display: inline-block;
-            padding: 6px 14px;
-            margin: 5px;
-            background: #fff;
-            border: 1px solid #ffcdd2;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #c62828;
-            transition: all 0.2s;
-        }
+.report-tag {
+	display: inline-block;
+	padding: 6px 14px;
+	margin: 5px;
+	background: #fff;
+	border: 1px solid #ffcdd2;
+	border-radius: 20px;
+	cursor: pointer;
+	font-size: 0.9rem;
+	color: #c62828;
+	transition: all 0.2s;
+}
 
-        .report-tag.selected {
-            background: #ffcdd2;
-            font-weight: bold;
-        }
+.report-tag.selected {
+	background: #ffcdd2;
+	font-weight: bold;
+}
 
-        .submit-report-btn {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            float: right;
-            transition: transform 0.1s, background 0.2s;
-        }
+.submit-report-btn {
+	background: #ff6b6b;
+	color: white;
+	border: none;
+	padding: 10px 25px;
+	border-radius: 50px;
+	cursor: pointer;
+	font-weight: bold;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	float: right;
+	transition: transform 0.1s, background 0.2s;
+}
 
-        .submit-report-btn:active {
-            transform: scale(0.92);
-        }
+.submit-report-btn:active {
+	transform: scale(0.92);
+}
 
-        .submit-report-btn:hover {
-            background: #ff5252;
-        }
-    </style>
+.submit-report-btn:hover {
+	background: #ff5252;
+}
+/* 自定義彈窗滾動條樣式 */
+#bookingModal .modal-content-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+#bookingModal .modal-content-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+#bookingModal .modal-content-wrapper::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+#bookingModal .modal-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+.close-btn {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.5rem;
+    background: #f3f4f6;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 100;
+}
+.close-btn:hover {
+    background: #e5e7eb;
+    transform: rotate(90deg); 
+}
+</style>
 </head>
 
-<body style="padding-bottom: 80px;"> <!-- 預留底部預約按鈕空間 -->
+<body style="padding-bottom: 80px;">
+	<!-- 預留底部預約按鈕空間 -->
 
-    <!-- Header -->
-    <header id="main-header" class="header"></header>
+	<!-- Header -->
+	<header id="main-header" class="header"></header>
 
-    <div class="container" style="padding-top: 2rem;">
-        <div class="row">
-            <!-- 左側：個人簡介 -->
-            <div class="col-md-4">
-                <div class="profile-card">
-                    <!-- 預設頭像或保母上傳的頭像 -->
-                    <img th:if="${sitterMember != null and sitterMember.memImage != null}"
-                        th:src="${sitterMember.memImage}" class="profile-avatar" alt="保母頭像">
-                    <img th:unless="${sitterMember != null and sitterMember.memImage != null}"
-                        th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
-                        class="profile-avatar" alt="預設頭像">
+	<div class="container" style="padding-top: 2rem;">
+		<div class="row">
+			<!-- 左側：個人簡介 -->
+			<div class="col-md-4">
+				<div class="profile-card">
+					<!-- 預設頭像或保母上傳的頭像 -->
+					<img
+						th:if="${sitterMember != null and sitterMember.memImage != null}"
+						th:src="${sitterMember.memImage}" class="profile-avatar"
+						alt="保母頭像"> <img
+						th:unless="${sitterMember != null and sitterMember.memImage != null}"
+						th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${sitter.sitterId}"
+						class="profile-avatar" alt="預設頭像">
 
-                    <!-- B. 保母名稱 -->
-                    <h2 class="mb-2" th:text="${sitter.sitterName}">保母名稱</h2>
+					<!-- B. 保母名稱 -->
+					<h2 class="mb-2" th:text="${sitter.sitterName}">保母名稱</h2>
 
-                    <!-- <div class="d-flex justify-center align-center mb-3 text-warning">
+					<!-- <div class="d-flex justify-center align-center mb-3 text-warning">
                         <i class="fas fa-star"></i>
                         <span class="ms-1 fw-bold"
                             th:text="${sitter.sitterStarCount != null ? sitter.sitterStarCount : '0.0'}">5.0</span>
@@ -202,199 +242,211 @@
                             則評價)</span>
                     </div> -->
 
-                    <!-- <p class="text-muted" th:if="${sitter.sitterAdd}" th:text="'📍 ' + ${sitter.sitterAdd}">台北市大安區</p> -->
-                </div>
-            </div>
+					<!-- <p class="text-muted" th:if="${sitter.sitterAdd}" th:text="'📍 ' + ${sitter.sitterAdd}">台北市大安區</p> -->
+				</div>
+			</div>
 
-            <!-- 右側：詳細資訊 -->
-            <div class="col-md-8">
+			<!-- 右側：詳細資訊 -->
+			<div class="col-md-8">
 
-                <!-- C. 服務對象 (寵物種類與體型) -->
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-paw"></i> 服務對象</h3>
-                    <div th:if="${petTypes != null and !petTypes.isEmpty()}">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead style="background-color: #f8f9fa;">
-                                    <tr class="text-center">
-                                        <th style="width: 25%; padding: 1rem;">服務項目</th>
-                                        <th style="width: 25%; padding: 1rem;">寵物種類</th>
-                                        <th style="width: 25%; padding: 1rem;">體型</th>
-                                        <th style="width: 25%; padding: 1rem;">價格</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="pt : ${petTypes}" class="text-center align-middle">
-                                        <!-- 服務項目 -->
-                                        <td style="padding: 1rem;">
-                                            <span class="badge bg-secondary"
-                                                style="font-size: 0.95rem; padding: 0.5em 1em;"
-                                                th:text="${serviceNameMap.get(pt.serviceItemId) != null ? serviceNameMap.get(pt.serviceItemId) : '項目 ' + pt.serviceItemId}">
-                                                服務項目
-                                            </span>
-                                        </td>
+				<!-- C. 服務對象 (寵物種類與體型) -->
+				<div class="section-card">
+					<h3 class="section-title">
+						<i class="fas fa-paw"></i> 服務對象
+					</h3>
+					<div th:if="${petTypes != null and !petTypes.isEmpty()}">
+						<div class="table-responsive">
+							<table class="table table-hover mb-0">
+								<thead style="background-color: #f8f9fa;">
+									<tr class="text-center">
+										<th style="width: 25%; padding: 1rem;">服務項目</th>
+										<th style="width: 25%; padding: 1rem;">寵物種類</th>
+										<th style="width: 25%; padding: 1rem;">體型</th>
+										<th style="width: 25%; padding: 1rem;">價格</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="pt : ${petTypes}" class="text-center align-middle">
+										<!-- 服務項目 -->
+										<td style="padding: 1rem;"><span
+											class="badge bg-secondary"
+											style="font-size: 0.95rem; padding: 0.5em 1em;"
+											th:text="${serviceNameMap.get(pt.serviceItemId) != null ? serviceNameMap.get(pt.serviceItemId) : '項目 ' + pt.serviceItemId}">
+												服務項目 </span></td>
 
-                                        <!-- 種類 -->
-                                        <td style="padding: 1rem;">
-                                            <span th:switch="${pt.typeId}"
-                                                class="badge rounded-pill bg-light text-dark border"
-                                                style="font-size: 0.95rem; padding: 0.5em 1em;">
-                                                <i class="fas"
-                                                    th:classappend="${pt.typeId == 1} ? 'fa-dog' : 'fa-cat'"></i>
-                                                <span th:case="1">狗</span>
-                                                <span th:case="2">貓</span>
-                                            </span>
-                                        </td>
+										<!-- 種類 -->
+										<td style="padding: 1rem;"><span th:switch="${pt.typeId}"
+											class="badge rounded-pill bg-light text-dark border"
+											style="font-size: 0.95rem; padding: 0.5em 1em;"> <i
+												class="fas"
+												th:classappend="${pt.typeId == 1} ? 'fa-dog' : 'fa-cat'"></i>
+												<span th:case="1">狗</span> <span th:case="2">貓</span>
+										</span></td>
 
-                                        <!-- 體型 -->
-                                        <td style="padding: 1rem;">
-                                            <span th:switch="${pt.sizeId}" style="font-size: 1rem;">
-                                                <span th:case="1">小型</span>
-                                                <span th:case="2">中型</span>
-                                                <span th:case="3">大型</span>
-                                                <span th:case="*">不限</span>
-                                            </span>
-                                        </td>
+										<!-- 體型 -->
+										<td style="padding: 1rem;"><span th:switch="${pt.sizeId}"
+											style="font-size: 1rem;"> <span th:case="1">小型</span>
+												<span th:case="2">中型</span> <span th:case="3">大型</span> <span
+												th:case="*">不限</span>
+										</span></td>
 
-                                        <!-- 價格 -->
-                                        <td style="padding: 1rem;">
-                                            <span class="text-danger fw-bold" style="font-size: 1.1rem;"
-                                                th:text="${servicePriceMap.get(pt.serviceItemId) != null ? '$' + servicePriceMap.get(pt.serviceItemId) : '另洽'}">
-                                                $500
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div th:if="${petTypes == null or petTypes.isEmpty()}" class="text-center text-muted">
-                        未設定服務對象與價格
-                    </div>
-                </div>
+										<!-- 價格 -->
+										<td style="padding: 1rem;"><span
+											class="text-danger fw-bold" style="font-size: 1.1rem;"
+											th:text="${servicePriceMap.get(pt.serviceItemId) != null ? '$' + servicePriceMap.get(pt.serviceItemId) : '另洽'}">
+												$500 </span></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div th:if="${petTypes == null or petTypes.isEmpty()}"
+						class="text-center text-muted">未設定服務對象與價格</div>
+				</div>
 
-                <!-- E. 服務地區 -->
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> 服務地區</h3>
-                    <div th:if="${serviceAreas != null and !serviceAreas.isEmpty()}">
-                        <span th:each="area : ${serviceAreas}" class="area-tag">
-                            <i class="fas fa-location-arrow"></i>
-                            <span th:text="${area.area.cityName + ' ' + area.area.district}">台北市 大安區</span>
-                        </span>
-                    </div>
-                    <div th:if="${serviceAreas == null or serviceAreas.isEmpty()}" class="text-center text-muted">
-                        全區服務或未設定
-                    </div>
-                </div>
+				<!-- E. 服務地區 -->
+				<div class="section-card">
+					<h3 class="section-title">
+						<i class="fas fa-map-marker-alt"></i> 服務地區
+					</h3>
+					<div th:if="${serviceAreas != null and !serviceAreas.isEmpty()}">
+						<span th:each="area : ${serviceAreas}" class="area-tag"> <i
+							class="fas fa-location-arrow"></i> <span
+							th:text="${area.area.cityName + ' ' + area.area.district}">台北市
+								大安區</span>
+						</span>
+					</div>
+					<div th:if="${serviceAreas == null or serviceAreas.isEmpty()}"
+						class="text-center text-muted">全區服務或未設定</div>
+				</div>
 
-                <!-- F. 歷史評價 -->
-                <div class="section-card" id="reviews" th:data-sitter-id="${sitter.sitterId}"
-                    th:data-sitter-name="${sitter.sitterName}">
-                    <h3 class="section-title" style="cursor: pointer; user-select: none;"
-                        onclick="toggleHistoryReviews('reviewsList', 'toggleIcon')">
-                        <i class="fas fa-comments"></i> 的被評價記錄
-                        <span style="color: #999; font-size: 0.9rem; margin-left: 10px;">
-                            (共 <span th:text="${reviews != null ? reviews.size() : 0}">0</span> 筆)
-                        </span>
-                        <i id="toggleIcon" class="fas fa-chevron-down"
-                            style="float: right; transition: transform 0.3s;"></i>
-                    </h3>
+				<!-- F. 歷史評價 -->
+				<div class="section-card" id="reviews"
+					th:data-sitter-id="${sitter.sitterId}"
+					th:data-sitter-name="${sitter.sitterName}">
+					<h3 class="section-title"
+						style="cursor: pointer; user-select: none;"
+						onclick="toggleHistoryReviews('reviewsList', 'toggleIcon')">
+						<i class="fas fa-comments"></i> 的被評價記錄 <span
+							style="color: #999; font-size: 0.9rem; margin-left: 10px;">
+							(共 <span th:text="${reviews != null ? reviews.size() : 0}">0</span>
+							筆)
+						</span> <i id="toggleIcon" class="fas fa-chevron-down"
+							style="float: right; transition: transform 0.3s;"></i>
+					</h3>
 
-                    <div id="reviewsList" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease;">
-                        <!-- 评价内容将由 JavaScript 动态加载 -->
-                    </div>
+					<div id="reviewsList"
+						style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease;">
+						<!-- 评价内容将由 JavaScript 动态加载 -->
+					</div>
 
-                    <div th:if="${reviews == null or reviews.isEmpty()}" class="text-center text-muted py-3">
-                        <i class="far fa-comment-dots fa-2x mb-2"></i>
-                        <p>目前尚無評價紀錄</p>
-                    </div>
-                </div>
+					<div th:if="${reviews == null or reviews.isEmpty()}"
+						class="text-center text-muted py-3">
+						<i class="far fa-comment-dots fa-2x mb-2"></i>
+						<p>目前尚無評價紀錄</p>
+					</div>
+				</div>
 
-            </div>
-        </div>
-    </div>
+			</div>
+		</div>
+	</div>
 
-    <!-- G. 底部預約按鈕 -->
-    <div class="booking-bar container">
-        <div class="d-none d-md-block">
-            <h5 class="mb-0 text-primary" th:text="${sitter.sitterName}">保母名稱</h5>
-            <small class="text-muted">專業用心，值得信賴</small>
-        </div>
-        <div class="d-flex gap-2 w-100 w-md-auto justify-content-end">
-            <a href="#" onclick="history.back()" class="btn btn-outline">
-                <i class="fas fa-arrow-left"></i> 返回
-            </a>
-            <!-- 連結到預約頁面，帶上 sitterId -->
-            <!-- <a th:href="@{/booking/create(sitterId=${sitter.sitterId})}" class="btn btn-primary"
+	<!-- G. 底部預約按鈕 -->
+	<div class="booking-bar container">
+		<div class="d-none d-md-block">
+			<h5 class="mb-0 text-primary" th:text="${sitter.sitterName}">保母名稱</h5>
+			<small class="text-muted">專業用心，值得信賴</small>
+		</div>
+		<div class="d-flex gap-2 w-100 w-md-auto justify-content-end">
+			<a href="#" onclick="history.back()" class="btn btn-outline"> <i
+				class="fas fa-arrow-left"></i> 返回
+			</a>
+			<!-- 連結到預約頁面，帶上 sitterId -->
+			<!-- <a th:href="@{/booking/create(sitterId=${sitter.sitterId})}" class="btn btn-primary"
                 style="min-width: 150px;">
                 <i class="fas fa-calendar-check"></i> 立即預約
             </a> -->
 
-            <button class="btn btn-primary" style="min-width: 150px; border-radius: 3rem;"
-			    th:onclick="openBookingModal([[${sitter.sitterName}]], [[${sitter.sitterId}]])">
-			    <i class="fas fa-calendar-check"></i> 立即預約
+			<button class="btn btn-primary"
+				style="min-width: 150px; border-radius: 3rem;"
+				th:onclick="openBookingModal([[${sitter.sitterName}]], [[${sitter.sitterId}]])">
+				<i class="fas fa-calendar-check"></i> 立即預約
 			</button>
-        </div>
-    </div>
-    <!--同步services.html-->
-    <!-- 預約 Modal -->
-    <div id="bookingModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
-        <div
-            style="background: white; padding: 2.5rem; border-radius: 2rem; width: 95%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-            <button onclick="closeModal()"
-                style="position: absolute; right: 1.5rem; top: 1.5rem; background: #f0f0f0; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
-            <h3 style="font-weight: 700; font-size: 1.5rem;">
-                預約 <span id="sitterName" style="color: var(--primary-color);"></span>
-            </h3>
+		</div>
+	</div>
+	<!--同步services.html-->
+	<!-- 預約 Modal -->
+	<div id="bookingModal"
+	    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+	    
+	    <div class="modal-content-wrapper" 
+	        style="background: white; padding: 2.5rem; border-radius: 2rem; width: 95%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
+	                max-height: 85vh; overflow-y: auto; overflow-x: hidden;">
+	        
+	        <button onclick="closeModal()" class="close-btn">&times;</button>
+	
+	        <h3 style="font-weight: 700; font-size: 1.6rem; margin-bottom: 1.5rem;">
+	            預約 <span id="sitterName" style="color: var(--primary-color);"></span>
+	        </h3>
+	
+	        <form id="realBookingForm">
+	            <input type="hidden" id="modalSitterId">
+	            
+	            <div class="form-group" style="margin-bottom: 1.2rem;">
+	                <label class="form-label" style="font-weight: 600;">選擇小毛孩</label> 
+	                <select class="form-control" id="petId">
+	                    <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
+	                    <option th:each="pet : ${myPets}" th:value="${pet.petId}"
+	                        th:text="${pet.petName} + ' (' + ${pet.petTypeName} + ')'">
+	                    </option>
+	                </select>
+	            </div>
+	
+	            <div class="form-group" style="margin-bottom: 1.2rem;">
+	                <label class="form-label" style="font-weight: 600;">服務項目</label> 
+	                <select class="form-control" id="serviceItemId"></select>
+	            </div>
+	
+	            <div class="row" style="display: flex; gap: 10px; margin-bottom: 1.2rem;">
+	                <div style="flex: 1;">
+	                    <label class="form-label" style="font-weight: 600;">開始時間</label> 
+	                    <input type="datetime-local" id="startTime" class="form-control">
+	                </div>
+	            </div>
+	            
+	            <div class="row" style="display: flex; gap: 10px; margin-bottom: 1.2rem;">
+	                <div style="flex: 1;">
+	                    <label class="form-label" style="font-weight: 600;">結束時間</label> 
+	                    <input type="datetime-local" id="endTime" class="form-control">
+	                </div>
+	            </div>
+	
+	            <div class="form-group" style="margin-bottom: 1.2rem;">
+	                <div style="background: #f8fafc; padding: 1rem; border-radius: 1rem; border: 1px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+	                    <span style="font-size: 0.9rem; color: #64748b;">錢包餘額</span>
+	                    <span style="font-weight: 700; color: #1e293b; font-size: 1.1rem;" th:text="'$ ' + ${walletBalance != null ? walletBalance : 0}">$ 0</span>
+	                </div>
+	            </div>
+	
+	            <div class="form-group" style="margin-bottom: 1.5rem;">
+	                <label class="form-label" style="font-weight: 600;">特別需求</label>
+	                <textarea class="form-control" id="bookingNotes" rows="3" placeholder="有什麼想告訴保母的嗎？" style="resize: none;"></textarea>
+	            </div>
+	
+	            <button type="button" class="btn btn-primary"
+	                style="width: 100%; border-radius: 3rem; height: 55px; font-size: 1.2rem; font-weight: 600; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);"
+	                onclick="submitBooking()">確認送出</button>
+	        </form>
+	    </div>
+	</div>
 
-            <form id="realBookingForm" class="mt-2">
-                <input type="hidden" id="modalSitterId">
-                <div class="form-group">
-                    <label class="form-label">選擇小毛孩</label> <select class="form-control" id="petId">
-                        <option th:if="${#lists.isEmpty(myPets)}" value="">請先至會員中心新增寵物</option>
+	<!-- Footer -->
+	<footer id="main-footer" class="footer"></footer>
 
-                        <option th:each="pet : ${myPets}" th:value="${pet.petId}"
-                            th:text="${pet.petName} + ' (' + ${pet.petTypeName} + ')'">
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">服務項目</label> <select class="form-control" id="serviceItemId">
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">開始時間</label> <input type="datetime-local" id="startTime"
-                        class="form-control">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">結束時間</label> <input type="datetime-local" id="endTime"
-                        class="form-control">
-                </div>
-                <div class="form-group mb-2">
-				    <div style="background: #f8fafc; padding: 0.8rem; border-radius: 0.8rem; border: 1px dashed #cbd5e1;">
-				        <span style="font-size: 0.9rem; color: #64748b;">您的錢包餘額：</span>
-				        <span style="font-weight: 700; color: #1e293b;" th:text="'$ ' + ${walletBalance != null ? walletBalance : 0}">$ 0</span>
-				    </div>
-				</div>
-                <div class="form-group">
-                    <label class="form-label">特別需求</label>
-                    <textarea class="form-control" id="bookingNotes" rows="2" placeholder="有什麼想告訴保母的嗎？"></textarea>
-                </div>
-                <button type="button" class="btn btn-primary"
-                    style="width: 100%; border-radius: 3rem; margin-top: 1rem; height: 50px; font-size: 1.1rem;"
-                    onclick="submitBooking()">確認送出</button>
-            </form>
-        </div>
-    </div>
+	<!-- JS -->
+	<!-- Scripts moved to bottom for consistency -->
 
-    <!-- Footer -->
-    <footer id="main-footer" class="footer"></footer>
-
-    <!-- JS -->
-    <!-- Scripts moved to bottom for consistency -->
-
-    <script th:inline="javascript">
+	<script th:inline="javascript">
         /*<![CDATA[*/
         const contextPath = /*[[@{/}]]*/ '';
         /*]]>*/
@@ -506,12 +558,21 @@
                 alert("請填寫時間！");
                 return;
             }
-
-            if (new Date(startVal) >= new Date(endVal)) {
+            const startDate = new Date(startVal);
+            const endDate = new Date(endVal);
+            if (startDate >= endDate) {
                 alert("結束時間需晚於開始時間！");
                 return;
             }
+            
+            const diffMs = endDate - startDate; 
+            const diffMins = diffMs / (1000 * 60); 
+            if (diffMins < 60) {
+                alert("預約服務時間至少需要 1 小時！");
+                return;
+            }
 
+            
             const formData = new URLSearchParams();
             formData.append('sitterId', document.getElementById('modalSitterId').value);
             formData.append('petId', petId);
@@ -540,11 +601,11 @@
         }
     </script>
 
-    <script th:src="@{/js/frontend/main.js}"></script>
-    <script th:src="@{/js/frontend/evaluate-functions.js}"></script>
-    <script th:src="@{/js/frontend/complaint-functions.js}"></script>
+	<script th:src="@{/js/frontend/main.js}"></script>
+	<script th:src="@{/js/frontend/evaluate-functions.js}"></script>
+	<script th:src="@{/js/frontend/complaint-functions.js}"></script>
 
-    <script th:inline="javascript">
+	<script th:inline="javascript">
         // 5. 載入評價資料 (延遲到 DOM 與 JS 檔案載入完成)
         document.addEventListener('DOMContentLoaded', function () {
             const reviewsCard = document.getElementById('reviews');

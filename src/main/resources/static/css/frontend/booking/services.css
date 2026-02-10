@@ -205,3 +205,38 @@
     font-weight: 500;
     transition: opacity 0.3s ease;
 }
+/* 自定義彈窗滾動條樣式 */
+#bookingModal .modal-content-wrapper::-webkit-scrollbar {
+    width: 6px; /* 寬度變細 */
+}
+#bookingModal .modal-content-wrapper::-webkit-scrollbar-track {
+    background: transparent; /* 背景透明，不產生突兀白邊 */
+}
+#bookingModal .modal-content-wrapper::-webkit-scrollbar-thumb {
+    background: #d1d5db; /* 滾動條顏色 */
+    border-radius: 10px;
+}
+#bookingModal .modal-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af; /* 滑鼠移上去變深 */
+}
+.close-btn {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.5rem;
+    background: #f3f4f6;
+    border: none;
+    width: 40px;  /* 放大寬度 */
+    height: 40px; /* 放大高度 */
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px; /* 放大叉叉符號 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 100;
+}
+.close-btn:hover {
+    background: #e5e7eb;
+    transform: rotate(90deg); 
+}
