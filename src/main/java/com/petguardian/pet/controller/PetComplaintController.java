@@ -54,6 +54,8 @@ public class PetComplaintController {
         }
 
         vo.setReportStatus(0);
+        vo.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        vo.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
         complaintservice.insert(vo);
         return "frontend/review";
@@ -86,6 +88,7 @@ public class PetComplaintController {
             vo.setReportMemId(memId);
             vo.setReportStatus(0);
             vo.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            vo.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
             // 自動補齊被檢舉人 (toReportedMemId)
             if (evaluateId != null) {
