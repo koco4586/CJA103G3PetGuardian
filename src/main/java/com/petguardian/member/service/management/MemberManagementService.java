@@ -30,6 +30,9 @@ public class MemberManagementService {
 		try {
 
 			// 圖片存本機
+			String fakePath = null;
+			
+			if (fileImagePath != null) {
 			Path uploadDir = Paths.get(REALPATH).toAbsolutePath(); //Path是一個類別， get() 方法會將字串路徑轉換成 Path 物件，toAbsolutePath()會將相對路徑轉換為絕對路徑
 			
 			Files.createDirectories(uploadDir); //會創建目錄，包括所有不存在的父目錄
@@ -40,11 +43,14 @@ public class MemberManagementService {
 
 			fileImagePath.transferTo(targetPath.toFile());// transferTo():創建指定路徑檔案，並且把使用者上傳照片內容寫入該檔案,targetPath.toFile():將 Path 物件轉換為 File 物件
 			
+			fakePath = "/member/" + fileName;
+			
+			}
 			// 假路徑存資料庫
 			Member member = memberManagementRepository.findById(memId).orElse(null);
 
 			member.setMemId(memId);
-			member.setMemImage("/member/" + fileName);
+			member.setMemImage(fakePath);
 			member.setMemName(memberManagementUpdateDTO.getMemName());
 			member.setMemAcc(memberManagementUpdateDTO.getMemAcc());
 			member.setMemUid(memberManagementUpdateDTO.getMemUid());

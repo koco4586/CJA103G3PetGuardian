@@ -18,7 +18,7 @@ public class MemberManagementUpdateDTO {
 	@Pattern(regexp = "^[a-zA-Z0-9]+$", message = "使用者帳號應不含特殊符號") // ^ 表示字串開始+：表示可以有一個或多個符合的字元$表示字串結束
 	private String memAcc;
 
-	@Pattern(regexp = "^[A-Z][12]\\d{8}$", message = "身分證字號格式不正確")
+	@Pattern(regexp = "^$|^[A-Z][12]\\d{8}$", message = "身分證字號格式不正確")
 	private String memUid;
 
 	@Past(message = "使用者出生日期應小於當前日期")
@@ -30,12 +30,12 @@ public class MemberManagementUpdateDTO {
 	@Email(message = "使用者電子信箱應為合法的信箱格式")
 	private String memEmail;
 
-	@Pattern(regexp = "^09\\d{8}$", message = "使用者手機號碼格式有誤")
+	@Pattern(regexp = "^$|^09\\d{8}$", message = "使用者手機號碼格式有誤")
 	private String memTel;
 
 	private String memAdd;
 
-	@Pattern(regexp = "^\\d{10,16}$", message = "銀行帳號格式應為10-16碼阿拉伯數字")
+	@Pattern(regexp = "^$|^\\d{10,16}$", message = "銀行帳號格式應為10-16碼阿拉伯數字")
 	private String memAccountNumber;
 
 	public String getMemName() {
