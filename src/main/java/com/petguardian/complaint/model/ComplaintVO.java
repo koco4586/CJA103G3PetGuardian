@@ -35,10 +35,10 @@ public class ComplaintVO implements java.io.Serializable {
     @Column(name = "report_status")
     private Integer reportStatus = 0;
 
-    @Column(name = "created_at", insertable = true, updatable = false)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Timestamp createdAt; // 報案時間
 
-    @Column(name = "updated_at", insertable = true, updatable = true)
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private Timestamp updatedAt; // 完結時間
 
     // --- 擴充欄位 (供後台管理顯示用) ---
