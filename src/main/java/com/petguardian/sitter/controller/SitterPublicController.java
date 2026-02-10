@@ -77,7 +77,7 @@ public class SitterPublicController {
 
     @Autowired
     private EvaluateService evaluateService;
-    
+
     @Autowired
     private WalletRepository walletRepository;
 
@@ -268,8 +268,8 @@ public class SitterPublicController {
             }
 
             SitterMemberVO sitterMember = sitterService.getSitterMemberById(sitter.getMemId());
-            if (sitterMember != null) {
-                model.addAttribute("sitterMember", sitterMember);
+            if (sitterMember == null || sitterMember.getMemStatus() == null || sitterMember.getMemStatus() != 1 || sitter.getSitterStatus() != 0) {
+                return "redirect:/booking/services"; // 不符合條件則導回列表
             }
 
             // 歷史評價 (僅查詢有文字評論的訂單)
@@ -288,7 +288,7 @@ public class SitterPublicController {
 
                 // [NEW] 載入會員寵物 (供預約視窗使用)
                 myPets = petRepository.findByMemId(memId);
-                
+
                 int balance = walletRepository.findByMemId(memId)
                         .map(Wallet::getBalance).orElse(0);
                 model.addAttribute("walletBalance", balance);
@@ -296,6 +296,7 @@ public class SitterPublicController {
 
             // 4. 將所有資料加入 Model 傳遞給前端
             model.addAttribute("sitter", sitter);
+            model.addAttribute("sitterMember", sitterMember);
             model.addAttribute("services", services);
             model.addAttribute("serviceAreas", serviceAreas);
             model.addAttribute("petTypes", petTypes); // [NEW] 傳遞服務對象

@@ -133,5 +133,9 @@ public class BookingCreateService {
         if (!order.getStartTime().toLocalDate().isEqual(order.getEndTime().toLocalDate())) {
             throw new IllegalArgumentException("不可跨日");
         }
+        long durationMinutes = Duration.between(order.getStartTime(), order.getEndTime()).toMinutes();
+        if (durationMinutes < 60) {
+            throw new IllegalArgumentException("預約服務時間至少需要 1 小時");
+        }
     }
 }

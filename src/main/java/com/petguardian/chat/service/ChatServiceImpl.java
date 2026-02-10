@@ -43,8 +43,7 @@ import lombok.RequiredArgsConstructor;
  * Architecture Note:
  * Chatroom operations delegated to {@link ChatRoomService} (Facade)
  * Message operations delegated to {@link ChatMessageService} (Facade)
- * Search & Retrieval logic orchestrated via {@link ChatMessageRetrievalManager}
- * (Strategy)
+ * Search & Retrieval via {@link ChatMessageRetrievalManager}(Strategy)
  * Status/Notification delegated to {@link ChatStatusService} (Facade)
  * DTO mapping delegated to {@link ChatMessageMapper}
  */
