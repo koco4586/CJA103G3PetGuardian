@@ -13,6 +13,7 @@ import com.petguardian.booking.model.BookingFavoriteRepository;
 import com.petguardian.booking.model.BookingFavoriteVO;
 import com.petguardian.petsitter.model.PetSitterServiceRepository;
 import com.petguardian.sitter.model.SitterMemberRepository;
+import com.petguardian.sitter.model.SitterMemberVO;
 import com.petguardian.sitter.model.SitterRepository;
 import com.petguardian.sitter.model.SitterVO;
 
@@ -61,7 +62,7 @@ public class BookingFavoriteService {
                 .map(BookingFavoriteVO::getSitterId)
                 .collect(Collectors.toSet());
 
-        // 3. 批次查詢保母基本資料 (一條 SQL 解決)
+        // 3. 批次查詢保母基本資料
         List<SitterVO> sitters = sitterRepository.findAllById(sitterIds);
         Map<Integer, SitterVO> sitterMap = sitters.stream()
                 .collect(Collectors.toMap(SitterVO::getSitterId, s -> s));
@@ -69,30 +70,38 @@ public class BookingFavoriteService {
         List<Integer> memIds = sitters.stream()
                 .map(SitterVO::getMemId)
                 .collect(Collectors.toList());
-        Map<Integer, String> memberImageMap = new java.util.HashMap<>();
+        Map<Integer, SitterMemberVO> memberMap = new java.util.HashMap<>();
         sitterMemberRepository.findAllById(memIds).forEach(m -> {
-        	String imgPath = m.getMemImage();
-            if (imgPath == null || imgPath.trim().isEmpty()) {
-                imgPath = "/images/default-avatar.png";
-            }
-            memberImageMap.put(m.getMemId(), imgPath);
+        	 memberMap.put(m.getMemId(), m);
         });
         // 4. 填回 VO
-        for (BookingFavoriteVO fav : favorites) {
+        java.util.Iterator<BookingFavoriteVO> iterator = favorites.iterator();
+        while (iterator.hasNext()) {
+            BookingFavoriteVO fav = iterator.next();
             SitterVO s = sitterMap.get(fav.getSitterId());
-            if (s != null) {
-                fav.setSitterName(s.getSitterName());
-                fav.setSitterMemId(s.getMemId());
-                fav.setAvgRating(s.getAverageRating());    // 填入平均分
-                fav.setRatingCount(s.getSitterRatingCount()); // 填入次數
-                fav.setBasePrice(500); // 建議此處維持 500 或從 SitterService 抓取
-            
-                String img = memberImageMap.getOrDefault(s.getMemId(), "/images/default-avatar.png");
-                fav.setMemImage(img);
-            } else {
-                fav.setSitterName("保母資料已移除");
-                fav.setMemImage("/images/default-avatar.png");
+            // 檢查保母是否存在
+            if (s == null) {
+                iterator.remove(); 
+                continue;
             }
+            // 取得對應的會員資料
+            SitterMemberVO member = memberMap.get(s.getMemId());
+            // 核心過濾邏輯：
+            boolean isSitterActive = (s.getSitterStatus() != null && s.getSitterStatus() == 0);
+            boolean isMemberActive = (member != null && member.getMemStatus() != null && member.getMemStatus() == 1);
+            if (!isSitterActive || !isMemberActive) {
+                iterator.remove(); // 只要任何一個狀態不對，就讓這筆收藏在前端消失
+                continue;
+            }
+            // 通過檢查，填入詳細資料 (保留您要的平均分與次數)
+            fav.setSitterName(s.getSitterName());
+            fav.setSitterMemId(s.getMemId());
+            fav.setAvgRating(s.getAverageRating());       // 成功保留平均分
+            fav.setRatingCount(s.getSitterRatingCount()); // 成功保留評價數
+            fav.setBasePrice(500); 
+            // 處理頭像
+            String img = (member.getMemImage() != null) ? member.getMemImage() : "/images/default-avatar.png";
+            fav.setMemImage(img);
         }
         return favorites;
     }

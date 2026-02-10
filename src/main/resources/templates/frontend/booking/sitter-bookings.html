@@ -266,7 +266,6 @@
 				2: '完成服務',
 				3: '拒絕預約'
 			};
-			if (!confirm(`確定要「${statusText[newStatus]}」嗎？`)) return;
 
 			$.post(`/sitter/updateStatus/${orderId}`, {
 				newStatus: newStatus
