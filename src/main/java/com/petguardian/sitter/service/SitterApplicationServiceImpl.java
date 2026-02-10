@@ -139,17 +139,17 @@ public class SitterApplicationServiceImpl implements SitterApplicationService {
              */
             sitterMemberRepository.updateMemSitterStatus(memId, 1); // 1: 啟用保姆權限
 
-            // [NEW] 審核通過，發送 500 元獎勵金
+            // [NEW] 審核通過，發送 1000 元獎勵金
             Wallet wallet = walletRepository.findByMemId(memId).orElse(null);
 
             if (wallet == null) {
                 // 若無錢包，建立新錢包
                 wallet = new Wallet();
                 wallet.setMemId(memId);
-                wallet.setBalance(500);
+                wallet.setBalance(1000);
             } else {
                 // 若有錢包，增加餘額
-                wallet.setBalance(wallet.getBalance() + 500);
+                wallet.setBalance(wallet.getBalance() + 1000);
             }
 
             walletRepository.save(wallet);
