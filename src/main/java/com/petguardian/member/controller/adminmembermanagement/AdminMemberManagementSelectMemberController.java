@@ -24,7 +24,7 @@ public class AdminMemberManagementSelectMemberController {
 
 	@GetMapping("/admin-member-management-searchmember")
 	public AdminMemberManagementSelectDTO searchmember(
-			@RequestParam @Min(value = 1001, message = "會員編號需大於1001") @NotNull(message = "會員編號不得為空值") Integer memId) {
+			@RequestParam @Min(value = 1001, message = "會員編號需大於1001") Integer memId) {
 
 		return adminMemberManagementSelectMemberService.searchmember(memId);
 
