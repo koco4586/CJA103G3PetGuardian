@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base href="/"> <!--  添加這行 -->
     <title>PetGuardian｜會員管理</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -40,7 +39,7 @@
         <div class="outer">
 
             <form>
-                <input type="text" placeholder="請輸入會員編號" class="searchmemid input" required>
+                <input type="text" placeholder="請輸入會員編號(會員編號應大於1001)" class="searchmemid input long" required>
                 <button type="submit" class="selectsubmit mybutton">點擊查詢</button>
             </form><br>
 
@@ -69,7 +68,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="js/backend/sidebar.js"></script>
+    <script src="/js/backend/sidebar.js"></script>
 
     <script>
 

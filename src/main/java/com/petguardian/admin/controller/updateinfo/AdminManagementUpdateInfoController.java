@@ -13,6 +13,7 @@ import com.petguardian.admin.model.Admin;
 import com.petguardian.admin.service.updateinfo.AdminManagementUpdateInfoService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/admin")
@@ -22,8 +23,8 @@ public class AdminManagementUpdateInfoController {
 	private AdminManagementUpdateInfoService adminManagementUpdateInfoService;
 
 	@PutMapping("/adminupdateinfo")
-	public Admin adminupdateinfo(@RequestParam(required = false) MultipartFile admImage,//非必填
-			@ModelAttribute AdminManagementUpdateInfoDTO adminManagementUpdateInfoDTO, HttpSession session) {
+	public Admin adminupdateinfo(@RequestParam(required = false) MultipartFile admImage, // 非必填，前端沒選照片時，該值會是undefined，所以欄位實際上不會被包含在請求中，沒加(required = false)會報錯
+			@ModelAttribute @Valid AdminManagementUpdateInfoDTO adminManagementUpdateInfoDTO, HttpSession session) {
 
 		Integer admId = (Integer) session.getAttribute("admId");
 
