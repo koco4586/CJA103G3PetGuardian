@@ -334,12 +334,8 @@ public class ChatRoomMetadataCache {
         String key = REDIS_USER_ROOMS_KEY + userId;
         try {
             circuitBreaker.executeRunnable(() -> {
-                redisJsonMapper.delete(key);
-                if (!roomIds.isEmpty()) {
-                    List<String> stringIds = roomIds.stream().map(String::valueOf).toList();
-                    redisJsonMapper.getStringTemplate().opsForList().rightPushAll(key, stringIds);
-                    redisJsonMapper.expire(key, Duration.ofDays(DEFAULT_TTL_DAYS));
-                }
+                List<String> stringIds = roomIds.stream().map(String::valueOf).toList();
+                redisJsonMapper.replaceList(key, stringIds, Duration.ofDays(DEFAULT_TTL_DAYS));
             });
         } catch (CallNotPermittedException e) {
             log.debug("[Cache] CB is {}. Skipping cache set for user rooms {}.", circuitBreaker.getState(), userId);

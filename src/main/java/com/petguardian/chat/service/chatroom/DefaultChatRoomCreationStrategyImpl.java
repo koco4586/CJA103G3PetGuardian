@@ -1,7 +1,9 @@
 package com.petguardian.chat.service.chatroom;
 
 import java.util.Optional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import com.petguardian.chat.model.ChatRoomRepository;
 import com.petguardian.chat.model.ChatRoomEntity;
@@ -11,6 +13,7 @@ import com.petguardian.chat.dto.ChatRoomMetadataDTO;
  * Default implementation for 1-on-1 chatroom creation.
  * Uses normalized ID order to prevent duplicate chatrooms.
  */
+@Slf4j
 @Service
 public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStrategy {
 
@@ -65,7 +68,18 @@ public class DefaultChatRoomCreationStrategyImpl implements ChatRoomCreationStra
         // Default name
         newRoom.setChatroomName("Chat: " + newRoom.getMemId1() + "-" + newRoom.getMemId2());
 
-        ChatRoomEntity saved = chatroomRepository.save(newRoom);
+        ChatRoomEntity saved;
+        try {
+            saved = chatroomRepository.save(newRoom);
+        } catch (DataIntegrityViolationException e) {
+            // Race condition: Another transaction created this room concurrently.
+            // Retry lookup from DB (the winning transaction's data is now committed).
+            log.debug("[RoomCreator] Concurrent creation detected for ({},{},{}). Retrying lookup.",
+                    memId1, memId2, type);
+            return chatroomRepository.findByMemId1AndMemId2AndChatroomType(memId1, memId2, type)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Constraint violation but room not found: " + memId1 + "," + memId2, e));
+        }
 
         // Push to Cache List & Lookup Cache
         metadataService.addUserToRoom(saved.getMemId1(), saved.getChatroomId());

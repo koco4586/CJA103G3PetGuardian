@@ -118,13 +118,14 @@ public class ChatRoomMetadataService {
         List<Integer> roomIds = metadataCache.getUserRoomIds(userId);
         if (!roomIds.isEmpty()) {
             List<ChatRoomMetadataDTO> cached = metadataCache.getRoomMetaBatch(roomIds);
-            // CRITICAL:
-            // In migration/outage scenarios, partial data is dangerous. Fallback to DB if
-            // counts mismatch.
-            if (!cached.isEmpty() && cached.size() == roomIds.size()) {
+            // Validate: All room metadata must be present. Partial data falls through to
+            // DB.
+            if (cached.size() == roomIds.size()) {
                 return cached;
             }
-            // Cache failed to return data - fall through to DB
+            // Partial cache hit - invalidate stale list and fall through to DB
+            log.debug("[MetadataService] Partial cache hit for user {}. Invalidating stale list.", userId);
+            metadataCache.invalidateUserRoomList(userId);
         }
 
         // 2. Fallback to DB
@@ -133,7 +134,7 @@ public class ChatRoomMetadataService {
                 .map(mapper::toMetadataDto)
                 .collect(Collectors.toList());
 
-        // 3. Re-fill cache (best effort)
+        // 3. Re-fill cache (best effort, atomic via Lua script)
         if (!dtos.isEmpty()) {
             metadataCache.setUserRoomIds(userId,
                     dtos.stream().map(ChatRoomMetadataDTO::getChatroomId).collect(Collectors.toList()));

@@ -1215,6 +1215,10 @@ async function jumpToMessage(messageId) {
         // Render (Treat as INITIAL for clear jump, but we've already cleared DOM)
         renderMessagesBatch(messages, DOM.messageList, RenderMode.INITIAL);
 
+        // [CRITICAL FIX] Re-attach scroll listener for infinite scroll to work after jump
+        attachScrollListener(DOM.messageList, ChatState.currentChatroomId);
+        toggleBackToPresentBtn();
+
         // [TRUE SMOOTH JUMP] Wait for browser layout
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -1228,6 +1232,12 @@ async function jumpToMessage(messageId) {
                 } else {
                     console.warn('[Jump] Target message element not found in DOM after render:', messageId);
                 }
+
+                // [CRITICAL FIX PART 2] Proactive loading if content insufficient for scrolling
+                // Wait for scroll animation to complete, then check if we need more content
+                setTimeout(() => {
+                    ensureSufficientContent();
+                }, 600);
             });
         });
 
@@ -1235,6 +1245,33 @@ async function jumpToMessage(messageId) {
         console.error('[Jump] Error:', err);
     } finally {
         ChatState.isLoadingHistory = false;
+    }
+}
+
+/**
+ * Ensures the message list has enough content to enable scrolling.
+ * Recursively loads more messages if needed.
+ */
+async function ensureSufficientContent() {
+    if (!DOM.messageList || ChatState.isLoadingHistory) return;
+
+    const hasScrollbar = DOM.messageList.scrollHeight > DOM.messageList.clientHeight;
+
+    if (!hasScrollbar) {
+        console.log('[Jump] Insufficient content for scrolling, proactively loading more...');
+
+        // Prioritize loading newer messages if we're in history (currentPage > 0)
+        if (ChatState.currentPage > 0) {
+            await loadChatHistory(ChatState.currentChatroomId, 'NEWER');
+            // After loading, check again
+            setTimeout(ensureSufficientContent, 100);
+        }
+        // Otherwise load older if available
+        else if (ChatState.hasMoreHistory) {
+            await loadChatHistory(ChatState.currentChatroomId, 'OLDER');
+            // After loading, check again
+            setTimeout(ensureSufficientContent, 100);
+        }
     }
 }
 
