@@ -14,6 +14,7 @@ import com.petguardian.evaluate.model.EvaluateVO;
 import com.petguardian.evaluate.model.EvaluateRepository;
 import com.petguardian.sitter.model.SitterRepository;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +55,8 @@ public class PetComplaintController {
         }
 
         vo.setReportStatus(0);
+        vo.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        vo.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
         complaintservice.insert(vo);
         return "frontend/review";
@@ -61,20 +64,34 @@ public class PetComplaintController {
 
     @PostMapping("/submitComplaint")
     @ResponseBody
+    @Transactional
     public ResponseEntity<?> handleComplaint(
             @RequestParam Integer bookingOrderId,
             @RequestParam(required = false) Integer evaluateId, // 🔥 新增：被檢舉的評價ID
             @RequestParam String reportReason,
             HttpSession session) {
 
-        System.out.println(">>> 收到檢舉請求: bookingOrderId=" + bookingOrderId +
+        System.out.println(">>> [DEBUG] 收到檢舉請求: bookingOrderId=" + bookingOrderId +
                 ", evaluateId=" + evaluateId + ", reason=" + reportReason);
         try {
             if (bookingOrderId == null) {
                 return ResponseEntity.badRequest().body("遺失訂單編號 (bookingOrderId is null)");
             }
 
-            Integer memId = (Integer) session.getAttribute("memId");
+            // 安全獲取 memId
+            Object sessionMemId = session.getAttribute("memId");
+            System.out.println(">>> [DEBUG] Session memId type: "
+                    + (sessionMemId != null ? sessionMemId.getClass().getName() : "null"));
+
+            Integer memId = null;
+            if (sessionMemId instanceof Integer) {
+                memId = (Integer) sessionMemId;
+            } else if (sessionMemId instanceof String) {
+                memId = Integer.valueOf((String) sessionMemId);
+            } else if (sessionMemId instanceof Long) {
+                memId = ((Long) sessionMemId).intValue();
+            }
+
             if (memId == null) {
                 return ResponseEntity.status(401).body("請先登入");
             }
@@ -85,7 +102,15 @@ public class PetComplaintController {
             vo.setReportReason(reportReason);
             vo.setReportMemId(memId);
             vo.setReportStatus(0);
+<<<<<<< HEAD
+
+            // 💡 註：createdAt 與 updatedAt 現在由資料庫自動產生 (ComplaintVO 設為 insertable=false)
+
+            System.out.println(">>> [DEBUG] 開始計算被檢舉人...");
+=======
             vo.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            vo.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+>>>>>>> master
 
             // 自動補齊被檢舉人 (toReportedMemId)
             if (evaluateId != null) {
@@ -94,6 +119,7 @@ public class PetComplaintController {
                 if (reviewOpt.isPresent()) {
                     EvaluateVO review = reviewOpt.get();
                     Integer targetId = review.getSenderId();
+                    System.out.println(">>> [DEBUG] 找到評價: senderId=" + targetId + ", roleType=" + review.getRoleType());
 
                     // 判斷 Sender 是保姆還是會員
                     if (review.getRoleType() != null && review.getRoleType() == 0) {
@@ -101,14 +127,19 @@ public class PetComplaintController {
                         Optional<com.petguardian.sitter.model.SitterVO> sitterOpt = sitterRepository.findById(targetId);
                         if (sitterOpt.isPresent()) {
                             vo.setToReportedMemId(sitterOpt.get().getMemId());
+                        } else {
+                            System.out.println(">>> [DEBUG] 找不到保姆資料 (targetId=" + targetId + ")");
                         }
                     } else {
                         // 會員評保姆 -> Sender 是 MemId
                         vo.setToReportedMemId(targetId);
                     }
+                } else {
+                    System.out.println(">>> [DEBUG] 找不到指定評價 (evaluateId=" + evaluateId + ")");
                 }
             } else {
                 // 🔥 舊邏輯：如果沒有 evaluateId，用訂單ID查找
+                System.out.println(">>> [DEBUG] 使用舊邏輯，由 bookingOrderId 查找評價...");
                 List<EvaluateVO> reviews = evaluateRepository.findByBookingOrderId(bookingOrderId);
                 if (reviews != null && !reviews.isEmpty()) {
                     for (EvaluateVO review : reviews) {
@@ -130,8 +161,11 @@ public class PetComplaintController {
             }
 
             if (vo.getToReportedMemId() == null) {
+                System.out.println(">>> [DEBUG] 無法識別被檢舉人，回傳 400");
                 return ResponseEntity.badRequest().body("無法識別被檢舉人的會員身份，請確認該保姆/會員連結有效");
             }
+
+            System.out.println(">>> [DEBUG] 被檢舉人 ID: " + vo.getToReportedMemId());
 
             // 🔥 檢舉功能：立即隱藏被檢舉的評價
             if (evaluateId != null) {
@@ -145,6 +179,7 @@ public class PetComplaintController {
                         return ResponseEntity.badRequest().body("您不能檢舉自己的評價");
                     }
 
+                    System.out.println(">>> [DEBUG] 正在隱藏評價...");
                     review.setIsHidden(1); // 標記為已隱藏
                     evaluateRepository.save(review);
                 }
@@ -173,13 +208,20 @@ public class PetComplaintController {
                 }
             }
 
+            System.out.println(">>> [DEBUG] 正在存入檢舉紀錄...");
             complaintservice.insert(vo);
+            System.out.println(">>> [DEBUG] 檢舉成功存檔");
             return ResponseEntity.ok("success");
 
         } catch (Exception e) {
+            System.err.println(">>> [ERROR] 檢舉處理發生異常!");
             e.printStackTrace();
             String errorMsg = e.getClass().getSimpleName() + ": " + e.getMessage();
-            return ResponseEntity.status(500).body("後端存檔失敗：" + errorMsg);
+            // 如果有深刻的原因，嘗試獲取 Cause
+            if (e.getCause() != null) {
+                errorMsg += " -> Cause: " + e.getCause().getMessage();
+            }
+            return ResponseEntity.status(500).body("後端處理失敗：" + errorMsg);
         }
     }
 }
