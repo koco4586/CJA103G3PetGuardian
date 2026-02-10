@@ -131,6 +131,27 @@ public class RedisJsonMapper {
             LUA_UPDATE_READ_STATUS,
             String.class);
 
+    // Atomic List Replacement Script (Prevents race condition in setUserRoomIds)
+    // KEYS[1]: target list key
+    // ARGV[1]: TTL in seconds
+    // ARGV[2..N]: list items to push
+    private static final String LUA_REPLACE_LIST = """
+            local key = KEYS[1]
+            local ttl = tonumber(ARGV[1])
+
+            redis.call('DEL', key)
+            if #ARGV > 1 then
+                redis.call('RPUSH', key, unpack(ARGV, 2))
+                if ttl and ttl > 0 then
+                    redis.call('EXPIRE', key, ttl)
+                end
+            end
+            return 'OK'
+            """;
+
+    private static final RedisScript<String> REPLACE_LIST_SCRIPT = new DefaultRedisScript<>(LUA_REPLACE_LIST,
+            String.class);
+
     // =================================================================================
     // CORE SERIALIZATION UTILS
     // =================================================================================
@@ -265,6 +286,34 @@ public class RedisJsonMapper {
             log.debug("[Redis] Failed to map list to {}: {}", type.getSimpleName(), e.getMessage());
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * Atomically replaces an entire Redis List using a Lua script.
+     * Guarantees no other client can read a partially-updated list.
+     * Uses unpack(ARGV, 2) directly to avoid redundant memory copy.
+     *
+     * @param key    Redis key
+     * @param values List values (String)
+     * @param ttl    Time-to-live
+     */
+    public void replaceList(String key, List<String> values, Duration ttl) {
+        if (values == null || values.isEmpty()) {
+            delete(key);
+            return;
+        }
+
+        // Single allocation: ARGV[0]=ttl, ARGV[1..N]=values
+        String[] args = new String[values.size() + 1];
+        args[0] = String.valueOf(ttl.toSeconds());
+        for (int i = 0; i < values.size(); i++) {
+            args[i + 1] = values.get(i);
+        }
+
+        redisTemplate.execute(
+                REPLACE_LIST_SCRIPT,
+                Collections.singletonList(key),
+                (Object[]) args);
     }
 
     // =================================================================================
