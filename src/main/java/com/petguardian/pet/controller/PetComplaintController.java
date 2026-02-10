@@ -55,6 +55,8 @@ public class PetComplaintController {
         }
 
         vo.setReportStatus(0);
+        vo.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        vo.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
         complaintservice.insert(vo);
         return "frontend/review";
@@ -100,10 +102,15 @@ public class PetComplaintController {
             vo.setReportReason(reportReason);
             vo.setReportMemId(memId);
             vo.setReportStatus(0);
+<<<<<<< HEAD
 
             // 💡 註：createdAt 與 updatedAt 現在由資料庫自動產生 (ComplaintVO 設為 insertable=false)
 
             System.out.println(">>> [DEBUG] 開始計算被檢舉人...");
+=======
+            vo.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            vo.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+>>>>>>> master
 
             // 自動補齊被檢舉人 (toReportedMemId)
             if (evaluateId != null) {
