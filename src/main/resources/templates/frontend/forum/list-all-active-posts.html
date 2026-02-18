@@ -304,6 +304,64 @@
 		}
 		
 		.hot-post-link:hover { color: var(--primary-orange); }
+		
+		/* 分頁容器居中 */
+		.pagination-container {
+		    display: flex;
+		    justify-content: center;
+		    margin: 40px 0;
+		}
+		
+		.pagination {
+		    display: flex;
+		    list-style: none;
+		    padding: 0;
+		    gap: 8px; /* 按鈕之間的間距 */
+		}
+		
+		.pagination li a {
+		    display: block;
+		    padding: 10px 18px;
+		    text-decoration: none;
+		    color: var(--deep-brown);
+		    background-color: #fff;
+		    border: 2px solid #eee;
+		    border-radius: 12px; /* 圓角看起來更親切 */
+		    font-weight: 700;
+		    transition: all 0.3s ease;
+		}
+		
+		/* 懸停效果 (Hover) */
+		.pagination li:not(.disabled):not(.active) a:hover {
+		    border-color: var(--primary-orange);
+		    color: var(--primary-orange);
+		    transform: translateY(-2px);
+		    box-shadow: 0 4px 10px rgba(255, 152, 0, 0.15);
+		}
+		
+		/* 當前頁面樣式 (Active) */
+		.pagination li.active a {
+		    background-color: var(--primary-orange);
+		    border-color: var(--primary-orange);
+		    color: white;
+		    cursor: default;
+		}
+		
+		/* 禁用狀態樣式 (Disabled) - 例如在第一頁時的上一頁 */
+		.pagination li.disabled a {
+		    color: #ccc;
+		    background-color: #f9f9f9;
+		    border-color: #eee;
+		    cursor: not-allowed;
+		    pointer-events: none; /* 防止點擊 */
+		}
+		
+		/* 針對「上一頁」與「下一頁」的特殊微調 */
+		.pagination li:first-child a, 
+		.pagination li:last-child a {
+		    padding-left: 20px;
+		    padding-right: 20px;
+		}
 
         @media (max-width: 850px) {
             .container.d-flex { 
@@ -339,7 +397,7 @@
                 <form th:action="@{/forumpost/get-keyword-for-posts}" method="get" style="width: 100%;">
                     <div style="position: relative; display: flex; align-items: center;">
                         <i class="fas fa-search" style="position: absolute; left: 15px; color: #aaa;"></i>
-                        <input type="text" name="keyword" class="search-input" placeholder="搜尋貼文標題或文章內容..." style="padding-left: 45px;">
+                        <input type="text" name="keyword" th:value="${keyword}" class="search-input" placeholder="搜尋貼文標題或文章內容..." style="padding-left: 45px;">
                         <input type="hidden" name="forumId" th:value="${forumId}">
                         <input type="hidden" name="forumName" th:value="${forumName}">
                     </div>
@@ -373,6 +431,28 @@
 						</div>
                     </a>
                 </th:block>
+                
+                <div class="pagination-container" th:if="${totalPages != null && totalPages > 0}">
+				    <ul class="pagination">
+				        <li th:classappend="${currentPage == 0} ? 'disabled'">
+				            <a th:href="${keyword != null && !keyword.isEmpty()} 
+				                ? @{/forumpost/get-keyword-for-posts(forumId=${forumId}, page=${currentPage - 1}, keyword=${keyword})} 
+				                : @{/forumpost/get-forum-id-for-posts(forumId=${forumId}, page=${currentPage - 1})}">上一頁</a>
+				        </li>
+				
+				        <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${currentPage == i} ? 'active'">
+				            <a th:href="${keyword != null && !keyword.isEmpty()} 
+				                ? @{/forumpost/get-keyword-for-posts(forumId=${forumId}, page=${i}, keyword=${keyword})} 
+				                : @{/forumpost/get-forum-id-for-posts(forumId=${forumId}, page=${i})}" th:text="${i + 1}"></a>
+				        </li>
+				
+				        <li th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+				            <a th:href="${keyword != null && !keyword.isEmpty()} 
+				                ? @{/forumpost/get-keyword-for-posts(forumId=${forumId}, page=${currentPage + 1}, keyword=${keyword})} 
+				                : @{/forumpost/get-forum-id-for-posts(forumId=${forumId}, page=${currentPage + 1})}">下一頁</a>
+				        </li>
+				    </ul>
+				</div>
             </div>
         </div>
 

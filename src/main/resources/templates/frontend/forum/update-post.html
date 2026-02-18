@@ -73,6 +73,64 @@
 	    border: 2px dashed var(--primary-orange) !important;
 	}
 
+	/* --- 圖片網格：確保左右排列 --- */
+	.pics-grid {
+	    display: flex;         /* 改用 flex 讓圖片左右並排 */
+	    flex-wrap: wrap;       /* 排滿時自動換行 */
+	    gap: 15px;             /* 圖片之間的間距 */
+	    margin-top: 15px;
+	    align-items: flex-start;
+	}
+	
+	/* --- 單張圖片容器 --- */
+	.pic-item {
+	    position: relative;
+	    width: 140px;          /* 固定寬度 */
+	    height: 140px;         /* 固定高度 */
+	    border-radius: 12px;
+	    overflow: hidden;      /* 確保圖片不超出圓角 */
+	    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+	    background-color: #eee;
+	    transition: transform 0.2s;
+	}
+	
+	.pic-item:hover {
+	    transform: translateY(-3px); /* 滑鼠移上去微浮起 */
+	}
+	
+	/* --- 圖片本身 --- */
+	.pic-item img {
+	    width: 100%;
+	    height: 100%;
+	    object-fit: cover;    /* 讓圖片完美填滿格子不變形 */
+	}
+	
+	/* --- 紅色刪除按鈕 (X) --- */
+	.delete-btn {
+	    position: absolute;
+	    top: 8px;
+	    right: 8px;
+	    width: 28px;
+	    height: 28px;
+	    background-color: rgba(255, 82, 82, 0.9); /* 帶點透明的亮紅 */
+	    color: white;
+	    border: none;
+	    border-radius: 50%;
+	    cursor: pointer;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	    font-size: 14px;
+	    transition: all 0.2s;
+	    z-index: 5;
+	    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+	}
+	
+	.delete-btn:hover {
+	    background-color: #ff1744;
+	    transform: scale(1.1);
+	}
+
 </style>
 </head>
 <body>
@@ -127,29 +185,34 @@
 			        <div id="main-pic-name" style="margin-top: 5px; font-size: 0.85rem; color: #666;"></div>
 			    </div>
 			</div>
+			
             <div class="form-group" th:if="${not #lists.isEmpty(picsId)}" id="old-pics-section">
 			    <label class="form-label">貼文附件照片</label>
 			    <div class="current-pics-section">
-			        <div class="pics-grid">
-			            <div class="pic-item" th:each="picId : ${picsId}">
+			        <div class="pics-grid" id="main-pics-grid">
+			            <div class="pic-item" th:each="picId : ${picsId}" th:id="'old-pic-' + ${picId}">
 			                <img th:src="@{/forum/get-pic-id-for-pic(picId=${picId})}" alt="貼文圖片">
+			                <button type="button" class="delete-btn" th:onclick="'markAsDeleted(' + ${picId} + ')'">
+			                    <i class="fas fa-times"></i>
+			                </button>
 			            </div>
-			        </div>
-			        <small style="display: block; margin-top: 10px; color: #888;">* 若需修改照片，請在下方重新上傳（將覆蓋舊照片）</small>
+			            </div>
+			        <small style="display: block; margin-top: 10px; color: #888;">若需修改照片，請在下方重新上傳</small>
 			    </div>
 			</div>
 			
 			<div class="form-group">
-			    <label class="form-label">重新上傳照片 (可選)</label>
-			    
-			    <div id="new-pics-preview" class="pics-grid" style="margin-bottom: 15px;"></div>
 			
+			    <label class="form-label">重新上傳照片 (可選)</label>    
+			    <div id="new-pics-preview" class="pics-grid" style="margin-bottom: 15px;"></div>
+	
 			    <div class="file-input-wrapper" id="multi-drop-zone" onclick="document.getElementById('file-input').click()">
 			        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #aaa; margin-bottom: 10px;"></i>
 			        <p style="margin: 0; color: #666; font-weight: 600;">點擊或拖曳圖片至此處</p>
 			        <input type="file" id="file-input" name="upFiles" multiple style="display: none;" onchange="updateFileName(this)">
 			        <div id="file-list" style="margin-top: 10px; font-size: 0.9rem; color: var(--primary-orange);"></div>
 			    </div>
+			    
 			</div>
 
             <div class="update-footer">
@@ -162,6 +225,7 @@
 	            <input type="hidden" name="forumName" th:value="${forumName}" id="forumName" >
             </div>
             <div id="errorData" th:if="${errorMsgs}" th:data-msgs="${errorMsgs}" style="display: none;"></div>
+            <div id="deleted-pics-container"></div>
         </form>
     </div>
 
@@ -185,40 +249,61 @@
 	        }
 	    }
     	
-	    function updateFileName(input) {
-	        const fileList = document.getElementById('file-list');
-	        const oldSection = document.getElementById('old-pics-section');
-	        const newPreview = document.getElementById('new-pics-preview');
+	 // 1. 檢查區塊顯示與否
+	    function toggleSection() {
+	        const grid = document.getElementById('main-pics-grid');
+	        const section = document.getElementById('old-pics-section');
+	        if (!grid || !section) return;
+
+	        // 只要還有任何一個子元素不是 display: none，就顯示區塊
+	        const hasVisibleItems = Array.from(grid.children).some(child => child.style.display !== 'none');
+	        section.style.display = hasVisibleItems ? 'block' : 'none';
+	    }
+
+	    // 2. 標記舊圖刪除 (只留這一個版本！)
+	    function markAsDeleted(picId) {
+	        const picElement = document.getElementById('old-pic-' + picId);
+	        if (picElement) {
+	            picElement.style.display = 'none'; // 隱藏視覺
+	        }
+
+	        // 產生傳給後端的隱藏 input
+	        const container = document.getElementById('deleted-pics-container');
+	        const input = document.createElement('input');
+	        input.type = 'hidden';
+	        input.name = 'deletedPicIds'; // 確保跟後端 List<Integer> 參數名一致
+	        input.value = picId;
+	        container.appendChild(input);
 	        
-	        // 清空之前的新預覽內容
-	        newPreview.innerHTML = '';
+	        console.log("已標記刪除圖片 ID:", picId);
+	        toggleSection(); // 關鍵：刪除後立刻檢查區塊
+	    }
+
+	    // 3. 上傳新圖預覽
+	    function updateFileName(input) {
+	        const grid = document.getElementById('main-pics-grid');
+	        const fileList = document.getElementById('file-list');
+	        
+	        // 移除舊的新圖預覽
+	        document.querySelectorAll('.new-preview-item').forEach(el => el.remove());
 
 	        if (input.files && input.files.length > 0) {
-	        	fileList.innerHTML = `✅ 已選擇 ${input.files.length} 張新照片 <br> 
-                    <small style="color: #ff5252;">(提醒：最多僅能上傳 6 張照片喔！)</small>`;
+	            fileList.innerHTML = `✅ 已選擇 ${input.files.length} 張新照片`;
 	            
-	            // ✨ 隱藏舊圖區塊
-	            if (oldSection) {
-	                oldSection.style.display = 'none';
-	            }
-
-	            // ✨ 產生新圖預覽
 	            Array.from(input.files).forEach(file => {
 	                const reader = new FileReader();
 	                reader.onload = function(e) {
 	                    const div = document.createElement('div');
-	                    div.className = 'pic-item';
-	                    div.innerHTML = `<img src="${e.target.result}" alt="新圖片預覽">`;
-	                    newPreview.appendChild(div);
+	                    div.className = 'pic-item new-preview-item';
+	                    div.innerHTML = `<img src="${e.target.result}">`;
+	                    grid.appendChild(div);
+	                    toggleSection(); // 新增預覽後檢查區塊
 	                };
 	                reader.readAsDataURL(file);
 	            });
 	        } else {
-	            // 如果使用者取消選擇，顯示回舊圖
 	            fileList.innerHTML = '';
-	            if (oldSection) {
-	                oldSection.style.display = 'block';
-	            }
+	            toggleSection();
 	        }
 	    }
 	    
@@ -269,6 +354,7 @@
             const msg = errorEl.getAttribute('data-msgs');
             Swal.fire({ icon: 'error', title: '失敗', text: msg, confirmButtonColor: '#ff9800' });
         }
+        
     </script>
 </body>
 </html>
