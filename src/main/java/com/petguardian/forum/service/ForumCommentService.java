@@ -29,7 +29,16 @@ public class ForumCommentService {
 		ForumCommentVO forumCommentVO = repo.findById(commentId)
 				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
 		forumCommentVO.setCommentStatus(2);
-		repo.save(forumCommentVO);
+		
+		if(forumCommentVO.getChildComments() != null) {
+			for(ForumCommentVO childComment : forumCommentVO.getChildComments()) {
+				if(childComment.getCommentStatus() == 2) {
+					continue;
+				}
+				childComment.setCommentStatus(0);
+			}
+		}
+		repo.save(forumCommentVO);	
 	}
 	
 	public ForumCommentVO getOneComment(Integer commentId) {
@@ -51,7 +60,7 @@ public class ForumCommentService {
 	}
 	
 	@Transactional
-	public void addCommentByPostId(String commentContent, Integer postId, Integer memId) {
+	public void addCommentByPostId(String commentContent, Integer postId, Integer memId, Integer parentCommentId) {
 
 		ForumPostVO forumPostVO = postRepo.findById(postId)
 				.orElseThrow(() -> new RuntimeException("找不到該貼文，編號：" + postId));
@@ -59,7 +68,12 @@ public class ForumCommentService {
 		ForumCommentVO forumCommentVO = new ForumCommentVO();
 		forumCommentVO.setCommentContent(commentContent);
 		forumCommentVO.setForumPost(forumPostVO);
-
+		
+		if(parentCommentId != null) {
+			ForumCommentVO parentComment = this.getOneComment(parentCommentId);
+			forumCommentVO.setParentComment(parentComment);
+		}
+		
 		// 使用傳入的 memId
 		Member member = new Member();
 		member.setMemId(memId);

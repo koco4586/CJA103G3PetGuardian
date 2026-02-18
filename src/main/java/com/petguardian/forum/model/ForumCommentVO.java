@@ -63,6 +63,14 @@ public class ForumCommentVO implements Serializable{
 	@Column(name = "comment_status", insertable = false)
 	private Integer commentStatus;
 	
+	@ManyToOne
+	@JoinColumn(name = "parent_comment_id", referencedColumnName = "comment_id")
+	private ForumCommentVO parentComment;
+	
+	@OneToMany(mappedBy = "parentComment")
+	@OrderBy("commentId asc")
+	private Set<ForumCommentVO> childComments;
+	
 	@Transient
 	private MultipartFile upFiles;
 	
@@ -150,6 +158,22 @@ public class ForumCommentVO implements Serializable{
 		this.commentStatus = commentStatus;
 	}
 	
+	public ForumCommentVO getParentComment() {
+		return parentComment;
+	}
+
+	public void setParentComment(ForumCommentVO parentComment) {
+		this.parentComment = parentComment;
+	}
+
+	public Set<ForumCommentVO> getChildComments() {
+		return childComments;
+	}
+
+	public void setChildComments(Set<ForumCommentVO> childComments) {
+		this.childComments = childComments;
+	}
+
 	//	驗證上傳檔案是否為圖片檔
 	@AssertTrue(message = "請上傳圖片檔（jpg, png, gif）")
 	public boolean isImage() {

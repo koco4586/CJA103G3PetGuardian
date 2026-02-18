@@ -377,7 +377,9 @@ public class ForumPostController {
 	public String insertComment(@Valid ForumCommentVO forumCommentVO, BindingResult result, ModelMap model,
 			RedirectAttributes ra, @RequestParam("commentContent") String commentContent,
 			@RequestParam("postId") Integer postId, @RequestParam("forumId") Integer forumId,
-			@RequestParam("forumName") String forumName, HttpServletRequest request) {
+			@RequestParam("forumName") String forumName,
+			@RequestParam(value = "parentCommentId", required = false) Integer parentCommentId,
+			HttpServletRequest request) {
 
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
@@ -390,7 +392,9 @@ public class ForumPostController {
 
 			ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+			
 			model.addAttribute("forumPostVO", forumPostVO);
+			model.addAttribute("errorMsgs", result.getFieldError().getDefaultMessage());
 			model.addAttribute("picsId", picsId);
 			model.addAttribute("userId", userId);
 
@@ -398,8 +402,8 @@ public class ForumPostController {
 		}
 
 		// 開始新增資料
-		forumCommentService.addCommentByPostId(commentContent, postId, userId);
-
+		forumCommentService.addCommentByPostId(commentContent, postId, userId, parentCommentId);
+		
 		// 重導會拿不到資料，因為有返回按鈕，所以要用RedirectAttributes把資料塞回去。
 		ra.addAttribute("forumName", forumName);
 		ra.addAttribute("forumId", forumId);
@@ -409,7 +413,7 @@ public class ForumPostController {
 		// 新增完成重導到該貼文頁面
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
-
+	
 	@PostMapping("update-comment-submit")
 	public String updateCommentSubmit(@Valid ForumCommentVO forumCommentVO, BindingResult result, RedirectAttributes ra,
 			ModelMap model, @RequestParam("forumId") Integer forumId, @RequestParam("commentId") Integer commentId,
@@ -428,8 +432,10 @@ public class ForumPostController {
 
 			ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
-
+			String errorMsgs = result.getFieldError().getDefaultMessage();
+			
 			model.addAttribute("forumPostVO", forumPostVO);
+			model.addAttribute("errorMsgs", errorMsgs);
 			model.addAttribute("picsId", picsId);
 			model.addAttribute("forumName", forumName);
 			model.addAttribute("userId", userId);
