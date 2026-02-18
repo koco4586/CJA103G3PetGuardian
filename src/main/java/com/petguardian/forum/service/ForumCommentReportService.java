@@ -33,8 +33,7 @@ public class ForumCommentReportService {
 				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
 		
 		forumCommentReportVO.setForumComment(forumCommentVO);
-		repo.save(forumCommentReportVO);
-		
+		repo.save(forumCommentReportVO);	
 	}
 	
 	public List<HandledCommentDTO> getAllHandledComments() {
@@ -56,7 +55,29 @@ public class ForumCommentReportService {
 			forumCommentReportVO.setForumComment(forumCommentVO);
 			repo.save(forumCommentReportVO);
 		}
-		commentRepo.save(forumCommentVO);
+		
+		if(forumCommentVO.getChildComments() != null) {
+			for(ForumCommentVO childComment : forumCommentVO.getChildComments()) {
+				if(childComment.getCommentStatus() == 2) {
+					continue;
+				}
+				boolean hasBeenReported = false;
+				if(childComment.getForumCommentReports() != null) {
+					for(ForumCommentReportVO childCommentReport : childComment.getForumCommentReports()) {
+						if(childCommentReport.getReportStatus() == 1) {
+							hasBeenReported = true;
+							break;
+						}
+					}
+				}
+				if(!hasBeenReported) {
+					childComment.setCommentStatus(1);
+				} else {
+					childComment.setCommentStatus(0);
+				}
+			}
+		}
+		commentRepo.save(forumCommentVO);	
 	}
 	
 	public List<PendingCommentDTO> getAllPendingComments() {
@@ -76,8 +97,7 @@ public class ForumCommentReportService {
 	}
 	
 	@Transactional
-	public void updateHandleResult(Integer reportId, Integer commentId, String handleResult) {
-		
+	public void updateHandleResult(Integer reportId, Integer commentId, String handleResult) {	
 		ForumCommentVO forumCommentVO = commentRepo.findById(commentId)
 				.orElseThrow(() -> new RuntimeException("找不到該留言，編號：" + commentId));
 		
@@ -89,8 +109,16 @@ public class ForumCommentReportService {
 		forumCommentReportVO.setHandleResult(handleResult);
 		forumCommentReportVO.setForumComment(forumCommentVO);
 		
+		if(forumCommentVO.getChildComments() != null) {
+			for(ForumCommentVO childComment : forumCommentVO.getChildComments()) {
+				if(childComment.getCommentStatus() == 2) {
+					continue;
+				}
+				childComment.setCommentStatus(0);
+			}
+		}
+		commentRepo.save(forumCommentVO);
 		repo.save(forumCommentReportVO);
-		
 	}
 	
 	@Transactional
@@ -102,8 +130,7 @@ public class ForumCommentReportService {
 		forumCommentReportVO.setReportStatus(2);
 		forumCommentReportVO.setHandleResult(handleResult);
 		
-		repo.save(forumCommentReportVO);
-		
+		repo.save(forumCommentReportVO);	
 	}
 	
 }
