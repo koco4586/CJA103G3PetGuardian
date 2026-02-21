@@ -74,8 +74,8 @@
 
                 e.preventDefault();
 
-                let loginaccount = $(".loginacc").val();
-                let loginpassword = $(".loginpw").val();
+                let loginaccount = $(".loginacc").val().trim();
+                let loginpassword = $(".loginpw").val().trim();
 
                 let loginobject = {
                     "memAcc": loginaccount,

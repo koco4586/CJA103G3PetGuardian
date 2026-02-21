@@ -106,10 +106,10 @@
                 e.preventDefault();
 
                 let admImage = $(".adm_image")[0].files[0]
-                let admName = $(".adm_name").val();
-                let admAccount = $(".adm_acc").val();
-                let admEmail = $(".adm_email").val();
-                let admTel = $(".adm_tel").val();
+                let admName = $(".adm_name").val().trim();
+                let admAccount = $(".adm_acc").val().trim();
+                let admEmail = $(".adm_email").val().trim();
+                let admTel = $(".adm_tel").val().trim();
 
                 let formData = new FormData();
 

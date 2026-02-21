@@ -145,15 +145,15 @@
                 e.preventDefault();
 
                 let memImage = $(".mem_image")[0].files[0]
-                let memName = $(".mem_name").val();
-                let memAcc = $(".mem_acc").val();
-                let memUid = $(".mem_uid").val();
+                let memName = $(".mem_name").val().trim();
+                let memAcc = $(".mem_acc").val().trim();
+                let memUid = $(".mem_uid").val().trim();
                 let memBth = $(".mem_bth").val();
                 let memSex = $(".mem_sex").val();
-                let memEmail = $(".mem_email").val();
-                let memTel = $(".mem_tel").val();
-                let memAdd = $(".mem_add").val();
-                let memAccountNumber = $(".mem_account_number").val();
+                let memEmail = $(".mem_email").val().trim();
+                let memTel = $(".mem_tel").val().trim();
+                let memAdd = $(".mem_add").val().trim();
+                let memAccountNumber = $(".mem_account_number").val().trim();
 
                 let formData = new FormData();
 
