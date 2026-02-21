@@ -3,6 +3,7 @@ package com.petguardian.forum.controller;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -64,38 +65,43 @@ public class ForumPostController {
 	}
 
 	@GetMapping("get-forum-id-for-posts")
-	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId, ModelMap model) {
-		
+	public String getForumIdForPosts(@RequestParam("forumId") Integer forumId,
+			@RequestParam(defaultValue = "0") int page, ModelMap model) {
+
 		List<ForumPostVO> postList = forumPostService.getAllActiveByForumId(forumId);
-		
+		Page<ForumPostVO> postPage = forumPostService.getAllActivePostWithPageableByForumId(forumId, page, 3);
+
 		redisService.incrementForumViewCount(forumId);
 		// redis處理熱門貼文邏輯
 		List<Integer> postIds = redisService.getTopHotPostIds(5);
 		List<ForumPostVO> topHotPostList = forumPostService.getTopHotPostsByPostIds(postIds);
-		
+
 		// redis拿取瀏覽次數邏輯
-		for(ForumPostVO post : postList) {
+		for (ForumPostVO post : postList) {
 			Integer postViewCount = redisService.getPostViewCount(post.getPostId());
-			if(postViewCount != null) {
+			if (postViewCount != null) {
 				post.setPostViews(postViewCount);
 			}
 		}
-		
-		model.addAttribute("postList", postList);
+
+		model.addAttribute("postList", postPage.getContent());
+		model.addAttribute("currentPage", page);
+		model.addAttribute("totalPages", postPage.getTotalPages());
 		model.addAttribute("topHotPostList", topHotPostList);
 		model.addAttribute("forumName", forumService.getOneForum(forumId).getForumName());
-		
+
 		return "frontend/forum/list-all-active-posts";
 	}
 
 	@GetMapping("get-post-id-for-one-post")
-	public String getPostIdForOnePost(@RequestParam("postId") Integer postId, ModelMap model, HttpServletRequest request) {
-		
+	public String getPostIdForOnePost(@RequestParam("postId") Integer postId, ModelMap model,
+			HttpServletRequest request) {
+
 		Integer userId = authStrategyService.getCurrentUserId(request);
-		
+
 		// redis處理瀏覽次數邏輯
 		redisService.incrementPostViewCount(postId);
-		
+
 		// 開始查詢資料
 		ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
@@ -110,15 +116,14 @@ public class ForumPostController {
 	}
 
 	@GetMapping("add-post")
-	public String addPost(ModelMap model, HttpServletRequest request,
-			RedirectAttributes ra) {
-		
+	public String addPost(ModelMap model, HttpServletRequest request, RedirectAttributes ra) {
+
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			ra.addAttribute("error", "請先登入後再發表文章");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		ForumPostVO forumPostVO = new ForumPostVO();
 		// 從 Model 中取得剛才 @ModelAttribute 塞進去的 forumId
 		Integer forumId = (Integer) model.getAttribute("forumId");
@@ -129,9 +134,9 @@ public class ForumPostController {
 		forumPostVO.setForum(forumVO);
 
 		model.addAttribute("forumPostVO", forumPostVO);
-		
+
 		return "frontend/forum/add-post";
-		
+
 	}
 
 	@PostMapping("insert-post")
@@ -145,7 +150,7 @@ public class ForumPostController {
 			ra.addAttribute("error", "請先登入後再發表文章");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		// Java Bean Validation 錯誤處理
 		if (result.hasErrors()) {
 			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
@@ -204,11 +209,11 @@ public class ForumPostController {
 				}
 			}
 		}
-		
+
 		Member member = new Member();
 		member.setMemId(userId);
 		forumPostVO.setMember(member);
-		
+
 		// 沒圖片時 -> 新增資料
 		if (postPics == null || postPics.length == 0 || postPics[0].isEmpty()) {
 			forumPostService.addPost(forumPostVO);
@@ -220,16 +225,16 @@ public class ForumPostController {
 		ra.addFlashAttribute("successMsgs", "🎉 貼文發表成功！");
 
 		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumPostVO.getForum().getForumId();
-		
+
 	}
 
 	@GetMapping("update-post")
-	public String updatePost(@RequestParam("postId") Integer postId, ModelMap model, 
-			HttpServletRequest request, RedirectAttributes ra) {
+	public String updatePost(@RequestParam("postId") Integer postId, ModelMap model, HttpServletRequest request,
+			RedirectAttributes ra) {
 
 		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
 		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
-		
+
 		// 使用 AuthStrategyService 取得當前使用者
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null || !userId.equals(forumPostVO.getMember().getMemId())) {
@@ -252,18 +257,19 @@ public class ForumPostController {
 	public String updatePostSubmit(@Valid ForumPostVO forumPostVO, BindingResult result,
 			ForumPostPicsVO forumPostPicsVO, ModelMap model, @RequestParam("upFiles") MultipartFile[] postPics,
 			@RequestParam("forumId") Integer forumId, @RequestParam("forumName") String forumName,
-			RedirectAttributes ra, HttpServletRequest request) throws IOException {
+			@RequestParam(value = "deletedPicIds", required = false) List<Integer> deletedPicIds, RedirectAttributes ra, HttpServletRequest request)
+			throws IOException {
 
 		Integer postId = forumPostVO.getPostId();
 		List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
-		
+
 		// 使用 AuthStrategyService 取得當前使用者
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null || !userId.equals(forumPostService.getOnePost(postId).getMember().getMemId())) {
 			ra.addAttribute("error", "您沒有此權限，請先登入再修改文章");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		// Java Bean Validation 錯誤處理
 		if (result.hasErrors()) {
 			// 把ObjectError手動加到result (Vaild 找 beans是FieldError，方法層級驗證是 GlobalError)
@@ -272,7 +278,6 @@ public class ForumPostController {
 					result.rejectValue("upFile", null, error.getDefaultMessage());
 				});
 			}
-			
 			model.addAttribute("picsId", picsId);
 			return "frontend/forum/update-post";
 		}
@@ -330,46 +335,66 @@ public class ForumPostController {
 				}
 			}
 		}
-		
+
 		Member member = new Member();
 		member.setMemId(userId);
 		forumPostVO.setMember(member);
 
-		// 沒圖片
-		if (postPics == null || postPics.length == 0 || postPics[0].isEmpty()) {
-			forumPostService.updatePost(forumPostVO);
+//		// 沒新增附圖，也沒刪除附圖
+//		if (postPics == null || postPics.length == 0 || postPics[0].isEmpty()) {
+//			forumPostService.updatePost(forumPostVO, null);
+//		} else if (deletedPicIds != null && !deletedPicIds.isEmpty()) {
+//			// 沒新增附圖，但有刪除附圖
+//			forumPostService.updatePost(forumPostVO, deletedPicIds);
+//		} else if (postPics != null && postPics.length > 0 && !postPics[0].isEmpty() && (deletedPicIds == null || deletedPicIds.isEmpty())) {
+//			// 有新增附圖，但沒刪除附圖
+//			forumPostService.updatePostWithPics(forumPostVO, postPics);
+//		} else {
+//			// 有新增附圖，且有刪除附圖
+//			forumPostService.updatePostWithDeletedPicsId(forumPostVO, postPics, deletedPicIds);
+//		}
+		
+		boolean hasNewPics = (postPics != null && postPics.length > 0 && !postPics[0].isEmpty());
+		boolean hasDeletedPics = (deletedPicIds != null && !deletedPicIds.isEmpty());
+		
+		if(hasNewPics || hasDeletedPics) {
+			forumPostService.updatePostWithDeletedPicsId(forumPostVO, postPics, deletedPicIds);
 		} else {
-			// 有圖片
-			forumPostService.updatePostWithPics(forumPostVO, postPics);
+			forumPostService.updatePost(forumPostVO);
 		}
+		
 		// 設定閃退訊息 (Flash Attribute)，重導向後會消失，不會重複出現
 		ra.addFlashAttribute("successMsgs", "🎉 貼文修改成功！");
 		ra.addAttribute("forumId", forumId);
 		ra.addAttribute("forumName", forumName);
 		ra.addAttribute("postId", postId);
-		
+
 		return "redirect:/forumpost/get-post-id-for-one-post";
-		
+
 	}
 
 	@PostMapping("insert-comment")
 	public String insertComment(@Valid ForumCommentVO forumCommentVO, BindingResult result, ModelMap model,
 			RedirectAttributes ra, @RequestParam("commentContent") String commentContent,
 			@RequestParam("postId") Integer postId, @RequestParam("forumId") Integer forumId,
-			@RequestParam("forumName") String forumName, HttpServletRequest request) {
+			@RequestParam("forumName") String forumName,
+			@RequestParam(value = "parentCommentId", required = false) Integer parentCommentId,
+			HttpServletRequest request) {
 
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			ra.addAttribute("error", "請先登入後再留言");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		// Java Bean Validation 錯誤處理
 		if (result.hasErrors()) {
 
 			ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+			
 			model.addAttribute("forumPostVO", forumPostVO);
+			model.addAttribute("errorMsgs", result.getFieldError().getDefaultMessage());
 			model.addAttribute("picsId", picsId);
 			model.addAttribute("userId", userId);
 
@@ -377,8 +402,8 @@ public class ForumPostController {
 		}
 
 		// 開始新增資料
-		forumCommentService.addCommentByPostId(commentContent, postId, userId);
-
+		forumCommentService.addCommentByPostId(commentContent, postId, userId, parentCommentId);
+		
 		// 重導會拿不到資料，因為有返回按鈕，所以要用RedirectAttributes把資料塞回去。
 		ra.addAttribute("forumName", forumName);
 		ra.addAttribute("forumId", forumId);
@@ -388,80 +413,90 @@ public class ForumPostController {
 		// 新增完成重導到該貼文頁面
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
-
+	
 	@PostMapping("update-comment-submit")
 	public String updateCommentSubmit(@Valid ForumCommentVO forumCommentVO, BindingResult result, RedirectAttributes ra,
 			ModelMap model, @RequestParam("forumId") Integer forumId, @RequestParam("commentId") Integer commentId,
-			@RequestParam("commentContent") String commentContent, @RequestParam("postId") Integer postId, HttpServletRequest request) {
+			@RequestParam("commentContent") String commentContent, @RequestParam("postId") Integer postId,
+			HttpServletRequest request) {
 
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null || !userId.equals(forumCommentService.getOneComment(commentId).getMember().getMemId())) {
 			ra.addAttribute("error", "您沒有此權限，請先登入後再修改留言");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		String forumName = forumService.getOneForum(forumId).getForumName();
-		
+
 		if (result.hasErrors()) {
-			
+
 			ForumPostVO forumPostVO = forumPostService.getOnePostWithCommentAndMember(postId);
 			List<Integer> picsId = forumPostPicsService.getPicsIdByPostId(postId);
+			String errorMsgs = result.getFieldError().getDefaultMessage();
 			
 			model.addAttribute("forumPostVO", forumPostVO);
+			model.addAttribute("errorMsgs", errorMsgs);
 			model.addAttribute("picsId", picsId);
 			model.addAttribute("forumName", forumName);
 			model.addAttribute("userId", userId);
-			
+
 			return "frontend/forum/one-post";
 		}
-		
+
 		forumCommentService.updateCommentByPostId(commentContent, commentId, userId);
-		
+
 		ra.addAttribute("forumName", forumName);
 		ra.addAttribute("forumId", forumId);
 		ra.addAttribute("postId", postId);
 		ra.addFlashAttribute("successMsgs", "🎉 留言修改完成");
-		
+
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
 
 	@GetMapping("get-keyword-for-posts")
-	public String getKeywordForPosts(@RequestParam("keyword") String keyword, @RequestParam("forumId") Integer forumId,
-			ModelMap model) {
+	public String getKeywordForPosts(@RequestParam("keyword") String keyword,
+			@RequestParam(defaultValue = "0") int page, @RequestParam("forumId") Integer forumId, ModelMap model) {
 
 		List<Integer> postIds = redisService.getTopHotPostIds(5);
-		
+		Page<ForumPostVO> postPage = forumPostService.getAllActivePostWithPageableByForumId(forumId, page, 3);
+		Page<ForumPostVO> postPageByKeyword = forumPostService.getPostBykeyword(keyword, forumId, page, 3);
+
 		// 空字串驗證，沒輸入資料forward回原頁面
 		if (keyword == null || keyword.trim().isEmpty()) {
 			// 重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 			// model.addAttribute("forumId", forumId);
 			model.addAttribute("errorMsgs", "請輸入欲查詢的內容");
-			model.addAttribute("postList", forumPostService.getAllActiveByForumId(forumId));
+			model.addAttribute("postList", postPage.getContent());
+			model.addAttribute("currentPage", page);
+			model.addAttribute("totalPages", postPage.getTotalPages());
 			model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
-			
+
 			return "frontend/forum/list-all-active-posts";
 		}
-
-		// 查詢討論區名稱
-		List<ForumPostVO> postList = forumPostService.getPostBykeyword(keyword, forumId);
-
+		
 		// 查無資料，forward回原頁面
-		if (postList == null || postList.isEmpty()) {
+		if (postPageByKeyword == null || postPageByKeyword.isEmpty()) {
 			// 【重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 			// model.addAttribute("forumId", forumId);
 			model.addAttribute("errorMsgs", "查無相關貼文");
-			model.addAttribute("postList", forumPostService.getAllActiveByForumId(forumId));
+			model.addAttribute("postList", postPage.getContent());
+			model.addAttribute("currentPage", page);
+			model.addAttribute("totalPages", postPage.getTotalPages());
 			model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
-			
+
 			return "frontend/forum/list-all-active-posts";
 		}
 
 		// 有資料，將資料放入model並forward至顯示頁面
 		// 【重要】搜尋完後，要記得再把 forumId 塞回去 model，否則下次搜尋時會報錯
 		// model.addAttribute("forumId", forumId);
-		model.addAttribute("postList", postList);
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("postList", postPageByKeyword.getContent());
+		model.addAttribute("currentPage", page);
+		model.addAttribute("totalPages", postPageByKeyword.getTotalPages());
 		model.addAttribute("topHotPostList", forumPostService.getTopHotPostsByPostIds(postIds));
-		
+		model.addAttribute("forumName", forumService.getOneForum(forumId).getForumName());
+
 		return "frontend/forum/list-all-active-posts";
 	}
 
@@ -474,19 +509,19 @@ public class ForumPostController {
 			ra.addAttribute("error", "請先登入後再進行檢舉");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		ForumPostVO forumPostVO = forumPostService.getOnePost(postId);
-		if(userId.equals(forumPostVO.getMember().getMemId())) {
+		if (userId.equals(forumPostVO.getMember().getMemId())) {
 			Integer forumId = forumPostVO.getForum().getForumId();
 			String forumName = forumService.getOneForum(forumId).getForumName();
-			
+
 			ra.addFlashAttribute("errorMsgs", "無法檢舉您自己的貼文");
 			ra.addAttribute("postId", postId);
 			ra.addAttribute("forumId", forumId);
 			ra.addAttribute("forumName", forumName);
 			return "redirect:/forumpost/get-post-id-for-one-post";
 		}
-		
+
 		model.addAttribute("postId", postId);
 		model.addAttribute("forumPostReportVO", new ForumPostReportVO());
 
@@ -503,7 +538,7 @@ public class ForumPostController {
 			ra.addAttribute("error", "請先登入後再進行檢舉");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		if (result.hasErrors()) {
 			model.addAttribute("postId", postId);
 			return "frontend/forum/report-post";
@@ -514,35 +549,37 @@ public class ForumPostController {
 		forumPostReportVO.setMember(member);
 
 		forumPostReportService.addReport(forumPostReportVO, postId);
-		
+
 		ra.addFlashAttribute("successMsgs", "🎉 檢舉成功，感謝您的回報");
-		
-		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumPostReportVO.getForumPost().getForum().getForumId();
+
+		return "redirect:/forumpost/get-forum-id-for-posts?forumId="
+				+ forumPostReportVO.getForumPost().getForum().getForumId();
 	}
 
 	@GetMapping("report-comment")
-	public String reportComment(@RequestParam("commentId") Integer commentId, ModelMap model, RedirectAttributes ra, HttpServletRequest request) {
+	public String reportComment(@RequestParam("commentId") Integer commentId, ModelMap model, RedirectAttributes ra,
+			HttpServletRequest request) {
 
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			ra.addAttribute("error", "請先登入後再進行檢舉");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		ForumCommentVO forumCommentVO = forumCommentService.getOneComment(commentId);
-		if(userId.equals(forumCommentVO.getMember().getMemId())) {
+		if (userId.equals(forumCommentVO.getMember().getMemId())) {
 			Integer postId = forumCommentVO.getForumPost().getPostId();
 			Integer forumId = forumCommentVO.getForumPost().getForum().getForumId();
 			String forumName = forumService.getOneForum(forumId).getForumName();
-			
+
 			ra.addFlashAttribute("errorMsgs", "無法檢舉您自己的留言");
 			ra.addAttribute("postId", postId);
 			ra.addAttribute("forumId", forumId);
 			ra.addAttribute("forumName", forumName);
-			
+
 			return "redirect:/forumpost/get-post-id-for-one-post";
 		}
-		
+
 		model.addAttribute("forumCommentReportVO", new ForumCommentReportVO());
 		model.addAttribute("commentId", commentId);
 
@@ -552,14 +589,15 @@ public class ForumPostController {
 
 	@PostMapping("report-comment-submit")
 	public String reportCommentSubmit(@Valid ForumCommentReportVO forumCommentReportVO, BindingResult result,
-			@RequestParam("commentId") Integer commentId, RedirectAttributes ra, ModelMap model, HttpServletRequest request) {
+			@RequestParam("commentId") Integer commentId, RedirectAttributes ra, ModelMap model,
+			HttpServletRequest request) {
 
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			ra.addAttribute("error", "請先登入後再進行檢舉");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		if (result.hasErrors()) {
 			model.addAttribute("commentId", commentId);
 			return "frontend/forum/report-comment";
@@ -570,10 +608,11 @@ public class ForumPostController {
 		forumCommentReportVO.setMember(member);
 
 		forumCommentReportService.addReport(forumCommentReportVO, commentId);
-		
+
 		ra.addFlashAttribute("successMsgs", "🎉 檢舉成功，感謝您的回報");
 
-		return "redirect:/forumpost/get-forum-id-for-posts?forumId=" + forumCommentReportVO.getForumComment().getForumPost().getForum().getForumId();
+		return "redirect:/forumpost/get-forum-id-for-posts?forumId="
+				+ forumCommentReportVO.getForumComment().getForumPost().getForum().getForumId();
 	}
 
 	@GetMapping("delete-post")
@@ -585,12 +624,12 @@ public class ForumPostController {
 			ra.addAttribute("error", "您沒有此權限，請先登入後再刪除文章");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		forumPostService.deletePost(postId);
-		
+
 		ra.addFlashAttribute("successMsgs", "🎉 貼文刪除成功");
 		ra.addAttribute("forumId", forumId);
-		
+
 		return "redirect:/forumpost/get-forum-id-for-posts";
 	}
 
@@ -603,9 +642,9 @@ public class ForumPostController {
 			ra.addAttribute("error", "您沒有此權限，請先登入後再刪除留言");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		forumCommentService.deleteComment(commentId);
-		
+
 		String forumName = forumService.getOneForum(forumId).getForumName();
 		ra.addAttribute("forumName", forumName);
 		ra.addAttribute("forumId", forumId);
@@ -614,64 +653,64 @@ public class ForumPostController {
 
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
-	
+
 	@GetMapping("post-collection")
 	public String postCollection(ModelMap model, HttpServletRequest request, RedirectAttributes ra) {
-		
+
 		// 使用 AuthStrategyService 取得當前使用者
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			ra.addAttribute("error", "請先登入才能查看收藏列表");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		model.addAttribute("collectionList", forumPostService.getAllPostCollectionsByMemId(userId));
-		
+
 		return "frontend/forum/post-collection";
 	}
-	
+
 	@PostMapping("delete-collection")
 	public String deleteCollection(RedirectAttributes ra, HttpServletRequest request,
 			@RequestParam("postId") Integer postId) {
-		
+
 		// 使用 AuthStrategyService 取得當前使用者
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			ra.addAttribute("error", "請先登入才能取消收藏");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		forumPostService.deletePostCollection(postId, userId);
-		
+
 		ra.addFlashAttribute("successMsgs", "🎉 取消收藏成功");
-		
+
 		return "redirect:/forumpost/post-collection";
-		
+
 	}
-	
+
 	@GetMapping("add-collection")
 	public String addCollection(RedirectAttributes ra, HttpServletRequest request, ModelMap model,
 			@RequestParam("postId") Integer postId, @RequestParam("forumId") Integer forumId) {
-		
+
 		// 使用 AuthStrategyService 取得當前使用者
 		Integer userId = authStrategyService.getCurrentUserId(request);
 		if (userId == null) {
 			ra.addAttribute("error", "請先登入才能收藏文章");
 			return "redirect:/html/frontend/member/login/login.html";
 		}
-		
+
 		String forumName = forumService.getOneForum(forumId).getForumName();
-		
+
 		forumPostService.addPostCollection(postId, userId);
-		
+
 		ra.addAttribute("forumName", forumName);
 		ra.addAttribute("forumId", forumId);
 		ra.addAttribute("postId", postId);
 		ra.addFlashAttribute("successMsgs", "🎉 收藏成功");
-		
+
 		return "redirect:/forumpost/get-post-id-for-one-post";
 	}
-	
+
 	@ModelAttribute
 	public void addAttribute(@RequestParam(value = "forumId", required = false) Integer forumId,
 			@RequestParam(value = "forumName", required = false) String forumName, ModelMap model) {

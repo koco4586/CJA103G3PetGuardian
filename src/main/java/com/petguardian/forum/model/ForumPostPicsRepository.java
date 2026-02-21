@@ -23,4 +23,11 @@ public interface ForumPostPicsRepository extends JpaRepository<ForumPostPicsVO, 
 	@Transactional
 	@Query(value = "delete from ForumPostPicsVO p where p.forumPost.postId = :postId")
 	public void deletePicsByPostId(@Param("postId") Integer postId);
+	
+	//	優化貼文更新邏輯，貼文附圖可單張刪除
+	@Modifying
+	@Transactional
+	@Query(value = "delete from ForumPostPicsVO p where p.picId = :picId")
+	public void deletedPicByPicId(@Param("picId") Integer picId);
+	
 }

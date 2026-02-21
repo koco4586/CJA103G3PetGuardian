@@ -2,6 +2,8 @@ package com.petguardian.forum.model;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,8 +24,8 @@ public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer>
 	public ForumPostVO findOnePostWithCommentAndMember(@Param("postId") Integer postId);
 	
 	//	關鍵字查詢
-	@Query(value = "select p from ForumPostVO p where p.postStatus = 1 and p.forum.forumId = :forumId and (p.postTitle like concat('%', :keyword, '%') or p.postContent like concat('%', :keyword, '%')) order by p.postId desc")
-	public List<ForumPostVO> findByKeyword(@Param("keyword") String keyword, @Param("forumId") Integer forumId);
+	@Query(value = "select p from ForumPostVO p where p.postStatus = 1 and p.forum.forumId = :forumId and (p.postTitle like concat('%', :keyword, '%') or p.postContent like concat('%', :keyword, '%'))")
+	public Page<ForumPostVO> findByKeyword(@Param("keyword") String keyword, @Param("forumId") Integer forumId, Pageable pageable);
 	
 	// 	Spring 會自動解析為：postStatus = 1 AND postTitle LIKE %...% ORDER BY postId DESC
 	//	List<ForumPostVO> findByPostStatusAndPostTitleContainingOrderByPostIdDesc(Integer postStatus, String postTitle);	
@@ -31,6 +33,10 @@ public interface ForumPostRepository extends JpaRepository<ForumPostVO, Integer>
 	//	從討論區id拿到該討論區所有啟用中文章
 	@Query(value = "select p from ForumPostVO p where p.forum.forumId = :forumId and p.postStatus = 1 order by p.postId desc")
 	public List<ForumPostVO> findPostsByForumId(@Param("forumId") Integer forumId);
+	
+	//	從討論區id拿到該討論區所有啟用中文章(有分頁功能)
+	@Query(value = "select p from ForumPostVO p where p.forum.forumId = :forumId and p.postStatus = 1")
+	public Page<ForumPostVO> findPostsWithPageableByForumId(@Param("forumId") Integer forumId, Pageable pageable);
 	
 	//	將Redis裡存的文章瀏覽次數寫回MySQL
 	@Modifying

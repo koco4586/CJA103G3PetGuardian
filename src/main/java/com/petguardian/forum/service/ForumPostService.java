@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,25 +56,51 @@ public class ForumPostService {
 		}
 	}
 	
-	public void updatePost(ForumPostVO forumPostVO) {
+	public void updatePost(ForumPostVO forumPostVO) {		
 		repo.save(forumPostVO);
 	}
 	
-	@Transactional
-	public void updatePostWithPics(ForumPostVO forumPostVO, MultipartFile[] postPics) throws IOException {
-		repo.save(forumPostVO);
-		Integer postId = forumPostVO.getPostId();
-	
-		if (postPics != null && postPics.length > 0 && !postPics[0].isEmpty()) {
-			picRepo.deletePicsByPostId(postId); // 先刪除該貼文所有照片，再重新新增
-			for (MultipartFile postPic : postPics) {
+//	@Transactional
+//	public void updatePostWithPics(ForumPostVO forumPostVO, MultipartFile[] postPics) throws IOException {
+//		
+//		repo.save(forumPostVO);
+//	
+//		if (postPics != null && postPics.length > 0 && !postPics[0].isEmpty()) {
+//			picRepo.deletePicsByPostId(postId); 先刪除該貼文所有照片，再重新新增
+//			for (MultipartFile postPic : postPics) {
 				// 每一張圖都要 new 一個新的物件
-	            ForumPostPicsVO forumPostPicsVO = new ForumPostPicsVO();
-	            forumPostPicsVO.setForumPost(forumPostVO); // 重點：設定關聯 (外鍵) = 對到哪篇文章
-	            byte[] pic = postPic.getBytes();
-	            forumPostPicsVO.setPic(pic);
+//	            ForumPostPicsVO forumPostPicsVO = new ForumPostPicsVO();
+//	            forumPostPicsVO.setForumPost(forumPostVO); // 重點：設定關聯 (外鍵) = 對到哪篇文章
+//	            byte[] pic = postPic.getBytes();
+//	            forumPostPicsVO.setPic(pic);
 	            // 儲存到 (forumpostpicture) 表格
-	            picRepo.save(forumPostPicsVO);
+//	            picRepo.save(forumPostPicsVO);
+//			}
+//		}
+//	}
+	
+	@Transactional
+	public void updatePostWithDeletedPicsId(ForumPostVO forumPostVO, MultipartFile[] postPics, List<Integer> deletedPicsId) throws IOException {
+		
+		repo.save(forumPostVO);
+		
+		if(deletedPicsId != null && !deletedPicsId.isEmpty()) {
+			deletedPicsId.stream()
+			.filter(picId -> picId != null)
+			.forEach(picId -> {
+				picRepo.deletedPicByPicId(picId);
+			});
+		}
+		
+		if(postPics != null && postPics.length > 0 && !postPics[0].isEmpty()) {
+			for(MultipartFile postPic : postPics) {
+				if(!postPic.isEmpty()) {
+					ForumPostPicsVO forumPostPicsVO = new ForumPostPicsVO();
+					forumPostPicsVO.setForumPost(forumPostVO);
+					byte[] pic = postPic.getBytes();
+				    forumPostPicsVO.setPic(pic);
+				    picRepo.save(forumPostPicsVO);
+				}
 			}
 		}
 	}
@@ -121,8 +150,14 @@ public class ForumPostService {
 		return repo.findPostsByForumId(forumId);
 	}
 	
-	public List<ForumPostVO> getPostBykeyword(String keyword, Integer forumId){
-		return repo.findByKeyword(keyword, forumId);
+	public Page<ForumPostVO> getAllActivePostWithPageableByForumId(Integer forumId, int page, int size){
+		PageRequest pageable = PageRequest.of(page, size, Sort.by("postId").descending());
+		return repo.findPostsWithPageableByForumId(forumId, pageable);
+	}
+	
+	public Page<ForumPostVO> getPostBykeyword(String keyword, Integer forumId, int page, int size){
+		PageRequest pageable = PageRequest.of(page, size, Sort.by("postId").descending());
+		return repo.findByKeyword(keyword, forumId, pageable);
 	}
 	
 	public List<DeletedPostDTO> getAllDeletedPosts(){
