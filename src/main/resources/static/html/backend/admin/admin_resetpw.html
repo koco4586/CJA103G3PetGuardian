@@ -101,8 +101,8 @@
 
                 e.preventDefault();
 
-                let password = $(".pw").val();
-                let passwordcheck = $(".pwcheck").val();
+                let password = $(".pw").val().trim();
+                let passwordcheck = $(".pwcheck").val().trim();
 
                 let adminresetpwobject = {
                     "admPassword": password,

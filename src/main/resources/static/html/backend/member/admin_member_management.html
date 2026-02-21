@@ -115,7 +115,7 @@
 
                 e.preventDefault();
 
-                let memid = $(".searchmemid").val();
+                let memid = $(".searchmemid").val().trim();
 
                 let fetch_url = `/admin/admin-member-management-searchmember?memId=${memid}`;// 拿掉 http://localhost:8080
 

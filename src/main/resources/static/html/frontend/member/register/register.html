@@ -98,11 +98,11 @@
 
                 e.preventDefault();
 
-                let registername = $(".registername").val();
-                let registeremail = $(".registeremail").val();
-                let registeraccount = $(".registeraccount").val();
-                let registerpassword = $(".registerpassword").val();
-                let registerpasswordcheck = $(".registerpasswordcheck").val();
+                let registername = $(".registername").val().trim();
+                let registeremail = $(".registeremail").val().trim();
+                let registeraccount = $(".registeraccount").val().trim();
+                let registerpassword = $(".registerpassword").val().trim();
+                let registerpasswordcheck = $(".registerpasswordcheck").val().trim();
 
                 let registerobject = {
                     "memName": registername,

@@ -109,12 +109,12 @@
                 e.preventDefault();
 
                 let insertimage = $(".adm_image")[0].files[0];
-                let insertname = $(".insertname").val();
-                let insertaccount = $(".insertaccount").val();
-                let insertemail = $(".insertemail").val();
-                let inserttelephone = $(".inserttel").val();
-                let insertpassword = $(".insertpassword").val();
-                let insertpasswordcheck = $(".insertpasswordcheck").val();
+                let insertname = $(".insertname").val().trim();
+                let insertaccount = $(".insertaccount").val().trim();
+                let insertemail = $(".insertemail").val().trim();
+                let inserttelephone = $(".inserttel").val().trim();
+                let insertpassword = $(".insertpassword").val().trim();
+                let insertpasswordcheck = $(".insertpasswordcheck").val().trim();
 
                 let formData = new FormData();
                 formData.append("admImage", insertimage);
