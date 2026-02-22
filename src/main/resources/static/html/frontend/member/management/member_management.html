@@ -72,7 +72,7 @@
                 <input type="file" id="image" class="mem_image image_input">
                 <label for="image" class="show_image"><img src="/images/member/membermanagement/mem_image.png"
                         width="40px"></label>
-                <span class="hintword">↑↑請點擊相機圖案上傳照片</span><br><br>
+                <span class="hintword">↑↑請點擊圖案上傳照片</span><br><br>
 
                 <span class="mustbe">*必填</span>
                 <span>姓名</span><br>
@@ -140,6 +140,29 @@
 
         function init() {
 
+            let fetch_url = "/front/presearch-member-management";// 拿掉 http://localhost:8080
+
+            fetch(fetch_url, {
+                credentials: "include"
+            }).then(res => res.json()).then(data => {
+                console.log(data);
+                if (!data.memImage) {
+                    $(".show_image").html(`<img src="/images/member/membermanagement/mem_image.png" style="width: 40px;">`);
+                } else {
+                    $(".show_image").html(`<img src="${data.memImage}" style="width: 200px;">`);
+                }
+
+                $(".mem_name").val(data.memName);
+                $(".mem_acc").val(data.memAcc);
+                $(".mem_uid").val(data.memUid);
+                $(".mem_bth").val(data.memBth);
+                $(".mem_sex").val(data.memSex);
+                $(".mem_email").val(data.memEmail);
+                $(".mem_tel").val(data.memTel);
+                $(".mem_add").val(data.memAdd);
+                $(".mem_account_number").val(data.memAccountNumber);
+            });
+
             function update(e) {
 
                 e.preventDefault();
@@ -174,7 +197,12 @@
                     body: formData         //FormData 是瀏覽器提供的「表單資料物件」,瀏覽器會自動Content-Type: multipart/form-data
                 }).then(res => res.json()).then(data => {
                     //                     console.log(data);
-                    $(".show_image").html(`<img src="${data.memImage}" style="width: 200px;">`);
+                    if (!data.memImage) {
+                        $(".show_image").html(`<img src="/images/member/membermanagement/mem_image.png" style="width: 40px;">`);
+                    } else {
+                        $(".show_image").html(`<img src="${data.memImage}" style="width: 200px;">`);
+                    }
+
                     alert("Petguardian會員基本資料變更成功！");
                 });
 
@@ -185,6 +213,8 @@
         };
 
         $(window).on("load", init);
+
+
 
     </script>
 
